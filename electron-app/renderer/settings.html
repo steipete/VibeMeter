@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="settings-style.css" />
+    <title>Vibe Meter Settings</title>
+  </head>
+  <body>
+    <div class="settings-container">
+      <!-- Header -->
+      <header class="settings-header">
+        <div class="header-content">
+          <h1 class="settings-title">Vibe Meter</h1>
+          <p class="settings-subtitle">Configure your spending preferences</p>
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <div class="messages-container">
+        <div id="success-message" class="message success-message">
+          <svg class="message-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <span class="message-text"></span>
+        </div>
+        <div id="settings-error" class="message error-message">
+          <svg class="message-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span class="message-text"></span>
+        </div>
+      </div>
+
+      <!-- Settings Form -->
+      <form class="settings-form">
+        <div class="settings-grid">
+          <!-- Currency Section -->
+          <div class="setting-section">
+            <div class="section-header">
+              <h2 class="section-title">Currency</h2>
+              <p class="section-description">Choose your preferred display currency</p>
+            </div>
+            <div class="form-group">
+              <label for="currency" class="form-label">Display Currency</label>
+              <div class="select-wrapper">
+                <select id="currency" class="form-select">
+                  <option value="USD">🇺🇸 US Dollar (USD)</option>
+                  <option value="EUR">🇪🇺 Euro (EUR)</option>
+                  <option value="GBP">🇬🇧 British Pound (GBP)</option>
+                  <option value="JPY">🇯🇵 Japanese Yen (JPY)</option>
+                  <option value="CAD">🇨🇦 Canadian Dollar (CAD)</option>
+                  <option value="AUD">🇦🇺 Australian Dollar (AUD)</option>
+                  <option value="CHF">🇨🇭 Swiss Franc (CHF)</option>
+                  <option value="CNY">🇨🇳 Chinese Yuan (CNY)</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spending Limits Section -->
+          <div class="setting-section">
+            <div class="section-header">
+              <h2 class="section-title">Spending Limits</h2>
+              <p class="section-description">Set warning and maximum spending thresholds (in USD)</p>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="warningLimit" class="form-label">Warning Limit</label>
+                <div class="input-wrapper">
+                  <span class="input-prefix">$</span>
+                  <input type="number" id="warningLimit" class="form-input" placeholder="50" min="0" step="0.01" />
+                </div>
+                <p class="form-help">Get notified when you approach this amount</p>
+              </div>
+              <div class="form-group">
+                <label for="upperLimit" class="form-label">Maximum Limit</label>
+                <div class="input-wrapper">
+                  <span class="input-prefix">$</span>
+                  <input type="number" id="upperLimit" class="form-input" placeholder="200" min="0" step="0.01" />
+                </div>
+                <p class="form-help">Alert when you reach this spending cap</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Refresh Settings Section -->
+          <div class="setting-section">
+            <div class="section-header">
+              <h2 class="section-title">Data Refresh</h2>
+              <p class="section-description">How often to check for spending updates</p>
+            </div>
+            <div class="form-group">
+              <label for="refreshInterval" class="form-label">Refresh Interval</label>
+              <div class="select-wrapper">
+                <select id="refreshInterval" class="form-select">
+                  <option value="1">Every minute</option>
+                  <option value="5">Every 5 minutes (recommended)</option>
+                  <option value="10">Every 10 minutes</option>
+                  <option value="15">Every 15 minutes</option>
+                  <option value="30">Every 30 minutes</option>
+                  <option value="60">Every hour</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="button" id="save-settings-btn" class="btn btn-primary">
+            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z" />
+              <path d="M5 3a2 2 0 00-2 2v1a1 1 0 002 0V5h10v10h-4a1 1 0 100 2h4a2 2 0 002-2V5a2 2 0 00-2-2H5z" />
+            </svg>
+            Save Settings
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script src="../dist_ts/renderer/settings.js"></script>
+  </body>
+</html>

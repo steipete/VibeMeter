@@ -1,0 +1,103 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f4f7f9;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.container {
+  background-color: #ffffff;
+  padding: 25px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Constrain width for better form readability */
+}
+
+h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9em;
+}
+
+input[type='number'],
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d9e0;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 0.95em;
+  color: #333;
+  background-color: #fff;
+}
+
+input[type='number']:focus,
+select:focus {
+  border-color: #007aff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+button {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #007aff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #005ecb;
+}
+
+button:active {
+  background-color: #004a9b;
+}
+
+.message-area {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.error-message {
+  color: #d8000c;
+  background-color: #ffd2d2;
+  border: 1px solid #d8000c;
+  display: none; /* Hidden by default */
+}
+
+.success-message {
+  color: #270;
+  background-color: #dff2bf;
+  border: 1px solid #4f8a10;
+  display: none; /* Hidden by default */
+}

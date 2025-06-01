@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vibe Meter Login</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* Prevent scrollbars on the main window */
+      }
+      webview {
+        width: 100%;
+        height: 100%;
+        border: none; /* No border for the webview */
+      }
+    </style>
+  </head>
+  <body>
+    <webview id="cursorLoginWebview" src="https://authenticator.cursor.sh/"></webview>
+    <script>
+      // Renderer process (login.html)
+      // No specific renderer-side JS needed for login as per spec, main process handles it.
+      // However, if any interaction or message passing from the webview to main process is needed,
+      // it would be done via a preload script and ipcRenderer.
+      // For now, keeping it simple as the main process monitors navigation and cookies.
+      const webview = document.getElementById('cursorLoginWebview');
+
+      webview.addEventListener('did-start-loading', () => {
+        console.log('Login webview started loading...');
+      });
+
+      webview.addEventListener('did-finish-load', () => {
+        console.log('Login webview finished loading.');
+      });
+
+      webview.addEventListener('did-fail-load', error => {
+        console.error('Login webview failed to load:', error);
+        // Optionally, display an error message to the user in this window
+      });
+
+      // The main process will handle the did-navigate event to check for the callback URL and extract cookies.
+      // No direct cookie access from renderer due to contextIsolation and webview sandboxing.
+    </script>
+  </body>
+</html>
