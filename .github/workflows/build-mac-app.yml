@@ -59,6 +59,8 @@ jobs:
         brew install swiftformat
 
     - name: Generate Xcode project
+      env:
+        CI: true
       run: ./scripts/generate-xcproj.sh
 
     - name: Lint code

@@ -5,8 +5,10 @@ set -e
 # Change to the project directory
 cd "$(dirname "$0")/.."
 
-echo "Quitting Xcode..."
-osascript -e 'tell application "Xcode" to quit' 2>/dev/null || true
+if [[ "${CI:-}" != "true" ]]; then
+    echo "Quitting Xcode..."
+    osascript -e 'tell application "Xcode" to quit' 2>/dev/null || true
+fi
 
 echo "Generating Xcode project with Tuist..."
 tuist generate --no-open
@@ -40,7 +42,9 @@ find . -path "*/Derived/InfoPlists+*" -name "*.swift" | while read -r file; do
     patch_info_plist_accessors "$file"
 done
 
-echo "Opening Xcode workspace..."
-open VibeMeter.xcworkspace
+if [[ "${CI:-}" != "true" ]]; then
+    echo "Opening Xcode workspace..."
+    open VibeMeter.xcworkspace
+fi
 
 echo "✅ Xcode project generated and patched successfully!"
