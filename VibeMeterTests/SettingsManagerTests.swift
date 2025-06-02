@@ -262,9 +262,11 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         existingUserDefaults.set("Test Team", forKey: SettingsManager.Keys.teamName)
         existingUserDefaults.set("existing@example.com", forKey: SettingsManager.Keys.userEmail)
 
+        // Copy the existing user defaults to avoid data race
+        let copiedDefaults = UserDefaults(suiteName: existingSuiteName)!
         DispatchQueue.main.sync {
             // Initialize SettingsManager with these pre-populated UserDefaults
-            let managerWithExistingValues = SettingsManager(userDefaults: existingUserDefaults)
+            let managerWithExistingValues = SettingsManager(userDefaults: copiedDefaults)
 
             XCTAssertEqual(managerWithExistingValues.selectedCurrencyCode, "EUR")
             XCTAssertEqual(managerWithExistingValues.warningLimitUSD, 150.0)
