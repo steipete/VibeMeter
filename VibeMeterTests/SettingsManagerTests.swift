@@ -1,6 +1,7 @@
 @testable import VibeMeter // Assuming your module is named VibeMeter
 import XCTest
 
+@MainActor
 class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     var settingsManager: SettingsManager! // This will now be the .shared instance, reconfigured for tests
     var testUserDefaults: UserDefaults!
@@ -10,11 +11,11 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
     override func setUp() {
         super.setUp()
-        // Use a specific UserDefaults suite for testing
+        // Use a specific UserDefaults suite for testing - this is OK since UserDefaults is Sendable
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName) // Clear before each test
         
-        DispatchQueue.main.sync {
+        MainActor.assumeIsolated {
             // Set the properties and configure manager on MainActor
             testUserDefaults = suite
             // Configure the SettingsManager.shared instance to use our test UserDefaults
@@ -24,7 +25,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     }
 
     override func tearDown() {
-        DispatchQueue.main.sync {
+        MainActor.assumeIsolated {
             testUserDefaults.removePersistentDomain(forName: testSuiteName)
             testUserDefaults = nil
             settingsManager = nil
@@ -35,126 +36,102 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     }
 
     func testDefaultCurrencyIsUSD() {
-        DispatchQueue.main.sync {
-            XCTAssertEqual(settingsManager.selectedCurrencyCode, "USD", "Default currency should be USD")
-        }
+        XCTAssertEqual(settingsManager.selectedCurrencyCode, "USD", "Default currency should be USD")
     }
 
     func testDefaultWarningLimit() {
-        DispatchQueue.main.sync {
-            XCTAssertEqual(settingsManager.warningLimitUSD, 200.0, "Default warning limit USD should be 200.0")
-        }
+        XCTAssertEqual(settingsManager.warningLimitUSD, 200.0, "Default warning limit USD should be 200.0")
     }
 
     func testDefaultUpperLimit() {
-        DispatchQueue.main.sync {
-            XCTAssertEqual(settingsManager.upperLimitUSD, 1000.0, "Default upper limit USD should be 1000.0")
-        }
+        XCTAssertEqual(settingsManager.upperLimitUSD, 1000.0, "Default upper limit USD should be 1000.0")
     }
 
     func testDefaultRefreshInterval() {
-        DispatchQueue.main.sync {
-            // The refactored init in SettingsManager ensures that if the key is not present (integer(forKey:) returns 0),
-            // it defaults to 5. If the key is present and is 0, it would use 0, but our UI doesn't allow setting 0.
-            XCTAssertEqual(settingsManager.refreshIntervalMinutes, 5, "Default refresh interval should be 5 minutes")
-        }
+        // The refactored init in SettingsManager ensures that if the key is not present (integer(forKey:) returns 0),
+        // it defaults to 5. If the key is present and is 0, it would use 0, but our UI doesn't allow setting 0.
+        XCTAssertEqual(settingsManager.refreshIntervalMinutes, 5, "Default refresh interval should be 5 minutes")
     }
 
     func testDefaultLaunchAtLogin() {
-        DispatchQueue.main.sync {
-            XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Default launch at login should be false")
-        }
+        XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Default launch at login should be false")
     }
 
     func testSettingSelectedCurrency() {
-        DispatchQueue.main.sync {
-            let newCurrency = "EUR"
-            settingsManager.selectedCurrencyCode = newCurrency
-            XCTAssertEqual(settingsManager.selectedCurrencyCode, newCurrency, "Selected currency should be updated")
-            XCTAssertEqual(
-                testUserDefaults.string(forKey: SettingsManager.Keys.selectedCurrencyCode),
-                newCurrency,
-                "UserDefaults should reflect the new currency"
-            )
-        }
+        let newCurrency = "EUR"
+        settingsManager.selectedCurrencyCode = newCurrency
+        XCTAssertEqual(settingsManager.selectedCurrencyCode, newCurrency, "Selected currency should be updated")
+        XCTAssertEqual(
+            testUserDefaults.string(forKey: SettingsManager.Keys.selectedCurrencyCode),
+            newCurrency,
+            "UserDefaults should reflect the new currency"
+        )
     }
 
     func testSettingWarningLimitUSD() {
-        DispatchQueue.main.sync {
-            let newLimit = 150.5
-            settingsManager.warningLimitUSD = newLimit
-            XCTAssertEqual(settingsManager.warningLimitUSD, newLimit, "Warning limit USD should be updated")
-            XCTAssertEqual(
-                testUserDefaults.double(forKey: SettingsManager.Keys.warningLimitUSD),
-                newLimit,
-                "UserDefaults should reflect the new warning limit"
-            )
-        }
+        let newLimit = 150.5
+        settingsManager.warningLimitUSD = newLimit
+        XCTAssertEqual(settingsManager.warningLimitUSD, newLimit, "Warning limit USD should be updated")
+        XCTAssertEqual(
+            testUserDefaults.double(forKey: SettingsManager.Keys.warningLimitUSD),
+            newLimit,
+            "UserDefaults should reflect the new warning limit"
+        )
     }
 
     func testSettingUpperLimitUSD() {
-        DispatchQueue.main.sync {
-            let newLimit = 800.75
-            settingsManager.upperLimitUSD = newLimit
-            XCTAssertEqual(settingsManager.upperLimitUSD, newLimit, "Upper limit USD should be updated")
-            XCTAssertEqual(
-                testUserDefaults.double(forKey: SettingsManager.Keys.upperLimitUSD),
-                newLimit,
-                "UserDefaults should reflect the new upper limit"
-            )
-        }
+        let newLimit = 800.75
+        settingsManager.upperLimitUSD = newLimit
+        XCTAssertEqual(settingsManager.upperLimitUSD, newLimit, "Upper limit USD should be updated")
+        XCTAssertEqual(
+            testUserDefaults.double(forKey: SettingsManager.Keys.upperLimitUSD),
+            newLimit,
+            "UserDefaults should reflect the new upper limit"
+        )
     }
 
     func testSettingRefreshInterval() {
-        DispatchQueue.main.sync {
-            let newInterval = 30
-            settingsManager.refreshIntervalMinutes = newInterval
-            XCTAssertEqual(settingsManager.refreshIntervalMinutes, newInterval, "Refresh interval should be updated")
-            XCTAssertEqual(
-                testUserDefaults.integer(forKey: SettingsManager.Keys.refreshIntervalMinutes),
-                newInterval,
-                "UserDefaults should reflect the new refresh interval"
-            )
-        }
+        let newInterval = 30
+        settingsManager.refreshIntervalMinutes = newInterval
+        XCTAssertEqual(settingsManager.refreshIntervalMinutes, newInterval, "Refresh interval should be updated")
+        XCTAssertEqual(
+            testUserDefaults.integer(forKey: SettingsManager.Keys.refreshIntervalMinutes),
+            newInterval,
+            "UserDefaults should reflect the new refresh interval"
+        )
     }
 
     func testSettingLaunchAtLogin() {
-        DispatchQueue.main.sync {
-            // This test assumes StartupManager.setLaunchAtLogin is mocked or its side effects are acceptable in test.
-            // For true unit testing, StartupManager interactions would be protocol-based and mocked.
-            // For now, we acknowledge this might call the actual StartupManager.
-            settingsManager.launchAtLoginEnabled = true
-            XCTAssertTrue(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to true")
-            XCTAssertTrue(
-                testUserDefaults.bool(forKey: SettingsManager.Keys.launchAtLoginEnabled),
-                "UserDefaults should reflect launch at login true"
-            )
+        // This test assumes StartupManager.setLaunchAtLogin is mocked or its side effects are acceptable in test.
+        // For true unit testing, StartupManager interactions would be protocol-based and mocked.
+        // For now, we acknowledge this might call the actual StartupManager.
+        settingsManager.launchAtLoginEnabled = true
+        XCTAssertTrue(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to true")
+        XCTAssertTrue(
+            testUserDefaults.bool(forKey: SettingsManager.Keys.launchAtLoginEnabled),
+            "UserDefaults should reflect launch at login true"
+        )
 
-            settingsManager.launchAtLoginEnabled = false
-            XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to false")
-            XCTAssertFalse(
-                testUserDefaults.bool(forKey: SettingsManager.Keys.launchAtLoginEnabled),
-                "UserDefaults should reflect launch at login false"
-            )
-        }
+        settingsManager.launchAtLoginEnabled = false
+        XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to false")
+        XCTAssertFalse(
+            testUserDefaults.bool(forKey: SettingsManager.Keys.launchAtLoginEnabled),
+            "UserDefaults should reflect launch at login false"
+        )
     }
 
     func testTeamIdStorage() {
         let testTeamId = 12345
-        DispatchQueue.main.sync {
-            settingsManager.teamId = testTeamId
-            XCTAssertEqual(settingsManager.teamId, testTeamId, "Team ID should be stored and retrieved correctly")
-        }
+        settingsManager.teamId = testTeamId
+        XCTAssertEqual(settingsManager.teamId, testTeamId, "Team ID should be stored and retrieved correctly")
         XCTAssertEqual(
             testUserDefaults.integer(forKey: SettingsManager.Keys.teamId),
             testTeamId,
             "UserDefaults should reflect the stored team ID"
         )
 
-        DispatchQueue.main.sync {
-            settingsManager.teamId = nil
-            XCTAssertNil(settingsManager.teamId, "Team ID should be nillable")
-        }
+        settingsManager.teamId = nil
+        XCTAssertNil(settingsManager.teamId, "Team ID should be nillable")
         XCTAssertNil(
             testUserDefaults.object(forKey: SettingsManager.Keys.teamId),
             "UserDefaults should have removed the team ID key"
@@ -163,28 +140,22 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
     func testTeamIdIsNilWhenNotSet() {
         // Ensure that a fresh SettingsManager (with cleared UserDefaults) reports nil for teamId
-        DispatchQueue.main.sync {
-            let freshManager = SettingsManager(userDefaults: testUserDefaults) // testUserDefaults is empty here
-            XCTAssertNil(freshManager.teamId, "Team ID should be nil if not set in UserDefaults.")
-        }
+        let freshManager = SettingsManager(userDefaults: testUserDefaults) // testUserDefaults is empty here
+        XCTAssertNil(freshManager.teamId, "Team ID should be nil if not set in UserDefaults.")
     }
 
     func testTeamNameStorage() {
         let testTeamName = "Vibing Crew"
-        DispatchQueue.main.sync {
-            settingsManager.teamName = testTeamName
-            XCTAssertEqual(settingsManager.teamName, testTeamName, "Team name should be stored and retrieved correctly")
-        }
+        settingsManager.teamName = testTeamName
+        XCTAssertEqual(settingsManager.teamName, testTeamName, "Team name should be stored and retrieved correctly")
         XCTAssertEqual(
             testUserDefaults.string(forKey: SettingsManager.Keys.teamName),
             testTeamName,
             "UserDefaults should reflect the stored team name"
         )
 
-        DispatchQueue.main.sync {
-            settingsManager.teamName = nil
-            XCTAssertNil(settingsManager.teamName, "Team name should be nillable")
-        }
+        settingsManager.teamName = nil
+        XCTAssertNil(settingsManager.teamName, "Team name should be nillable")
         XCTAssertNil(
             testUserDefaults.string(forKey: SettingsManager.Keys.teamName),
             "UserDefaults should reflect nil team name"
@@ -193,20 +164,16 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
     func testUserEmailStorage() {
         let testUserEmail = "test@example.com"
-        DispatchQueue.main.sync {
-            settingsManager.userEmail = testUserEmail
-            XCTAssertEqual(settingsManager.userEmail, testUserEmail, "User email should be stored and retrieved correctly")
-        }
+        settingsManager.userEmail = testUserEmail
+        XCTAssertEqual(settingsManager.userEmail, testUserEmail, "User email should be stored and retrieved correctly")
         XCTAssertEqual(
             testUserDefaults.string(forKey: SettingsManager.Keys.userEmail),
             testUserEmail,
             "UserDefaults should reflect the stored user email"
         )
 
-        DispatchQueue.main.sync {
-            settingsManager.userEmail = nil
-            XCTAssertNil(settingsManager.userEmail, "User email should be nillable")
-        }
+        settingsManager.userEmail = nil
+        XCTAssertNil(settingsManager.userEmail, "User email should be nillable")
         XCTAssertNil(
             testUserDefaults.string(forKey: SettingsManager.Keys.userEmail),
             "UserDefaults should reflect nil user email"
@@ -214,24 +181,20 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     }
 
     func testClearUserSessionData() {
-        DispatchQueue.main.sync {
-            settingsManager.teamId = 999
-            settingsManager.teamName = "Temporary Team"
-            settingsManager.userEmail = "temp@example.com"
-        }
+        settingsManager.teamId = 999
+        settingsManager.teamName = "Temporary Team"
+        settingsManager.userEmail = "temp@example.com"
 
         // Verify they are set before clearing
         XCTAssertNotNil(testUserDefaults.object(forKey: SettingsManager.Keys.teamId))
         XCTAssertNotNil(testUserDefaults.object(forKey: SettingsManager.Keys.teamName))
         XCTAssertNotNil(testUserDefaults.object(forKey: SettingsManager.Keys.userEmail))
 
-        DispatchQueue.main.sync {
-            settingsManager.clearUserSessionData()
+        settingsManager.clearUserSessionData()
 
-            XCTAssertNil(settingsManager.teamId, "Team ID should be cleared")
-            XCTAssertNil(settingsManager.teamName, "Team name should be cleared")
-            XCTAssertNil(settingsManager.userEmail, "User email should be cleared")
-        }
+        XCTAssertNil(settingsManager.teamId, "Team ID should be cleared")
+        XCTAssertNil(settingsManager.teamName, "Team name should be cleared")
+        XCTAssertNil(settingsManager.userEmail, "User email should be cleared")
 
         XCTAssertNil(
             testUserDefaults.object(forKey: SettingsManager.Keys.teamId),
@@ -264,19 +227,17 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
         // Copy the existing user defaults to avoid data race
         let copiedDefaults = UserDefaults(suiteName: existingSuiteName)!
-        DispatchQueue.main.sync {
-            // Initialize SettingsManager with these pre-populated UserDefaults
-            let managerWithExistingValues = SettingsManager(userDefaults: copiedDefaults)
+        // Initialize SettingsManager with these pre-populated UserDefaults
+        let managerWithExistingValues = SettingsManager(userDefaults: copiedDefaults)
 
-            XCTAssertEqual(managerWithExistingValues.selectedCurrencyCode, "EUR")
-            XCTAssertEqual(managerWithExistingValues.warningLimitUSD, 150.0)
-            XCTAssertEqual(managerWithExistingValues.upperLimitUSD, 750.0)
-            XCTAssertEqual(managerWithExistingValues.refreshIntervalMinutes, 15)
-            XCTAssertTrue(managerWithExistingValues.launchAtLoginEnabled)
-            XCTAssertEqual(managerWithExistingValues.teamId, 5678)
-            XCTAssertEqual(managerWithExistingValues.teamName, "Test Team")
-            XCTAssertEqual(managerWithExistingValues.userEmail, "existing@example.com")
-        }
+        XCTAssertEqual(managerWithExistingValues.selectedCurrencyCode, "EUR")
+        XCTAssertEqual(managerWithExistingValues.warningLimitUSD, 150.0)
+        XCTAssertEqual(managerWithExistingValues.upperLimitUSD, 750.0)
+        XCTAssertEqual(managerWithExistingValues.refreshIntervalMinutes, 15)
+        XCTAssertTrue(managerWithExistingValues.launchAtLoginEnabled)
+        XCTAssertEqual(managerWithExistingValues.teamId, 5678)
+        XCTAssertEqual(managerWithExistingValues.teamName, "Test Team")
+        XCTAssertEqual(managerWithExistingValues.userEmail, "existing@example.com")
 
         existingUserDefaults.removePersistentDomain(forName: existingSuiteName)
     }

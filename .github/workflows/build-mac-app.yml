@@ -46,19 +46,22 @@ jobs:
 
     - name: Install build tools
       run: |
-        # Install Tuist
-        curl -L https://install.tuist.io | bash
+        # Try Homebrew Tuist first (more reliable in CI)
+        echo "Installing Tuist via Homebrew..."
+        brew install tuist
         
-        # Install xcbeautify
-        brew install xcbeautify
+        # Verify Tuist installation
+        echo "Verifying Tuist installation..."
+        tuist --help > /dev/null
         
-        # Install SwiftLint
-        brew install swiftlint
-        
-        # Install SwiftFormat
-        brew install swiftformat
+        # Install other build tools
+        echo "Installing build tools via Homebrew..."
+        brew install xcbeautify swiftlint swiftformat
+        echo "All tools installed successfully"
 
     - name: Generate Xcode project
+      env:
+        CI: true
       run: ./scripts/generate-xcproj.sh
 
     - name: Lint code
@@ -67,49 +70,55 @@ jobs:
 
     - name: Build app
       id: build
-      env:
-        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
-        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
       run: |
-        # Build the app with code signing if certificate is available
-        if [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
-          echo "Building with code signing..."
-          ./scripts/build.sh --configuration Release --sign
-        else
-          echo "Building without code signing..."
-          ./scripts/build.sh --configuration Release
-        fi
+        echo "Building VibeMeter..."
+        ./scripts/build.sh --configuration Release
         
         # Get version info
         APP_PATH="build/Build/Products/Release/VibeMeter.app"
+        if [ ! -d "$APP_PATH" ]; then
+          echo "Error: VibeMeter.app not found at expected path"
+          echo "Looking for VibeMeter.app in build directory:"
+          find build -name "VibeMeter.app" -type d || echo "No VibeMeter.app found"
+          exit 1
+        fi
+        
         VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
         BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP_PATH/Contents/Info.plist")
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
         echo "BUILD=${BUILD}" >> $GITHUB_OUTPUT
         echo "APP_PATH=${APP_PATH}" >> $GITHUB_OUTPUT
+        echo "✅ Build successful: $APP_PATH (v$VERSION build $BUILD)"
 
     - name: Run tests
       run: |
         xcodebuild test \
           -workspace VibeMeter.xcworkspace \
           -scheme VibeMeter \
-          -destination 'platform=macOS' \
+          -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
+          -test-iterations 1 \
+          -maximum-parallel-testing-workers 1 \
           | xcbeautify
-      continue-on-error: true
 
-    - name: Notarize app
+    - name: Sign and Notarize app
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
       env:
         APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
         APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
+        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
       run: |
-        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" ]]; then
-          echo "Notarizing app..."
-          ./scripts/notarize-app.sh "${{ steps.build.outputs.APP_PATH }}"
+        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" && -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Both signing and notarization credentials available - performing full signing and notarization..."
+          ./scripts/sign-and-notarize.sh --app-path "${{ steps.build.outputs.APP_PATH }}" --sign-and-notarize --verbose
+        elif [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Only signing credentials available - performing code signing only..."
+          ./scripts/sign-and-notarize.sh --app-path "${{ steps.build.outputs.APP_PATH }}" --sign-only --verbose
         else
-          echo "Skipping notarization - credentials not configured"
+          echo "⚠️ No signing or notarization credentials configured - skipping signing/notarization"
+          echo "The unsigned app will still be uploaded as an artifact for testing"
         fi
 
     - name: Create DMG
@@ -126,6 +135,7 @@ jobs:
         path: |
           ${{ steps.build.outputs.APP_PATH }}
           ${{ steps.dmg.outputs.DMG_PATH }}
+          build/VibeMeter-notarized.zip
         retention-days: 14
 
     - name: Comment on PR
