@@ -47,14 +47,23 @@ jobs:
     - name: Install build tools
       run: |
         # Install Tuist
+        echo "Installing Tuist..."
         curl -L https://install.tuist.io | bash
         echo "Tuist installation completed"
         
         # Verify Tuist is installed and accessible
-        tuist --version
+        echo "Verifying Tuist installation..."
+        tuist --version || {
+          echo "Tuist installation failed, trying alternative..."
+          which tuist || echo "tuist not found in PATH"
+          ls -la /usr/local/bin/tuist || echo "tuist not in /usr/local/bin"
+          exit 1
+        }
         
         # Install other build tools
+        echo "Installing build tools via Homebrew..."
         brew install xcbeautify swiftlint swiftformat
+        echo "All tools installed successfully"
 
     - name: Generate Xcode project
       env:
