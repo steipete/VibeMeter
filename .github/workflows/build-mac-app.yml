@@ -70,11 +70,7 @@ jobs:
 
     - name: Build app
       id: build
-      env:
-        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
-        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
       run: |
-        # Build without code signing (CI doesn't have certificates configured)
         echo "Building VibeMeter..."
         ./scripts/build.sh --configuration Release
         
@@ -105,18 +101,24 @@ jobs:
           -maximum-parallel-testing-workers 1 \
           | xcbeautify
 
-    - name: Notarize app
+    - name: Sign and Notarize app
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
       env:
         APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
         APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
+        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
       run: |
-        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" ]]; then
-          echo "Notarizing app..."
-          ./scripts/notarize-app.sh "${{ steps.build.outputs.APP_PATH }}"
+        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" && -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Both signing and notarization credentials available - performing full signing and notarization..."
+          ./scripts/sign-and-notarize.sh --app-path "${{ steps.build.outputs.APP_PATH }}" --sign-and-notarize --verbose
+        elif [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Only signing credentials available - performing code signing only..."
+          ./scripts/sign-and-notarize.sh --app-path "${{ steps.build.outputs.APP_PATH }}" --sign-only --verbose
         else
-          echo "Skipping notarization - credentials not configured"
+          echo "⚠️ No signing or notarization credentials configured - skipping signing/notarization"
+          echo "The unsigned app will still be uploaded as an artifact for testing"
         fi
 
     - name: Create DMG
@@ -133,6 +135,7 @@ jobs:
         path: |
           ${{ steps.build.outputs.APP_PATH }}
           ${{ steps.dmg.outputs.DMG_PATH }}
+          build/VibeMeter-notarized.zip
         retention-days: 14
 
     - name: Comment on PR

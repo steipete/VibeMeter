@@ -38,20 +38,30 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 ### Distribution
 ```bash
 # Build release version
-./scripts/build.sh
+./scripts/build.sh --configuration Release
 
-# Code sign the app
-./scripts/codesign-app.sh
+# Code sign and notarize (requires Apple Developer credentials)
+./scripts/sign-and-notarize.sh --sign-and-notarize
+
+# Or just code sign for development
+./scripts/sign-and-notarize.sh --sign-only
 
 # Create DMG
 ./scripts/create-dmg.sh
 
-# Notarize the app
-./scripts/notarize-app.sh
-
-# Test notarization
-./scripts/test-notarization.sh
+# Individual scripts (if needed)
+./scripts/codesign-app.sh build/Build/Products/Release/VibeMeter.app
+./scripts/notarize-app.sh build/Build/Products/Release/VibeMeter.app
 ```
+
+### Code Signing & Notarization Setup
+
+For distribution, you need Apple Developer credentials. See `docs/SIGNING-AND-NOTARIZATION.md` for detailed setup instructions.
+
+Required environment variables for notarization:
+- `APP_STORE_CONNECT_API_KEY_P8` - App Store Connect API key content
+- `APP_STORE_CONNECT_KEY_ID` - API Key ID  
+- `APP_STORE_CONNECT_ISSUER_ID` - API Key Issuer ID
 
 ## Architecture
 
