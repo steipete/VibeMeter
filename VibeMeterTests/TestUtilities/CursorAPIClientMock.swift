@@ -59,7 +59,8 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
     }
 
     func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> CursorAPIClient
-        .MonthlyInvoiceResponse {
+        .MonthlyInvoiceResponse
+    {
         fetchMonthlyInvoiceCallCount += 1
         lastAuthTokenForInvoice = authToken
         lastMonthForInvoice = month

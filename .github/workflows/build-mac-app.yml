@@ -93,10 +93,11 @@ jobs:
         xcodebuild test \
           -workspace VibeMeter.xcworkspace \
           -scheme VibeMeter \
-          -destination 'platform=macOS' \
+          -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
+          -test-iterations 1 \
+          -maximum-parallel-testing-workers 1 \
           | xcbeautify
-      continue-on-error: true
 
     - name: Notarize app
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')

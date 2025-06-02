@@ -2,6 +2,7 @@ import Combine
 @testable import VibeMeter
 import XCTest
 
+@MainActor
 class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     var dataCoordinator: RealDataCoordinator!
 
@@ -19,11 +20,12 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
 
     override func setUp() {
         super.setUp()
-        cancellables = []
-        testUserDefaults = UserDefaults(suiteName: testSuiteName)
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
+        let suite = UserDefaults(suiteName: testSuiteName)
+        suite?.removePersistentDomain(forName: testSuiteName)
         
-        DispatchQueue.main.sync {
+        MainActor.assumeIsolated {
+            cancellables = []
+            testUserDefaults = suite
             // 1. Setup mock SettingsManager (as it's used by other mocks too)
             SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
             mockSettingsManager = SettingsManager.shared
@@ -61,7 +63,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     }
 
     override func tearDown() {
-        DispatchQueue.main.sync {
+        MainActor.assumeIsolated {
             dataCoordinator = nil
             mockLoginManager = nil
             mockSettingsManager = nil
@@ -69,74 +71,64 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             mockApiClient = nil
             mockNotificationManager = nil
             SettingsManager._test_clearSharedInstance()
+            testUserDefaults.removePersistentDomain(forName: testSuiteName)
+            testUserDefaults = nil
+            cancellables = nil
         }
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
-        testUserDefaults = nil
-        cancellables = nil
         super.tearDown()
     }
 
     // MARK: - Currency Conversion & Display Tests
 
     func testCurrencyChange_UpdatesConvertedValuesAndSymbol() async {
-        DispatchQueue.main.sync {
-            _ = keychainMockForLoginManager.saveToken("test-token")
-            dataCoordinator.isLoggedIn = true
-            dataCoordinator.currentSpendingUSD = 100.0
-            mockSettingsManager.warningLimitUSD = 50.0
-            mockSettingsManager.upperLimitUSD = 150.0
+        _ = keychainMockForLoginManager.saveToken("test-token")
+        dataCoordinator.isLoggedIn = true
+        dataCoordinator.currentSpendingUSD = 100.0
+        mockSettingsManager.warningLimitUSD = 50.0
+        mockSettingsManager.upperLimitUSD = 150.0
 
-            mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.9, "GBP": 0.8]
-        }
-        
+        mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.9, "GBP": 0.8]
+
         await dataCoordinator.forceRefreshData(showSyncedMessage: false)
 
-        DispatchQueue.main.sync {
-            XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "USD")
-            XCTAssertEqual(dataCoordinator.currentSpendingConverted, 100.0)
-            XCTAssertEqual(dataCoordinator.warningLimitConverted, 50.0)
-            XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "$")
+        XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "USD")
+        XCTAssertEqual(dataCoordinator.currentSpendingConverted, 100.0)
+        XCTAssertEqual(dataCoordinator.warningLimitConverted, 50.0)
+        XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "$")
 
-            // Act: Change currency in SettingsManager (which DataCoordinator observes)
-            mockSettingsManager.selectedCurrencyCode = "EUR"
-        }
-        
+        // Act: Change currency in SettingsManager (which DataCoordinator observes)
+        mockSettingsManager.selectedCurrencyCode = "EUR"
+
         // Allow sink block to execute
         try? await Task.sleep(nanoseconds: 100_000_000)
 
         // Assert
-        DispatchQueue.main.sync {
-            XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "EUR")
-            XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "€")
-            XCTAssertEqual(dataCoordinator.currentSpendingConverted!, 100.0 * 0.9, accuracy: 0.01)
-            XCTAssertEqual(dataCoordinator.warningLimitConverted!, 50.0 * 0.9, accuracy: 0.01)
-            XCTAssertEqual(dataCoordinator.upperLimitConverted!, 150.0 * 0.9, accuracy: 0.01)
-            XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€90.00 / €45.00")
-        }
+        XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "EUR")
+        XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "€")
+        XCTAssertEqual(dataCoordinator.currentSpendingConverted!, 100.0 * 0.9, accuracy: 0.01)
+        XCTAssertEqual(dataCoordinator.warningLimitConverted!, 50.0 * 0.9, accuracy: 0.01)
+        XCTAssertEqual(dataCoordinator.upperLimitConverted!, 150.0 * 0.9, accuracy: 0.01)
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€90.00 / €45.00")
     }
 
     func testExchangeRatesUnavailable_DisplaysInUSD() async {
-        DispatchQueue.main.sync {
-            _ = keychainMockForLoginManager.saveToken("test-token")
-            dataCoordinator.isLoggedIn = true
-            dataCoordinator.currentSpendingUSD = 120.0
-            mockSettingsManager.warningLimitUSD = 80.0
-            mockSettingsManager.selectedCurrencyCode = "EUR"
+        _ = keychainMockForLoginManager.saveToken("test-token")
+        dataCoordinator.isLoggedIn = true
+        dataCoordinator.currentSpendingUSD = 120.0
+        mockSettingsManager.warningLimitUSD = 80.0
+        mockSettingsManager.selectedCurrencyCode = "EUR"
 
-            mockExchangeRateManager.ratesToReturn = nil
-            mockExchangeRateManager.errorToReturn = NSError(domain: "test", code: 1)
-        }
+        mockExchangeRateManager.ratesToReturn = nil
+        mockExchangeRateManager.errorToReturn = NSError(domain: "test", code: 1)
 
         await dataCoordinator.forceRefreshData(showSyncedMessage: false)
 
-        DispatchQueue.main.sync {
-            XCTAssertFalse(dataCoordinator.exchangeRatesAvailable)
-            XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "EUR")
-            XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "$")
-            XCTAssertEqual(dataCoordinator.currentSpendingConverted, 120.0)
-            XCTAssertEqual(dataCoordinator.warningLimitConverted, 80.0)
-            XCTAssertEqual(dataCoordinator.menuBarDisplayText, "$120.00 / $80.00")
-            XCTAssertEqual(dataCoordinator.lastErrorMessage, "Rates MIA! Showing USD for now. ✨")
-        }
+        XCTAssertFalse(dataCoordinator.exchangeRatesAvailable)
+        XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "EUR")
+        XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "$")
+        XCTAssertEqual(dataCoordinator.currentSpendingConverted, 120.0)
+        XCTAssertEqual(dataCoordinator.warningLimitConverted, 80.0)
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "$120.00 / $80.00")
+        XCTAssertEqual(dataCoordinator.lastErrorMessage, "Rates MIA! Showing USD for now. ✨")
     }
 }

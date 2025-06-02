@@ -91,13 +91,13 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
             XCTFail("Should have thrown an APIError.networkError")
         } catch let error as CursorAPIClient.APIError {
             if case let .networkError(errorDetails) = error {
-        XCTAssertEqual(
-            errorDetails.statusCode,
-            500,
-            "Error details should contain the status code"
-        )
+                XCTAssertEqual(
+                    errorDetails.statusCode,
+                    500,
+                    "Error details should contain the status code"
+                )
             } else {
-        XCTFail("Incorrect APIError type, expected .networkError")
+                XCTFail("Incorrect APIError type, expected .networkError")
             }
         } catch {
             XCTFail("Unexpected error type: \(error)")
