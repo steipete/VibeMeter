@@ -51,7 +51,6 @@ jobs:
         echo "Tuist installation completed"
         
         # Verify Tuist is installed and accessible
-        export PATH=$PATH:~/.tuist/bin
         tuist --version || echo "Tuist not found in PATH"
         which tuist || echo "Tuist command not found"
         
@@ -67,12 +66,7 @@ jobs:
     - name: Generate Xcode project
       env:
         CI: true
-      run: |
-        export PATH=$PATH:~/.tuist/bin
-        echo "Current PATH: $PATH"
-        which tuist || echo "Tuist still not found"
-        tuist --version || echo "Cannot run tuist --version"
-        ./scripts/generate-xcproj.sh
+      run: ./scripts/generate-xcproj.sh
 
     - name: Lint code
       run: ./scripts/lint.sh
