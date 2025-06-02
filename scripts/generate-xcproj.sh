@@ -11,6 +11,9 @@ if [[ "${CI:-}" != "true" ]]; then
 fi
 
 echo "Generating Xcode project with Tuist..."
+if [[ "${CI:-}" == "true" ]]; then
+    export PATH=$PATH:~/.tuist/bin
+fi
 tuist generate --no-open
 
 echo "Patching generated files for Swift 6 Sendable compliance..."
