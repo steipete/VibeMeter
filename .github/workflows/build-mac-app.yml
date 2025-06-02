@@ -52,7 +52,7 @@ jobs:
         
         # Verify Tuist installation
         echo "Verifying Tuist installation..."
-        tuist --version
+        tuist --help > /dev/null
         
         # Install other build tools
         echo "Installing build tools via Homebrew..."
