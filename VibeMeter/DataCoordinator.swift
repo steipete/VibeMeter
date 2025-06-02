@@ -5,9 +5,9 @@ import Foundation
 class RealDataCoordinator: DataCoordinatorProtocol {
     // Managers - now using protocols where applicable, or concrete if testability is handled within them
     private let loginManager: LoginManager // Using concrete LoginManager for now
-    private let apiClient: CursorAPIClientProtocol
+    internal let apiClient: CursorAPIClientProtocol
     let settingsManager: SettingsManagerProtocol
-    private let exchangeRateManager: ExchangeRateManagerProtocol
+    internal let exchangeRateManager: ExchangeRateManagerProtocol
     private let notificationManager: NotificationManagerProtocol
     // weak var menuBarController: MenuBarController? // Retain if direct calls are needed beyond observation
 

@@ -10,12 +10,12 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
 
     var teamInfoToReturn: (id: Int, name: String)? = (123, "Mock Team")
     var userInfoToReturn: CursorAPIClient.UserInfoResponse? = CursorAPIClient
-        .UserInfoResponse(email: "mock@example.com")
+        .UserInfoResponse(email: "mock@example.com", teamId: 12345)
     var monthlyInvoiceToReturn: CursorAPIClient.MonthlyInvoiceResponse? = CursorAPIClient
         .MonthlyInvoiceResponse(items: [
             CursorAPIClient.InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
             CursorAPIClient.InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
-        ])
+        ], pricingDescription: nil)
 
     // MARK: - Controllable Errors
 
@@ -81,11 +81,11 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
         fetchMonthlyInvoiceCallCount = 0
 
         teamInfoToReturn = (123, "Mock Team")
-        userInfoToReturn = CursorAPIClient.UserInfoResponse(email: "mock@example.com")
+        userInfoToReturn = CursorAPIClient.UserInfoResponse(email: "mock@example.com", teamId: 12345)
         monthlyInvoiceToReturn = CursorAPIClient.MonthlyInvoiceResponse(items: [
             CursorAPIClient.InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
             CursorAPIClient.InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
-        ])
+        ], pricingDescription: nil)
 
         errorToThrow = nil
         teamInfoError = nil
