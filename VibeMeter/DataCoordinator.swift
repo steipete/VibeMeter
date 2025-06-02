@@ -6,7 +6,7 @@ class RealDataCoordinator: DataCoordinatorProtocol {
     // Managers - now using protocols where applicable, or concrete if testability is handled within them
     private let loginManager: LoginManager // Using concrete LoginManager for now
     internal let apiClient: CursorAPIClientProtocol
-    let settingsManager: SettingsManagerProtocol
+    let settingsManager: any SettingsManagerProtocol
     internal let exchangeRateManager: ExchangeRateManagerProtocol
     private let notificationManager: NotificationManagerProtocol
     // weak var menuBarController: MenuBarController? // Retain if direct calls are needed beyond observation
@@ -34,7 +34,7 @@ class RealDataCoordinator: DataCoordinatorProtocol {
 
     init(
         loginManager: LoginManager, // Keep concrete for now, or use LoginManagerProtocol if created
-        settingsManager: SettingsManagerProtocol,
+        settingsManager: any SettingsManagerProtocol,
         exchangeRateManager: ExchangeRateManagerProtocol,
         apiClient: CursorAPIClientProtocol,
         notificationManager: NotificationManagerProtocol

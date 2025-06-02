@@ -19,7 +19,7 @@ protocol DataCoordinatorProtocol: ObservableObject {
     var lastErrorMessage: String? { get } // For displaying errors in Settings or menu
     var teamIdFetchFailed: Bool { get } // Specific state for team ID fetch failure
     var currentExchangeRates: [String: Double] { get } // Expose current rates
-    var settingsManager: SettingsManagerProtocol { get } // Expose settings manager
+    var settingsManager: any SettingsManagerProtocol { get } // Expose settings manager
 
     // Actions
     func forceRefreshData(showSyncedMessage: Bool) async
@@ -33,7 +33,7 @@ protocol DataCoordinatorProtocol: ObservableObject {
 // Companion object for shared instance and testability
 @MainActor
 class DataCoordinator {
-    static var shared: DataCoordinatorProtocol = RealDataCoordinator(
+    static var shared: any DataCoordinatorProtocol = RealDataCoordinator(
         // Initialize with real shared instances of dependencies
         // These dependencies themselves are now using the shared/protocol pattern
         loginManager: LoginManager(
