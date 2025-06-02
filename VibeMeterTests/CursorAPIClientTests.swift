@@ -1,35 +1,37 @@
 @testable import VibeMeter
 import XCTest
 
-class CursorAPIClientTests: XCTestCase {
+class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
     var apiClient: RealCursorAPIClient!
     var mockURLSession: MockURLSession!
     var testUserDefaults: UserDefaults!
     var settingsManager: SettingsManager!
     let testSuiteName = "com.vibemeter.tests.CursorAPIClientTests"
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        testUserDefaults = UserDefaults(suiteName: testSuiteName)
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
-
-        // Setup SettingsManager with testUserDefaults
-        // Tests for CursorAPIClient might depend on teamId being set in SettingsManager
-        SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
-        settingsManager = SettingsManager.shared
-
-        mockURLSession = MockURLSession()
-        apiClient = CursorAPIClient.__init(session: mockURLSession, settingsManager: settingsManager)
+    override func setUp() {
+        super.setUp()
+        MainActor.assumeIsolated {
+            testUserDefaults = UserDefaults(suiteName: testSuiteName)
+            testUserDefaults.removePersistentDomain(forName: testSuiteName)
+            // Setup SettingsManager with testUserDefaults
+            // Tests for CursorAPIClient might depend on teamId being set in SettingsManager
+            SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
+            settingsManager = SettingsManager.shared
+            mockURLSession = MockURLSession()
+            apiClient = CursorAPIClient.__init(session: mockURLSession, settingsManager: settingsManager)
+        }
     }
 
-    override func tearDownWithError() throws {
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
-        testUserDefaults = nil
-        apiClient = nil
-        mockURLSession = nil
-        settingsManager = nil
-        SettingsManager._test_clearSharedInstance()
-        try super.tearDownWithError()
+    override func tearDown() {
+        MainActor.assumeIsolated {
+            testUserDefaults.removePersistentDomain(forName: testSuiteName)
+            testUserDefaults = nil
+            apiClient = nil
+            mockURLSession = nil
+            settingsManager = nil
+            SettingsManager._test_clearSharedInstance()
+        }
+        super.tearDown()
     }
 
     // MARK: - Helper to create mock responses
@@ -45,6 +47,7 @@ class CursorAPIClientTests: XCTestCase {
 
     // MARK: - Fetch Team Info Tests
 
+    @MainActor
     func testFetchTeamInfoSuccessfully() async throws {
         let mockTeamData = CursorAPIClient.TeamInfoResponse(teams: [CursorAPIClient.Team(id: 123, name: "Test Team")])
         let mockData = try JSONEncoder().encode(mockTeamData)
@@ -62,6 +65,7 @@ class CursorAPIClientTests: XCTestCase {
         XCTAssertEqual(mockURLSession.lastRequest?.httpMethod, "POST")
     }
 
+    @MainActor
     func testFetchTeamInfoEmptyTeamsArray() async {
         let mockTeamData = CursorAPIClient.TeamInfoResponse(teams: [])
         let mockData = try? JSONEncoder().encode(mockTeamData)
@@ -78,6 +82,7 @@ class CursorAPIClientTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testFetchTeamInfoHttpError() async {
         mockURLSession.nextResponse = createMockResponse(statusCode: 500, data: nil)
 
@@ -86,19 +91,20 @@ class CursorAPIClientTests: XCTestCase {
             XCTFail("Should have thrown an APIError.networkError")
         } catch let error as CursorAPIClient.APIError {
             if case let .networkError(errorDetails) = error {
-                XCTAssertEqual(
-                    errorDetails.statusCode,
-                    500,
-                    "Error details should contain the status code"
-                )
+        XCTAssertEqual(
+            errorDetails.statusCode,
+            500,
+            "Error details should contain the status code"
+        )
             } else {
-                XCTFail("Incorrect APIError type, expected .networkError")
+        XCTFail("Incorrect APIError type, expected .networkError")
             }
         } catch {
             XCTFail("Unexpected error type: \(error)")
         }
     }
 
+    @MainActor
     func testFetchTeamInfoDecodingError() async {
         let malformedData = Data("{\"invalid\": \"json\"}".utf8)
         mockURLSession.nextData = malformedData
@@ -116,8 +122,9 @@ class CursorAPIClientTests: XCTestCase {
 
     // MARK: - Fetch User Info Tests
 
+    @MainActor
     func testFetchUserInfoSuccessfully() async throws {
-        let mockUserData = CursorAPIClient.UserInfoResponse(email: "test@example.com")
+        let mockUserData = CursorAPIClient.UserInfoResponse(email: "test@example.com", teamId: nil)
         let mockData = try JSONEncoder().encode(mockUserData)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = createMockResponse(statusCode: 200, data: mockData)
@@ -134,19 +141,20 @@ class CursorAPIClientTests: XCTestCase {
 
     // MARK: - Fetch Monthly Invoice Tests
 
+    @MainActor
     func testFetchMonthlyInvoiceSuccessfully() async throws {
         settingsManager.teamId = 123 // Prerequisite for this call
         let mockInvoiceData = CursorAPIClient.MonthlyInvoiceResponse(items: [
             CursorAPIClient.InvoiceItem(cents: 1000, description: "Usage 1"),
             CursorAPIClient.InvoiceItem(cents: 250, description: "Usage 2"),
-        ])
+        ], pricingDescription: nil)
         let mockData = try JSONEncoder().encode(mockInvoiceData)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = createMockResponse(statusCode: 200, data: mockData)
 
         let invoiceResponse = try await apiClient.fetchMonthlyInvoice(authToken: "testToken", month: 10, year: 2023)
-        XCTAssertEqual(invoiceResponse.items.count, 2)
-        XCTAssertEqual(invoiceResponse.items[0].cents, 1000)
+        XCTAssertEqual(invoiceResponse.items?.count, 2)
+        XCTAssertEqual(invoiceResponse.items?[0].cents, 1000)
         XCTAssertEqual(invoiceResponse.totalSpendingCents, 1250)
         XCTAssertEqual(
             mockURLSession.lastURL?.absoluteString,
@@ -165,6 +173,7 @@ class CursorAPIClientTests: XCTestCase {
         XCTAssertTrue(decodedBody?.includeUsageEvents ?? false) // Should be true as set in implementation
     }
 
+    @MainActor
     func testFetchMonthlyInvoiceNoTeamId() async {
         settingsManager.teamId = nil // Ensure no teamId
         do {
@@ -177,20 +186,22 @@ class CursorAPIClientTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testFetchMonthlyInvoiceEmptyItems() async throws {
         settingsManager.teamId = 123
-        let mockInvoiceData = CursorAPIClient.MonthlyInvoiceResponse(items: [])
+        let mockInvoiceData = CursorAPIClient.MonthlyInvoiceResponse(items: [], pricingDescription: nil)
         let mockData = try JSONEncoder().encode(mockInvoiceData)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = createMockResponse(statusCode: 200, data: mockData)
 
         let invoiceResponse = try await apiClient.fetchMonthlyInvoice(authToken: "testToken", month: 10, year: 2023)
-        XCTAssertTrue(invoiceResponse.items.isEmpty)
+        XCTAssertTrue(invoiceResponse.items?.isEmpty ?? true)
         XCTAssertEqual(invoiceResponse.totalSpendingCents, 0)
     }
 
     // MARK: - Unauthorized Error Handling (Applies to all calls)
 
+    @MainActor
     func testApiCallReturnsUnauthorized() async {
         mockURLSession.nextResponse = createMockResponse(statusCode: 401, data: nil)
 

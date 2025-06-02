@@ -7,13 +7,14 @@ import WebKit
 
 // MARK: - Mock Cookie Store
 
+@MainActor
 public class MockHTTPCookieStore: HTTPCookieStoreContract {
     public var cookiesToReturn: [HTTPCookie] = []
     public var getAllCookiesCallCount = 0
 
     public init() {}
 
-    public func getAllCookies(_ completionHandler: @escaping ([HTTPCookie]) -> Void) {
+    public func getAllCookies(_ completionHandler: @escaping @MainActor @Sendable ([HTTPCookie]) -> Void) {
         getAllCookiesCallCount += 1
         completionHandler(cookiesToReturn)
     }
