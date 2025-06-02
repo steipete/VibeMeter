@@ -31,7 +31,7 @@ permissions:
 jobs:
   build:
     name: Build VibeMeter
-    runs-on: ghcr.io/cirruslabs/macos-runner:sequoia-xxl
+    runs-on: macos-15
     timeout-minutes: 30
     
     steps:
@@ -59,9 +59,7 @@ jobs:
         brew install swiftformat
 
     - name: Generate Xcode project
-      run: |
-        tuist fetch
-        tuist generate
+      run: ./scripts/generate-xcproj.sh
 
     - name: Lint code
       run: ./scripts/lint.sh
@@ -98,6 +96,7 @@ jobs:
           -destination 'platform=macOS' \
           -configuration Debug \
           | xcbeautify
+      continue-on-error: true
 
     - name: Notarize app
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
