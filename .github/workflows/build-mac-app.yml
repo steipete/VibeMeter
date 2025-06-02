@@ -51,14 +51,15 @@ jobs:
         curl -L https://install.tuist.io | bash
         echo "Tuist installation completed"
         
-        # Verify Tuist is installed and accessible
+        # Verify Tuist is installed - use TUIST_DISABLE_AUTO_UPDATE to avoid corruption issues
         echo "Verifying Tuist installation..."
-        tuist --version || {
-          echo "Tuist installation failed, trying alternative..."
-          which tuist || echo "tuist not found in PATH"
-          ls -la /usr/local/bin/tuist || echo "tuist not in /usr/local/bin"
+        export TUIST_DISABLE_AUTO_UPDATE=true
+        tuist --help > /dev/null 2>&1 || {
+          echo "Tuist verification failed. Attempting manual setup..."
+          ls -la /usr/local/bin/tuist
           exit 1
         }
+        echo "Tuist verified successfully"
         
         # Install other build tools
         echo "Installing build tools via Homebrew..."
@@ -68,6 +69,7 @@ jobs:
     - name: Generate Xcode project
       env:
         CI: true
+        TUIST_DISABLE_AUTO_UPDATE: true
       run: ./scripts/generate-xcproj.sh
 
     - name: Lint code
