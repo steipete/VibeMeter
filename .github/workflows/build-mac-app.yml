@@ -1,0 +1,180 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      notarize:
+        description: 'Notarize the app'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      create_release:
+        description: 'Create a GitHub release'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build VibeMeter
+    runs-on: ghcr.io/cirruslabs/macos-runner:sequoia-xxl
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        xcodebuild -version
+        swift --version
+
+    - name: Install build tools
+      run: |
+        # Install Tuist
+        curl -L https://install.tuist.io | bash
+        
+        # Install xcbeautify
+        brew install xcbeautify
+        
+        # Install SwiftLint
+        brew install swiftlint
+        
+        # Install SwiftFormat
+        brew install swiftformat
+
+    - name: Generate Xcode project
+      run: |
+        tuist fetch
+        tuist generate
+
+    - name: Lint code
+      run: ./scripts/lint.sh
+      continue-on-error: true
+
+    - name: Build app
+      id: build
+      env:
+        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
+        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
+      run: |
+        # Build the app with code signing if certificate is available
+        if [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Building with code signing..."
+          ./scripts/build.sh --configuration Release --sign
+        else
+          echo "Building without code signing..."
+          ./scripts/build.sh --configuration Release
+        fi
+        
+        # Get version info
+        APP_PATH="build/Build/Products/Release/VibeMeter.app"
+        VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
+        BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP_PATH/Contents/Info.plist")
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "BUILD=${BUILD}" >> $GITHUB_OUTPUT
+        echo "APP_PATH=${APP_PATH}" >> $GITHUB_OUTPUT
+
+    - name: Run tests
+      run: |
+        xcodebuild test \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS' \
+          -configuration Debug \
+          | xcbeautify
+
+    - name: Notarize app
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
+      env:
+        APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      run: |
+        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" ]]; then
+          echo "Notarizing app..."
+          ./scripts/notarize-app.sh "${{ steps.build.outputs.APP_PATH }}"
+        else
+          echo "Skipping notarization - credentials not configured"
+        fi
+
+    - name: Create DMG
+      id: dmg
+      run: |
+        ./scripts/create-dmg.sh "${{ steps.build.outputs.APP_PATH }}"
+        DMG_PATH="build/VibeMeter-${{ steps.build.outputs.VERSION }}.dmg"
+        echo "DMG_PATH=${DMG_PATH}" >> $GITHUB_OUTPUT
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: VibeMeter-${{ steps.build.outputs.VERSION }}-${{ github.sha }}
+        path: |
+          ${{ steps.build.outputs.APP_PATH }}
+          ${{ steps.dmg.outputs.DMG_PATH }}
+        retention-days: 14
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const version = '${{ steps.build.outputs.VERSION }}';
+          const build = '${{ steps.build.outputs.BUILD }}';
+          const sha = context.sha.substring(0, 7);
+          const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          
+          const body = `### ✅ Build Successful!
+          
+          **Version:** ${version} (${build})
+          **Commit:** ${sha}
+          
+          [Download artifacts](${artifactUrl})
+          
+          The build artifacts will be available for 14 days.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+    - name: Create Release
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.build.outputs.VERSION }}
+        name: VibeMeter v${{ steps.build.outputs.VERSION }}
+        draft: true
+        prerelease: false
+        files: |
+          ${{ steps.dmg.outputs.DMG_PATH }}
+        body: |
+          ## What's New
+          
+          <!-- Add release notes here -->
+          
+          ## Downloads
+          
+          - **VibeMeter.dmg** - Notarized disk image for macOS
+          
+          ### Requirements
+          
+          - macOS 12.0 or later
+          - Apple Silicon or Intel Mac

@@ -1,0 +1,47 @@
+disabled_rules:
+  - trailing_comma # Allow trailing commas for better git diffs
+  - identifier_name # Allow shorter names like 'ui' and test functions with underscores
+  - force_cast # Allow force casts in tests
+  - force_try # Allow force try in tests
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+
+excluded:
+  - Derived
+  - .build
+  - Package.swift
+  - VibeMeter.xcodeproj
+  - VibeMeter.xcworkspace
+
+line_length:
+  warning: 120
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 400
+  error: 600
+
+function_body_length:
+  warning: 50
+  error: 100
+
+type_body_length:
+  warning: 250
+  error: 400
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 50
+  excluded:
+    - id
+    - ui
+    - _test_setSharedInstance
+    - _test_resetSharedInstance

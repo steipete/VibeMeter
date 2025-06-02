@@ -1,45 +1,90 @@
-# VibeMeter
+# Vibe Meter
 
-A menu bar app to track AI tool spending, specifically designed for monitoring Cursor costs in real-time.
-
-## About
-
-VibeMeter was created to solve a simple problem: keeping track of rapidly growing AI development tool costs. With monthly Cursor bills approaching $900, this app provides real-time monitoring and configurable spending alerts.
-
-Read more about the project's origin and development philosophy in [The Future of Vibe Coding](https://steipete.me/posts/2025/the-future-of-vibe-coding).
-
-## Project Structure
-
-This repository contains two parallel implementations:
-
-### 🍎 Native Mac App (`mac-app/`)
-- **Technology**: Swift 6 + SwiftUI
-- **Features**: Native macOS menu bar integration, keychain storage, system notifications
-- **Status**: More complete implementation with full feature set
-
-### ⚡ Cross-Platform App (`electron-app/`)
-- **Technology**: Electron + TypeScript + React
-- **Features**: Cross-platform compatibility, web-based UI
-- **Status**: Basic functionality implemented, less polished than Mac version
+A native macOS menu bar application for monitoring your monthly spending on Cursor AI.
 
 ## Features
 
-- Real-time Cursor spending tracking
-- Configurable warning thresholds ($200, $1000)
-- Monthly cost monitoring
-- Currency conversion support
-- Launch at startup
-- Secure credential storage
-- User notifications
+- 📊 Real-time spending tracking in your menu bar
+- 💰 Multi-currency support (USD, EUR, GBP, JPY, and more)
+- 🔔 Customizable spending limit notifications
+- 🔐 Secure authentication via Cursor's web login
+- ⚡ Lightweight native Swift app with minimal resource usage
 
-## Development Status
+## Requirements
 
-⚠️ **This project is unfinished** - it was developed as a prototype during a live 3-hour workshop demonstrating AI-assisted development. While functional, it requires further refinement and polish before production use.
+- macOS 14.0 or later
+- Xcode 15.0 or later (for building)
+- [Tuist](https://tuist.io) (for project generation)
 
-## Development Philosophy
+## Building the Project
 
-VibeMeter exemplifies "vibe coding" - a collaborative approach to development using AI tools like Cursor, Gemini, and Claude. The entire codebase was created through AI assistance, showcasing the potential of human-AI collaboration in software development.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/steipete/VibeMeter.git
+   cd VibeMeter
+   ```
+
+2. **Generate the Xcode project:**
+   ```bash
+   ./scripts/generate-xcproj.sh
+   ```
+
+3. **Build and run:**
+   - Open `VibeMeter.xcworkspace` in Xcode
+   - Select the VibeMeter scheme
+   - Press ⌘R to build and run
+
+## Development
+
+### Project Structure
+
+- `VibeMeter/` - Main application code
+- `VibeMeterTests/` - Unit tests
+- `scripts/` - Build and distribution scripts
+- `docs/` - Additional documentation
+
+### Key Commands
+
+```bash
+# Generate Xcode project
+./scripts/generate-xcproj.sh
+
+# Format code
+./scripts/format.sh
+
+# Run linter
+./scripts/lint.sh
+
+# Run tests
+xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter test
+```
+
+### Architecture
+
+VibeMeter follows a clean architecture pattern with:
+- **DataCoordinator** - Central state management
+- **Service Layer** - API client, settings, notifications
+- **UI Layer** - Menu bar controller and SwiftUI settings
+
+## Distribution
+
+For signed and notarized builds:
+
+```bash
+./scripts/build.sh
+./scripts/codesign-app.sh
+./scripts/create-dmg.sh
+./scripts/notarize-app.sh
+```
+
+## Blog Post
+
+Read about the development process: [Building a native macOS app with AI](https://steipete.com/posts/vibemeter/)
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
+
+## Author
+
+Peter Steinberger ([@steipete](https://twitter.com/steipete)) 

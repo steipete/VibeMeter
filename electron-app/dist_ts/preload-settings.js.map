@@ -1,1 +1,0 @@
-{"version":3,"file":"preload-settings.js","sourceRoot":"","sources":["../preload-settings.ts"],"names":[],"mappings":";;AAAA,uCAAsD;AAkBtD,MAAM,UAAU,GAAgB;IAC9B,iBAAiB,EAAE,GAAG,EAAE,CAAC,sBAAW,CAAC,MAAM,CAAC,cAAc,CAAC;IAC3D,gBAAgB,EAAE,QAAQ,CAAC,EAAE,CAAC,sBAAW,CAAC,IAAI,CAAC,eAAe,EAAE,QAAQ,CAAC;CAC1E,CAAC;AAEF,wBAAa,CAAC,iBAAiB,CAAC,aAAa,EAAE,UAAU,CAAC,CAAC"}
