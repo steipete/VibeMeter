@@ -66,6 +66,18 @@ VibeMeter follows a clean architecture pattern with:
 - **Service Layer** - API client, settings, notifications
 - **UI Layer** - Menu bar controller and SwiftUI settings
 
+## CI/CD Pipeline
+
+This project includes automated CI/CD with GitHub Actions:
+
+- 🔄 **Automated building and testing** on every PR and push to main
+- 🔐 **Code signing and notarization** for release builds  
+- 🧹 **SwiftLint and SwiftFormat** integration for code quality
+- 📦 **Artifact generation** with downloadable DMG files
+- 💬 **PR comments** with build status and download links
+
+See [docs/CI-SETUP.md](docs/CI-SETUP.md) for setup instructions.
+
 ## Distribution
 
 For signed and notarized builds:
@@ -76,6 +88,8 @@ For signed and notarized builds:
 ./scripts/create-dmg.sh
 ./scripts/notarize-app.sh
 ```
+
+Or use GitHub Actions for automated builds.
 
 ## Blog Post
 
