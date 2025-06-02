@@ -51,17 +51,10 @@ jobs:
         echo "Tuist installation completed"
         
         # Verify Tuist is installed and accessible
-        tuist --version || echo "Tuist not found in PATH"
-        which tuist || echo "Tuist command not found"
+        tuist --version
         
-        # Install xcbeautify
-        brew install xcbeautify
-        
-        # Install SwiftLint
-        brew install swiftlint
-        
-        # Install SwiftFormat
-        brew install swiftformat
+        # Install other build tools
+        brew install xcbeautify swiftlint swiftformat
 
     - name: Generate Xcode project
       env:
@@ -78,22 +71,25 @@ jobs:
         MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
         MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
       run: |
-        # Build the app with code signing if certificate is available
-        if [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
-          echo "Building with code signing..."
-          ./scripts/build.sh --configuration Release --sign
-        else
-          echo "Building without code signing..."
-          ./scripts/build.sh --configuration Release
-        fi
+        # Build without code signing (CI doesn't have certificates configured)
+        echo "Building VibeMeter..."
+        ./scripts/build.sh --configuration Release
         
         # Get version info
         APP_PATH="build/Build/Products/Release/VibeMeter.app"
+        if [ ! -d "$APP_PATH" ]; then
+          echo "Error: VibeMeter.app not found at expected path"
+          echo "Looking for VibeMeter.app in build directory:"
+          find build -name "VibeMeter.app" -type d || echo "No VibeMeter.app found"
+          exit 1
+        fi
+        
         VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
         BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP_PATH/Contents/Info.plist")
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
         echo "BUILD=${BUILD}" >> $GITHUB_OUTPUT
         echo "APP_PATH=${APP_PATH}" >> $GITHUB_OUTPUT
+        echo "✅ Build successful: $APP_PATH (v$VERSION build $BUILD)"
 
     - name: Run tests
       run: |
