@@ -9,19 +9,19 @@ struct LoggedInContentView: View {
         VStack(spacing: 0) {
             // Header section - more compact
             UserHeaderView(userSessionData: userSessionData)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 12)
+                .padding(.horizontal, 14)
+                .padding(.top, 10)
+                .padding(.bottom, 10)
 
             Divider()
                 .overlay(Color.white.opacity(0.08))
 
             // Content section - reduced spacing
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 CostTableView(settingsManager: settingsManager)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
 
             Spacer(minLength: 8)
 
@@ -31,8 +31,8 @@ struct LoggedInContentView: View {
                     .overlay(Color.white.opacity(0.1))
 
                 ActionButtonsView(onRefresh: onRefresh)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
             }
         }
     }

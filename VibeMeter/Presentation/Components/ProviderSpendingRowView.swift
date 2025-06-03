@@ -11,7 +11,7 @@ struct ProviderSpendingRowView: View {
     private var currencyData
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             mainProviderRow
 
             if let providerData = spendingData.getSpendingData(for: provider),
@@ -19,8 +19,8 @@ struct ProviderSpendingRowView: View {
                 usageDataRow(usage: usage)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
@@ -32,7 +32,7 @@ struct ProviderSpendingRowView: View {
     }
 
     private var mainProviderRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Provider icon with consistent sizing
             Group {
                 if provider.iconName.contains(".") {
@@ -47,11 +47,11 @@ struct ProviderSpendingRowView: View {
                 }
             }
             .foregroundStyle(provider.accentColor)
-            .frame(width: 20, height: 20)
+            .frame(width: 18, height: 18)
 
             // Provider name
             Text(provider.displayName)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -59,33 +59,33 @@ struct ProviderSpendingRowView: View {
             Group {
                 if let providerData = spendingData.getSpendingData(for: provider),
                    let spending = providerData.displaySpending {
-                    Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    Text("\(currencyData.selectedSymbol)\(spending.formatted(.number.precision(.fractionLength(2))))")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 } else {
                     Text("--")
-                        .font(.system(size: 14))
+                        .font(.system(size: 13))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .frame(minWidth: 60, alignment: .trailing)
+            .frame(minWidth: 50, alignment: .trailing)
         }
     }
 
     private func usageDataRow(usage: ProviderUsageData) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Align with icon column above
             Color.clear
-                .frame(width: 20)
+                .frame(width: 18)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Label("\(usage.currentRequests) / \(usage.maxRequests ?? 0)",
                       systemImage: "chart.bar.fill")
-                    .font(.system(size: 11))
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
 
                 Text("requests")
-                    .font(.system(size: 11))
+                    .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
 
                 Spacer()
@@ -95,8 +95,8 @@ struct ProviderSpendingRowView: View {
                     let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
                     ProgressView(value: progress)
                         .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
-                        .frame(width: 80, height: 6)
-                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 3))
+                        .frame(width: 60, height: 4)
+                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 2))
                 }
             }
         }
