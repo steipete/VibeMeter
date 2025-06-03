@@ -6,26 +6,25 @@ final class CursorProviderTests: XCTestCase {
     private var cursorProvider: CursorProvider!
     private var mockURLSession: MockURLSession!
     private var mockSettingsManager: MockSettingsManager!
-    
+
     override func setUp() {
         super.setUp()
         mockURLSession = MockURLSession()
         mockSettingsManager = MockSettingsManager()
         cursorProvider = CursorProvider(
             settingsManager: mockSettingsManager,
-            urlSession: mockURLSession
-        )
+            urlSession: mockURLSession)
     }
-    
+
     override func tearDown() {
         cursorProvider = nil
         mockURLSession = nil
         mockSettingsManager = nil
         super.tearDown()
     }
-    
+
     // MARK: - Team Info Tests
-    
+
     func testFetchTeamInfo_Success() async throws {
         // Given
         let mockTeamsData = """
@@ -38,31 +37,32 @@ final class CursorProviderTests: XCTestCase {
             ]
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockTeamsData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-        
+
         // Then
         XCTAssertEqual(teamInfo.id, 123)
         XCTAssertEqual(teamInfo.name, "Test Team")
         XCTAssertEqual(teamInfo.provider, .cursor)
-        
+
         // Verify request was correctly formed
         XCTAssertEqual(mockURLSession.lastRequest?.httpMethod, "POST")
-        XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"), "WorkosCursorSessionToken=test-token")
+        XCTAssertEqual(
+            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"),
+            "WorkosCursorSessionToken=test-token")
         XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type"), "application/json")
     }
-    
+
     func testFetchTeamInfo_NoTeamsFound() async {
         // Given
         let mockEmptyTeamsData = """
@@ -70,17 +70,16 @@ final class CursorProviderTests: XCTestCase {
             "teams": []
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockEmptyTeamsData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
@@ -89,19 +88,18 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .noTeamFound)
         }
     }
-    
+
     func testFetchTeamInfo_UnauthorizedError() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
             statusCode: 401,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = Data()
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "invalid-token")
@@ -110,9 +108,9 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .unauthorized)
         }
     }
-    
+
     // MARK: - User Info Tests
-    
+
     func testFetchUserInfo_Success() async throws {
         // Given
         let mockUserData = """
@@ -121,31 +119,32 @@ final class CursorProviderTests: XCTestCase {
             "teamId": 456
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUserData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-        
+
         // Then
         XCTAssertEqual(userInfo.email, "test@example.com")
         XCTAssertEqual(userInfo.teamId, 456)
         XCTAssertEqual(userInfo.provider, .cursor)
-        
+
         // Verify request was correctly formed (GET request)
         XCTAssertEqual(mockURLSession.lastRequest?.httpMethod, "GET")
-        XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"), "WorkosCursorSessionToken=test-token")
+        XCTAssertEqual(
+            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"),
+            "WorkosCursorSessionToken=test-token")
         XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept"), "application/json")
     }
-    
+
     func testFetchUserInfo_WithoutTeamId() async throws {
         // Given
         let mockUserData = """
@@ -153,28 +152,27 @@ final class CursorProviderTests: XCTestCase {
             "email": "test@example.com"
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUserData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-        
+
         // Then
         XCTAssertEqual(userInfo.email, "test@example.com")
         XCTAssertNil(userInfo.teamId)
         XCTAssertEqual(userInfo.provider, .cursor)
     }
-    
+
     // MARK: - Monthly Invoice Tests
-    
+
     func testFetchMonthlyInvoice_WithProvidedTeamId() async throws {
         // Given
         let mockInvoiceData = """
@@ -195,25 +193,23 @@ final class CursorProviderTests: XCTestCase {
             }
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let invoice = try await cursorProvider.fetchMonthlyInvoice(
             authToken: "test-token",
             month: 11,
             year: 2023,
-            teamId: 789
-        )
-        
+            teamId: 789)
+
         // Then
         XCTAssertEqual(invoice.items.count, 2)
         XCTAssertEqual(invoice.items[0].cents, 2500)
@@ -224,11 +220,11 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(invoice.month, 11)
         XCTAssertEqual(invoice.year, 2023)
         XCTAssertEqual(invoice.provider, .cursor)
-        
+
         XCTAssertNotNil(invoice.pricingDescription)
         XCTAssertEqual(invoice.pricingDescription?.description, "Pro Plan")
         XCTAssertEqual(invoice.pricingDescription?.id, "pro-plan-123")
-        
+
         // Verify request body
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
@@ -236,70 +232,66 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
         XCTAssertEqual(bodyJSON?["teamId"] as? Int, 789)
     }
-    
+
     func testFetchMonthlyInvoice_WithStoredTeamId() async throws {
         // Given
         mockSettingsManager.sessions[.cursor] = ProviderSession(
             email: "test@example.com",
             teamId: 999,
-            provider: .cursor
-        )
-        
+            provider: .cursor)
+
         let mockInvoiceData = """
         {
             "items": [],
             "pricing_description": null
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let invoice = try await cursorProvider.fetchMonthlyInvoice(
             authToken: "test-token",
             month: 5,
             year: 2023,
-            teamId: nil
-        )
-        
+            teamId: nil)
+
         // Then
         XCTAssertEqual(invoice.items.count, 0)
         XCTAssertEqual(invoice.totalSpendingCents, 0)
         XCTAssertNil(invoice.pricingDescription)
-        
+
         // Verify stored team ID was used
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         XCTAssertEqual(bodyJSON?["teamId"] as? Int, 999)
     }
-    
+
     func testFetchMonthlyInvoice_NoTeamIdAvailable() async {
         // Given - no stored team ID and none provided
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchMonthlyInvoice(
                 authToken: "test-token",
                 month: 5,
                 year: 2023,
-                teamId: nil
-            )
+                teamId: nil)
             XCTFail("Should have thrown teamIdNotSet error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .teamIdNotSet)
         }
     }
-    
+
     // MARK: - Usage Data Tests
-    
+
     func testFetchUsageData_Success() async throws {
         // Given
         let mockUsageData = """
@@ -328,31 +320,30 @@ final class CursorProviderTests: XCTestCase {
             "start_of_month": "2023-12-01T00:00:00Z"
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/usage")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUsageData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
-        
+
         // Then
         XCTAssertEqual(usageData.currentRequests, 25) // Uses GPT-4 as primary
         XCTAssertEqual(usageData.totalRequests, 50)
         XCTAssertEqual(usageData.maxRequests, 100)
         XCTAssertEqual(usageData.provider, .cursor)
-        
+
         // Verify date parsing
         let expectedDate = ISO8601DateFormatter().date(from: "2023-12-01T00:00:00Z")!
         XCTAssertEqual(usageData.startOfMonth, expectedDate)
     }
-    
+
     func testFetchUsageData_InvalidDateFormat() async throws {
         // Given
         let mockUsageData = """
@@ -381,27 +372,26 @@ final class CursorProviderTests: XCTestCase {
             "start_of_month": "invalid-date"
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/usage")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUsageData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
-        
+
         // Then - should use current date as fallback
         let timeDifference = abs(usageData.startOfMonth.timeIntervalSinceNow)
         XCTAssertLessThan(timeDifference, 60) // Within 1 minute of now
     }
-    
+
     // MARK: - Token Validation Tests
-    
+
     func testValidateToken_ValidToken() async {
         // Given
         let mockUserData = """
@@ -410,131 +400,128 @@ final class CursorProviderTests: XCTestCase {
             "teamId": 456
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUserData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let isValid = await cursorProvider.validateToken(authToken: "valid-token")
-        
+
         // Then
         XCTAssertTrue(isValid)
     }
-    
+
     func testValidateToken_InvalidToken() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 401,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = Data()
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         let isValid = await cursorProvider.validateToken(authToken: "invalid-token")
-        
+
         // Then
         XCTAssertFalse(isValid)
     }
-    
+
     func testValidateToken_NetworkError() async {
         // Given
         mockURLSession.nextError = NSError(domain: "NetworkError", code: -1009, userInfo: nil)
-        
+
         // When
         let isValid = await cursorProvider.validateToken(authToken: "test-token")
-        
+
         // Then
         XCTAssertFalse(isValid)
     }
-    
+
     // MARK: - Authentication URL Tests
-    
+
     func testGetAuthenticationURL() async {
         // When
         let authURL = await cursorProvider.getAuthenticationURL()
-        
+
         // Then
         XCTAssertEqual(authURL.absoluteString, "https://authenticator.cursor.sh/")
     }
-    
+
     // MARK: - Token Extraction Tests
-    
+
     func testExtractAuthToken_FromCookies() async {
         // Given
         let cookie = HTTPCookie(properties: [
             .name: "WorkosCursorSessionToken",
             .value: "extracted-token-123",
             .domain: ".cursor.com",
-            .path: "/"
+            .path: "/",
         ])!
-        
+
         let callbackData: [String: Any] = [
-            "cookies": [cookie]
+            "cookies": [cookie],
         ]
-        
+
         // When
         let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
-        
+
         // Then
         XCTAssertEqual(extractedToken, "extracted-token-123")
     }
-    
+
     func testExtractAuthToken_NoCookies() async {
         // Given
         let callbackData: [String: Any] = [:]
-        
+
         // When
         let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
-        
+
         // Then
         XCTAssertNil(extractedToken)
     }
-    
+
     func testExtractAuthToken_WrongCookieName() async {
         // Given
         let cookie = HTTPCookie(properties: [
             .name: "SomeOtherCookie",
             .value: "some-value",
             .domain: ".cursor.com",
-            .path: "/"
+            .path: "/",
         ])!
-        
+
         let callbackData: [String: Any] = [
-            "cookies": [cookie]
+            "cookies": [cookie],
         ]
-        
+
         // When
         let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
-        
+
         // Then
         XCTAssertNil(extractedToken)
     }
-    
+
     // MARK: - Error Handling Tests
-    
+
     func testNetworkError_RateLimitExceeded() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 429,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = Data()
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
@@ -543,19 +530,18 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .rateLimitExceeded)
         }
     }
-    
+
     func testNetworkError_ServiceUnavailable() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 503,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = Data()
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
@@ -564,21 +550,20 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .serviceUnavailable)
         }
     }
-    
+
     func testNetworkError_DecodingError() async {
         // Given - invalid JSON
         let invalidJSON = "{ invalid json }".data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = invalidJSON
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
@@ -591,7 +576,7 @@ final class CursorProviderTests: XCTestCase {
             }
         }
     }
-    
+
     func testNetworkError_SpecificErrorResponse() async {
         // Given
         let errorResponse = """
@@ -608,17 +593,16 @@ final class CursorProviderTests: XCTestCase {
             }
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
             statusCode: 400,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = errorResponse
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
@@ -627,21 +611,20 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .noTeamFound)
         }
     }
-    
+
     func testNetworkError_500WithTeamNotFound() async {
         // Given
         let errorMessage = "Team not found in database".data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
             statusCode: 500,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = errorMessage
         mockURLSession.nextResponse = mockResponse
-        
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
@@ -650,21 +633,20 @@ final class CursorProviderTests: XCTestCase {
             XCTAssertEqual(error, .noTeamFound)
         }
     }
-    
+
     func testNetworkError_GenericNetworkFailure() async {
         // Given
         mockURLSession.nextError = NSError(
             domain: NSURLErrorDomain,
             code: NSURLErrorTimedOut,
-            userInfo: [NSLocalizedDescriptionKey: "Request timed out"]
-        )
-        
+            userInfo: [NSLocalizedDescriptionKey: "Request timed out"])
+
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
             XCTFail("Should have thrown network error")
         } catch let error as ProviderError {
-            if case .networkError(let message, let statusCode) = error {
+            if case let .networkError(message, statusCode) = error {
                 XCTAssertTrue(message.contains("timed out"))
                 XCTAssertNil(statusCode)
             } else {
@@ -672,9 +654,9 @@ final class CursorProviderTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Request Configuration Tests
-    
+
     func testRequestConfiguration() async throws {
         // Given
         let mockUserData = """
@@ -682,30 +664,29 @@ final class CursorProviderTests: XCTestCase {
             "email": "test@example.com"
         }
         """.data(using: .utf8)!
-        
+
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil
-        )!
-        
+            headerFields: nil)!
+
         mockURLSession.nextData = mockUserData
         mockURLSession.nextResponse = mockResponse
-        
+
         // When
         _ = try await cursorProvider.fetchUserInfo(authToken: "test-auth-token")
-        
+
         // Then
         let request = try XCTUnwrap(mockURLSession.lastRequest)
-        
+
         // Verify headers
         XCTAssertEqual(request.value(forHTTPHeaderField: "Cookie"), "WorkosCursorSessionToken=test-auth-token")
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
-        
+
         // Verify timeout
         XCTAssertEqual(request.timeoutInterval, 30)
-        
+
         // Verify URL
         XCTAssertEqual(request.url?.absoluteString, "https://www.cursor.com/api/auth/me")
     }
@@ -719,60 +700,60 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var currencies: [ServiceProvider: String] = [:]
     var refreshIntervals: [ServiceProvider: TimeInterval] = [:]
     var notificationSettings: [ServiceProvider: Bool] = [:]
-    
+
     func getSession(for provider: ServiceProvider) async -> ProviderSession? {
         sessions[provider]
     }
-    
+
     func setSession(_ session: ProviderSession, for provider: ServiceProvider) async {
         sessions[provider] = session
     }
-    
+
     func clearSession(for provider: ServiceProvider) async {
         sessions.removeValue(forKey: provider)
     }
-    
+
     func getSpendingLimit(for provider: ServiceProvider) async -> Int {
         spendingLimits[provider] ?? 2000
     }
-    
+
     func setSpendingLimit(_ limit: Int, for provider: ServiceProvider) async {
         spendingLimits[provider] = limit
     }
-    
+
     func getCurrency(for provider: ServiceProvider) async -> String {
         currencies[provider] ?? "USD"
     }
-    
+
     func setCurrency(_ currency: String, for provider: ServiceProvider) async {
         currencies[provider] = currency
     }
-    
+
     func getRefreshInterval(for provider: ServiceProvider) async -> TimeInterval {
         refreshIntervals[provider] ?? 3600
     }
-    
+
     func setRefreshInterval(_ interval: TimeInterval, for provider: ServiceProvider) async {
         refreshIntervals[provider] = interval
     }
-    
+
     func getNotificationsEnabled(for provider: ServiceProvider) async -> Bool {
         notificationSettings[provider] ?? true
     }
-    
+
     func setNotificationsEnabled(_ enabled: Bool, for provider: ServiceProvider) async {
         notificationSettings[provider] = enabled
     }
-    
+
     // Multi-provider methods
     func getAllSessions() async -> [ServiceProvider: ProviderSession] {
         sessions
     }
-    
+
     func getAllSpendingLimits() async -> [ServiceProvider: Int] {
         spendingLimits
     }
-    
+
     func getAllCurrencies() async -> [ServiceProvider: String] {
         currencies
     }
