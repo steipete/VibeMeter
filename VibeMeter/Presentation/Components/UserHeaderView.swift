@@ -4,24 +4,24 @@ struct UserHeaderView: View {
     let userSessionData: MultiProviderUserSessionData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
+        HStack(spacing: 12) {
+            UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    if let email = userSessionData.mostRecentSession?.userEmail {
-                        Text(email)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                    }
-
-                    Text(providerCountText)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                if let email = userSessionData.mostRecentSession?.userEmail {
+                    Text(email)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
 
-                Spacer()
+                Text(providerCountText)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
             }
+
+            Spacer()
         }
     }
 

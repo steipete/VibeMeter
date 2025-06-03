@@ -19,11 +19,11 @@ struct ProviderSpendingRowView: View {
                 usageDataRow(usage: usage)
             }
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(selectedProvider == provider ? Color.white.opacity(0.1) : Color.clear))
+            RoundedRectangle(cornerRadius: 8)
+                .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProvider = hovering ? provider : nil
@@ -32,61 +32,69 @@ struct ProviderSpendingRowView: View {
     }
 
     private var mainProviderRow: some View {
-        HStack(spacing: 0) {
-            // Icon column - fixed width to align with "Total Spending" label
-            Image(systemName: provider.iconName)
-                .font(.system(size: 14))
-                .foregroundStyle(provider.accentColor)
-                .frame(width: 20, alignment: .leading)
+        HStack(spacing: 12) {
+            // Provider icon with consistent sizing
+            Group {
+                if provider.iconName.contains(".") {
+                    Image(systemName: provider.iconName)
+                } else {
+                    Image(provider.iconName)
+                }
+            }
+            .font(.system(size: 16))
+            .foregroundStyle(provider.accentColor)
+            .frame(width: 20, height: 20)
 
-            // Provider name column - aligned with "Total Spending" text
+            // Provider name
             Text(provider.displayName)
-                .font(.system(size: 12))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 8)
 
-            // Amount column - aligned with total spending amount
-            if let providerData = spendingData.getSpendingData(for: provider),
-               let spending = providerData.displaySpending {
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.primary)
-            } else {
-                Text("--")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.tertiary)
+            // Amount with consistent number formatting
+            Group {
+                if let providerData = spendingData.getSpendingData(for: provider),
+                   let spending = providerData.displaySpending {
+                    Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                } else {
+                    Text("--")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.tertiary)
+                }
             }
+            .frame(minWidth: 60, alignment: .trailing)
         }
     }
 
     private func usageDataRow(usage: ProviderUsageData) -> some View {
-        HStack(spacing: 0) {
-            // Icon space to align with provider icon above
+        HStack(spacing: 12) {
+            // Align with icon column above
             Color.clear
                 .frame(width: 20)
 
             HStack(spacing: 8) {
                 Label("\(usage.currentRequests) / \(usage.maxRequests ?? 0)",
-                      systemImage: "number.circle")
-                    .font(.system(size: 10))
+                      systemImage: "chart.bar.fill")
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
 
                 Text("requests")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
 
                 Spacer()
 
-                // Usage bar
+                // Usage progress bar
                 if let maxRequests = usage.maxRequests, maxRequests > 0 {
                     let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
                     ProgressView(value: progress)
                         .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
-                        .frame(width: 60, height: 4)
+                        .frame(width: 80, height: 6)
+                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 3))
                 }
             }
-            .padding(.leading, 8)
         }
     }
 

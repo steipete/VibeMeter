@@ -12,7 +12,7 @@ struct CostTableView: View {
     private var selectedProvider: ServiceProvider?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             totalSpendingSection
 
             if !spendingData.providersWithData.isEmpty {
@@ -24,75 +24,91 @@ struct CostTableView: View {
     }
 
     private var totalSpendingSection: some View {
-        HStack {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Total Spending")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            Spacer()
+            HStack(alignment: .firstTextBaseline) {
+                if let totalSpending = currentSpendingDisplay {
+                    Text(totalSpending)
+                        .font(.system(size: 28, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                } else {
+                    Text("No data")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.tertiary)
+                }
 
-            if let totalSpending = currentSpendingDisplay {
-                Text(totalSpending)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.primary)
-            } else {
-                Text("No data")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.tertiary)
+                Spacer()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial))
     }
 
     private var providerBreakdownSection: some View {
-        VStack(spacing: 8) {
-            ForEach(spendingData.providersWithData, id: \.self) { provider in
-                ProviderSpendingRowView(
-                    provider: provider,
-                    selectedProvider: $selectedProvider)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Breakdown")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 20)
+
+            VStack(spacing: 2) {
+                ForEach(spendingData.providersWithData, id: \.self) { provider in
+                    ProviderSpendingRowView(
+                        provider: provider,
+                        selectedProvider: $selectedProvider)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
         }
-        .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial))
     }
 
     private var spendingLimitsSection: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Label("Warning", systemImage: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.orange)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Limits")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 20)
+            
+            VStack(spacing: 12) {
+                HStack {
+                    Label("Warning", systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer()
+                    Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedWarningLimit))")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
 
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedWarningLimit))")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.orange)
+                HStack {
+                    Label("Limit", systemImage: "xmark.octagon.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedUpperLimit))")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.red)
+                }
             }
-
-            HStack {
-                Label("Limit", systemImage: "xmark.octagon.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.red)
-
-                Spacer()
-
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedUpperLimit))")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.red)
-            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
         }
-        .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial))
     }
 
