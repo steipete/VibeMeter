@@ -31,6 +31,16 @@ struct ProvidersSettingsView: View {
                 } header: {
                     Text("Service Providers")
                         .font(.headline)
+                } footer: {
+                    HStack {
+                        Spacer()
+                        Text("Support for more providers is coming soon. Help appreciated.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                    .padding(.top, 8)
                 }
             }
             .formStyle(.grouped)
