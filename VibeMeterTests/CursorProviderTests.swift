@@ -86,6 +86,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown noTeamFound error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .noTeamFound)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -106,6 +108,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown unauthorized error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .unauthorized)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -235,7 +239,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchMonthlyInvoice_WithStoredTeamId() async throws {
         // Given
-        mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
+        await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
             teamId: 999,
             teamName: "Test Team",
@@ -289,6 +293,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown teamIdNotSet error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .teamIdNotSet)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -452,7 +458,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testGetAuthenticationURL() async {
         // When
-        let authURL = await cursorProvider.getAuthenticationURL()
+        let authURL = cursorProvider.getAuthenticationURL()
 
         // Then
         XCTAssertEqual(authURL.absoluteString, "https://authenticator.cursor.sh/")
@@ -474,7 +480,7 @@ final class CursorProviderTests: XCTestCase {
         ]
 
         // When
-        let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
+        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
         XCTAssertEqual(extractedToken, "extracted-token-123")
@@ -485,7 +491,7 @@ final class CursorProviderTests: XCTestCase {
         let callbackData: [String: Any] = [:]
 
         // When
-        let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
+        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
         XCTAssertNil(extractedToken)
@@ -505,7 +511,7 @@ final class CursorProviderTests: XCTestCase {
         ]
 
         // When
-        let extractedToken = await cursorProvider.extractAuthToken(from: callbackData)
+        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
         XCTAssertNil(extractedToken)
@@ -530,6 +536,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown rate limit error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .rateLimitExceeded)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -550,6 +558,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown service unavailable error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .serviceUnavailable)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -576,6 +586,8 @@ final class CursorProviderTests: XCTestCase {
             } else {
                 XCTFail("Expected decoding error, got \(error)")
             }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -611,6 +623,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown no team found error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .noTeamFound)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -633,6 +647,8 @@ final class CursorProviderTests: XCTestCase {
             XCTFail("Should have thrown no team found error")
         } catch let error as ProviderError {
             XCTAssertEqual(error, .noTeamFound)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -654,6 +670,8 @@ final class CursorProviderTests: XCTestCase {
             } else {
                 XCTFail("Expected network error, got \(error)")
             }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 

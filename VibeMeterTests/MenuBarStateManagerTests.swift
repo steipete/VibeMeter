@@ -6,13 +6,13 @@ final class MenuBarStateManagerTests: XCTestCase {
     var sut: MenuBarStateManager!
 
     override func setUp() async throws {
-        try await super.setUp()
+        await MainActor.run { super.setUp() }
         sut = MenuBarStateManager()
     }
 
     override func tearDown() async throws {
         sut = nil
-        try await super.tearDown()
+        await MainActor.run { super.tearDown() }
     }
 
     // MARK: - MenuBarState Tests

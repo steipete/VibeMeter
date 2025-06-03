@@ -8,16 +8,16 @@ final class NotificationManagerTests: XCTestCase {
     private var notificationManager: TestableNotificationManager!
     private var mockNotificationCenter: MockUNUserNotificationCenter!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        await MainActor.run { super.setUp() }
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         notificationManager = nil
         mockNotificationCenter = nil
-        super.tearDown()
+        await MainActor.run { super.tearDown() }
     }
 
     // MARK: - Authorization Tests
