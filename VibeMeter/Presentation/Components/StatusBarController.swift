@@ -106,8 +106,8 @@ final class StatusBarController: NSObject {
             // Ensure the image has the correct size
             nsImage.size = NSSize(width: 18, height: 18)
             button.image = nsImage
-            // Don't use template mode for now to see the actual rendering
-            button.image?.isTemplate = false
+            // Use template mode to ensure proper tinting for light/dark mode
+            button.image?.isTemplate = true
         } else {
             // Fallback to a system image if rendering fails
             print("GaugeIcon rendering failed, using fallback")

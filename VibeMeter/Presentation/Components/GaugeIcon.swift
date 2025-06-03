@@ -8,6 +8,8 @@ struct GaugeIcon: View {
     var isLoading: Bool = false
     var isDisabled: Bool = false
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     private let lineRatio   = 0.18          // stroke thickness vs. frame
     private let startAngle  = 210.0         // ° (left-down)
     private let sweepAngle  = -240.0        // clockwise span
