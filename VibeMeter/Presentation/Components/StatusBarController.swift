@@ -139,7 +139,12 @@ final class StatusBarController: NSObject {
                 to: currencyData.selectedCode,
                 rates: currencyData.effectiveRates)
 
-            button.title = "\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
+            // Update cost animation if spending changed
+            stateManager.setCostValue(spending)
+
+            // Use animated cost value for display with added spacing
+            let animatedSpending = stateManager.animatedCostValue
+            button.title = "  \(currencyData.selectedSymbol)\(String(format: "%.2f", animatedSpending))"
         } else {
             button.title = ""
         }
@@ -179,6 +184,7 @@ final class StatusBarController: NSObject {
                 // Only update frequently if animating, transitioning, or value changed
                 if self.stateManager.currentState.isAnimated ||
                     self.stateManager.isTransitioning ||
+                    self.stateManager.isCostTransitioning ||
                     abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001 {
                     self.updateStatusItemDisplay()
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
