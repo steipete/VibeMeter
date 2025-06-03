@@ -33,7 +33,9 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             testUserDefaults = suite
 
             // Setup mock SettingsManager
-            SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults, startupManager: StartupManagerMock())
+            SettingsManager._test_setSharedInstance(
+                userDefaults: testUserDefaults,
+                startupManager: StartupManagerMock())
             mockSettingsManager = SettingsManager.shared
 
             // Setup other mocks

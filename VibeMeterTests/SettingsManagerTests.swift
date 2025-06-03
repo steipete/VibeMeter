@@ -11,25 +11,27 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
     override func setUp() {
         super.setUp()
-        
+
         MainActor.assumeIsolated {
             // Clear any existing shared instance first
             SettingsManager._test_clearSharedInstance()
-            
+
             // Use a specific UserDefaults suite for testing
             let suite = UserDefaults(suiteName: testSuiteName)
             suite?.removePersistentDomain(forName: testSuiteName)
-            
+
             // Ensure we start fresh by clearing the suite entirely
-            if let suite = suite {
+            if let suite {
                 for key in Array(suite.dictionaryRepresentation().keys) {
                     suite.removeObject(forKey: key)
                 }
             }
-            
+
             testUserDefaults = suite
             // Configure the SettingsManager.shared instance to use our test UserDefaults
-            SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults, startupManager: StartupManagerMock())
+            SettingsManager._test_setSharedInstance(
+                userDefaults: testUserDefaults,
+                startupManager: StartupManagerMock())
             settingsManager = SettingsManager.shared
         }
     }
