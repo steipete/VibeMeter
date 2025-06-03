@@ -20,14 +20,6 @@ struct SpendingLimitsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(
-                        "Spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .padding(.bottom, 10)
-                }
-
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
                         LabeledContent("Amount") {
@@ -99,6 +91,17 @@ struct SpendingLimitsView: View {
                     Text("Upper Limit")
                         .font(.headline)
                 }
+
+                // Bottom explanatory text, centered
+                VStack {
+                    Text(
+                        "Spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 20)
+                }
+                .frame(maxWidth: .infinity)
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
