@@ -118,3 +118,27 @@ struct SpendingLimitsView: View {
             settingsManager.upperLimitUSD
     }
 }
+
+// MARK: - Preview
+
+#Preview("Spending Limits - USD") {
+    SpendingLimitsView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: MultiProviderUserSessionData()
+    )
+    .environment(CurrencyData())
+    .frame(width: 620, height: 500)
+}
+
+#Preview("Spending Limits - EUR") {
+    let currencyData = CurrencyData()
+    currencyData.selectedCode = "EUR"
+    currencyData.effectiveRates = ["EUR": 0.92]
+    
+    return SpendingLimitsView(
+        settingsManager: MockSettingsManager.withLimits(warning: 150, upper: 800),
+        userSessionData: MultiProviderUserSessionData()
+    )
+    .environment(currencyData)
+    .frame(width: 620, height: 500)
+}

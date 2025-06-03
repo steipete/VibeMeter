@@ -7,7 +7,7 @@ import SwiftUI
 /// menu bar display options, and dock visibility. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    let settingsManager: SettingsManager
+    let settingsManager: any SettingsManagerProtocol
 
     // Using @AppStorage for direct UserDefaults binding
     @AppStorage("launchAtLoginEnabled")
@@ -24,7 +24,7 @@ struct GeneralSettingsView: View {
     private let startupManager = StartupManager()
     private let currencyManager = CurrencyManager.shared
 
-    init(settingsManager: SettingsManager) {
+    init(settingsManager: any SettingsManagerProtocol) {
         self.settingsManager = settingsManager
     }
 
@@ -191,4 +191,11 @@ struct GeneralSettingsView: View {
             }
         }
     }
+}
+
+// MARK: - Preview
+
+#Preview("General Settings") {
+    GeneralSettingsView(settingsManager: MockSettingsManager())
+        .frame(width: 620, height: 550)
 }

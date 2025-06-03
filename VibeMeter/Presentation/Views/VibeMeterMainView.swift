@@ -80,33 +80,3 @@ struct VibeMeterMainView: View {
         .environment(CurrencyData())
 }
 
-// MARK: - Mock Settings Manager for Preview
-
-@MainActor
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var showCostInMenuBar: Bool = true
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
-    }
-}

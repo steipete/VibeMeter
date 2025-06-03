@@ -9,6 +9,7 @@ struct MultiProviderSettingsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager
+    let orchestrator: MultiProviderDataOrchestrator?
 
     @State
     private var showingProviderDetail: ServiceProvider?
@@ -40,7 +41,7 @@ struct MultiProviderSettingsView: View {
                 }
                 .tag(MultiProviderSettingsTab.limits)
 
-            AboutView()
+            AboutView(orchestrator: orchestrator)
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
@@ -99,33 +100,3 @@ enum MultiProviderSettingsTab: CaseIterable {
         .frame(width: 620, height: 500)
 }
 
-// MARK: - Mock Settings Manager for Preview
-
-@MainActor
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var showCostInMenuBar: Bool = true
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
-    }
-}

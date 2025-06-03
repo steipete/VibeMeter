@@ -79,3 +79,15 @@ struct LoggedOutContentView: View {
         NSApp.terminate(nil)
     }
 }
+
+// MARK: - Preview
+
+#Preview("Logged Out Content") {
+    LoggedOutContentView(
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+    .frame(width: 300, height: 350)
+    .background(.thickMaterial)
+}

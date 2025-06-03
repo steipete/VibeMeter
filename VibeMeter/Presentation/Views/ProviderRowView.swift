@@ -119,3 +119,70 @@ struct ProviderRowView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview("Provider Row - Logged In") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    return ProviderRowView(
+        provider: .cursor,
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        ),
+        providerRegistry: ProviderRegistry.shared,
+        showDetail: {}
+    )
+    .padding()
+    .frame(width: 600)
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("Provider Row - Not Connected") {
+    ProviderRowView(
+        provider: .cursor,
+        userSessionData: MultiProviderUserSessionData(),
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        ),
+        providerRegistry: ProviderRegistry.shared,
+        showDetail: {}
+    )
+    .padding()
+    .frame(width: 600)
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("Provider Row - With Error") {
+    let userSessionData = MultiProviderUserSessionData()
+    let session = ProviderSessionState(
+        isLoggedIn: false,
+        provider: .cursor,
+        userEmail: "user@example.com",
+        teamName: nil,
+        teamId: nil,
+        lastUpdated: Date(),
+        lastErrorMessage: "Authentication failed: Invalid credentials"
+    )
+    userSessionData.updateSession(session)
+    
+    return ProviderRowView(
+        provider: .cursor,
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        ),
+        providerRegistry: ProviderRegistry.shared,
+        showDetail: {}
+    )
+    .padding()
+    .frame(width: 600)
+    .background(Color(NSColor.windowBackgroundColor))
+}

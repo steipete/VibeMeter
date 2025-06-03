@@ -195,3 +195,35 @@ struct ProviderDetailView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview("Provider Detail - Logged In") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    return ProviderDetailView(
+        provider: .cursor,
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+}
+
+#Preview("Provider Detail - Not Logged In") {
+    ProviderDetailView(
+        provider: .cursor,
+        settingsManager: MockSettingsManager(),
+        userSessionData: MultiProviderUserSessionData(),
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+}

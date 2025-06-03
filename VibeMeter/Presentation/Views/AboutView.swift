@@ -7,6 +7,7 @@ import SwiftUI
 /// build details, developer credits, and links to external resources like
 /// GitHub repository and support channels.
 struct AboutView: View {
+    let orchestrator: MultiProviderDataOrchestrator?
     var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
@@ -18,6 +19,7 @@ struct AboutView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     appInfoSection
+                    systemStatusSection
                     descriptionSection
                     linksSection
 
@@ -26,7 +28,7 @@ struct AboutView: View {
                     copyrightSection
                 }
                 .frame(maxWidth: .infinity)
-                .padding()
+                .standardPadding()
             }
             .scrollContentBackground(.hidden)
             .navigationTitle("About VibeMeter")
@@ -156,4 +158,11 @@ extension View {
     func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
         modifier(PressEventModifier(onPress: onPress, onRelease: onRelease))
     }
+}
+
+// MARK: - Preview
+
+#Preview("About View") {
+    AboutView()
+        .frame(width: 620, height: 600)
 }

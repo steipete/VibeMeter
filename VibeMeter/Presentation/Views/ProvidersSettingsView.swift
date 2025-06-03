@@ -108,3 +108,42 @@ struct ProvidersSettingsView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview("Providers Settings - Multiple States") {
+    let userSessionData = MultiProviderUserSessionData()
+    @State var showingProviderDetail: ServiceProvider?
+    
+    // Set up one logged in provider
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    return ProvidersSettingsView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        ),
+        showingProviderDetail: $showingProviderDetail
+    )
+    .frame(width: 620, height: 400)
+}
+
+#Preview("Providers Settings - All Logged Out") {
+    @State var showingProviderDetail: ServiceProvider?
+    
+    return ProvidersSettingsView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: MultiProviderUserSessionData(),
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        ),
+        showingProviderDetail: $showingProviderDetail
+    )
+    .frame(width: 620, height: 400)
+}
