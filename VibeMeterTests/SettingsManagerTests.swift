@@ -69,8 +69,8 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Default launch at login should be false")
     }
 
-    func testDefaultShowCostInMenuBar() {
-        XCTAssertTrue(settingsManager.showCostInMenuBar, "Default show cost in menu bar should be true")
+    func testDefaultMenuBarDisplayMode() {
+        XCTAssertEqual(settingsManager.menuBarDisplayMode, .both, "Default menu bar display mode should be both")
     }
 
     func testDefaultShowInDock() {
@@ -115,12 +115,21 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to false")
     }
 
-    func testSettingShowCostInMenuBar() {
-        settingsManager.showCostInMenuBar = false
-        XCTAssertFalse(settingsManager.showCostInMenuBar, "Show cost in menu bar should be updated to false")
+    func testSettingMenuBarDisplayMode() {
+        settingsManager.menuBarDisplayMode = .iconOnly
+        XCTAssertEqual(
+            settingsManager.menuBarDisplayMode,
+            .iconOnly,
+            "Menu bar display mode should be updated to iconOnly")
 
-        settingsManager.showCostInMenuBar = true
-        XCTAssertTrue(settingsManager.showCostInMenuBar, "Show cost in menu bar should be updated to true")
+        settingsManager.menuBarDisplayMode = .moneyOnly
+        XCTAssertEqual(
+            settingsManager.menuBarDisplayMode,
+            .moneyOnly,
+            "Menu bar display mode should be updated to moneyOnly")
+
+        settingsManager.menuBarDisplayMode = .both
+        XCTAssertEqual(settingsManager.menuBarDisplayMode, .both, "Menu bar display mode should be updated to both")
     }
 
     func testSettingShowInDock() {
@@ -270,7 +279,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         existingUserDefaults.set(750.0, forKey: SettingsManager.Keys.upperLimitUSD)
         existingUserDefaults.set(15, forKey: SettingsManager.Keys.refreshIntervalMinutes)
         existingUserDefaults.set(true, forKey: SettingsManager.Keys.launchAtLoginEnabled)
-        existingUserDefaults.set(false, forKey: SettingsManager.Keys.showCostInMenuBar)
+        existingUserDefaults.set("icon", forKey: "menuBarDisplayMode")
         existingUserDefaults.set(true, forKey: SettingsManager.Keys.showInDock)
 
         // Initialize SettingsManager with these pre-populated UserDefaults
@@ -284,7 +293,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(managerWithExistingValues.upperLimitUSD, 750.0)
         XCTAssertEqual(managerWithExistingValues.refreshIntervalMinutes, 15)
         XCTAssertTrue(managerWithExistingValues.launchAtLoginEnabled)
-        XCTAssertFalse(managerWithExistingValues.showCostInMenuBar)
+        XCTAssertEqual(managerWithExistingValues.menuBarDisplayMode, .iconOnly)
         XCTAssertTrue(managerWithExistingValues.showInDock)
 
         existingUserDefaults.removePersistentDomain(forName: existingSuiteName)

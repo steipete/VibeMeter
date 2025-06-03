@@ -409,7 +409,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
             invoice: ProviderMonthlyInvoice,
             usage: ProviderUsageData)?.self) { group in
                 for i in 0 ..< callCount {
-                    group.addTask {
+                    group.addTask { [sut = self.sut] in
                         let provider = MockBackgroundProvider(provider: .cursor)
                         provider.userInfoToReturn = ProviderUserInfo(
                             email: "user\(i)@test.com",
@@ -417,7 +417,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
                             provider: .cursor)
 
                         do {
-                            return try await self.sut.processProviderData(
+                            return try await sut!.processProviderData(
                                 provider: .cursor,
                                 authToken: "token-\(i)",
                                 providerClient: provider)

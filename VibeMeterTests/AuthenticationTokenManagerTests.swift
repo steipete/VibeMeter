@@ -7,8 +7,8 @@ final class AuthenticationTokenManagerTests: XCTestCase {
     private var tokenManager: AuthenticationTokenManager!
     private var mockKeychainServices: [ServiceProvider: MockKeychainService] = [:]
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         setupMockKeychainServices()
 
         // Create token manager with mock keychain services
@@ -19,10 +19,10 @@ final class AuthenticationTokenManagerTests: XCTestCase {
         tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         tokenManager = nil
         mockKeychainServices.removeAll()
-        try await super.tearDown()
+        super.tearDown()
     }
 
     private func setupMockKeychainServices() {
@@ -395,7 +395,7 @@ final class AuthenticationTokenManagerTests: XCTestCase {
 
 // MARK: - Mock Keychain Service
 
-private class MockKeychainService: KeychainServicing {
+private final class MockKeychainService: KeychainServicing, @unchecked Sendable {
     var storedToken: String?
     var shouldFailSave = false
     var shouldFailGet = false

@@ -10,7 +10,7 @@ final class CursorProviderTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockURLSession = MockURLSession()
-        mockSettingsManager = MockSettingsManager()
+        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
         cursorProvider = CursorProvider(
             settingsManager: mockSettingsManager,
             urlSession: mockURLSession)
@@ -714,7 +714,6 @@ final class CursorProviderTests: XCTestCase {
 
 // MARK: - Mock Settings Manager
 
-@MainActor
 private class MockSettingsManager: SettingsManagerProtocol {
     var providerSessions: [ServiceProvider: ProviderSession] = [:]
     var selectedCurrencyCode: String = "USD"
@@ -722,7 +721,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var upperLimitUSD: Double = 500
     var refreshIntervalMinutes: Int = 5
     var launchAtLoginEnabled: Bool = false
-    var showCostInMenuBar: Bool = true
+    var menuBarDisplayMode: MenuBarDisplayMode = .both
     var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
 

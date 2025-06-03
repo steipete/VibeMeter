@@ -486,14 +486,16 @@ final class CurrencyConversionHelperTests: XCTestCase {
         // When - Perform concurrent operations on MainActor
         await withTaskGroup(of: Bool.self) { group in
             for i in 0 ..< taskCount {
-                group.addTask { @MainActor in
-                    let amount = Double(i * 10)
-                    let rate = 0.85
-                    let converted = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-                    let formatted = CurrencyConversionHelper.formatAmount(converted, currencySymbol: "$")
-                    let monthly = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: amount)
+                group.addTask {
+                    await MainActor.run {
+                        let amount = Double(i * 10)
+                        let rate = 0.85
+                        let converted = CurrencyConversionHelper.convert(amount: amount, rate: rate)
+                        let formatted = CurrencyConversionHelper.formatAmount(converted, currencySymbol: "$")
+                        let monthly = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: amount)
 
-                    return converted == amount * rate && !formatted.isEmpty && monthly == amount / 12.0
+                        return converted == amount * rate && !formatted.isEmpty && monthly == amount / 12.0
+                    }
                 }
             }
 
