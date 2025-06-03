@@ -51,7 +51,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(userSession.isLoggedInToAnyProvider)
         XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
         XCTAssertTrue(userSession.loggedInProviders.contains(.cursor))
-        
+
         let session = userSession.getSession(for: .cursor)
         XCTAssertNotNil(session)
         XCTAssertEqual(session?.userEmail, email)
@@ -76,7 +76,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         // Assert
         XCTAssertTrue(userSession.isLoggedInToAnyProvider)
         XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
-        
+
         let session = userSession.getSession(for: .cursor)
         XCTAssertNotNil(session)
         XCTAssertEqual(session?.userEmail, email)
@@ -115,7 +115,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
-        
+
         let session = userSession.getSession(for: .cursor)
         XCTAssertNotNil(session)
         XCTAssertFalse(session?.isLoggedIn ?? true)
@@ -138,7 +138,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         // Assert
         XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
         XCTAssertFalse(userSession.isLoggedInToAnyProvider)
-        
+
         let session = userSession.getSession(for: .cursor)
         XCTAssertNil(session?.lastErrorMessage) // Unauthorized errors clear the message
     }
@@ -158,7 +158,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(userSession.isLoggedInToAnyProvider)
         XCTAssertTrue(userSession.loggedInProviders.isEmpty)
         XCTAssertNil(userSession.mostRecentSession)
-        
+
         let session = userSession.getSession(for: .cursor)
         XCTAssertNil(session) // Session should be completely removed
     }
@@ -185,14 +185,18 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
     func testMostRecentSession_UpdatesWithLatestLogin() {
         // Arrange & Act - Login to Cursor first
         userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: "Cursor Team", teamId: 111)
-        
+
         // First login should be most recent
         XCTAssertEqual(userSession.mostRecentSession?.provider, .cursor)
         XCTAssertEqual(userSession.mostRecentSession?.userEmail, "cursor@example.com")
 
         // Update cursor login (should update most recent)
-        userSession.handleLoginSuccess(for: .cursor, email: "updated@example.com", teamName: "Updated Team", teamId: 222)
-        
+        userSession.handleLoginSuccess(
+            for: .cursor,
+            email: "updated@example.com",
+            teamName: "Updated Team",
+            teamId: 222)
+
         // Should still be cursor but with updated info
         XCTAssertEqual(userSession.mostRecentSession?.provider, .cursor)
         XCTAssertEqual(userSession.mostRecentSession?.userEmail, "updated@example.com")
@@ -202,7 +206,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
     func testLogout_WithMultipleProviders_OnlyAffectsTargetProvider() {
         // Arrange - Login to Cursor
         userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: "Cursor Team", teamId: 111)
-        
+
         XCTAssertTrue(userSession.isLoggedInToAnyProvider)
         XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
 
@@ -266,7 +270,7 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
     func testHandleLoginSuccess_OverwritesPreviousSession() {
         // Arrange
         userSession.handleLoginSuccess(for: .cursor, email: "old@example.com", teamName: "Old Team", teamId: 111)
-        
+
         // Verify first session
         let firstSession = userSession.getSession(for: .cursor)
         XCTAssertEqual(firstSession?.userEmail, "old@example.com")
