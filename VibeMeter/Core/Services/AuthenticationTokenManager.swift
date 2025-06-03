@@ -14,7 +14,7 @@ final class AuthenticationTokenManager {
     init() {
         setupKeychainHelpers()
     }
-    
+
     // For testing purposes
     init(keychainHelpers: [ServiceProvider: KeychainServicing]) {
         self.keychainHelpers = keychainHelpers

@@ -75,8 +75,9 @@ struct ProviderSpendingRowView: View {
                             from: "USD",
                             to: currencyData.selectedCode,
                             rates: currencyData.effectiveRates) ?? spendingUSD
-                    
-                    Text("\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
+
+                    Text(
+                        "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 } else {
