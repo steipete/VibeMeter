@@ -15,7 +15,9 @@ struct GaugeIcon: View {
     var body: some View {
         Canvas { ctx, size in
             let line      = size.width * lineRatio
-            let radius    = size.width / 2 - line / 2
+            // Add margin by reducing radius further
+            let margin    = size.width * 0.1 // 10% margin
+            let radius    = size.width / 2 - line / 2 - margin
             let center    = CGPoint(x: size.width / 2, y: size.height / 2)
             let endAngle  = startAngle + sweepAngle * value
             let trackPath = Path { p in
@@ -33,14 +35,15 @@ struct GaugeIcon: View {
                          clockwise:  true)
             }
             
-            // Only draw gauge if not disabled
+            // Draw track (always visible)
+            ctx.stroke(trackPath,
+                       with: .color(isDisabled ? Color.gray.opacity(0.4) : Color.gray.opacity(0.3)),
+                       style: StrokeStyle(lineWidth: line, lineCap: .round))
+            
+            // Only draw progress arc if not disabled
             if !isDisabled {
-                // track
-                ctx.stroke(trackPath,
-                           with: .color(.white.opacity(isLoading ? 0.15 : 0.25)),
-                           style: StrokeStyle(lineWidth: line, lineCap: .round))
                 
-                // coloured arc
+                // Progress arc with color
                 let fillColor = isLoading ? loadingColor(for: value) : color(for: value)
                 ctx.stroke(progPath,
                            with: .color(fillColor),
