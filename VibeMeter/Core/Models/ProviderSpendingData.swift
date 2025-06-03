@@ -189,10 +189,14 @@ public final class MultiProviderSpendingData {
     /// Gets total spending across all providers in the target currency.
     public func totalSpendingConverted(to currency: String, rates: [String: Double]) -> Double {
         let totalUSD = totalSpendingUSD
-        if currency == "USD" {
-            return totalUSD
-        }
+        guard currency != "USD" else { return totalUSD }
 
+        // Use direct conversion with fallback handling
+        if let rate = rates[currency] {
+            return totalUSD * rate
+        }
+        
+        // If no rate available, try ExchangeRateManager fallback
         return ExchangeRateManager.shared.convert(
             totalUSD,
             from: "USD",

@@ -1,6 +1,6 @@
 import AppKit
-import SwiftUI
 import os.log
+import SwiftUI
 
 @MainActor
 struct MenuBarContentView: View {
@@ -12,7 +12,7 @@ struct MenuBarContentView: View {
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
-    
+
     private let logger = Logger(subsystem: "com.vibemeter", category: "MenuBarContentView")
 
     var body: some View {
@@ -31,8 +31,12 @@ struct MenuBarContentView: View {
         .environment(currencyData)
         .onAppear {
             logger.info("MenuBarContentView appeared")
-            logger.info("Logged in providers: \(userSessionData.loggedInProviders.map { $0.displayName }.joined(separator: ", "))")
-            logger.info("Providers with data: \(spendingData.providersWithData.map { $0.displayName }.joined(separator: ", "))")
+            logger
+                .info(
+                    "Logged in providers: \(userSessionData.loggedInProviders.map(\.displayName).joined(separator: ", "))")
+            logger
+                .info(
+                    "Providers with data: \(spendingData.providersWithData.map(\.displayName).joined(separator: ", "))")
         }
     }
 }
@@ -48,7 +52,7 @@ struct LoggedInMenuContent: View {
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
-    
+
     private let logger = Logger(subsystem: "com.vibemeter", category: "LoggedInMenuContent")
 
     var body: some View {
@@ -155,7 +159,7 @@ struct LoggedInMenuContent: View {
 
         let totalSpending = spendingData.totalSpendingConverted(
             to: currencyData.selectedCode,
-            rates: currencyData.currentExchangeRates)
+            rates: currencyData.effectiveRates)
 
         return "\(currencyData.selectedSymbol)\(String(format: "%.2f", totalSpending))"
     }
@@ -249,12 +253,10 @@ private extension String {
         settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .environment(MultiProviderSpendingData())
-    .environment(CurrencyData())
-    .frame(width: 250)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .environment(MultiProviderSpendingData())
+        .environment(CurrencyData())
+        .frame(width: 250)
 }
 
 #Preview("Menu Bar - Logged In") {
@@ -263,9 +265,8 @@ private extension String {
         for: .cursor,
         email: "user@example.com",
         teamName: "Example Team",
-        teamId: 123
-    )
-    
+        teamId: 123)
+
     let spendingData = MultiProviderSpendingData()
     spendingData.updateSpending(
         for: .cursor,
@@ -274,22 +275,18 @@ private extension String {
             pricingDescription: nil,
             provider: .cursor,
             month: 5,
-            year: 2025
-        ),
+            year: 2025),
         rates: [:],
-        targetCurrency: "USD"
-    )
-    
+        targetCurrency: "USD")
+
     return MenuBarContentView(
         settingsManager: MockSettingsManager(),
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .environment(spendingData)
-    .environment(CurrencyData())
-    .frame(width: 250)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .environment(spendingData)
+        .environment(CurrencyData())
+        .frame(width: 250)
 }
 
 // MARK: - Mock Settings Manager for Preview
@@ -305,19 +302,19 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var showCostInMenuBar: Bool = true
     var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
-    
+
     func clearUserSessionData() {
         providerSessions.removeAll()
     }
-    
+
     func clearUserSessionData(for provider: ServiceProvider) {
         providerSessions.removeValue(forKey: provider)
     }
-    
+
     func getSession(for provider: ServiceProvider) -> ProviderSession? {
         providerSessions[provider]
     }
-    
+
     func updateSession(for provider: ServiceProvider, session: ProviderSession) {
         providerSessions[provider] = session
     }

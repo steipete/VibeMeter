@@ -18,7 +18,7 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     public var displayName: String {
         switch self {
         case .cursor:
-            "Cursor AI"
+            "Cursor"
         }
     }
 
@@ -90,7 +90,7 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     public var iconName: String {
         switch self {
         case .cursor:
-            "terminal.fill"
+            "cursor"
         }
     }
 

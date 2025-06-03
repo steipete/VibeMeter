@@ -5,42 +5,42 @@ import SwiftUI
 enum MenuBarState: Equatable {
     /// User is not logged in - grey icon, no gauge
     case notLoggedIn
-    
+
     /// User is logged in and data is loading - animated gauge
     case loading
-    
+
     /// User is logged in with spending data - static gauge at value
     case data(value: Double) // 0.0 to 1.0
-    
+
     /// Returns the gauge value for rendering
     var gaugeValue: Double? {
         switch self {
         case .notLoggedIn:
-            return nil // No gauge shown
+            nil // No gauge shown
         case .loading:
-            return nil // Calculated dynamically for animation
-        case .data(let value):
-            return min(max(value, 0.0), 1.0)
+            nil // Calculated dynamically for animation
+        case let .data(value):
+            min(max(value, 0.0), 1.0)
         }
     }
-    
+
     /// Whether this state should show the gauge
     var showsGauge: Bool {
         switch self {
         case .notLoggedIn:
-            return false
+            false
         case .loading, .data:
-            return true
+            true
         }
     }
-    
+
     /// Whether this state is animated
     var isAnimated: Bool {
         switch self {
         case .loading:
-            return true
+            true
         case .notLoggedIn, .data:
-            return false
+            false
         }
     }
 }
@@ -48,29 +48,31 @@ enum MenuBarState: Equatable {
 /// Manages animated transitions between menu bar states
 @MainActor
 class MenuBarStateManager: ObservableObject {
-    @Published private(set) var currentState: MenuBarState = .notLoggedIn
-    @Published private(set) var animatedGaugeValue: Double = 0.0
-    
+    @Published
+    private(set) var currentState: MenuBarState = .notLoggedIn
+    @Published
+    private(set) var animatedGaugeValue: Double = 0.0
+
     private var animationStartTime: TimeInterval = 0
     private var transitionStartValue: Double = 0
     private var transitionTargetValue: Double = 0
     private var isTransitioning = false
-    
+
     /// Duration for loading animation cycle (0→1→0)
     private let loadingCycleDuration: TimeInterval = 4.0
-    
+
     /// Duration for state transitions
     private let transitionDuration: TimeInterval = 0.5
-    
+
     /// Update the state with optional animation
     func setState(_ newState: MenuBarState) {
         guard newState != currentState else { return }
-        
+
         // Start transition
         isTransitioning = true
         transitionStartValue = animatedGaugeValue
         animationStartTime = Date().timeIntervalSinceReferenceDate
-        
+
         // Determine target value for transition
         switch newState {
         case .notLoggedIn:
@@ -78,21 +80,21 @@ class MenuBarStateManager: ObservableObject {
         case .loading:
             // Continue from current position
             transitionTargetValue = animatedGaugeValue
-        case .data(let value):
+        case let .data(value):
             transitionTargetValue = value
         }
-        
+
         currentState = newState
     }
-    
+
     /// Calculate the current gauge value based on state and time
     func updateAnimation() {
         let currentTime = Date().timeIntervalSinceReferenceDate
-        
+
         switch currentState {
         case .notLoggedIn:
             animatedGaugeValue = 0.0
-            
+
         case .loading:
             if isTransitioning {
                 // Handle transition into loading state
@@ -102,15 +104,16 @@ class MenuBarStateManager: ObservableObject {
                     animationStartTime = currentTime
                 } else {
                     let progress = elapsed / transitionDuration
-                    animatedGaugeValue = transitionStartValue + (transitionTargetValue - transitionStartValue) * easeInOut(progress)
+                    animatedGaugeValue = transitionStartValue + (transitionTargetValue - transitionStartValue) *
+                        easeInOut(progress)
                     return
                 }
             }
-            
+
             // Loading animation: 0→1→0
             let cycleTime = (currentTime - animationStartTime).truncatingRemainder(dividingBy: loadingCycleDuration)
             let halfCycle = loadingCycleDuration / 2
-            
+
             if cycleTime < halfCycle {
                 // Going up: 0→1
                 animatedGaugeValue = cycleTime / halfCycle
@@ -118,8 +121,8 @@ class MenuBarStateManager: ObservableObject {
                 // Going down: 1→0
                 animatedGaugeValue = 1.0 - ((cycleTime - halfCycle) / halfCycle)
             }
-            
-        case .data(let targetValue):
+
+        case let .data(targetValue):
             if isTransitioning {
                 let elapsed = currentTime - animationStartTime
                 if elapsed >= transitionDuration {
@@ -127,18 +130,19 @@ class MenuBarStateManager: ObservableObject {
                     animatedGaugeValue = targetValue
                 } else {
                     let progress = elapsed / transitionDuration
-                    animatedGaugeValue = transitionStartValue + (targetValue - transitionStartValue) * easeInOut(progress)
+                    animatedGaugeValue = transitionStartValue + (targetValue - transitionStartValue) *
+                        easeInOut(progress)
                 }
             } else {
                 animatedGaugeValue = targetValue
             }
         }
     }
-    
+
     /// Easing function for smooth transitions
     private func easeInOut(_ t: Double) -> Double {
-        return t < 0.5 
-            ? 2 * t * t 
+        t < 0.5
+            ? 2 * t * t
             : -1 + (4 - 2 * t) * t
     }
 }

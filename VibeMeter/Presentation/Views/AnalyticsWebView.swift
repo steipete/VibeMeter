@@ -123,10 +123,8 @@ struct AnalyticsSettingsView: View {
     AnalyticsSettingsView(
         userSession: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .frame(width: 800, height: 600)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .frame(width: 800, height: 600)
 }
 
 #Preview("Analytics Settings - Logged In") {
@@ -135,16 +133,13 @@ struct AnalyticsSettingsView: View {
         for: .cursor,
         email: "user@example.com",
         teamName: "Example Team",
-        teamId: 123
-    )
-    
+        teamId: 123)
+
     return AnalyticsSettingsView(
         userSession: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .frame(width: 800, height: 600)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .frame(width: 800, height: 600)
 }
 
 // MARK: - Mock Settings Manager for Preview
@@ -160,19 +155,19 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var showCostInMenuBar: Bool = true
     var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
-    
+
     func clearUserSessionData() {
         providerSessions.removeAll()
     }
-    
+
     func clearUserSessionData(for provider: ServiceProvider) {
         providerSessions.removeValue(forKey: provider)
     }
-    
+
     func getSession(for provider: ServiceProvider) -> ProviderSession? {
         providerSessions[provider]
     }
-    
+
     func updateSession(for provider: ServiceProvider, session: ProviderSession) {
         providerSessions[provider] = session
     }

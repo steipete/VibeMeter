@@ -62,11 +62,11 @@ public actor CursorProvider: ProviderProtocol {
 
         let endpoint = baseURL.appendingPathComponent("auth/me")
         logger.debug("User info endpoint: \(endpoint.absoluteString)")
-        
+
         let request = createRequest(for: endpoint, authToken: authToken)
         logger.debug("Request URL: \(request.url?.absoluteString ?? "nil")")
         logger.debug("Request Headers: \(request.allHTTPHeaderFields ?? [:])")
-        
+
         // GET request (default)
 
         let response: CursorUserResponse = try await performRequest(request)
@@ -85,15 +85,15 @@ public actor CursorProvider: ProviderProtocol {
         logger.debug("Fetching Cursor invoice for \(month)/\(year) for team \(teamId)")
 
         let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
-        
+
         var request = createRequest(for: endpoint, authToken: authToken)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+
         let body = [
             "month": month,
             "teamId": teamId,
-            "year": year
+            "year": year,
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         let response: CursorInvoiceResponse = try await performRequest(request)
@@ -126,12 +126,14 @@ public actor CursorProvider: ProviderProtocol {
 
         // Use GPT-4 usage as the primary metric since it has the largest quota
         let primaryUsage = response.gpt4
-        
+
         // Parse the start of month date
         let dateFormatter = ISO8601DateFormatter()
         let startOfMonth = dateFormatter.date(from: response.startOfMonth) ?? Date()
 
-        logger.info("Successfully fetched Cursor usage: \(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests")
+        logger
+            .info(
+                "Successfully fetched Cursor usage: \(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests")
 
         return ProviderUsageData(
             currentRequests: primaryUsage.numRequests,

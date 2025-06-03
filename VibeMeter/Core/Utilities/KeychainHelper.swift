@@ -2,62 +2,62 @@ import Foundation
 import KeychainAccess
 
 #if DEBUG
-/// Mock keychain storage for debug builds that persists across app restarts
-final class DebugKeychainStorage: @unchecked Sendable {
-    private var storage: [String: String] = [:]
-    private let queue = DispatchQueue(label: "com.vibemeter.debugkeychain")
-    private let storageURL: URL
-    
-    init() {
-        // Store in Application Support to persist across app restarts
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let appFolder = appSupport.appendingPathComponent("VibeMeter-Debug")
-        try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
-        storageURL = appFolder.appendingPathComponent("debug-keychain.json")
-        
-        loadFromDisk()
-    }
-    
-    private func loadFromDisk() {
-        guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
-        
-        do {
-            let data = try Data(contentsOf: storageURL)
-            storage = try JSONDecoder().decode([String: String].self, from: data)
-        } catch {
-            print("Debug keychain: Failed to load from disk: \(error)")
+    /// Mock keychain storage for debug builds that persists across app restarts
+    final class DebugKeychainStorage: @unchecked Sendable {
+        private var storage: [String: String] = [:]
+        private let queue = DispatchQueue(label: "com.vibemeter.debugkeychain")
+        private let storageURL: URL
+
+        init() {
+            // Store in Application Support to persist across app restarts
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let appFolder = appSupport.appendingPathComponent("VibeMeter-Debug")
+            try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
+            storageURL = appFolder.appendingPathComponent("debug-keychain.json")
+
+            loadFromDisk()
+        }
+
+        private func loadFromDisk() {
+            guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
+
+            do {
+                let data = try Data(contentsOf: storageURL)
+                storage = try JSONDecoder().decode([String: String].self, from: data)
+            } catch {
+                print("Debug keychain: Failed to load from disk: \(error)")
+            }
+        }
+
+        private func saveToDisk() {
+            do {
+                let data = try JSONEncoder().encode(storage)
+                try data.write(to: storageURL)
+            } catch {
+                print("Debug keychain: Failed to save to disk: \(error)")
+            }
+        }
+
+        func set(_ value: String, key: String) {
+            queue.sync {
+                storage[key] = value
+                saveToDisk()
+            }
+        }
+
+        func get(_ key: String) -> String? {
+            queue.sync {
+                storage[key]
+            }
+        }
+
+        func remove(_ key: String) {
+            queue.sync {
+                _ = storage.removeValue(forKey: key)
+                saveToDisk()
+            }
         }
     }
-    
-    private func saveToDisk() {
-        do {
-            let data = try JSONEncoder().encode(storage)
-            try data.write(to: storageURL)
-        } catch {
-            print("Debug keychain: Failed to save to disk: \(error)")
-        }
-    }
-    
-    func set(_ value: String, key: String) {
-        queue.sync {
-            storage[key] = value
-            saveToDisk()
-        }
-    }
-    
-    func get(_ key: String) -> String? {
-        queue.sync {
-            storage[key]
-        }
-    }
-    
-    func remove(_ key: String) {
-        queue.sync {
-            _ = storage.removeValue(forKey: key)
-            saveToDisk()
-        }
-    }
-}
 #endif
 
 /// Helper class for secure storage of authentication tokens in the macOS Keychain.
@@ -71,9 +71,9 @@ final class DebugKeychainStorage: @unchecked Sendable {
 /// to ensure they're only accessible when the device is unlocked.
 final class KeychainHelper: KeychainServicing, @unchecked Sendable {
     #if DEBUG
-    private let debugStorage = DebugKeychainStorage()
+        private let debugStorage = DebugKeychainStorage()
     #else
-    private let keychain: Keychain
+        private let keychain: Keychain
     #endif
     private let tokenKey: String
 
@@ -83,12 +83,12 @@ final class KeychainHelper: KeychainServicing, @unchecked Sendable {
         #if DEBUG
         // In debug builds, we use in-memory storage to avoid keychain prompts
         #else
-        // Production builds use stricter security
-        self.keychain = Keychain(service: service)
-            .accessibility(.whenUnlockedThisDeviceOnly)
-            .synchronizable(false)
+            // Production builds use stricter security
+            self.keychain = Keychain(service: service)
+                .accessibility(.whenUnlockedThisDeviceOnly)
+                .synchronizable(false)
         #endif
-        
+
         self.tokenKey = "authToken" // Generic token key
     }
 
@@ -97,41 +97,41 @@ final class KeychainHelper: KeychainServicing, @unchecked Sendable {
 
     func saveToken(_ token: String) -> Bool {
         #if DEBUG
-        debugStorage.set(token, key: tokenKey)
-        return true
-        #else
-        do {
-            try keychain.set(token, key: tokenKey)
+            debugStorage.set(token, key: tokenKey)
             return true
-        } catch {
-            return false
-        }
+        #else
+            do {
+                try keychain.set(token, key: tokenKey)
+                return true
+            } catch {
+                return false
+            }
         #endif
     }
 
     func getToken() -> String? {
         #if DEBUG
-        return debugStorage.get(tokenKey)
+            return debugStorage.get(tokenKey)
         #else
-        do {
-            return try keychain.get(tokenKey)
-        } catch {
-            return nil
-        }
+            do {
+                return try keychain.get(tokenKey)
+            } catch {
+                return nil
+            }
         #endif
     }
 
     func deleteToken() -> Bool {
         #if DEBUG
-        debugStorage.remove(tokenKey)
-        return true
-        #else
-        do {
-            try keychain.remove(tokenKey)
+            debugStorage.remove(tokenKey)
             return true
-        } catch {
-            return false
-        }
+        #else
+            do {
+                try keychain.remove(tokenKey)
+                return true
+            } catch {
+                return false
+            }
         #endif
     }
 }

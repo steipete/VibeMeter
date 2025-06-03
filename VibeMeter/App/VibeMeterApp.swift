@@ -20,15 +20,16 @@ struct VibeMeterApp: App {
     @State
     private var gravatarService = GravatarService.shared
 
-    // Reactive computed property for menu bar display text  
-    @ObservedObject private var settingsManager = SettingsManager.shared
-    
+    // Reactive computed property for menu bar display text
+    @ObservedObject
+    private var settingsManager = SettingsManager.shared
+
     private var menuBarDisplayText: String {
         // Only show cost if setting is enabled and we have data
         guard settingsManager.showCostInMenuBar else {
             return "" // Empty string = icon only (default behavior)
         }
-        
+
         let providers = appDelegate.spendingData.providersWithData
         guard !providers.isEmpty else {
             return "" // No data = icon only
@@ -36,9 +37,8 @@ struct VibeMeterApp: App {
 
         // Always use total spending for consistency with the popover
         let spending = appDelegate.spendingData.totalSpendingConverted(
-            to: appDelegate.currencyData.selectedCode, 
-            rates: appDelegate.currencyData.currentExchangeRates
-        )
+            to: appDelegate.currencyData.selectedCode,
+            rates: appDelegate.currencyData.effectiveRates)
 
         return "\(appDelegate.currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
     }
@@ -56,7 +56,6 @@ struct VibeMeterApp: App {
         }
     }
 }
-
 
 // MARK: - App Delegate
 
@@ -97,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         // Skip single instance check for SwiftUI previews
         let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        
+
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
         // process early.
@@ -126,23 +125,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApp.setActivationPolicy(.accessory)
         }
-        logger.info("Activation policy set to: \(self.settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)")")
+        logger
+            .info(
+                "Activation policy set to: \(self.settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)")")
 
         // Initialize auto-updater
         #if !DEBUG
             sparkleUpdaterManager = SparkleUpdaterManager()
         #endif
 
-        // Set up the status bar controller
-        statusBarController = StatusBarController(
-            settingsManager: settingsManager,
-            userSession: userSession,
-            loginManager: loginManager,
-            spendingData: spendingData,
-            currencyData: currencyData
-        )
+        // Ensure login states are properly synchronized with keychain
+        loginManager.refreshLoginStatesFromKeychain()
 
-        // Initialize the data orchestrator
+        // Initialize the data orchestrator first
         multiProviderOrchestrator = MultiProviderDataOrchestrator(
             providerFactory: providerFactory,
             settingsManager: settingsManager,
@@ -151,8 +146,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             loginManager: loginManager,
             spendingData: spendingData,
             userSessionData: userSession,
-            currencyData: currencyData
-        )
+            currencyData: currencyData)
+
+        // Set up the status bar controller with orchestrator access
+        statusBarController = StatusBarController(
+            settingsManager: settingsManager,
+            userSession: userSession,
+            loginManager: loginManager,
+            spendingData: spendingData,
+            currencyData: currencyData,
+            orchestrator: multiProviderOrchestrator!)
 
         // Don't show login window automatically - wait for user to click login button
 
@@ -183,5 +186,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.openSettings()
     }
-    
 }

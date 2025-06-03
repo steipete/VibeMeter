@@ -68,7 +68,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         // Initialize refresh states
         for provider in ServiceProvider.allCases {
             isRefreshing[provider] = false
-        logger.info("Set isRefreshing=false for \(provider.displayName)")
+            logger.info("Set isRefreshing=false for \(provider.displayName)")
         }
 
         setupLoginCallbacks()
@@ -86,8 +86,10 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 teamId: nil)
         }
 
-        logger.info("MultiProviderDataOrchestrator initialized with \(loginManager.loggedInProviders.count) logged-in providers")
-        
+        logger
+            .info(
+                "MultiProviderDataOrchestrator initialized with \(loginManager.loggedInProviders.count) logged-in providers")
+
         // Trigger initial data refresh for providers with existing tokens
         Task {
             logger.info("Starting initial data refresh for logged-in providers")
@@ -104,7 +106,9 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     public func refreshAllProviders(showSyncedMessage: Bool = false) async {
         let enabledProviders = ProviderRegistry.shared.activeProviders
 
-        logger.info("refreshAllProviders called for \(enabledProviders.count) providers: \(enabledProviders.map { $0.displayName }.joined(separator: ", "))")
+        logger
+            .info(
+                "refreshAllProviders called for \(enabledProviders.count) providers: \(enabledProviders.map(\.displayName).joined(separator: ", "))")
 
         await withTaskGroup(of: Void.self) { group in
             for provider in enabledProviders {
@@ -124,7 +128,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     /// Refreshes data for a specific provider.
     public func refreshData(for provider: ServiceProvider, showSyncedMessage _: Bool = false) async {
         logger.info("refreshData called for \(provider.displayName)")
-        
+
         guard ProviderRegistry.shared.isEnabled(provider) else {
             logger.debug("Provider \(provider.displayName) is disabled, skipping refresh")
             return
@@ -135,7 +139,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             userSessionData.handleLogout(from: provider)
             return
         }
-        
+
         logger.info("Found auth token for \(provider.displayName), proceeding with data fetch")
 
         isRefreshing[provider] = true
@@ -154,7 +158,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
             logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
             logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
-            
+
             // Update session data
             userSessionData.handleLoginSuccess(
                 for: provider,
@@ -162,7 +166,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 teamName: teamInfo.name,
                 teamId: teamInfo.id)
             logger.info("Updated userSessionData for \(provider.displayName)")
-            
+
             // Sync with SettingsManager
             let providerSession = ProviderSession(
                 provider: provider,
@@ -188,8 +192,10 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             let usage = try await usageTask
 
             logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
-            logger.info("Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
-            
+            logger
+                .info(
+                    "Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
+
             // Update spending data
             let rates = await exchangeRateManager.getExchangeRates()
             let targetCurrency = settingsManager.selectedCurrencyCode
@@ -221,7 +227,9 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             }
 
             logger.info("Successfully refreshed data for \(provider.displayName)")
-            logger.info("Current spending for \(provider.displayName): USD=\(self.spendingData.getSpendingData(for: provider)?.currentSpendingUSD ?? 0), display=\(self.spendingData.getSpendingData(for: provider)?.displaySpending ?? 0)")
+            logger
+                .info(
+                    "Current spending for \(provider.displayName): USD=\(self.spendingData.getSpendingData(for: provider)?.currentSpendingUSD ?? 0), display=\(self.spendingData.getSpendingData(for: provider)?.displaySpending ?? 0)")
 
         } catch let error as ProviderError where error == .unauthorized {
             logger.warning("Unauthorized for \(provider.displayName), logging out")
@@ -276,35 +284,35 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     }
 
     // MARK: - Private Methods
-    
+
     private func observeCurrencyChanges() {
         // Observe settings manager currency changes
         Task {
             // Initial currency setup
             let selectedCurrency = settingsManager.selectedCurrencyCode
             currencyData.updateSelectedCurrency(selectedCurrency)
-            
+
             // Watch for currency changes
             NotificationCenter.default.addObserver(
                 forName: UserDefaults.didChangeNotification,
                 object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self else { return }
-                    let newCurrency = self.settingsManager.selectedCurrencyCode
-                    if newCurrency != self.currencyData.selectedCode {
-                        self.logger.info("Currency changed from \(self.currencyData.selectedCode) to \(newCurrency)")
-                        self.updateCurrency(to: newCurrency)
+                queue: .main) { [weak self] _ in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        let newCurrency = self.settingsManager.selectedCurrencyCode
+                        if newCurrency != self.currencyData.selectedCode {
+                            self.logger
+                                .info("Currency changed from \(self.currencyData.selectedCode) to \(newCurrency)")
+                            self.updateCurrency(to: newCurrency)
+                        }
                     }
                 }
-            }
         }
     }
 
     private func setupLoginCallbacks() {
         logger.info("Setting up login callbacks")
-        
+
         loginManager.onLoginSuccess = { [weak self] provider in
             self?.logger.info("Login success callback triggered for \(provider.displayName)")
             Task { @MainActor in
@@ -314,7 +322,8 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         }
 
         loginManager.onLoginFailure = { [weak self] provider, error in
-            self?.logger.info("Login failure callback triggered for \(provider.displayName): \(error.localizedDescription)")
+            self?.logger
+                .info("Login failure callback triggered for \(provider.displayName): \(error.localizedDescription)")
             self?.userSessionData.handleLoginFailure(for: provider, error: error)
         }
 
@@ -353,8 +362,17 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
         // Update conversions for all providers
         for provider in ServiceProvider.allCases {
-            guard spendingData.getSpendingData(for: provider) != nil else { continue }
+            guard let providerData = spendingData.getSpendingData(for: provider),
+                  let invoice = providerData.latestInvoiceResponse else { continue }
 
+            // Re-convert spending data with new currency
+            self.spendingData.updateSpending(
+                for: provider,
+                from: invoice,
+                rates: rates,
+                targetCurrency: targetCurrency)
+
+            // Update limits conversions
             self.spendingData.updateLimits(
                 for: provider,
                 warningUSD: settingsManager.warningLimitUSD,

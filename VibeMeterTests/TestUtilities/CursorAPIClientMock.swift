@@ -2,27 +2,42 @@ import Foundation
 @testable import VibeMeter
 
 @MainActor
-final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
+final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
+    let provider: ServiceProvider = .cursor
+    
     var fetchTeamInfoCallCount = 0
     var fetchUserInfoCallCount = 0
     var fetchMonthlyInvoiceCallCount = 0
+    var fetchUsageDataCallCount = 0
+    var validateTokenCallCount = 0
 
     // MARK: - Controllable Responses
 
-    var teamInfoToReturn: TeamInfo? = TeamInfo(id: 123, name: "Mock Team")
-    var userInfoToReturn: UserInfo? = UserInfo(email: "mock@example.com", teamId: 12345)
-    var monthlyInvoiceToReturn: MonthlyInvoice? = MonthlyInvoice(
+    var teamInfoToReturn: ProviderTeamInfo? = ProviderTeamInfo(id: 123, name: "Mock Team", provider: .cursor)
+    var userInfoToReturn: ProviderUserInfo? = ProviderUserInfo(email: "mock@example.com", teamId: 12345, provider: .cursor)
+    var monthlyInvoiceToReturn: ProviderMonthlyInvoice? = ProviderMonthlyInvoice(
         items: [
-            InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
-            InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
+            ProviderInvoiceItem(cents: 5000, description: "Mock Pro Usage", provider: .cursor),
+            ProviderInvoiceItem(cents: 1000, description: "Mock Fast Prompts", provider: .cursor),
         ],
-        pricingDescription: nil)
+        pricingDescription: nil,
+        provider: .cursor,
+        month: 5,
+        year: 2023)
+    var usageDataToReturn: ProviderUsageData? = ProviderUsageData(
+        currentRequests: 150,
+        totalRequests: 4387,
+        maxRequests: 500,
+        startOfMonth: Date(),
+        provider: .cursor)
 
     // MARK: - Controllable Errors
 
     var teamInfoError: Error?
     var userInfoError: Error?
     var monthlyInvoiceError: Error?
+    var usageDataError: Error?
+    var tokenValidationResult: Bool = true
 
     // MARK: - Captured Parameters
 
@@ -30,9 +45,9 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
     var lastMonthRequested: Int?
     var lastYearRequested: Int?
 
-    // MARK: - CursorAPIClientProtocol
+    // MARK: - ProviderProtocol
 
-    func fetchTeamInfo(authToken: String) async throws -> TeamInfo {
+    func fetchTeamInfo(authToken: String) async throws -> ProviderTeamInfo {
         fetchTeamInfoCallCount += 1
         lastAuthTokenUsed = authToken
 
@@ -41,13 +56,13 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
         }
 
         guard let teamInfo = teamInfoToReturn else {
-            throw CursorAPIError.noTeamFound
+            throw ProviderError.noTeamFound
         }
 
         return teamInfo
     }
 
-    func fetchUserInfo(authToken: String) async throws -> UserInfo {
+    func fetchUserInfo(authToken: String) async throws -> ProviderUserInfo {
         fetchUserInfoCallCount += 1
         lastAuthTokenUsed = authToken
 
@@ -56,13 +71,13 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
         }
 
         guard let userInfo = userInfoToReturn else {
-            throw CursorAPIError.networkError(message: "No user info to return", statusCode: nil)
+            throw ProviderError.networkError(message: "No user info to return", statusCode: nil)
         }
 
         return userInfo
     }
 
-    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> MonthlyInvoice {
+    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> ProviderMonthlyInvoice {
         fetchMonthlyInvoiceCallCount += 1
         lastAuthTokenUsed = authToken
         lastMonthRequested = month
@@ -73,10 +88,39 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
         }
 
         guard let invoice = monthlyInvoiceToReturn else {
-            throw CursorAPIError.networkError(message: "No invoice to return", statusCode: nil)
+            throw ProviderError.networkError(message: "No invoice to return", statusCode: nil)
         }
 
         return invoice
+    }
+    
+    func fetchUsageData(authToken: String) async throws -> ProviderUsageData {
+        fetchUsageDataCallCount += 1
+        lastAuthTokenUsed = authToken
+
+        if let error = usageDataError {
+            throw error
+        }
+
+        guard let usageData = usageDataToReturn else {
+            throw ProviderError.networkError(message: "No usage data to return", statusCode: nil)
+        }
+
+        return usageData
+    }
+    
+    func validateToken(authToken: String) async -> Bool {
+        validateTokenCallCount += 1
+        lastAuthTokenUsed = authToken
+        return tokenValidationResult
+    }
+    
+    func getAuthenticationURL() -> URL {
+        return URL(string: "https://authenticator.cursor.sh")!
+    }
+    
+    func extractAuthToken(from callbackData: [String: Any]) -> String? {
+        return callbackData["token"] as? String
     }
 
     // MARK: - Reset
@@ -85,19 +129,32 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
         fetchTeamInfoCallCount = 0
         fetchUserInfoCallCount = 0
         fetchMonthlyInvoiceCallCount = 0
+        fetchUsageDataCallCount = 0
+        validateTokenCallCount = 0
 
-        teamInfoToReturn = TeamInfo(id: 123, name: "Mock Team")
-        userInfoToReturn = UserInfo(email: "mock@example.com", teamId: 12345)
-        monthlyInvoiceToReturn = MonthlyInvoice(
+        teamInfoToReturn = ProviderTeamInfo(id: 123, name: "Mock Team", provider: .cursor)
+        userInfoToReturn = ProviderUserInfo(email: "mock@example.com", teamId: 12345, provider: .cursor)
+        monthlyInvoiceToReturn = ProviderMonthlyInvoice(
             items: [
-                InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
-                InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
+                ProviderInvoiceItem(cents: 5000, description: "Mock Pro Usage", provider: .cursor),
+                ProviderInvoiceItem(cents: 1000, description: "Mock Fast Prompts", provider: .cursor),
             ],
-            pricingDescription: nil)
+            pricingDescription: nil,
+            provider: .cursor,
+            month: 5,
+            year: 2023)
+        usageDataToReturn = ProviderUsageData(
+            currentRequests: 150,
+            totalRequests: 4387,
+            maxRequests: 500,
+            startOfMonth: Date(),
+            provider: .cursor)
 
         teamInfoError = nil
         userInfoError = nil
         monthlyInvoiceError = nil
+        usageDataError = nil
+        tokenValidationResult = true
 
         lastAuthTokenUsed = nil
         lastMonthRequested = nil
