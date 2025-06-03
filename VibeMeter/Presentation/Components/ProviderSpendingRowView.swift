@@ -17,18 +17,26 @@ struct ProviderSpendingRowView: View {
     private var currencyData
 
     var body: some View {
-        HStack(spacing: 0) {
-            mainProviderRow
+        VStack(spacing: 2) {
+            HStack(spacing: 0) {
+                mainProviderRow
 
-            // Integrate usage data inline instead of separate row
+                // Integrate usage data inline instead of separate row
+                if let providerData = spendingData.getSpendingData(for: provider),
+                   let usage = providerData.usageData,
+                   let maxRequests = usage.maxRequests, maxRequests > 0 {
+                    Divider()
+                        .frame(height: 16)
+                        .padding(.horizontal, 8)
+
+                    usageDataBadge(usage: usage, maxRequests: maxRequests)
+                }
+            }
+            
+            // Show last refresh timestamp if available
             if let providerData = spendingData.getSpendingData(for: provider),
-               let usage = providerData.usageData,
-               let maxRequests = usage.maxRequests, maxRequests > 0 {
-                Divider()
-                    .frame(height: 16)
-                    .padding(.horizontal, 8)
-
-                usageDataBadge(usage: usage, maxRequests: maxRequests)
+               let lastRefresh = providerData.lastSuccessfulRefresh {
+                lastRefreshRow(date: lastRefresh)
             }
         }
         .padding(.horizontal, 8)
@@ -119,6 +127,24 @@ struct ProviderSpendingRowView: View {
                 .progressViewStyle(LinearProgressViewStyle(tint: ProgressColorHelper.color(for: progress)))
                 .frame(width: 40, height: 3)
                 .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
+        }
+    }
+    
+    private func lastRefreshRow(date: Date) -> some View {
+        HStack {
+            // Align with icon column above (20px wide from mainProviderRow)
+            Color.clear
+                .frame(width: 20)
+            
+            RelativeTimestampView(
+                date: date,
+                style: .withPrefix,
+                showFreshnessColor: false
+            )
+            .font(.system(size: 9))
+            .foregroundStyle(.quaternary)
+            
+            Spacer()
         }
     }
 
