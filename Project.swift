@@ -85,11 +85,9 @@ let project = Project(
                 "VibeMeter/App/**/*.swift",
                 "VibeMeter/Core/**/*.swift",
                 "VibeMeter/Presentation/**/*.swift",
-                "VibeMeter/Resources/**/*.swift",
             ],
             resources: [
                 .glob(pattern: "VibeMeter/Assets.xcassets", excluding: []),
-                .glob(pattern: "VibeMeter/Resources/**", excluding: ["**/*.swift"]),
             ],
             entitlements: .file(path: "VibeMeter/VibeMeter.entitlements"),
             dependencies: [
