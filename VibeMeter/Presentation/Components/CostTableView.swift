@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Component that displays spending data in a structured table format.
+///
+/// This view presents total spending, provider breakdown, and spending limits in organized
+/// sections with proper visual hierarchy. It includes currency conversion, progress indicators,
+/// and spending threshold warnings with color-coded visual feedback.
 struct CostTableView: View {
     let settingsManager: any SettingsManagerProtocol
 
@@ -28,9 +33,9 @@ struct CostTableView: View {
             Text("Total Spending")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-            
+
             Spacer()
-            
+
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
@@ -71,19 +76,21 @@ struct CostTableView: View {
             Text("Limits")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-            
+
             Spacer()
-            
-            Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+
+            Text(
+                "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.orange)
-            
+
             Text("•")
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
-            
-            Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+
+            Text(
+                "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.red)
         }

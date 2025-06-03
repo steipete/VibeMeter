@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Individual row component displaying spending data for a single service provider.
+///
+/// This view shows provider-specific information including provider name, icon, spending amount,
+/// and usage metrics with progress indicators. It supports hover states and provides detailed
+/// usage information for request quotas and consumption tracking.
 struct ProviderSpendingRowView: View {
     let provider: ServiceProvider
     @Binding

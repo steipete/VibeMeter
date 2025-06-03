@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+/// Action buttons component providing refresh, settings, and quit functionality.
+///
+/// This view contains the primary action buttons for the menu bar interface, including
+/// data refresh with loading animation, settings access, and application termination.
+/// Each button includes hover states and appropriate visual feedback.
 struct ActionButtonsView: View {
     let onRefresh: () async -> Void
 

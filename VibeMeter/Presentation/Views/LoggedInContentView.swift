@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Content view displayed when users are logged in to one or more service providers.
+///
+/// This view presents the complete spending dashboard including user header, cost breakdown,
+/// provider details, spending limits, and action buttons. It provides a compact yet comprehensive
+/// overview of current spending across all connected providers.
 struct LoggedInContentView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData

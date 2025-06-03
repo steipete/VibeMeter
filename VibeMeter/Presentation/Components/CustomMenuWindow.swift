@@ -47,24 +47,23 @@ final class CustomMenuWindow: NSPanel {
     func show(relativeTo statusItemButton: NSStatusBarButton) {
         // Use modern macOS 15 window positioning APIs for better reliability
         guard let statusWindow = statusItemButton.window else { return }
-        
+
         // Get status item frame in screen coordinates using modern APIs
         let buttonBounds = statusItemButton.bounds
         let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
         let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
-        
+
         // Calculate optimal position with screen boundary awareness
         let targetFrame = calculateOptimalFrame(
             relativeTo: buttonFrameInScreen,
-            preferredSize: NSSize(width: frame.width, height: frame.height)
-        )
-        
+            preferredSize: NSSize(width: frame.width, height: frame.height))
+
         setFrame(targetFrame, display: false)
 
         // Use modern animation APIs with better timing
         alphaValue = 0
         makeKeyAndOrderFront(nil)
-        
+
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
@@ -79,7 +78,7 @@ final class CustomMenuWindow: NSPanel {
             setupEventMonitoring()
         }
     }
-    
+
     /// Calculates optimal window frame position with screen boundary awareness
     private func calculateOptimalFrame(relativeTo statusFrame: NSRect, preferredSize: NSSize) -> NSRect {
         guard let screen = NSScreen.main else {
@@ -88,26 +87,25 @@ final class CustomMenuWindow: NSPanel {
             let y = statusFrame.minY - preferredSize.height - 5
             return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
         }
-        
+
         let screenFrame = screen.visibleFrame
         let gap: CGFloat = 5
-        
+
         // Start with centered position below status item
         var x = statusFrame.midX - preferredSize.width / 2
         let y = statusFrame.minY - preferredSize.height - gap
-        
+
         // Ensure window stays within screen bounds
         let minX = screenFrame.minX + 10 // 10px margin from screen edge
         let maxX = screenFrame.maxX - preferredSize.width - 10
         x = max(minX, min(maxX, x))
-        
+
         // Ensure window doesn't go below screen
         let finalY = max(screenFrame.minY + 10, y)
-        
+
         return NSRect(
             origin: NSPoint(x: x, y: finalY),
-            size: preferredSize
-        )
+            size: preferredSize)
     }
 
     func hide() {

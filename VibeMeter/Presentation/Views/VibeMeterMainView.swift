@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Main view for the VibeMeter menu bar application that displays either logged-in or logged-out content.
+///
+/// This view serves as the primary interface for the application, conditionally showing
+/// either the full spending dashboard when users are logged in to providers or a login
+/// interface when no providers are connected.
 @MainActor
 struct VibeMeterMainView: View {
     let settingsManager: any SettingsManagerProtocol

@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Header component displaying user information and connection status.
+///
+/// This view shows the user's avatar, email address, and the number of connected providers.
+/// It provides a quick overview of the current session state and user identity across
+/// all connected service providers.
 struct UserHeaderView: View {
     let userSessionData: MultiProviderUserSessionData
 

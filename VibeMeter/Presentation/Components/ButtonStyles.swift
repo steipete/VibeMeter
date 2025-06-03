@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// Custom button styles for the VibeMeter application interface.
+///
+/// This file contains reusable button styles that provide consistent visual design
+/// across the application, including glass effects, prominent styles, and icon buttons
+/// with proper hover states and animations.
+
+/// Glass-effect button style with subtle transparency and optional destructive styling.
 struct GlassButtonStyle: ButtonStyle {
     let isDestructive: Bool
 
@@ -22,6 +29,7 @@ struct GlassButtonStyle: ButtonStyle {
     }
 }
 
+/// Prominent button style with gradient background for primary actions.
 struct ProminentGlassButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -42,6 +50,7 @@ struct ProminentGlassButtonStyle: ButtonStyle {
     }
 }
 
+/// Icon button style with circular hover effect and optional destructive styling.
 struct IconButtonStyle: ButtonStyle {
     let isDestructive: Bool
     @State

@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+/// Content view displayed when no service providers are connected.
+///
+/// This view provides the initial login interface for users to connect to supported
+/// service providers like Cursor AI. It presents available providers with login buttons
+/// and brief descriptions of the service integration.
 struct LoggedOutContentView: View {
     let loginManager: MultiProviderLoginManager
 
