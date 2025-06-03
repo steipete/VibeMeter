@@ -59,8 +59,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         let cursorData = spendingData.getSpendingData(for: .cursor)
         XCTAssertNotNil(cursorData)
-        XCTAssertEqual(cursorData?.currentSpendingUSD, 80.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending, 80.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 80.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.displaySpending ?? 0, 80.0, accuracy: 0.01)
         XCTAssertEqual(cursorData?.latestInvoiceResponse?.totalSpendingCents, 8000)
     }
 
@@ -80,8 +80,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD, 100.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending, 90.0, accuracy: 0.01) // 100 * 0.9
+        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 100.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.displaySpending ?? 0, 90.0, accuracy: 0.01) // 100 * 0.9
     }
 
     func testUpdateSpending_NonUSD_NoRates_FallsBackToUSD() {
@@ -100,8 +100,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD, 50.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending, 50.0, accuracy: 0.01) // Falls back to USD
+        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 50.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.displaySpending ?? 0, 50.0, accuracy: 0.01) // Falls back to USD
     }
 
     // MARK: - Update Limits Tests
@@ -123,8 +123,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted, 200.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.upperLimitConverted, 1000.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 200.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 1000.0, accuracy: 0.01)
     }
 
     func testUpdateLimits_EUR_ConvertsCorrectly() {
@@ -144,8 +144,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted, 170.0, accuracy: 0.01) // 200 * 0.85
-        XCTAssertEqual(cursorData?.upperLimitConverted, 850.0, accuracy: 0.01) // 1000 * 0.85
+        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 170.0, accuracy: 0.01) // 200 * 0.85
+        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 850.0, accuracy: 0.01) // 1000 * 0.85
     }
 
     func testUpdateLimits_InvalidRate_FallsBackToUSD() {
@@ -165,8 +165,8 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert - Should fall back to USD amounts
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted, 200.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.upperLimitConverted, 1000.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 200.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 1000.0, accuracy: 0.01)
     }
 
     // MARK: - Usage Data Tests
@@ -235,7 +235,7 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         let cursorData = spendingData.getSpendingData(for: .cursor)
         XCTAssertNotNil(cursorData)
-        XCTAssertEqual(cursorData?.currentSpendingUSD, 50.0, accuracy: 0.01)
+        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 50.0, accuracy: 0.01)
     }
 
     func testTotalSpending_MultipleProviders() {
@@ -287,7 +287,7 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert - Should have latest data
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD, 100.0, accuracy: 0.01) // From invoice2
+        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 100.0, accuracy: 0.01) // From invoice2
         XCTAssertEqual(cursorData?.latestInvoiceResponse?.totalSpendingCents, 10000)
     }
 

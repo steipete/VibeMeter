@@ -112,7 +112,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             year: 2025)
 
         // Simulate existing login state
-        mockLoginManager.providerLoginStates[.cursor] = true
+        mockLoginManager._test_setLoginState(true, for: .cursor)
 
         // Create new orchestrator with logged-in state
         orchestrator = MultiProviderDataOrchestrator(
@@ -166,7 +166,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(userSessionData.mostRecentSession?.teamName, "LoginSuccessTeam")
 
         if let cursorData = spendingData.getSpendingData(for: .cursor) {
-            XCTAssertEqual(cursorData.currentSpendingUSD, 123.45, accuracy: 0.01)
+            XCTAssertEqual(cursorData.currentSpendingUSD ?? 0, 123.45, accuracy: 0.01)
         } else {
             XCTFail("Should have spending data for Cursor")
         }
@@ -227,7 +227,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         ProviderRegistry.shared.enableProvider(.cursor)
 
         // Simulate login
-        mockLoginManager.providerLoginStates[.cursor] = true
+        mockLoginManager._test_setLoginState(true, for: .cursor)
 
         // Test refreshing all providers
         await orchestrator.refreshAllProviders(showSyncedMessage: false)
@@ -275,7 +275,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(currencyData.selectedSymbol, "€")
 
         if let cursorData = spendingData.getSpendingData(for: .cursor) {
-            XCTAssertEqual(cursorData.currentSpendingUSD, 100.0, accuracy: 0.01)
+            XCTAssertEqual(cursorData.currentSpendingUSD ?? 0, 100.0, accuracy: 0.01)
             // Display spending should be converted to EUR
             XCTAssertNotNil(cursorData.displaySpending)
         }

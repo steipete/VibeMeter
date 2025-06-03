@@ -8,8 +8,9 @@ import os.log
 /// This orchestrator manages data fetching, authentication, and synchronization
 /// for all enabled providers simultaneously, allowing users to track costs
 /// across multiple services in a unified interface.
+@Observable
 @MainActor
-public final class MultiProviderDataOrchestrator: ObservableObject {
+public final class MultiProviderDataOrchestrator {
     // MARK: - Dependencies
 
     private let providerFactory: ProviderFactory
@@ -20,22 +21,15 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
     // MARK: - Data Models
 
-    @Published
     public private(set) var spendingData: MultiProviderSpendingData
-    @Published
     public private(set) var userSessionData: MultiProviderUserSessionData
-    @Published
     public private(set) var currencyData: CurrencyData
-    @Published
     public private(set) var gravatarService: GravatarService
 
     // MARK: - State
 
-    @Published
     public private(set) var isRefreshing: [ServiceProvider: Bool] = [:]
-    @Published
     public private(set) var lastRefreshDates: [ServiceProvider: Date] = [:]
-    @Published
     public private(set) var refreshErrors: [ServiceProvider: String] = [:]
 
     // MARK: - Private Properties
