@@ -10,11 +10,29 @@ extension NSApplication {
     /// The Settings scene is automatically managed by SwiftUI and integrates
     /// with the standard macOS settings menu item.
     func openSettings() {
+        // Ensure the app is active and comes to foreground
+        NSApp.activate(ignoringOtherApps: true)
+
         // For macOS 15+ with SwiftUI Settings scene
         if let internalItemAction = NSApp.mainMenu?.item(
             withInternalIdentifier: kAppMenuInternalIdentifier)?.submenu?.item(
             withLocalizedTitle: kSettingsLocalizedStringKey)?.internalItemAction {
             internalItemAction()
+
+            // Additional step to ensure the settings window comes to front
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                // Find and bring the settings window to front
+                for window in NSApp.windows {
+                    if window.title.contains("Settings") || window.title.contains("Preferences") {
+                        window.makeKeyAndOrderFront(nil)
+                        window.orderFrontRegardless()
+                        break
+                    }
+                }
+
+                // Ensure app stays active
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
     }
 }

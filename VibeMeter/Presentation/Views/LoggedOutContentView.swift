@@ -67,7 +67,6 @@ struct LoggedOutContentView: View {
     }
 
     private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
         NSApp.openSettings()
     }
 

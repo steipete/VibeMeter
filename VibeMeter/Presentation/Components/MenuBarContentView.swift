@@ -118,7 +118,6 @@ struct LoggedInMenuContent: View {
                 .keyboardShortcut("r")
 
                 Button("Settings...") {
-                    NSApp.activate(ignoringOtherApps: true)
                     NSApp.openSettings()
                 }
                 .keyboardShortcut(",")
@@ -214,7 +213,6 @@ struct LoggedOutMenuContent: View {
             Divider()
 
             Button("Settings...") {
-                NSApp.activate(ignoringOtherApps: true)
                 NSApp.openSettings()
             }
             .keyboardShortcut(",")

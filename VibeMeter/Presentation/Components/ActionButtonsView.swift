@@ -58,7 +58,6 @@ struct ActionButtonsView: View {
     }
 
     private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
         NSApp.openSettings()
     }
 
