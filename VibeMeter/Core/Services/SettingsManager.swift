@@ -33,30 +33,6 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     func updateSession(for provider: ServiceProvider, session: ProviderSession)
 }
 
-// MARK: - Provider Session Model
-
-/// Represents user session data for a specific provider.
-public struct ProviderSession: Codable, Sendable {
-    public let provider: ServiceProvider
-    public var teamId: Int?
-    public var teamName: String?
-    public var userEmail: String?
-    public var isActive: Bool
-
-    public init(
-        provider: ServiceProvider,
-        teamId: Int? = nil,
-        teamName: String? = nil,
-        userEmail: String? = nil,
-        isActive: Bool = false) {
-        self.provider = provider
-        self.teamId = teamId
-        self.teamName = teamName
-        self.userEmail = userEmail
-        self.isActive = isActive
-    }
-}
-
 // MARK: - Modern Settings Manager
 
 /// Manages persistent application settings using UserDefaults.

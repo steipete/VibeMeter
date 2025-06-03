@@ -232,7 +232,7 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(usdToEur!, 90.0, accuracy: 0.01)
 
         let eurToGbp = currencyData.convertAmount(90.0, from: "EUR", to: "GBP")
-        XCTAssertEqual(eurToGbp!, 112.5, accuracy: 0.01) // 90 / 0.8
+        XCTAssertEqual(eurToGbp!, 80.0, accuracy: 0.01) // 90 EUR -> 100 USD -> 80 GBP
     }
 
     func testRatesUnavailable_Workflow() {

@@ -63,6 +63,11 @@ struct AboutView: View {
                 Label("Report an Issue", systemImage: "exclamationmark.bubble")
             }
             .buttonStyle(.link)
+
+            Link(destination: URL(string: "https://x.com/steipete")!) {
+                Label("Follow on X", systemImage: "x.squareroot")
+            }
+            .buttonStyle(.link)
         }
     }
 
