@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VibeMeter is a macOS menu bar application that monitors monthly spending on the Cursor AI service. It's a native Swift 6 application using AppKit and SwiftUI, built with Tuist for project generation.
+VibeMeter is a macOS menu bar application that monitors monthly spending on AI services, starting with Cursor AI. It's a native Swift 6 application using AppKit and SwiftUI, built with Tuist for project generation. Version 1.0.0 features a multi-provider architecture ready for future AI service integrations.
 
 ## Build Commands
 
@@ -74,24 +74,29 @@ Required environment variables for notarization:
 
 ### Core Components
 
-1. **DataCoordinator** (`VibeMeter/DataCoordinator.swift`)
-   - Central data management and state coordination
+1. **MultiProviderDataOrchestrator** (`VibeMeter/Core/Services/MultiProviderDataOrchestrator.swift`)
+   - Central coordination of multi-provider data management
    - Manages all service dependencies and data flow
    - Publishes state changes for UI updates via Combine
    - Handles data fetching, currency conversion, and notification triggers
 
-2. **MenuBarController** (`VibeMeter/MenuBarController.swift`)
-   - Manages the NSStatusItem and dropdown menu
-   - Observes DataCoordinator state changes
-   - Updates menu bar display text and menu items
+2. **StatusBarController** (`VibeMeter/Presentation/Components/StatusBarController.swift`)
+   - Manages the NSStatusItem and custom menu window
+   - Observes data changes and updates display
+   - Handles animated gauge icon and menu bar text
 
 3. **Service Layer**
-   - **CursorAPIClient**: Handles all Cursor API interactions (teams, user info, invoices)
-   - **LoginManager**: Manages WebKit-based authentication and cookie storage
+   - **CursorProvider**: Handles all Cursor AI API interactions (teams, user info, invoices)
+   - **MultiProviderLoginManager**: Manages WebKit-based authentication across providers
    - **ExchangeRateManager**: Fetches and caches currency exchange rates
    - **SettingsManager**: Persists user preferences via UserDefaults
    - **NotificationManager**: Handles macOS user notifications
    - **StartupManager**: Manages Launch at Login functionality
+
+4. **Data Models** (using @Observable)
+   - **MultiProviderUserSessionData**: User authentication state across providers
+   - **MultiProviderSpendingData**: Spending data aggregation and calculations
+   - **CurrencyData**: Currency conversion and exchange rate management
 
 ### Key Design Patterns
 
@@ -99,7 +104,8 @@ Required environment variables for notarization:
 - **Dependency Injection**: Services are injected into DataCoordinator
 - **Combine Framework**: Used for reactive state management
 - **Swift Concurrency**: async/await for network operations
-- **MVVM-like Structure**: DataCoordinator acts as the view model layer
+- **MVVM-like Structure**: MultiProviderDataOrchestrator acts as the coordination layer
+- **Observable Models**: Modern SwiftUI data flow with @Observable macro
 
 ### Testing Strategy
 
@@ -120,6 +126,7 @@ Required environment variables for notarization:
 - **Swift Packages**:
   - swift-log (1.6.1+): Logging infrastructure
   - KeychainAccess (4.0.0+): Secure credential storage
+  - Sparkle (2.0.0+): Automatic updates with cryptographic verification
 
 - **System Frameworks**:
   - AppKit, SwiftUI, WebKit, Combine, UserNotifications, ServiceManagement

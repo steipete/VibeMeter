@@ -1,22 +1,67 @@
-# Vibe Meter
+# VibeMeter
 
-A native macOS menu bar application for monitoring your monthly spending on Cursor AI.
+A beautiful, native macOS menu bar application that helps you track your monthly AI spending with real-time monitoring and smart notifications.
 
-## Features
+![VibeMeter Menu Bar](assets/menubar-icon.png)
 
-- 📊 Real-time spending tracking in your menu bar
-- 💰 Multi-currency support (USD, EUR, GBP, JPY, and more)
-- 🔔 Customizable spending limit notifications
-- 🔐 Secure authentication via Cursor's web login
-- ⚡ Lightweight native Swift app with minimal resource usage
+## ✨ Features
 
-## Requirements
+- **📊 Real-time Spending Tracking** - Monitor your AI service costs directly from your menu bar
+- **🔄 Multi-Provider Support** - Currently supports Cursor AI with extensible architecture for future services
+- **💰 Multi-Currency Support** - View spending in USD, EUR, GBP, JPY, and 20+ other currencies
+- **🔔 Smart Notifications** - Customizable spending limit alerts to keep you on budget
+- **🎨 Animated Gauge Display** - Beautiful visual indicator showing spending progress
+- **🔐 Secure Authentication** - Safe login via provider's official web authentication
+- **⚡ Lightweight & Native** - Built with Swift 6, optimized for performance and battery life
+- **🔄 Auto-Updates** - Secure automatic updates with cryptographic verification
+- **🌓 Dark Mode Support** - Seamlessly adapts to your system appearance
 
-- macOS 14.0 or later
-- Xcode 15.0 or later (for building)
-- [Tuist](https://tuist.io) (for project generation)
+## 🚀 Quick Start
 
-## Building the Project
+1. **Download VibeMeter** from the [latest release](https://github.com/steipete/VibeMeter/releases)
+2. **Install** by dragging VibeMeter.app to your Applications folder
+3. **Launch** and click the menu bar icon to get started
+4. **Login** to your Cursor AI account when prompted
+5. **Configure** spending limits and currency preferences in Settings
+
+## 📋 Requirements
+
+- **macOS 15.0** or later (Sequoia)
+- **Cursor AI account** (free or paid)
+- **Internet connection** for real-time data sync
+
+## 🎯 How It Works
+
+VibeMeter connects securely to your Cursor AI account and monitors your monthly usage:
+
+- **Automatic Sync** - Updates spending data every 5 minutes
+- **Visual Indicators** - Gauge fills up as you approach your spending limits
+- **Progress Notifications** - Alerts at 80% and 100% of your warning threshold
+- **Currency Conversion** - Real-time exchange rates for accurate international tracking
+
+## ⚙️ Configuration
+
+### Spending Limits
+- **Warning Limit** - Get notified when you reach 80% (default: $20)
+- **Upper Limit** - Maximum threshold for visual indicators (default: $30)
+
+### Display Options
+- **Show Cost in Menu Bar** - Toggle cost display next to the icon
+- **Currency Selection** - Choose from 20+ supported currencies
+- **Notification Preferences** - Customize alert frequency and triggers
+
+## 🛠️ Development
+
+Want to contribute? VibeMeter is built with modern Swift technologies:
+
+### Tech Stack
+- **Swift 6** with strict concurrency
+- **SwiftUI** for settings and UI components
+- **AppKit** for menu bar integration
+- **Combine** for reactive data flow
+- **Tuist** for project generation
+
+### Getting Started
 
 1. **Clone the repository:**
    ```bash
@@ -24,81 +69,94 @@ A native macOS menu bar application for monitoring your monthly spending on Curs
    cd VibeMeter
    ```
 
-2. **Generate the Xcode project:**
+2. **Install Tuist:**
+   ```bash
+   curl -Ls https://install.tuist.io | bash
+   ```
+
+3. **Generate and open project:**
    ```bash
    ./scripts/generate-xcproj.sh
    ```
 
-3. **Build and run:**
+4. **Build and run:**
    - Open `VibeMeter.xcworkspace` in Xcode
-   - Select the VibeMeter scheme
-   - Press ⌘R to build and run
-
-## Development
-
-### Project Structure
-
-- `VibeMeter/` - Main application code
-- `VibeMeterTests/` - Unit tests
-- `scripts/` - Build and distribution scripts
-- `docs/` - Additional documentation
+   - Select the VibeMeter scheme and press ⌘R
 
 ### Key Commands
 
 ```bash
-# Generate Xcode project
-./scripts/generate-xcproj.sh
-
-# Format code
+# Code formatting
 ./scripts/format.sh
 
-# Run linter
+# Linting
 ./scripts/lint.sh
 
 # Run tests
 xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter test
-```
 
-### Architecture
-
-VibeMeter follows a clean architecture pattern with:
-- **DataCoordinator** - Central state management
-- **Service Layer** - API client, settings, notifications
-- **UI Layer** - Menu bar controller and SwiftUI settings
-
-## CI/CD Pipeline
-
-This project includes automated CI/CD with GitHub Actions:
-
-- 🔄 **Automated building and testing** on every PR and push to main
-- 🔐 **Code signing and notarization** for release builds  
-- 🧹 **SwiftLint and SwiftFormat** integration for code quality
-- 📦 **Artifact generation** with downloadable DMG files
-- 💬 **PR comments** with build status and download links
-
-See [docs/CI-SETUP.md](docs/CI-SETUP.md) for setup instructions.
-
-## Distribution
-
-For signed and notarized builds:
-
-```bash
+# Build release
 ./scripts/build.sh
-./scripts/codesign-app.sh
-./scripts/create-dmg.sh
-./scripts/notarize-app.sh
 ```
 
-Or use GitHub Actions for automated builds.
+## 🏗️ Architecture
 
-## Blog Post
+VibeMeter follows clean architecture principles:
 
-Read about the development process: [Building a native macOS app with AI](https://steipete.com/posts/vibemeter/)
+- **Multi-Provider System** - Extensible design for supporting multiple AI services
+- **Reactive State Management** - Combine-based data flow with `@Observable` models  
+- **Service Layer** - Modular services for API clients, authentication, and notifications
+- **Protocol-Oriented Design** - Extensive use of protocols for testability and flexibility
 
-## License
+## 🔐 Privacy & Security
+
+- **Local Authentication** - Login credentials never stored, uses secure web authentication
+- **Encrypted Storage** - Sensitive data protected using macOS Keychain
+- **No Tracking** - VibeMeter doesn't collect any analytics or usage data
+- **Secure Updates** - All updates cryptographically signed and verified
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for details on:
+
+- Code style and formatting
+- Testing requirements  
+- Pull request process
+- Architecture decisions
+
+## 📖 Documentation
+
+- [Architecture Overview](docs/MODERN-ARCHITECTURE.md)
+- [Release Process](docs/RELEASE.md)
+- [Code Signing Setup](docs/SIGNING-AND-NOTARIZATION.md)
+- [CI/CD Pipeline](docs/CI-SETUP.md)
+
+## 🐛 Support
+
+Found a bug or have a feature request?
+
+1. Check [existing issues](https://github.com/steipete/VibeMeter/issues)
+2. Create a [new issue](https://github.com/steipete/VibeMeter/issues/new) with details
+3. For urgent issues, mention [@steipete](https://twitter.com/steipete) on Twitter
+
+## 🎉 Roadmap
+
+**Version 1.x:**
+- Additional AI service providers (OpenAI, Anthropic, etc.)
+- Enhanced analytics and spending insights
+- Team usage tracking for organizations
+- Export functionality for financial records
+
+## 📝 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Author
+---
 
-Peter Steinberger ([@steipete](https://twitter.com/steipete)) 
+## 👨‍💻 About
+
+Created by [Peter Steinberger](https://steipete.com) ([@steipete](https://twitter.com/steipete))
+
+Read about the development process: [Building a native macOS app with AI](https://steipete.com/posts/vibemeter/)
+
+**Made with ❤️ in Vienna, Austria**

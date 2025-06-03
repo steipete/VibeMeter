@@ -5,71 +5,76 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2025-06-03
 
-## [0.9.0] - 2025-06-02
+🎉 **Initial Release** - Welcome to VibeMeter, your AI spending companion!
 
-### Added
-- 🚀 **Sparkle Auto-Update Integration** - Automatic updates with secure EdDSA signing
-- 🔍 **"Check for Updates" Menu Item** - Manual update checking from menu bar
-- 🔧 **Improved Code Signing** - Automatic signing with development team to prevent keychain popups
-- 📡 **Appcast Feed** - XML feed for update distribution via GitHub releases
-- 🛠️ **Release Automation Scripts** - Complete build, sign, and release pipeline
-- ⚙️ **Menu Bar Icon Fixes** - Proper visibility and sizing when logged out
-- 🔗 **Login Menu Option** - Easy access to login when not authenticated
+### ✨ Core Features
 
-### Changed
-- 📝 **Menu Bar Behavior** - Shows icon only when logged out, icon + text when logged in
-- 🎨 **Menu Bar Icon Size** - Optimized to 18x18 pixels for better appearance
-- 🔐 **Signing Configuration** - Uses team ID Y5PE65HELJ to avoid authentication dialogs
+- **📊 Real-time Spending Tracking** - Monitor your Cursor AI costs directly from the menu bar
+- **🎨 Animated Gauge Display** - Beautiful visual indicator showing spending progress with smooth animations
+- **💰 Multi-Currency Support** - View spending in USD, EUR, GBP, JPY, and 20+ other currencies with live exchange rates
+- **🔔 Smart Notifications** - Customizable spending limit alerts to keep you on budget
+- **🔐 Secure Authentication** - Safe login via Cursor's official web authentication system
+- **⚙️ Comprehensive Settings** - Full preferences window with spending limits, currency selection, and display options
 
-### Fixed
-- ❌ **Menu Bar Icon Visibility** - Icon now always visible regardless of login state
-- 🎯 **Menu Bar Spacing** - Eliminated excessive spacing around menu bar icon
-- 🔧 **Build System** - Cleaned up conflicting menu building approaches
-- ⌨️ **Keyboard Shortcuts** - Fixed conflicts between Quit (⌘⇧Q) and Logout (⌘Q)
+### 🎯 User Experience
 
-### Security
-- 🔒 **EdDSA Signing Keys** - Generated secure key pair for update verification
-- 🛡️ **Private Key Protection** - Keys stored in gitignored private/ directory
-- ✅ **Code Signing Identity** - Proper Apple Developer signing configuration
+- **🚀 Instant Onboarding** - Popover automatically appears on first launch for easy setup
+- **⚡ Lightweight Performance** - Native Swift 6 app optimized for minimal resource usage
+- **🌓 Dark Mode Support** - Seamlessly adapts to your system appearance preferences
+- **🔄 Auto-Updates** - Secure automatic updates with EdDSA cryptographic verification
+- **📱 Native macOS Integration** - Perfect menu bar citizen with proper sizing and behavior
 
-### Technical
-- 📦 **Sparkle 2.7.0** - Added as Swift Package dependency
-- 🏗️ **Swift 6 Compliance** - Maintained strict concurrency and sendable compliance
-- 🧪 **Test Fixes** - Updated test expectations for new menu bar behavior
-- 📋 **Release Scripts** - Local testing and GitHub release automation
+### 🏗️ Technical Excellence
 
-## [1.0.0] - TBD
+- **🏛️ Multi-Provider Architecture** - Extensible design ready for future AI service integrations
+- **🔄 Reactive State Management** - Combine-based data flow with `@Observable` models
+- **🧪 Comprehensive Testing** - Full test suite covering core functionality and edge cases
+- **📦 Modern Build System** - Tuist-based project generation with automated CI/CD pipeline
+- **🔒 Security First** - Keychain storage, sandboxed environment, and code signing
 
-### Planned
-- 🎉 **Public Release** - First stable release
-- 📊 **Enhanced Analytics** - More detailed spending insights
-- 🎨 **UI Polish** - Final design refinements
-- 📱 **Additional Platforms** - Potential iOS companion app
+### 🔧 Configuration Options
+
+- **Spending Limits** - Warning threshold (default: $20) and upper limit (default: $30)
+- **Display Preferences** - Toggle cost display in menu bar, currency selection
+- **Notification Settings** - Customize alert frequency and spending thresholds
+- **Auto-Launch** - Optional startup integration for continuous monitoring
+
+### 🛡️ Privacy & Security
+
+- **No Data Collection** - VibeMeter doesn't track or collect any user analytics
+- **Local Storage** - All data stored securely on your device using macOS Keychain
+- **Secure Communication** - Direct API communication with Cursor's authenticated endpoints
+- **Code Signing** - Fully signed and notarized for macOS security compliance
 
 ---
 
-## Version History
+## 🚀 Getting Started
 
-- **0.9.0** - Pre-release with auto-updates and improved menu bar
-- **1.0.0** - Initial public release (planned)
+1. **Download** VibeMeter from [GitHub Releases](https://github.com/steipete/VibeMeter/releases)
+2. **Install** by dragging to your Applications folder
+3. **Launch** and follow the setup guide
+4. **Configure** your spending preferences in Settings
 
-## Development Notes
+## 🔮 What's Next
 
-### Auto-Update Flow
-1. App checks `https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml`
-2. If newer version found, downloads from GitHub releases
-3. Verifies signature using embedded public key
-4. Prompts user for update installation
+Future releases will include:
+- **Additional AI Providers** - OpenAI, Anthropic, and more
+- **Enhanced Analytics** - Detailed spending insights and trends
+- **Team Features** - Organization usage tracking and management
+- **Export Capabilities** - Financial reporting and data export options
 
-### Release Process
-1. `./scripts/release-local.sh` - Test local builds
-2. `./scripts/create-github-release.sh` - Create GitHub release with notarization
-3. Commit updated `appcast.xml` to repository
-4. Updates become available to all users
+## 📞 Support
 
-### Security
-- All releases signed with Apple Developer ID
-- Updates verified with EdDSA cryptographic signatures
-- Private keys never committed to repository
+- **Issues**: [GitHub Issues](https://github.com/steipete/VibeMeter/issues)
+- **Twitter**: [@steipete](https://twitter.com/steipete)
+- **Blog**: [Development Story](https://steipete.com/posts/vibemeter/)
+
+---
+
+**Thank you for using VibeMeter! 🎉**
+
+We're excited to help you track your AI spending efficiently and beautifully. If you enjoy the app, please consider starring the repository and sharing it with others who might find it useful.
+
+**Made with ❤️ in Vienna, Austria**
