@@ -17,16 +17,22 @@ struct ProviderSpendingRowView: View {
     private var currencyData
 
     var body: some View {
-        VStack(spacing: 2) {
+        HStack(spacing: 0) {
             mainProviderRow
 
+            // Integrate usage data inline instead of separate row
             if let providerData = spendingData.getSpendingData(for: provider),
-               let usage = providerData.usageData {
-                usageDataRow(usage: usage)
+               let usage = providerData.usageData,
+               let maxRequests = usage.maxRequests, maxRequests > 0 {
+                Divider()
+                    .frame(height: 16)
+                    .padding(.horizontal, 8)
+
+                usageDataBadge(usage: usage, maxRequests: maxRequests)
             }
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 1)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
@@ -41,13 +47,13 @@ struct ProviderSpendingRowView: View {
     }
 
     private var mainProviderRow: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             // Provider icon with consistent sizing
             Group {
                 if provider.iconName.contains(".") {
                     // System symbol - use font sizing
                     Image(systemName: provider.iconName)
-                        .font(.system(size: 16))
+                        .font(.system(size: 14))
                 } else {
                     // Custom asset - use resizable with explicit sizing
                     Image(provider.iconName)
@@ -56,13 +62,14 @@ struct ProviderSpendingRowView: View {
                 }
             }
             .foregroundStyle(provider.accentColor)
-            .frame(width: 18, height: 18)
+            .frame(width: 16, height: 16)
 
             // Provider name
             Text(provider.displayName)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
 
             // Amount with consistent number formatting
             Group {
@@ -78,44 +85,28 @@ struct ProviderSpendingRowView: View {
 
                     Text(
                         "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 } else {
                     Text("--")
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .frame(minWidth: 50, alignment: .trailing)
         }
     }
 
-    private func usageDataRow(usage: ProviderUsageData) -> some View {
-        HStack(spacing: 10) {
-            // Align with icon column above
-            Color.clear
-                .frame(width: 18)
+    private func usageDataBadge(usage: ProviderUsageData, maxRequests: Int) -> some View {
+        let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
+        return HStack(spacing: 4) {
+            Text("\(usage.currentRequests)/\(maxRequests)")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.secondary)
 
-            HStack(spacing: 6) {
-                Text("\(usage.currentRequests) / \(usage.maxRequests ?? 0)")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-
-                Text("requests")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.tertiary)
-
-                Spacer()
-
-                // Usage progress bar
-                if let maxRequests = usage.maxRequests, maxRequests > 0 {
-                    let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
-                    ProgressView(value: progress)
-                        .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
-                        .frame(width: 60, height: 4)
-                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 2))
-                }
-            }
+            ProgressView(value: progress)
+                .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
+                .frame(width: 40, height: 3)
+                .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
         }
     }
 
@@ -201,23 +192,21 @@ private extension ServiceProvider {
 #Preview("Provider Spending Row - With Data") {
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
-    
+
     // Add sample data
     spendingData.updateSpending(
         for: .cursor,
         from: ProviderMonthlyInvoice(
             items: [
-                ProviderInvoiceItem(cents: 2497, description: "Pro Usage", provider: .cursor)
+                ProviderInvoiceItem(cents: 2497, description: "Pro Usage", provider: .cursor),
             ],
             pricingDescription: nil,
             provider: .cursor,
             month: 5,
-            year: 2025
-        ),
+            year: 2025),
         rates: [:],
-        targetCurrency: "USD"
-    )
-    
+        targetCurrency: "USD")
+
     spendingData.updateUsage(
         for: .cursor,
         from: ProviderUsageData(
@@ -225,21 +214,19 @@ private extension ServiceProvider {
             totalRequests: 4387,
             maxRequests: 500,
             startOfMonth: Date(),
-            provider: .cursor
-        )
-    )
-    
-    @State var selectedProvider: ServiceProvider?
-    
+            provider: .cursor))
+
+    @State
+    var selectedProvider: ServiceProvider?
+
     return VStack(spacing: 16) {
         ProviderSpendingRowView(
             provider: .cursor,
             loginManager: nil,
-            selectedProvider: $selectedProvider
-        )
-        .environment(spendingData)
-        .environment(currencyData)
-        
+            selectedProvider: $selectedProvider)
+            .environment(spendingData)
+            .environment(currencyData)
+
         Text("Selected: \(selectedProvider?.displayName ?? "None")")
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -252,17 +239,17 @@ private extension ServiceProvider {
 #Preview("Provider Spending Row - Loading") {
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
-    
-    @State var selectedProvider: ServiceProvider?
-    
+
+    @State
+    var selectedProvider: ServiceProvider?
+
     return ProviderSpendingRowView(
         provider: .cursor,
         loginManager: nil,
-        selectedProvider: $selectedProvider
-    )
-    .environment(spendingData)
-    .environment(currencyData)
-    .padding()
-    .frame(width: 320)
-    .background(Color(NSColor.windowBackgroundColor))
+        selectedProvider: $selectedProvider)
+        .environment(spendingData)
+        .environment(currencyData)
+        .padding()
+        .frame(width: 320)
+        .background(Color(NSColor.windowBackgroundColor))
 }

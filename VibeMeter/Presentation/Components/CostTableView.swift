@@ -55,7 +55,7 @@ struct CostTableView: View {
     }
 
     private var providerBreakdownSection: some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 0) {
             ForEach(spendingData.providersWithData, id: \.self) { provider in
                 ProviderSpendingRowView(
                     provider: provider,
@@ -63,8 +63,7 @@ struct CostTableView: View {
                     selectedProvider: $selectedProvider)
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 6)
+        .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.thickMaterial))
