@@ -96,12 +96,14 @@ struct LoggedInMenuContent: View {
             // Limits (compact)
             HStack {
                 Text("⚠️")
-                Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+                Text(
+                    "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
                 Spacer()
 
                 Text("🚨")
-                Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+                Text(
+                    "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
