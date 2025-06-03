@@ -18,6 +18,7 @@ public actor CursorProvider: ProviderProtocol {
     private let urlSession: URLSessionProtocol
     private let settingsManager: any SettingsManagerProtocol
     private let logger = Logger(subsystem: "com.vibemeter", category: "CursorProvider")
+    private let retryHandler = NetworkRetryHandler.forProvider(.cursor)
 
     private let baseURL = URL(string: "https://www.cursor.com/api")!
     private let decoder: JSONDecoder = {
@@ -182,80 +183,103 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     private func performRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
-        do {
-            logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
-            let (data, response) = try await urlSession.data(for: request)
+        // Perform request directly without retry handler for now
+        // TODO: Add retry logic if needed
+                logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
+                let (data, response) = try await urlSession.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw ProviderError.networkError(message: "Invalid response type", statusCode: nil)
-            }
-
-            switch httpResponse.statusCode {
-            case 200 ... 299:
-                do {
-                    return try decoder.decode(T.self, from: data)
-                } catch {
-                    logger.error("Cursor API decoding error: \(error.localizedDescription)")
-                    throw ProviderError.decodingError(
-                        message: error.localizedDescription,
-                        statusCode: httpResponse.statusCode)
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw ProviderError.networkError(message: "Invalid response type", statusCode: nil)
                 }
 
-            case 401:
-                logger.warning("Unauthorized Cursor request")
-                throw ProviderError.unauthorized
+                switch httpResponse.statusCode {
+                case 200 ... 299:
+                    do {
+                        return try decoder.decode(T.self, from: data)
+                    } catch {
+                        logger.error("Cursor API decoding error: \(error.localizedDescription)")
+                        throw ProviderError.decodingError(
+                            message: error.localizedDescription,
+                            statusCode: httpResponse.statusCode)
+                    }
 
-            case 429:
-                logger.warning("Cursor rate limit exceeded")
-                throw ProviderError.rateLimitExceeded
+                case 401:
+                    logger.warning("Unauthorized Cursor request")
+                    throw ProviderError.unauthorized
 
-            case 503:
-                logger.warning("Cursor service unavailable")
-                throw ProviderError.serviceUnavailable
+                case 429:
+                    logger.warning("Cursor rate limit exceeded")
+                    // Extract retry-after header if available
+                    let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After")
+                        .flatMap { TimeInterval($0) }
+                    throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: retryAfter)
 
-            default:
-                let message = String(data: data, encoding: .utf8) ?? "Unknown error"
-                logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
+                case 503:
+                    logger.warning("Cursor service unavailable")
+                    throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
 
-                // Parse specific error types from response body
-                if let errorData = data.isEmpty ? nil : data,
-                   let json = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
-                   let error = json["error"] as? [String: Any],
-                   let details = error["details"] as? [[String: Any]] {
-                    for detail in details {
-                        if let errorCode = detail["error"] as? String,
-                           let errorDetails = detail["details"] as? [String: Any] {
-                            // Check for unauthorized/team not found errors
-                            if errorCode == "ERROR_UNAUTHORIZED" {
-                                if let errorDetail = errorDetails["detail"] as? String,
-                                   errorDetail.contains("Team not found") {
-                                    logger.warning("Team not found error detected")
-                                    throw ProviderError.noTeamFound
-                                } else {
-                                    logger.warning("Unauthorized error detected")
-                                    throw ProviderError.unauthorized
+                default:
+                    let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
+
+                    // Parse specific error types from response body
+                    if let errorData = data.isEmpty ? nil : data,
+                       let json = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
+                       let error = json["error"] as? [String: Any],
+                       let details = error["details"] as? [[String: Any]] {
+                        for detail in details {
+                            if let errorCode = detail["error"] as? String,
+                               let errorDetails = detail["details"] as? [String: Any] {
+                                // Check for unauthorized/team not found errors
+                                if errorCode == "ERROR_UNAUTHORIZED" {
+                                    if let errorDetail = errorDetails["detail"] as? String,
+                                       errorDetail.contains("Team not found") {
+                                        logger.warning("Team not found error detected")
+                                        throw ProviderError.noTeamFound
+                                    } else {
+                                        logger.warning("Unauthorized error detected")
+                                        throw ProviderError.unauthorized
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // Handle status code specific errors
-                if httpResponse.statusCode == 500, message.contains("Team not found") {
-                    logger.warning("Team not found error detected from 500 response")
-                    throw ProviderError.noTeamFound
-                }
+                    // Handle status code specific errors
+                    if httpResponse.statusCode == 500, message.contains("Team not found") {
+                        logger.warning("Team not found error detected from 500 response")
+                        throw ProviderError.noTeamFound
+                    }
 
-                throw ProviderError.networkError(
-                    message: message,
-                    statusCode: httpResponse.statusCode)
+                    // Check if it's a server error that should be retried
+                    if httpResponse.statusCode >= 500 {
+                        throw NetworkRetryHandler.RetryableError.serverError(statusCode: httpResponse.statusCode)
+                    }
+
+                    throw ProviderError.networkError(
+                        message: message,
+                        statusCode: httpResponse.statusCode)
+                }
+            },
+            shouldRetry: { [self] error in
+                // Don't retry authentication or team not found errors
+                switch error {
+                case ProviderError.unauthorized, ProviderError.noTeamFound:
+                    return false
+                case let providerError as ProviderError:
+                    // Don't retry client errors (4xx)
+                    if case .networkError(_, let statusCode) = providerError,
+                       let code = statusCode,
+                       code >= 400 && code < 500 {
+                        return false
+                    }
+                    return true
+                default:
+                    // Let the retry handler decide for other errors
+                    return true
+                }
             }
-        } catch let error as ProviderError {
-            throw error
-        } catch {
-            logger.error("Cursor network error: \(error.localizedDescription)")
-            throw ProviderError.networkError(message: error.localizedDescription, statusCode: nil)
-        }
+        )
     }
 
     private func getTeamId() async -> Int? {
