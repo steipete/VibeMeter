@@ -54,16 +54,28 @@ class MenuBarStateManager: ObservableObject {
     private(set) var animatedGaugeValue: Double = 0.0
     @Published
     private(set) var isTransitioning = false
+    @Published
+    private(set) var animatedCostValue: Double = 0.0
+    @Published
+    private(set) var isCostTransitioning = false
 
     private var animationStartTime: TimeInterval = 0
     private var transitionStartValue: Double = 0
     private var transitionTargetValue: Double = 0
+
+    // Cost animation properties
+    private var costAnimationStartTime: TimeInterval = 0
+    private var costTransitionStartValue: Double = 0
+    private var costTransitionTargetValue: Double = 0
 
     /// Duration for loading animation cycle (0→1→0)
     private let loadingCycleDuration: TimeInterval = 4.0
 
     /// Duration for state transitions
     private let transitionDuration: TimeInterval = 0.5
+
+    /// Duration for cost transitions (shorter for snappier feel)
+    private let costTransitionDuration: TimeInterval = 0.3
 
     /// Update the state with optional animation
     func setState(_ newState: MenuBarState) {
@@ -86,6 +98,25 @@ class MenuBarStateManager: ObservableObject {
         }
 
         currentState = newState
+    }
+
+    /// Update the cost value with optional animation
+    func setCostValue(_ newValue: Double) {
+        // If this is the first time setting cost (both current and target are 0), set immediately without animation
+        if animatedCostValue == 0.0, costTransitionTargetValue == 0.0 {
+            animatedCostValue = newValue
+            costTransitionTargetValue = newValue
+            return
+        }
+
+        // Only animate if the value has changed significantly (more than $0.01)
+        guard abs(newValue - costTransitionTargetValue) > 0.01 else { return }
+
+        // Start cost transition
+        isCostTransitioning = true
+        costTransitionStartValue = animatedCostValue
+        costTransitionTargetValue = newValue
+        costAnimationStartTime = Date().timeIntervalSinceReferenceDate
     }
 
     /// Calculate the current gauge value based on state and time
@@ -136,6 +167,19 @@ class MenuBarStateManager: ObservableObject {
                 }
             } else {
                 animatedGaugeValue = targetValue
+            }
+        }
+
+        // Handle cost animation independently
+        if isCostTransitioning {
+            let elapsed = currentTime - costAnimationStartTime
+            if elapsed >= costTransitionDuration {
+                isCostTransitioning = false
+                animatedCostValue = costTransitionTargetValue
+            } else {
+                let progress = elapsed / costTransitionDuration
+                animatedCostValue = costTransitionStartValue + (costTransitionTargetValue - costTransitionStartValue) *
+                    easeInOut(progress)
             }
         }
     }
