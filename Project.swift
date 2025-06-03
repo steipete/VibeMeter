@@ -23,7 +23,7 @@ let project = Project(
             "ENABLE_HARDENED_RUNTIME": true,
             "ENABLE_USER_SCRIPT_SANDBOXING": true,
             "GENERATE_INFOPLIST_FILE": true,
-            "INFOPLIST_KEY_CFBundleDisplayName": "VibeMeter",
+            "INFOPLIST_KEY_CFBundleDisplayName": "Vibe Meter",
             "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.productivity",
             "INFOPLIST_KEY_LSUIElement": true,
             "INFOPLIST_KEY_NSHumanReadableCopyright": "Copyright © 2025 Peter Steinberger",
