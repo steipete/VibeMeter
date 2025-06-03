@@ -74,6 +74,7 @@ public actor CursorProvider: ProviderProtocol {
         } catch let ProviderError.decodingError(message, statusCode) where statusCode == 204 {
             // 204 No Content from /auth/me means the session/cookie is invalid or expired
             logger.warning("Received 204 from auth endpoint - session expired or invalid")
+            logger.warning("Decoding error message: \(message)")
             throw ProviderError.unauthorized
         }
     }
