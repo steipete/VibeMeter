@@ -26,7 +26,7 @@ struct VibeMeterApp: App {
 
     private var menuBarDisplayText: String {
         // Only show cost if setting is enabled and we have data
-        guard settingsManager.showCostInMenuBar else {
+        guard settingsManager.menuBarDisplayMode.showsMoney else {
             return "" // Empty string = icon only (default behavior)
         }
 

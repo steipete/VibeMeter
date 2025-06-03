@@ -20,7 +20,7 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
 
     // App behavior
     var launchAtLoginEnabled: Bool { get set }
-    var showCostInMenuBar: Bool { get set }
+    var menuBarDisplayMode: MenuBarDisplayMode { get set }
     var showInDock: Bool { get set }
 
     // Provider management
@@ -64,7 +64,7 @@ public final class SettingsManager: SettingsManagerProtocol {
         static let warningLimitUSD = "warningLimitUSD"
         static let upperLimitUSD = "upperLimitUSD"
         static let launchAtLoginEnabled = "launchAtLoginEnabled"
-        static let showCostInMenuBar = "showCostInMenuBar"
+        static let menuBarDisplayMode = "menuBarDisplayMode"
         static let showInDock = "showInDock"
     }
 
@@ -139,10 +139,10 @@ public final class SettingsManager: SettingsManagerProtocol {
         }
     }
 
-    public var showCostInMenuBar: Bool {
+    public var menuBarDisplayMode: MenuBarDisplayMode {
         didSet {
-            userDefaults.set(showCostInMenuBar, forKey: Keys.showCostInMenuBar)
-            logger.debug("Show cost in menu bar: \(self.showCostInMenuBar)")
+            userDefaults.set(menuBarDisplayMode.rawValue, forKey: Keys.menuBarDisplayMode)
+            logger.debug("Menu bar display mode: \(self.menuBarDisplayMode.displayName)")
         }
     }
 
@@ -205,8 +205,13 @@ public final class SettingsManager: SettingsManagerProtocol {
         warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
-        showCostInMenuBar = userDefaults
-            .object(forKey: Keys.showCostInMenuBar) as? Bool ?? false // Default to false (icon-only)
+        // Initialize menu bar display mode
+        if let displayModeString = userDefaults.object(forKey: Keys.menuBarDisplayMode) as? String,
+           let displayMode = MenuBarDisplayMode(rawValue: displayModeString) {
+            menuBarDisplayMode = displayMode
+        } else {
+            menuBarDisplayMode = .both // Default to "both" (icon + money)
+        }
         showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
 
         // Validate refresh interval
@@ -248,8 +253,13 @@ public final class SettingsManager: SettingsManagerProtocol {
         warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
-        showCostInMenuBar = userDefaults
-            .object(forKey: Keys.showCostInMenuBar) as? Bool ?? false // Default to false (icon-only)
+        // Initialize menu bar display mode
+        if let displayModeString = userDefaults.object(forKey: Keys.menuBarDisplayMode) as? String,
+           let displayMode = MenuBarDisplayMode(rawValue: displayModeString) {
+            menuBarDisplayMode = displayMode
+        } else {
+            menuBarDisplayMode = .both // Default to "both" (icon + money)
+        }
         showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
     }
 
