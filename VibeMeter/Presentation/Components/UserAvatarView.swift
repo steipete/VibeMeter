@@ -26,12 +26,8 @@ struct UserAvatarView: View {
                             .aspectRatio(contentMode: .fill)
                             .frame(width: size, height: size)
                             .clipShape(Circle())
-                    case .failure(_), .empty:
+                    default:
                         fallbackAvatar
-                    @unknown default:
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: size, height: size)
                     }
                 }
             } else {

@@ -183,10 +183,8 @@ extension NWInterface.InterfaceType {
             return "Ethernet"
         case .loopback:
             return "Loopback"
-        case .other:
+        default:
             return "Other"
-        @unknown default:
-            return "Unknown"
         }
     }
 
@@ -195,9 +193,7 @@ extension NWInterface.InterfaceType {
         switch self {
         case .cellular:
             return true
-        case .wifi, .wiredEthernet, .loopback, .other:
-            return false
-        @unknown default:
+        default:
             return false
         }
     }

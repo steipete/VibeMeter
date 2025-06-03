@@ -16,23 +16,23 @@ struct LoggedInContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header section - more compact
+            // Header section - better spacing
             UserHeaderView(userSessionData: userSessionData)
                 .padding(.horizontal, 14)
-                .padding(.top, 10)
-                .padding(.bottom, 8)
+                .padding(.top, 12)
+                .padding(.bottom, 10)
 
             Divider()
                 .overlay(Color.white.opacity(0.08))
 
-            // Content section - tighter spacing
-            VStack(spacing: 4) {
+            // Content section - improved spacing
+            VStack(spacing: 6) {
                 CostTableView(settingsManager: settingsManager, loginManager: loginManager, showTimestamps: false)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 8)
 
             // Last updated section at bottom
             if let lastUpdate = mostRecentRefresh {
@@ -41,10 +41,7 @@ struct LoggedInContentView: View {
                         .overlay(Color.white.opacity(0.06))
                     
                     HStack {
-                        RelativeTimeFormatter.RelativeTimestampView(
-                            date: lastUpdate,
-                            style: .withPrefix,
-                            showFreshnessColor: false)
+                        Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
                             .font(.system(size: 10))
                             .foregroundStyle(.quaternary)
                         
@@ -62,7 +59,7 @@ struct LoggedInContentView: View {
 
                 ActionButtonsView(onRefresh: onRefresh)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 10)
             }
         }
     }

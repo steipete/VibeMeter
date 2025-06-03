@@ -19,9 +19,9 @@ public extension View {
 
     /// Applies standard content view frame sizing.
     ///
-    /// - Returns: View with 300x380pt frame
+    /// - Returns: View with 300x400pt frame
     func contentFrame() -> some View {
-        frame(width: 300, height: 380)
+        frame(width: 300, height: 400)
     }
 
     /// Applies standard component preview frame sizing.

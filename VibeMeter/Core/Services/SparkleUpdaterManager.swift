@@ -1,4 +1,3 @@
-import Combine
 import os
 import Sparkle
 
@@ -14,7 +13,8 @@ import Sparkle
 /// interface for the rest of the application while handling all
 /// update-related delegate callbacks and UI presentation.
 @MainActor
-public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate, ObservableObject {
+@Observable
+public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     // MARK: - Static Logger for nonisolated methods
 
     private nonisolated static let staticLogger = Logger(subsystem: "com.steipete.vibemeter", category: "updates")
@@ -47,8 +47,14 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
     // MARK: Public
 
-    // Use lazy var to initialize after self is available
-    public lazy var updaterController: SPUStandardUpdaterController = {
+    // Initialize controller after self is available
+    private var _updaterController: SPUStandardUpdaterController?
+    
+    public var updaterController: SPUStandardUpdaterController {
+        if let controller = _updaterController {
+            return controller
+        }
+        
         let controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
@@ -60,8 +66,10 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         Self.staticLogger
             .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
+        
+        _updaterController = controller
         return controller
-    }() // The () here executes the closure and assigns the result to updaterController
+    }
 
     // MARK: Private
 

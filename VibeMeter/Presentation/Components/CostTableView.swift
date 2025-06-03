@@ -25,7 +25,7 @@ struct CostTableView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             totalSpendingSection
 
             if !spendingData.providersWithData.isEmpty {
@@ -134,7 +134,8 @@ struct CostTableView: View {
 
     return CostTableView(
         settingsManager: MockServices.settingsManager(currency: "EUR"),
-        loginManager: nil)
+        loginManager: nil,
+        showTimestamps: true)
         .withSpendingEnvironment(spendingData)
         .componentFrame(width: 280)
         .previewBackground()

@@ -18,7 +18,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Initialize window with appropriate style
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 380),
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false)
@@ -167,7 +167,7 @@ struct CustomMenuContainer<Content: View>: View {
 
     var body: some View {
         content
-            .frame(width: 300, height: 380)
+            .frame(width: 300, height: 400)
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }

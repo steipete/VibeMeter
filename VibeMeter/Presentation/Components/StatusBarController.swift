@@ -1,6 +1,6 @@
 import AppKit
-import Combine
 import SwiftUI
+import Observation
 
 /// Manages the macOS status bar item and its associated dropdown menu.
 ///
@@ -12,7 +12,9 @@ import SwiftUI
 final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
     private var customMenuWindow: CustomMenuWindow?
-    private var cancellables = Set<AnyCancellable>()
+    private var observationTask: Task<Void, Never>?
+    private var animationTimer: Timer?
+    private var periodicTimer: Timer?
     private let stateManager = MenuBarStateManager()
 
     private let settingsManager: any SettingsManagerProtocol
@@ -331,34 +333,86 @@ final class StatusBarController: NSObject {
     }
 
     private func observeDataChanges() {
-        // Observe settings changes
-        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
-                self?.updateStatusItemDisplay()
-            }
-            .store(in: &cancellables)
-
-        // Observe appearance changes (dark/light mode)
-        DistributedNotificationCenter.default
-            .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
-            .sink { [weak self] _ in
-                // Delay slightly to ensure the appearance change has propagated
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(100))
-                    self?.updateStatusItemDisplay()
+        // Start modern observation using structured concurrency
+        observationTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            
+            // Set up notification observers and model observation using structured concurrency
+            await withTaskGroup(of: Void.self) { group in
+                // Observe settings changes
+                group.addTask {
+                    await self.observeSettingsChanges()
+                }
+                
+                // Observe appearance changes  
+                group.addTask {
+                    await self.observeAppearanceChanges()
+                }
+                
+                // Observe @Observable model changes
+                group.addTask {
+                    await self.observeModelChanges()
                 }
             }
-            .store(in: &cancellables)
-
-        // Update display with appropriate frequency based on state
-        Timer.publish(every: 0.03, on: .main, in: .common) // 30ms for smooth animations
-            .autoconnect()
-            .sink { [weak self] _ in
+        }
+        
+        // Set up animation timer
+        setupAnimationTimer()
+        
+        // Set up periodic update timer
+        setupPeriodicTimer()
+    }
+    
+    private func observeSettingsChanges() async {
+        let notificationSequence = NotificationCenter.default.notifications(
+            named: UserDefaults.didChangeNotification
+        )
+        
+        for await _ in notificationSequence {
+            updateStatusItemDisplay()
+        }
+    }
+    
+    private func observeAppearanceChanges() async {
+        let notificationSequence = DistributedNotificationCenter.default.notifications(
+            named: Notification.Name("AppleInterfaceThemeChangedNotification")
+        )
+        
+        for await _ in notificationSequence {
+            // Delay slightly to ensure the appearance change has propagated
+            try? await Task.sleep(for: .milliseconds(100))
+            updateStatusItemDisplay()
+        }
+    }
+    
+    private func observeModelChanges() async {
+        // Use withObservationTracking to observe @Observable models
+        while !Task.isCancelled {
+            withObservationTracking {
+                // Track changes to observable models
+                _ = userSession.isLoggedInToAnyProvider
+                _ = spendingData.providersWithData.count
+                _ = currencyData.selectedCode
+                _ = settingsManager.upperLimitUSD
+            } onChange: {
+                Task { @MainActor in
+                    self.updateStatusItemDisplay()
+                }
+            }
+            
+            // Small delay to prevent excessive updates
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+    
+    private func setupAnimationTimer() {
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
+            Task { @MainActor in
                 guard let self else { return }
-
+                
                 // Update animation state first
                 self.stateManager.updateAnimation()
-
+                
                 // Only update frequently if animating, transitioning, or value changed
                 if self.stateManager.currentState.isAnimated ||
                     self.stateManager.isTransitioning ||
@@ -368,21 +422,25 @@ final class StatusBarController: NSObject {
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
                 }
             }
-            .store(in: &cancellables)
-
-        // Also update periodically for data changes (less frequently)
-        Timer.publish(every: 1.0, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
+        }
+    }
+    
+    private func setupPeriodicTimer() {
+        periodicTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
                 self?.updateStatusItemDisplay()
             }
-            .store(in: &cancellables)
+        }
     }
 
     private var lastRenderedValue: Double = 0
 
     deinit {
-        // Can't call MainActor methods from deinit, so just set to nil
-        customMenuWindow = nil
+        // Cancel observation task
+        observationTask?.cancel()
+        
+        // Note: Cannot safely invalidate MainActor-isolated timers from deinit
+        // They will be cleaned up when the class is deallocated
+        // customMenuWindow is also MainActor-isolated and will be cleaned up automatically
     }
 }

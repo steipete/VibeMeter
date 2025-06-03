@@ -10,23 +10,31 @@ struct ProviderSpendingRowView: View {
     let loginManager: MultiProviderLoginManager?
     @Binding
     var selectedProvider: ServiceProvider?
+    let showTimestamp: Bool
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
 
+    init(provider: ServiceProvider, loginManager: MultiProviderLoginManager?, selectedProvider: Binding<ServiceProvider?>, showTimestamp: Bool = true) {
+        self.provider = provider
+        self.loginManager = loginManager
+        self._selectedProvider = selectedProvider
+        self.showTimestamp = showTimestamp
+    }
+
     var body: some View {
         VStack(spacing: 1) {
             mainProviderRow
 
-            // Show usage data and last refresh on second line
+            // Show usage data and optionally last refresh on second line
             HStack {
                 // Align with icon column above (20px wide from mainProviderRow)
                 Color.clear
                     .frame(width: 20)
 
-                // Usage data badge
+                // Usage data badge with extended progress bar
                 if let providerData = spendingData.getSpendingData(for: provider),
                    let usage = providerData.usageData,
                    let maxRequests = usage.maxRequests, maxRequests > 0 {
@@ -35,8 +43,9 @@ struct ProviderSpendingRowView: View {
 
                 Spacer()
 
-                // Last refresh timestamp
-                if let providerData = spendingData.getSpendingData(for: provider),
+                // Last refresh timestamp (only if enabled)
+                if showTimestamp,
+                   let providerData = spendingData.getSpendingData(for: provider),
                    let lastRefresh = providerData.lastSuccessfulRefresh {
                     RelativeTimestampView(
                         date: lastRefresh,
@@ -46,7 +55,7 @@ struct ProviderSpendingRowView: View {
                         .foregroundStyle(.quaternary)
                 }
             }
-            .frame(minHeight: 12) // Reduce minimum height for tighter layout
+            .frame(minHeight: showTimestamp ? 12 : 16) // Slightly taller when no timestamp
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2) // Reduce vertical padding
@@ -126,14 +135,14 @@ struct ProviderSpendingRowView: View {
 
     private func usageDataBadge(usage: ProviderUsageData, maxRequests: Int) -> some View {
         let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
-        return HStack(spacing: 4) {
+        return HStack(spacing: 6) {
             Text("\(usage.currentRequests)/\(maxRequests)")
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.secondary)
 
             ProgressView(value: progress)
                 .progressViewStyle(LinearProgressViewStyle(tint: ProgressColorHelper.color(for: progress)))
-                .frame(width: 40, height: 3)
+                .frame(width: showTimestamp ? 60 : 80, height: 3) // Extended width, larger when no timestamp
                 .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
         }
     }
@@ -209,7 +218,8 @@ private extension ServiceProvider {
         ProviderSpendingRowView(
             provider: .cursor,
             loginManager: nil,
-            selectedProvider: $selectedProvider)
+            selectedProvider: $selectedProvider,
+            showTimestamp: true)
             .environment(spendingData)
             .environment(currencyData)
 
@@ -232,7 +242,8 @@ private extension ServiceProvider {
     return ProviderSpendingRowView(
         provider: .cursor,
         loginManager: nil,
-        selectedProvider: $selectedProvider)
+        selectedProvider: $selectedProvider,
+        showTimestamp: true)
         .environment(spendingData)
         .environment(currencyData)
         .padding()
