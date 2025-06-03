@@ -183,8 +183,9 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     private func performRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
-        // Perform request directly without retry handler for now
-        // TODO: Add retry logic if needed
+        // Use retry handler for network resilience
+        try await retryHandler.execute(
+            operation: { [self] in
                 logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
                 let (data, response) = try await urlSession.data(for: request)
 
