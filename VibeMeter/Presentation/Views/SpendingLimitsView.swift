@@ -32,7 +32,8 @@ struct SpendingLimitsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         LabeledContent("Amount") {
                             HStack(spacing: 8) {
-                                Text("$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
+                                Text(
+                                    "$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
                                     .font(.system(.body, design: .monospaced))
                                     .foregroundStyle(.primary)
                                 Text("USD")
@@ -67,7 +68,8 @@ struct SpendingLimitsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         LabeledContent("Amount") {
                             HStack(spacing: 8) {
-                                Text("$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
+                                Text(
+                                    "$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
                                     .font(.system(.body, design: .monospaced))
                                     .foregroundStyle(.primary)
                                 Text("USD")

@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Detailed view for a specific service provider showing connection status and management options.
+///
+/// This view displays comprehensive information about a selected provider including
+/// connection status, user account details, login/logout capabilities, and provider-specific
+/// settings. It appears as a sheet when users want to manage individual provider connections.
 struct ProviderDetailView: View {
     let provider: ServiceProvider
     let settingsManager: any SettingsManagerProtocol
@@ -54,7 +59,7 @@ struct ProviderDetailView: View {
                 if let session = userSessionData.getSession(for: provider) {
                     connectionStatusSection(session: session)
                     providerSettingsSection
-                    
+
                     // Logout button for logged in users
                     if userSessionData.isLoggedIn(to: provider) {
                         HStack {

@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Row view component for displaying provider information in settings lists.
+///
+/// This view shows provider details including name, icon, connection status, and
+/// action buttons for login/logout. It's used in the providers settings section
+/// to manage multiple service provider connections in a consistent list format.
 struct ProviderRowView: View {
     let provider: ServiceProvider
     let userSessionData: MultiProviderUserSessionData
@@ -72,7 +77,6 @@ struct ProviderRowView: View {
                         loginManager.showLoginWindow(for: provider)
                     }
                     .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
                 }
 
                 if isLoggedIn {
@@ -80,14 +84,12 @@ struct ProviderRowView: View {
                         loginManager.logOut(from: provider)
                     }
                     .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
 
                 Button("Details") {
                     showDetail()
                 }
                 .buttonStyle(.bordered)
-                .controlSize(.small)
             }
         }
     }

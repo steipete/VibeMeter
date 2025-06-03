@@ -30,16 +30,19 @@ struct CursorInvoiceResponse: Decodable {
     let pricingDescription: CursorPricingDescription?
 }
 
+/// Individual line item within an invoice containing cost and description.
 struct CursorInvoiceItem: Decodable {
     let cents: Int
     let description: String
 }
 
+/// Pricing plan description containing plan details and identifier.
 struct CursorPricingDescription: Decodable {
     let description: String
     let id: String
 }
 
+/// Response model for usage statistics across different AI models and request types.
 struct CursorUsageResponse: Decodable {
     let gpt35Turbo: ModelUsage
     let gpt4: ModelUsage
@@ -54,6 +57,7 @@ struct CursorUsageResponse: Decodable {
     }
 }
 
+/// Usage statistics for a specific AI model including request and token consumption.
 struct ModelUsage: Decodable {
     let numRequests: Int
     let numRequestsTotal: Int

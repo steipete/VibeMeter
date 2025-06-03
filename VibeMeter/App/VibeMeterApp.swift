@@ -96,15 +96,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         // Skip single instance check for SwiftUI previews
         let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        
+
         // Detect if running in test environment
         let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-                              NSClassFromString("XCTestCase") != nil
+            NSClassFromString("XCTestCase") != nil
 
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
         // process early.
-        if !isRunningInPreview && !isRunningInTests {
+        if !isRunningInPreview, !isRunningInTests {
             let runningApps = NSRunningApplication
                 .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             if runningApps.count > 1 {
@@ -157,7 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             logger.error("Failed to initialize MultiProviderDataOrchestrator")
             return
         }
-        
+
         // Only create status bar controller if not running in tests
         if !isRunningInTests {
             statusBarController = StatusBarController(
@@ -167,11 +167,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 spendingData: spendingData,
                 currencyData: currencyData,
                 orchestrator: orchestrator)
+
+            // Show popover on startup if user is not logged in to any provider
+            Task { @MainActor in
+                // Add a short delay to ensure the UI is fully initialized
+                try? await Task.sleep(for: .milliseconds(500))
+
+                if !userSession.isLoggedInToAnyProvider {
+                    statusBarController?.showPopover()
+                }
+            }
         } else {
             logger.info("Running in test environment - skipping StatusBarController initialization")
         }
-
-        // Don't show login window automatically - wait for user to click login button
 
         logger.info("VibeMeter launched successfully")
     }

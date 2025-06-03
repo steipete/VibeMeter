@@ -61,7 +61,7 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Show cost in menu bar
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Show cost in menu bar", isOn: $showCostInMenuBar)
@@ -86,7 +86,7 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 8)
-            
+
             // Refresh Interval
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Refresh Interval") {
@@ -107,7 +107,7 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 8)
-            
+
             // Check for Updates
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -153,7 +153,6 @@ struct GeneralSettingsView: View {
                 .font(.headline)
         }
     }
-
 
     private func validateRefreshInterval(_ newValue: Int) {
         if SettingsManager.refreshIntervalOptions.contains(newValue) {

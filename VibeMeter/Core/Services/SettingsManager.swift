@@ -191,13 +191,13 @@ public final class SettingsManager: SettingsManagerProtocol {
     public static var shared: SettingsManager {
         MainActor.assumeIsolated {
             // Return test instance if available, otherwise return the singleton
-            if let testInstance = testInstance {
+            if let testInstance {
                 return testInstance
             }
             return _sharedInstance
         }
     }
-    
+
     private static let _sharedInstance = MainActor.assumeIsolated {
         SettingsManager()
     }
