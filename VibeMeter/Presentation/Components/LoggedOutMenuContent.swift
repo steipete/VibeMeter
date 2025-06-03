@@ -54,15 +54,18 @@ struct LoggedOutMenuContent: View {
     private var loginButtonsSection: some View {
         VStack(spacing: 6) {
             ForEach(ServiceProvider.allCases, id: \.self) { provider in
-                Button("Login to \(provider.displayName)") {
-                    logger.info("User clicked login button for \(provider.displayName)")
-                    loginManager.showLoginWindow(for: provider)
-                }
-                .apply { button in
+                Group {
                     if provider == .cursor {
-                        button.keyboardShortcut("l")
+                        Button("Login to \(provider.displayName)") {
+                            logger.info("User clicked login button for \(provider.displayName)")
+                            loginManager.showLoginWindow(for: provider)
+                        }
+                        .keyboardShortcut("l")
                     } else {
-                        button
+                        Button("Login to \(provider.displayName)") {
+                            logger.info("User clicked login button for \(provider.displayName)")
+                            loginManager.showLoginWindow(for: provider)
+                        }
                     }
                 }
                 .buttonStyle(.borderedProminent)

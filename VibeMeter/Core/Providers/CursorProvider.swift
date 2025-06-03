@@ -210,6 +210,38 @@ public actor CursorProvider: ProviderProtocol {
             default:
                 let message = String(data: data, encoding: .utf8) ?? "Unknown error"
                 logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
+                
+                // Parse specific error types from response body
+                if let errorData = data.isEmpty ? nil : data,
+                   let json = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
+                   let error = json["error"] as? [String: Any],
+                   let details = error["details"] as? [[String: Any]] {
+                    
+                    for detail in details {
+                        if let errorCode = detail["error"] as? String,
+                           let errorDetails = detail["details"] as? [String: Any] {
+                            
+                            // Check for unauthorized/team not found errors
+                            if errorCode == "ERROR_UNAUTHORIZED" {
+                                if let errorDetail = errorDetails["detail"] as? String,
+                                   errorDetail.contains("Team not found") {
+                                    logger.warning("Team not found error detected")
+                                    throw ProviderError.noTeamFound
+                                } else {
+                                    logger.warning("Unauthorized error detected")
+                                    throw ProviderError.unauthorized
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Handle status code specific errors
+                if httpResponse.statusCode == 500 && message.contains("Team not found") {
+                    logger.warning("Team not found error detected from 500 response")
+                    throw ProviderError.noTeamFound
+                }
+                
                 throw ProviderError.networkError(
                     message: message,
                     statusCode: httpResponse.statusCode)
