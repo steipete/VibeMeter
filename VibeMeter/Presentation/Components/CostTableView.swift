@@ -50,11 +50,6 @@ struct CostTableView: View {
 
     private var providerBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Breakdown")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 14)
-
             VStack(spacing: 1) {
                 ForEach(spendingData.providersWithData, id: \.self) { provider in
                     ProviderSpendingRowView(
