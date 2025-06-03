@@ -48,7 +48,7 @@ struct AboutView: View {
         }
         .padding(.top, 20)
     }
-    
+
     @ViewBuilder
     private var systemStatusSection: some View {
         if let orchestrator {
@@ -56,22 +56,21 @@ struct AboutView: View {
                 Text("System Status")
                     .font(.headline)
                     .fontWeight(.medium)
-                
+
                 VStack(spacing: 6) {
                     HStack {
                         Text("Network:")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
-                        
+
                         Spacer()
-                        
+
                         NetworkStatusIndicator(
                             networkStatus: orchestrator.networkStatus,
                             isConnected: orchestrator.isNetworkConnected,
-                            compact: true
-                        )
+                            compact: true)
                     }
-                    
+
                     if !orchestrator.isNetworkConnected {
                         Text("Some features may not work without internet")
                             .font(.system(size: 11))

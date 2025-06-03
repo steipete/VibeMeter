@@ -112,39 +112,37 @@ struct ProvidersSettingsView: View {
 // MARK: - Preview
 
 #Preview("Providers Settings - Multiple States") {
-    @Previewable @State var userSessionData = {
+    @Previewable @State
+    var userSessionData = {
         let data = MultiProviderUserSessionData()
         data.handleLoginSuccess(
             for: .cursor,
             email: "user@example.com",
             teamName: "Example Team",
-            teamId: 123
-        )
+            teamId: 123)
         return data
     }()
-    @Previewable @State var showingProviderDetail: ServiceProvider?
-    
+    @Previewable @State
+    var showingProviderDetail: ServiceProvider?
+
     ProvidersSettingsView(
         settingsManager: MockSettingsManager(),
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        ),
-        showingProviderDetail: $showingProviderDetail
-    )
-    .frame(width: 620, height: 400)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        showingProviderDetail: $showingProviderDetail)
+        .frame(width: 620, height: 400)
 }
 
 #Preview("Providers Settings - All Logged Out") {
-    @Previewable @State var showingProviderDetail: ServiceProvider?
-    
+    @Previewable @State
+    var showingProviderDetail: ServiceProvider?
+
     ProvidersSettingsView(
         settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        ),
-        showingProviderDetail: $showingProviderDetail
-    )
-    .frame(width: 620, height: 400)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        showingProviderDetail: $showingProviderDetail)
+        .frame(width: 620, height: 400)
 }

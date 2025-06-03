@@ -54,13 +54,13 @@ final class ExchangeRateManagerMock: ExchangeRateManagerProtocol, MockResetProto
         resetTracking()
         resetReturnValues()
     }
-    
+
     func resetTracking() {
         fetchExchangeRatesCallCount = 0
         getRatesCallCount = 0
         convertCallCount = 0
     }
-    
+
     func resetReturnValues() {
         ratesToReturn = ["USD": 1.0, "EUR": 0.92, "GBP": 0.82]
         errorToReturn = nil

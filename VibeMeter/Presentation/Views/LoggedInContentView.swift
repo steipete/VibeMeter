@@ -49,28 +49,26 @@ struct LoggedInContentView: View {
 #Preview("Logged In Content - With Data") {
     let (userSession, spendingData, currencyData) = PreviewData.loggedInWithSpending(cents: 4997)
     let services = MockServices.standard
-    
+
     return LoggedInContentView(
         settingsManager: services.0,
         userSessionData: userSession,
         loginManager: nil,
-        onRefresh: {}
-    )
-    .withCompleteEnvironment(spending: spendingData, currency: currencyData)
-    .contentFrame()
-    .materialBackground()
+        onRefresh: {})
+        .withCompleteEnvironment(spending: spendingData, currency: currencyData)
+        .contentFrame()
+        .materialBackground()
 }
 
 #Preview("Logged In Content - Loading") {
     let userSession = PreviewData.mockUserSession(email: "john.doe@company.com", teamName: "Company Team", teamId: 456)
-    
+
     return LoggedInContentView(
         settingsManager: MockServices.settingsManager,
         userSessionData: userSession,
         loginManager: nil,
-        onRefresh: {}
-    )
-    .standardPreviewEnvironment()
-    .contentFrame()
-    .materialBackground()
+        onRefresh: {})
+        .standardPreviewEnvironment()
+        .contentFrame()
+        .materialBackground()
 }

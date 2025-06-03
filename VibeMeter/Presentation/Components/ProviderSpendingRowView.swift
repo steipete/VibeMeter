@@ -32,7 +32,7 @@ struct ProviderSpendingRowView: View {
                     usageDataBadge(usage: usage, maxRequests: maxRequests)
                 }
             }
-            
+
             // Show last refresh timestamp if available
             if let providerData = spendingData.getSpendingData(for: provider),
                let lastRefresh = providerData.lastSuccessfulRefresh {
@@ -72,14 +72,13 @@ struct ProviderSpendingRowView: View {
                 }
                 .foregroundStyle(provider.accentColor)
                 .frame(width: 16, height: 16)
-                
+
                 // Status badge overlay
                 if let providerData = spendingData.getSpendingData(for: provider) {
                     ProviderStatusBadge(
                         status: providerData.connectionStatus,
-                        size: 10
-                    )
-                    .offset(x: 4, y: -4)
+                        size: 10)
+                        .offset(x: 4, y: -4)
                 }
             }
             .frame(width: 20, height: 20) // Give space for badge
@@ -129,21 +128,20 @@ struct ProviderSpendingRowView: View {
                 .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
         }
     }
-    
+
     private func lastRefreshRow(date: Date) -> some View {
         HStack {
             // Align with icon column above (20px wide from mainProviderRow)
             Color.clear
                 .frame(width: 20)
-            
+
             RelativeTimestampView(
                 date: date,
                 style: .withPrefix,
-                showFreshnessColor: false
-            )
-            .font(.system(size: 9))
-            .foregroundStyle(.quaternary)
-            
+                showFreshnessColor: false)
+                .font(.system(size: 9))
+                .foregroundStyle(.quaternary)
+
             Spacer()
         }
     }
@@ -220,8 +218,9 @@ private extension ServiceProvider {
 // MARK: - Preview
 
 #Preview("Provider Spending Row - With Data") {
-    @Previewable @State var selectedProvider: ServiceProvider?
-    
+    @Previewable @State
+    var selectedProvider: ServiceProvider?
+
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
 
@@ -266,8 +265,9 @@ private extension ServiceProvider {
 }
 
 #Preview("Provider Spending Row - Loading") {
-    @Previewable @State var selectedProvider: ServiceProvider?
-    
+    @Previewable @State
+    var selectedProvider: ServiceProvider?
+
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
 

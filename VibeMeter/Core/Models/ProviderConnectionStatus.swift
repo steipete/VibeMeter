@@ -5,26 +5,26 @@ import SwiftUI
 /// This enum captures all possible states a provider connection can be in,
 /// from disconnected to various error states, with appropriate visual representations.
 public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
-    case disconnected           // Not logged in
-    case connecting            // Currently authenticating
-    case connected            // Authenticated and working
-    case syncing             // Fetching data
+    case disconnected // Not logged in
+    case connecting // Currently authenticating
+    case connected // Authenticated and working
+    case syncing // Fetching data
     case error(message: String) // Connection/API error (simplified for Codable)
     case rateLimited(until: Date?) // Rate limited with retry time
-    case stale               // Data is old (haven't refreshed in a while)
-    
+    case stale // Data is old (haven't refreshed in a while)
+
     // MARK: - Codable
-    
+
     private enum CodingKeys: String, CodingKey {
         case type
         case message
         case until
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
-        
+
         switch type {
         case "disconnected":
             self = .disconnected
@@ -46,10 +46,10 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
             self = .disconnected
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        
+
         switch self {
         case .disconnected:
             try container.encode("disconnected", forKey: .type)
@@ -59,55 +59,55 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
             try container.encode("connected", forKey: .type)
         case .syncing:
             try container.encode("syncing", forKey: .type)
-        case .error(let message):
+        case let .error(message):
             try container.encode("error", forKey: .type)
             try container.encode(message, forKey: .message)
-        case .rateLimited(let until):
+        case let .rateLimited(until):
             try container.encode("rateLimited", forKey: .type)
             try container.encodeIfPresent(until, forKey: .until)
         case .stale:
             try container.encode("stale", forKey: .type)
         }
     }
-    
+
     // MARK: - Display Properties
-    
+
     /// Color representing the status.
     public var displayColor: Color {
         switch self {
         case .disconnected:
-            return .gray
+            .gray
         case .connecting, .syncing:
-            return .blue
+            .blue
         case .connected:
-            return .green
+            .green
         case .error:
-            return .red
+            .red
         case .rateLimited:
-            return .orange
+            .orange
         case .stale:
-            return .yellow
+            .yellow
         }
     }
-    
+
     /// SF Symbol name for the status.
     public var iconName: String {
         switch self {
         case .disconnected:
-            return "circle"
+            "circle"
         case .connecting, .syncing:
-            return "arrow.2.circlepath"
+            "arrow.2.circlepath"
         case .connected:
-            return "checkmark.circle.fill"
+            "checkmark.circle.fill"
         case .error:
-            return "exclamationmark.triangle.fill"
+            "exclamationmark.triangle.fill"
         case .rateLimited:
-            return "clock.fill"
+            "clock.fill"
         case .stale:
-            return "exclamationmark.circle"
+            "exclamationmark.circle"
         }
     }
-    
+
     /// Human-readable description of the status.
     public var description: String {
         switch self {
@@ -119,9 +119,9 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
             return "Updating..."
         case .connected:
             return "Connected"
-        case .error(let message):
+        case let .error(message):
             return userFriendlyError(from: message)
-        case .rateLimited(let until):
+        case let .rateLimited(until):
             if let until {
                 let formatter = RelativeDateTimeFormatter()
                 formatter.unitsStyle = .short
@@ -132,62 +132,62 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
             return "Data may be outdated"
         }
     }
-    
+
     /// Short description for compact displays.
     public var shortDescription: String {
         switch self {
         case .disconnected:
-            return "Offline"
+            "Offline"
         case .connecting:
-            return "Connecting"
+            "Connecting"
         case .syncing:
-            return "Syncing"
+            "Syncing"
         case .connected:
-            return "Online"
+            "Online"
         case .error:
-            return "Error"
+            "Error"
         case .rateLimited:
-            return "Limited"
+            "Limited"
         case .stale:
-            return "Stale"
+            "Stale"
         }
     }
-    
+
     /// Whether this status indicates an active operation.
     public var isActive: Bool {
         switch self {
         case .connecting, .syncing:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
-    
+
     /// Whether this status indicates a problem.
     public var isError: Bool {
         switch self {
         case .error, .rateLimited, .stale:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
-    
+
     // MARK: - Private Helpers
-    
+
     private func userFriendlyError(from message: String) -> String {
         // Convert technical errors to user-friendly messages
         if message.lowercased().contains("network") || message.lowercased().contains("connection") {
-            return "Connection failed"
+            "Connection failed"
         } else if message.lowercased().contains("unauthorized") || message.lowercased().contains("auth") {
-            return "Authentication failed"
+            "Authentication failed"
         } else if message.lowercased().contains("timeout") {
-            return "Request timed out"
+            "Request timed out"
         } else if message.lowercased().contains("team not found") {
-            return "Team not found"
+            "Team not found"
         } else {
             // Truncate long error messages
-            return String(message.prefix(50))
+            String(message.prefix(50))
         }
     }
 }
@@ -199,32 +199,32 @@ extension ProviderConnectionStatus {
     public static func from(_ error: ProviderError) -> ProviderConnectionStatus {
         switch error {
         case .unauthorized:
-            return .error(message: "Authentication failed")
+            .error(message: "Authentication failed")
         case .rateLimitExceeded:
-            return .rateLimited(until: nil)
-        case .networkError(let message, _):
-            return .error(message: message)
+            .rateLimited(until: nil)
+        case let .networkError(message, _):
+            .error(message: message)
         case .noTeamFound:
-            return .error(message: "Team not found")
+            .error(message: "Team not found")
         case .teamIdNotSet:
-            return .error(message: "Team not configured")
+            .error(message: "Team not configured")
         case .serviceUnavailable:
-            return .error(message: "Service unavailable")
-        case .decodingError(let message, _):
-            return .error(message: "Data error: \(message)")
-        case .unsupportedProvider(let provider):
-            return .error(message: "Unsupported provider: \(provider.displayName)")
-        case .authenticationFailed(let reason):
-            return .error(message: "Authentication failed: \(reason)")
+            .error(message: "Service unavailable")
+        case let .decodingError(message, _):
+            .error(message: "Data error: \(message)")
+        case let .unsupportedProvider(provider):
+            .error(message: "Unsupported provider: \(provider.displayName)")
+        case let .authenticationFailed(reason):
+            .error(message: "Authentication failed: \(reason)")
         case .tokenExpired:
-            return .error(message: "Token expired")
+            .error(message: "Token expired")
         }
     }
-    
+
     /// Creates a rate limited status from a NetworkRetryHandler error.
     static func from(_ error: NetworkRetryHandler.RetryableError) -> ProviderConnectionStatus? {
         switch error {
-        case .rateLimited(let retryAfter):
+        case let .rateLimited(retryAfter):
             let until = retryAfter.map { Date(timeIntervalSinceNow: $0) }
             return .rateLimited(until: until)
         case .serverError:

@@ -79,4 +79,3 @@ struct VibeMeterMainView: View {
         .environment(spendingData)
         .environment(CurrencyData())
 }
-

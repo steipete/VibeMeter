@@ -204,17 +204,14 @@ struct ProviderDetailView: View {
         for: .cursor,
         email: "user@example.com",
         teamName: "Example Team",
-        teamId: 123
-    )
-    
+        teamId: 123)
+
     return ProviderDetailView(
         provider: .cursor,
         settingsManager: MockSettingsManager(),
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
 }
 
 #Preview("Provider Detail - Not Logged In") {
@@ -223,7 +220,5 @@ struct ProviderDetailView: View {
         settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
 }

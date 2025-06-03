@@ -6,13 +6,13 @@ struct UserDefaultsBacked<T> {
     let key: String
     let defaultValue: T
     let userDefaults: UserDefaults
-    
+
     init(key: String, defaultValue: T, userDefaults: UserDefaults = .standard) {
         self.key = key
         self.defaultValue = defaultValue
         self.userDefaults = userDefaults
     }
-    
+
     var wrappedValue: T {
         get {
             userDefaults.object(forKey: key) as? T ?? defaultValue

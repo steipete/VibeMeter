@@ -4,8 +4,7 @@ import SwiftUI
 ///
 /// This factory provides consistent mock service instances across previews,
 /// reducing duplication and ensuring standardized behavior for preview scenarios.
-public struct MockServices {
-    
+public enum MockServices {
     /// Shared MockSettingsManager instance for previews.
     ///
     /// Uses default values suitable for most preview scenarios.
@@ -13,7 +12,7 @@ public struct MockServices {
     public static var settingsManager: MockSettingsManager {
         MockSettingsManager()
     }
-    
+
     /// MockSettingsManager with custom configuration.
     ///
     /// - Parameters:
@@ -25,25 +24,22 @@ public struct MockServices {
     public static func settingsManager(
         currency: String = "USD",
         warningLimit: Double = 200,
-        upperLimit: Double = 500
-    ) -> MockSettingsManager {
+        upperLimit: Double = 500) -> MockSettingsManager {
         MockSettingsManager(
             selectedCurrencyCode: currency,
             warningLimitUSD: warningLimit,
-            upperLimitUSD: upperLimit
-        )
+            upperLimitUSD: upperLimit)
     }
-    
+
     /// MultiProviderLoginManager with mock settings for previews.
     ///
     /// Uses a MockSettingsManager as the dependency.
     @MainActor
     public static var loginManager: MultiProviderLoginManager {
         MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager()))
     }
-    
+
     /// MultiProviderLoginManager with custom settings manager.
     ///
     /// - Parameter settingsManager: The settings manager to use
@@ -51,8 +47,7 @@ public struct MockServices {
     @MainActor
     public static func loginManager(with settingsManager: MockSettingsManager) -> MultiProviderLoginManager {
         MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: settingsManager)
-        )
+            providerFactory: ProviderFactory(settingsManager: settingsManager))
     }
 }
 
@@ -68,7 +63,7 @@ public extension MockServices {
         let login = loginManager(with: settings)
         return (settings, login)
     }
-    
+
     /// Services bundle with custom currency.
     ///
     /// - Parameter currency: Currency code to use
@@ -79,7 +74,7 @@ public extension MockServices {
         let login = loginManager(with: settings)
         return (settings, login)
     }
-    
+
     /// Services bundle with custom spending limits.
     ///
     /// - Parameters:

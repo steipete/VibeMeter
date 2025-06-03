@@ -88,4 +88,3 @@ struct MenuBarContentView: View {
         .environment(CurrencyData())
         .frame(width: 250)
 }
-

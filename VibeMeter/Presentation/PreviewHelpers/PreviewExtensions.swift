@@ -9,21 +9,21 @@ public extension View {
     func menuBarFrame() -> some View {
         frame(width: 250)
     }
-    
+
     /// Applies standard settings window frame sizing.
     ///
     /// - Returns: View with 620x500pt frame
     func settingsFrame() -> some View {
         frame(width: 620, height: 500)
     }
-    
+
     /// Applies standard content view frame sizing.
     ///
     /// - Returns: View with 300x400pt frame
     func contentFrame() -> some View {
         frame(width: 300, height: 400)
     }
-    
+
     /// Applies standard component preview frame sizing.
     ///
     /// - Parameters:
@@ -37,7 +37,7 @@ public extension View {
             return frame(width: width)
         }
     }
-    
+
     /// Applies standard preview background styling.
     ///
     /// Uses the system window background color appropriate for macOS.
@@ -45,7 +45,7 @@ public extension View {
     func previewBackground() -> some View {
         background(Color(NSColor.windowBackgroundColor))
     }
-    
+
     /// Applies material background for menu-like previews.
     ///
     /// - Returns: View with thick material background
@@ -65,7 +65,7 @@ public extension View {
         environment(PreviewData.emptySpendingData())
             .environment(PreviewData.mockCurrencyData())
     }
-    
+
     /// Applies preview environment with spending data.
     ///
     /// - Parameter spendingData: The spending data to inject
@@ -74,7 +74,7 @@ public extension View {
         environment(spendingData)
             .environment(PreviewData.mockCurrencyData())
     }
-    
+
     /// Applies preview environment with currency data.
     ///
     /// - Parameter currencyData: The currency data to inject
@@ -83,7 +83,7 @@ public extension View {
         environment(PreviewData.emptySpendingData())
             .environment(currencyData)
     }
-    
+
     /// Applies complete preview environment with both spending and currency data.
     ///
     /// - Parameters:
@@ -92,8 +92,7 @@ public extension View {
     /// - Returns: View with complete environment
     func withCompleteEnvironment(
         spending: MultiProviderSpendingData,
-        currency: CurrencyData
-    ) -> some View {
+        currency: CurrencyData) -> some View {
         environment(spending)
             .environment(currency)
     }
@@ -112,7 +111,7 @@ public extension View {
         }
         .padding()
     }
-    
+
     /// Wraps view in an HStack with standard spacing for side-by-side previews.
     ///
     /// - Parameter spacing: Spacing between items (default: 20)

@@ -95,9 +95,7 @@ struct LoggedOutMenuContent: View {
 #Preview("Logged Out Menu") {
     LoggedOutMenuContent(
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .frame(width: 250)
-    .background(Color(NSColor.windowBackgroundColor))
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .frame(width: 250)
+        .background(Color(NSColor.windowBackgroundColor))
 }

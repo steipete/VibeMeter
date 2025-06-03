@@ -11,18 +11,17 @@ import SwiftUI
 struct MaterialBackgroundModifier: ViewModifier {
     let cornerRadius: CGFloat
     let material: Material
-    
+
     init(cornerRadius: CGFloat = 10, material: Material = .thickMaterial) {
         self.cornerRadius = cornerRadius
         self.material = material
     }
-    
+
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(material)
-            )
+                    .fill(material))
     }
 }
 
@@ -32,12 +31,12 @@ struct MaterialBackgroundModifier: ViewModifier {
 struct StandardPaddingModifier: ViewModifier {
     let horizontal: CGFloat
     let vertical: CGFloat
-    
+
     init(horizontal: CGFloat = 16, vertical: CGFloat = 14) {
         self.horizontal = horizontal
         self.vertical = vertical
     }
-    
+
     func body(content: Content) -> some View {
         content
             .padding(.horizontal, horizontal)
@@ -52,17 +51,16 @@ struct CardStyleModifier: ViewModifier {
     let cornerRadius: CGFloat
     let horizontalPadding: CGFloat
     let verticalPadding: CGFloat
-    
+
     init(
         cornerRadius: CGFloat = 10,
         horizontalPadding: CGFloat = 14,
-        verticalPadding: CGFloat = 10
-    ) {
+        verticalPadding: CGFloat = 10) {
         self.cornerRadius = cornerRadius
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
     }
-    
+
     func body(content: Content) -> some View {
         content
             .padding(.horizontal, horizontalPadding)
@@ -81,11 +79,10 @@ public extension View {
     ///   - material: Material type to use (default: .thickMaterial)
     func materialBackground(
         cornerRadius: CGFloat = 10,
-        material: Material = .thickMaterial
-    ) -> some View {
+        material: Material = .thickMaterial) -> some View {
         modifier(MaterialBackgroundModifier(cornerRadius: cornerRadius, material: material))
     }
-    
+
     /// Applies standard padding used throughout the app.
     ///
     /// - Parameters:
@@ -93,11 +90,10 @@ public extension View {
     ///   - vertical: Vertical padding (default: 14)
     func standardPadding(
         horizontal: CGFloat = 16,
-        vertical: CGFloat = 14
-    ) -> some View {
+        vertical: CGFloat = 14) -> some View {
         modifier(StandardPaddingModifier(horizontal: horizontal, vertical: vertical))
     }
-    
+
     /// Applies card styling with material background and padding.
     ///
     /// - Parameters:
@@ -107,13 +103,11 @@ public extension View {
     func cardStyle(
         cornerRadius: CGFloat = 10,
         horizontalPadding: CGFloat = 14,
-        verticalPadding: CGFloat = 10
-    ) -> some View {
+        verticalPadding: CGFloat = 10) -> some View {
         modifier(CardStyleModifier(
             cornerRadius: cornerRadius,
             horizontalPadding: horizontalPadding,
-            verticalPadding: verticalPadding
-        ))
+            verticalPadding: verticalPadding))
     }
 }
 
@@ -124,15 +118,15 @@ public extension View {
         Text("Thick Material")
             .standardPadding()
             .materialBackground(material: .thickMaterial)
-        
+
         Text("Regular Material")
             .standardPadding()
             .materialBackground(material: .regular)
-        
+
         Text("Thin Material")
             .standardPadding()
             .materialBackground(material: .thin)
-        
+
         Text("Ultra Thin Material")
             .standardPadding()
             .materialBackground(material: .ultraThin)
@@ -153,7 +147,7 @@ public extension View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
-        
+
         VStack(alignment: .leading, spacing: 8) {
             Text("Custom Card Style")
                 .font(.headline)
@@ -180,7 +174,7 @@ public extension View {
         }
         .standardPadding()
         .background(Color.blue.opacity(0.1))
-        
+
         HStack {
             Text("Custom Padding")
             Spacer()

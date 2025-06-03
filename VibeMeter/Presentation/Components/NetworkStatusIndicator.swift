@@ -9,13 +9,13 @@ struct NetworkStatusIndicator: View {
     let networkStatus: String
     let isConnected: Bool
     let compact: Bool
-    
+
     init(networkStatus: String, isConnected: Bool, compact: Bool = false) {
         self.networkStatus = networkStatus
         self.isConnected = isConnected
         self.compact = compact
     }
-    
+
     var body: some View {
         HStack(spacing: compact ? 4 : 6) {
             // Status icon
@@ -25,9 +25,8 @@ struct NetworkStatusIndicator: View {
                 .symbolEffect(
                     .pulse.byLayer,
                     options: .repeating,
-                    isActive: !isConnected
-                )
-            
+                    isActive: !isConnected)
+
             if !compact {
                 Text(networkStatus)
                     .font(.system(size: 11))
@@ -38,28 +37,27 @@ struct NetworkStatusIndicator: View {
         .padding(.vertical, compact ? 2 : 3)
         .background(
             RoundedRectangle(cornerRadius: compact ? 4 : 6)
-                .fill(statusColor.opacity(0.1))
-        )
+                .fill(statusColor.opacity(0.1)))
         .help(fullStatusDescription)
     }
-    
+
     private var statusIcon: String {
         if isConnected {
-            return "wifi"
+            "wifi"
         } else {
-            return "wifi.slash"
+            "wifi.slash"
         }
     }
-    
+
     private var statusColor: Color {
         isConnected ? .green : .red
     }
-    
+
     private var fullStatusDescription: String {
         if isConnected {
-            return "Network: \(networkStatus)"
+            "Network: \(networkStatus)"
         } else {
-            return "No internet connection"
+            "No internet connection"
         }
     }
 }
@@ -68,13 +66,12 @@ struct NetworkStatusIndicator: View {
 struct CompactNetworkStatus: View {
     let networkStatus: String
     let isConnected: Bool
-    
+
     var body: some View {
         NetworkStatusIndicator(
             networkStatus: networkStatus,
             isConnected: isConnected,
-            compact: true
-        )
+            compact: true)
     }
 }
 
@@ -88,13 +85,13 @@ struct CompactNetworkStatus: View {
             NetworkStatusIndicator(networkStatus: "Cellular (Expensive)", isConnected: true)
             NetworkStatusIndicator(networkStatus: "Offline", isConnected: false)
         }
-        
+
         Divider()
-        
+
         Text("Compact variants:")
             .font(.caption)
             .foregroundStyle(.secondary)
-        
+
         HStack(spacing: 8) {
             CompactNetworkStatus(networkStatus: "WiFi", isConnected: true)
             CompactNetworkStatus(networkStatus: "Offline", isConnected: false)

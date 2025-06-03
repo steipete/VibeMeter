@@ -145,4 +145,3 @@ struct AnalyticsSettingsView: View {
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
         .frame(width: 800, height: 600)
 }
-

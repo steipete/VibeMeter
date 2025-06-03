@@ -124,10 +124,9 @@ struct SpendingLimitsView: View {
 #Preview("Spending Limits - USD") {
     SpendingLimitsView(
         settingsManager: MockSettingsManager(),
-        userSessionData: MultiProviderUserSessionData()
-    )
-    .environment(CurrencyData())
-    .frame(width: 620, height: 500)
+        userSessionData: MultiProviderUserSessionData())
+        .environment(CurrencyData())
+        .frame(width: 620, height: 500)
 }
 
 @MainActor
@@ -141,8 +140,7 @@ private func makeCurrencyData() -> CurrencyData {
 #Preview("Spending Limits - EUR") {
     SpendingLimitsView(
         settingsManager: MockSettingsManager.withLimits(warning: 150, upper: 800),
-        userSessionData: MultiProviderUserSessionData()
-    )
-    .environment(makeCurrencyData())
-    .frame(width: 620, height: 500)
+        userSessionData: MultiProviderUserSessionData())
+        .environment(makeCurrencyData())
+        .frame(width: 620, height: 500)
 }

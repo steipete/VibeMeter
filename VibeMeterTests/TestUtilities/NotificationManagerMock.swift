@@ -62,7 +62,7 @@ final class NotificationManagerMock: NotificationManagerProtocol, MockResetProto
         resetTracking()
         resetReturnValues()
     }
-    
+
     func resetTracking() {
         requestAuthorizationCalled = false
         showWarningNotificationCalled = false
@@ -70,7 +70,7 @@ final class NotificationManagerMock: NotificationManagerProtocol, MockResetProto
         resetAllNotificationStatesCalled = false
         resetNotificationStateIfBelowCalled = false
     }
-    
+
     func resetReturnValues() {
         authorizationGrantedToReturn = true
         lastWarningSpending = nil

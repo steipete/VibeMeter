@@ -180,9 +180,9 @@ struct CustomMenuContainer<Content: View>: View {
             Text("VibeMeter")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             Divider()
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis")
                 Label("Settings", systemImage: "gear")
@@ -190,13 +190,13 @@ struct CustomMenuContainer<Content: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
-            
+
             Spacer()
-            
+
             Button("Log In") {}
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-            
+
             Spacer()
         }
         .padding()

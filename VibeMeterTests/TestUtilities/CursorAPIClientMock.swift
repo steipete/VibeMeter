@@ -133,7 +133,7 @@ final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked
         resetTracking()
         resetReturnValues()
     }
-    
+
     func resetTracking() {
         fetchTeamInfoCallCount = 0
         fetchUserInfoCallCount = 0
@@ -144,7 +144,7 @@ final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked
         lastMonthRequested = nil
         lastYearRequested = nil
     }
-    
+
     func resetReturnValues() {
         teamInfoToReturn = ProviderTeamInfo(id: 123, name: "Mock Team", provider: .cursor)
         userInfoToReturn = ProviderUserInfo(email: "mock@example.com", teamId: 12345, provider: .cursor)

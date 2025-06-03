@@ -69,14 +69,14 @@ struct UserAvatarView: View {
             UserAvatarView(email: "hello@world.com", size: 60)
             UserAvatarView(email: "john.doe@example.com", size: 80)
         }
-        
+
         HStack(spacing: 20) {
             VStack {
                 UserAvatarView(email: nil, size: 40)
                 Text("No email")
                     .font(.caption)
             }
-            
+
             VStack {
                 UserAvatarView(email: "jane@example.com", size: 40)
                 Text("With email")

@@ -105,4 +105,3 @@ private func makeUserSessionData() -> MultiProviderUserSessionData {
         orchestrator: nil)
         .frame(width: 620, height: 500)
 }
-

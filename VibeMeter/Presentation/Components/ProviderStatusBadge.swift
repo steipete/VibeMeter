@@ -7,16 +7,17 @@ import SwiftUI
 struct ProviderStatusBadge: View {
     let status: ProviderConnectionStatus
     let size: CGFloat
-    
-    @State private var isAnimating = false
-    
+
+    @State
+    private var isAnimating = false
+
     var body: some View {
         ZStack {
             // Background circle with subtle color
             Circle()
                 .fill(status.displayColor.opacity(0.15))
                 .frame(width: size, height: size)
-            
+
             // Status icon
             Image(systemName: status.iconName)
                 .font(.system(size: size * 0.55, weight: .medium))
@@ -24,8 +25,7 @@ struct ProviderStatusBadge: View {
                 .symbolEffect(
                     .pulse.byLayer,
                     options: .repeating,
-                    isActive: status.isActive
-                )
+                    isActive: status.isActive)
         }
         .help(status.description) // Tooltip on hover
         .onAppear {
@@ -43,11 +43,11 @@ struct ProviderStatusBadge: View {
 struct ProviderStatusIndicator: View {
     let status: ProviderConnectionStatus
     let showText: Bool
-    
+
     var body: some View {
         HStack(spacing: 6) {
             ProviderStatusBadge(status: status, size: 16)
-            
+
             if showText {
                 Text(status.shortDescription)
                     .font(.system(size: 11, weight: .medium))
@@ -59,15 +59,14 @@ struct ProviderStatusIndicator: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(status.displayColor.opacity(0.1))
-                .opacity(showText ? 1 : 0)
-        )
+                .opacity(showText ? 1 : 0))
     }
 }
 
 /// Menu bar status dot indicator for overall system status.
 struct MenuBarStatusDot: View {
     let status: ProviderConnectionStatus
-    
+
     var body: some View {
         if status.isError {
             Circle()
@@ -93,9 +92,9 @@ struct MenuBarStatusDot: View {
                 }
             }
         }
-        
+
         Divider()
-        
+
         // Large indicators with text
         VStack(alignment: .leading, spacing: 12) {
             ForEach(previewStatuses, id: \.0) { _, status in
@@ -114,5 +113,5 @@ private let previewStatuses: [(String, ProviderConnectionStatus)] = [
     ("Syncing", .syncing),
     ("Error", .error(message: "Connection failed")),
     ("Rate Limited", .rateLimited(until: Date(timeIntervalSinceNow: 3600))),
-    ("Stale", .stale)
+    ("Stale", .stale),
 ]

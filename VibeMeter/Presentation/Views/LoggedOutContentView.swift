@@ -85,9 +85,7 @@ struct LoggedOutContentView: View {
 #Preview("Logged Out Content") {
     LoggedOutContentView(
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        )
-    )
-    .frame(width: 300, height: 350)
-    .background(.thickMaterial)
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .frame(width: 300, height: 350)
+        .background(.thickMaterial)
 }

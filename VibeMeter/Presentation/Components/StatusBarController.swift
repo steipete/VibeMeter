@@ -128,7 +128,7 @@ final class StatusBarController: NSObject {
                     .frame(width: 18, height: 18)
                     .environment(\.colorScheme, colorScheme)
             }
-            
+
             // Add status indicator if there are any provider issues
             if spendingData.hasProviderIssues {
                 MenuBarStatusDot(status: spendingData.overallConnectionStatus)
@@ -171,7 +171,7 @@ final class StatusBarController: NSObject {
         } else {
             button.title = ""
         }
-        
+
         // Set tooltip with spending percentage and last refresh info
         button.toolTip = createTooltipText()
     }
@@ -199,40 +199,40 @@ final class StatusBarController: NSObject {
     }
 
     // Methods removed - handled by CustomMenuWindow
-    
+
     private func createTooltipText() -> String {
         guard userSession.isLoggedInToAnyProvider else {
             return "VibeMeter - Not logged in to any provider"
         }
-        
+
         let providers = spendingData.providersWithData
         guard !providers.isEmpty else {
             return "VibeMeter - Loading data..."
         }
-        
+
         // Calculate spending percentage
         let totalSpendingUSD = spendingData.totalSpendingConverted(
             to: "USD",
             rates: currencyData.effectiveRates)
         let upperLimit = settingsManager.upperLimitUSD
         let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
-        
+
         // Get most recent refresh date
         let mostRecentRefresh = providers
             .compactMap { provider in
                 spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
             }
             .max()
-        
+
         var tooltip = "VibeMeter - \(Int(percentage))% of limit"
-        
+
         if let lastRefresh = mostRecentRefresh {
             let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .withPrefix)
             tooltip += "\n\(refreshText)"
         } else {
             tooltip += "\nNever updated"
         }
-        
+
         return tooltip
     }
 

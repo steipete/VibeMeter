@@ -16,7 +16,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
     public var showCostInMenuBar: Bool = true
     public var showInDock: Bool = false
     public var enabledProviders: Set<ServiceProvider> = [.cursor]
-    
+
     public init(
         selectedCurrencyCode: String = "USD",
         warningLimitUSD: Double = 200,
@@ -25,8 +25,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
         launchAtLoginEnabled: Bool = false,
         showCostInMenuBar: Bool = true,
         showInDock: Bool = false,
-        enabledProviders: Set<ServiceProvider> = [.cursor]
-    ) {
+        enabledProviders: Set<ServiceProvider> = [.cursor]) {
         self.selectedCurrencyCode = selectedCurrencyCode
         self.warningLimitUSD = warningLimitUSD
         self.upperLimitUSD = upperLimitUSD
@@ -36,19 +35,19 @@ public class MockSettingsManager: SettingsManagerProtocol {
         self.showInDock = showInDock
         self.enabledProviders = enabledProviders
     }
-    
+
     public func clearUserSessionData() {
         providerSessions.removeAll()
     }
-    
+
     public func clearUserSessionData(for provider: ServiceProvider) {
         providerSessions.removeValue(forKey: provider)
     }
-    
+
     public func getSession(for provider: ServiceProvider) -> ProviderSession? {
         providerSessions[provider]
     }
-    
+
     public func updateSession(for provider: ServiceProvider, session: ProviderSession) {
         providerSessions[provider] = session
     }
@@ -62,25 +61,23 @@ extension MockSettingsManager {
         provider: ServiceProvider = .cursor,
         email: String = "user@example.com",
         teamName: String = "Example Team",
-        teamId: Int = 123
-    ) -> MockSettingsManager {
+        teamId: Int = 123) -> MockSettingsManager {
         let manager = MockSettingsManager()
         let session = ProviderSession(
             provider: provider,
             teamId: teamId,
             teamName: teamName,
             userEmail: email,
-            isActive: true
-        )
+            isActive: true)
         manager.updateSession(for: provider, session: session)
         return manager
     }
-    
+
     /// Creates a MockSettingsManager with custom currency settings
     static func withCurrency(_ currencyCode: String) -> MockSettingsManager {
         MockSettingsManager(selectedCurrencyCode: currencyCode)
     }
-    
+
     /// Creates a MockSettingsManager with custom limits
     static func withLimits(warning: Double, upper: Double) -> MockSettingsManager {
         MockSettingsManager(warningLimitUSD: warning, upperLimitUSD: upper)

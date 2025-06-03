@@ -55,10 +55,10 @@ struct SettingsRow<Content: View>: View {
                 Toggle("", isOn: .constant(true))
                     .toggleStyle(.switch)
             }
-            
+
             Divider()
                 .padding(.horizontal, 16)
-            
+
             SettingsRow {
                 Text("Setting 2")
                 Spacer()
@@ -66,7 +66,7 @@ struct SettingsRow<Content: View>: View {
                     .foregroundStyle(.secondary)
             }
         }
-        
+
         SettingsSection(title: "Advanced Options") {
             SettingsRow {
                 VStack(alignment: .leading, spacing: 4) {
@@ -94,10 +94,10 @@ struct SettingsRow<Content: View>: View {
             Toggle("", isOn: .constant(true))
                 .toggleStyle(.switch)
         }
-        
+
         Divider()
             .padding(.horizontal, 16)
-        
+
         SettingsRow {
             Label("Picker Setting", systemImage: "paintbrush")
             Spacer()
@@ -109,10 +109,10 @@ struct SettingsRow<Content: View>: View {
             .pickerStyle(.menu)
             .fixedSize()
         }
-        
+
         Divider()
             .padding(.horizontal, 16)
-        
+
         SettingsRow {
             Label("Action Setting", systemImage: "gear")
             Spacer()

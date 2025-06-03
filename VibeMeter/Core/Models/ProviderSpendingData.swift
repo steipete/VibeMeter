@@ -129,7 +129,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         lastError = nil
         retryAfter = nil
     }
-    
+
     /// Updates the connection status.
     public mutating func updateConnectionStatus(_ status: ProviderConnectionStatus) {
         connectionStatus = status
@@ -139,7 +139,7 @@ public struct ProviderSpendingData: Codable, Sendable {
             retryAfter = nil
         }
     }
-    
+
     /// Checks if data is stale (older than specified interval).
     public func isStale(olderThan interval: TimeInterval) -> Bool {
         guard let lastRefresh = lastSuccessfulRefresh else { return true }
@@ -237,25 +237,25 @@ public final class MultiProviderSpendingData {
             .sorted { $0.lastUpdated > $1.lastUpdated }
             .first?.provider
     }
-    
+
     // MARK: - Connection Status Methods
-    
+
     /// Updates connection status for a provider.
     public func updateConnectionStatus(for provider: ServiceProvider, status: ProviderConnectionStatus) {
         var data = providerSpending[provider] ?? ProviderSpendingData(provider: provider)
         data.updateConnectionStatus(status)
         providerSpending[provider] = data
     }
-    
+
     /// Gets overall system status based on all providers.
     public var overallConnectionStatus: ProviderConnectionStatus {
         let statuses = providerSpending.values.map(\.connectionStatus)
-        
+
         // Priority: Error > RateLimited > Stale > Syncing > Connecting > Connected > Disconnected
-        if statuses.contains(where: { if case .error = $0 { return true } else { return false } }) {
+        if statuses.contains(where: { if case .error = $0 { true } else { false } }) {
             return .error(message: "One or more providers have errors")
         }
-        if statuses.contains(where: { if case .rateLimited = $0 { return true } else { return false } }) {
+        if statuses.contains(where: { if case .rateLimited = $0 { true } else { false } }) {
             return .rateLimited(until: nil)
         }
         if statuses.contains(where: { $0 == .stale }) {
@@ -272,15 +272,15 @@ public final class MultiProviderSpendingData {
         }
         return .disconnected
     }
-    
+
     /// Checks if any provider needs attention (error, rate limited, or stale).
     public var hasProviderIssues: Bool {
         providerSpending.values.contains { data in
             switch data.connectionStatus {
             case .error, .rateLimited, .stale:
-                return true
+                true
             default:
-                return false
+                false
             }
         }
     }

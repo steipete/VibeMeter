@@ -123,29 +123,27 @@ struct ProviderRowView: View {
 // MARK: - Preview
 
 #Preview("Provider Row - Logged In") {
-    @Previewable @State var userSessionData = {
+    @Previewable @State
+    var userSessionData = {
         let data = MultiProviderUserSessionData()
         data.handleLoginSuccess(
             for: .cursor,
             email: "user@example.com",
             teamName: "Example Team",
-            teamId: 123
-        )
+            teamId: 123)
         return data
     }()
-    
+
     ProviderRowView(
         provider: .cursor,
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        ),
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
         providerRegistry: ProviderRegistry.shared,
-        showDetail: {}
-    )
-    .padding()
-    .frame(width: 600)
-    .background(Color(NSColor.windowBackgroundColor))
+        showDetail: {})
+        .padding()
+        .frame(width: 600)
+        .background(Color(NSColor.windowBackgroundColor))
 }
 
 #Preview("Provider Row - Not Connected") {
@@ -153,33 +151,30 @@ struct ProviderRowView: View {
         provider: .cursor,
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        ),
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
         providerRegistry: ProviderRegistry.shared,
-        showDetail: {}
-    )
-    .padding()
-    .frame(width: 600)
-    .background(Color(NSColor.windowBackgroundColor))
+        showDetail: {})
+        .padding()
+        .frame(width: 600)
+        .background(Color(NSColor.windowBackgroundColor))
 }
 
 #Preview("Provider Row - With Error") {
-    @Previewable @State var userSessionData = {
+    @Previewable @State
+    var userSessionData = {
         let data = MultiProviderUserSessionData()
         data.setErrorMessage(for: .cursor, message: "Authentication failed: Invalid credentials")
         return data
     }()
-    
+
     ProviderRowView(
         provider: .cursor,
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
-        ),
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
         providerRegistry: ProviderRegistry.shared,
-        showDetail: {}
-    )
-    .padding()
-    .frame(width: 600)
-    .background(Color(NSColor.windowBackgroundColor))
+        showDetail: {})
+        .padding()
+        .frame(width: 600)
+        .background(Color(NSColor.windowBackgroundColor))
 }

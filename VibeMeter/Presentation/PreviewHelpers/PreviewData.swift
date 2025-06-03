@@ -4,10 +4,9 @@ import SwiftUI
 ///
 /// This factory provides standardized mock data for common preview scenarios,
 /// reducing duplication and ensuring consistency across preview implementations.
-public struct PreviewData {
-    
+public enum PreviewData {
     // MARK: - User Session Data
-    
+
     /// Creates a MultiProviderUserSessionData with a logged-in session for previews.
     ///
     /// - Parameters:
@@ -21,18 +20,16 @@ public struct PreviewData {
         for provider: ServiceProvider = .cursor,
         email: String = "user@example.com",
         teamName: String = "Example Team",
-        teamId: Int = 123
-    ) -> MultiProviderUserSessionData {
+        teamId: Int = 123) -> MultiProviderUserSessionData {
         let userSessionData = MultiProviderUserSessionData()
         userSessionData.handleLoginSuccess(
             for: provider,
             email: email,
             teamName: teamName,
-            teamId: teamId
-        )
+            teamId: teamId)
         return userSessionData
     }
-    
+
     /// Creates a MultiProviderUserSessionData with no logged-in sessions.
     ///
     /// - Returns: Empty MultiProviderUserSessionData
@@ -40,9 +37,9 @@ public struct PreviewData {
     public static func emptyUserSession() -> MultiProviderUserSessionData {
         MultiProviderUserSessionData()
     }
-    
+
     // MARK: - Spending Data
-    
+
     /// Creates a MultiProviderSpendingData with sample spending and usage data.
     ///
     /// - Parameters:
@@ -60,26 +57,23 @@ public struct PreviewData {
         description: String = "Pro Usage",
         currentRequests: Int = 350,
         maxRequests: Int = 500,
-        targetCurrency: String = "USD"
-    ) -> MultiProviderSpendingData {
+        targetCurrency: String = "USD") -> MultiProviderSpendingData {
         let spendingData = MultiProviderSpendingData()
-        
+
         // Add invoice data
         spendingData.updateSpending(
             for: provider,
             from: ProviderMonthlyInvoice(
                 items: [
-                    ProviderInvoiceItem(cents: cents, description: description, provider: provider)
+                    ProviderInvoiceItem(cents: cents, description: description, provider: provider),
                 ],
                 pricingDescription: nil,
                 provider: provider,
                 month: 5,
-                year: 2025
-            ),
+                year: 2025),
             rates: [:],
-            targetCurrency: targetCurrency
-        )
-        
+            targetCurrency: targetCurrency)
+
         // Add usage data if maxRequests > 0
         if maxRequests > 0 {
             spendingData.updateUsage(
@@ -89,14 +83,12 @@ public struct PreviewData {
                     totalRequests: currentRequests + 3000,
                     maxRequests: maxRequests,
                     startOfMonth: Date(),
-                    provider: provider
-                )
-            )
+                    provider: provider))
         }
-        
+
         return spendingData
     }
-    
+
     /// Creates an empty MultiProviderSpendingData for loading state previews.
     ///
     /// - Returns: Empty MultiProviderSpendingData
@@ -104,9 +96,9 @@ public struct PreviewData {
     public static func emptySpendingData() -> MultiProviderSpendingData {
         MultiProviderSpendingData()
     }
-    
+
     // MARK: - Currency Data
-    
+
     /// Creates a CurrencyData with specified currency and exchange rates.
     ///
     /// - Parameters:
@@ -116,8 +108,7 @@ public struct PreviewData {
     @MainActor
     public static func mockCurrencyData(
         code: String = "USD",
-        rates: [String: Double] = [:]
-    ) -> CurrencyData {
+        rates: [String: Double] = [:]) -> CurrencyData {
         let currencyData = CurrencyData()
         currencyData.updateSelectedCurrency(code)
         if !rates.isEmpty {
@@ -125,7 +116,7 @@ public struct PreviewData {
         }
         return currencyData
     }
-    
+
     /// Creates CurrencyData configured for EUR with realistic exchange rate.
     ///
     /// - Returns: CurrencyData configured for EUR
@@ -133,7 +124,7 @@ public struct PreviewData {
     public static func eurCurrencyData() -> CurrencyData {
         mockCurrencyData(code: "EUR", rates: ["EUR": 0.92])
     }
-    
+
     /// Creates CurrencyData configured for GBP with realistic exchange rate.
     ///
     /// - Returns: CurrencyData configured for GBP
@@ -157,15 +148,14 @@ public extension PreviewData {
     static func loggedInWithSpending(
         email: String = "user@example.com",
         cents: Int = 2497,
-        currencyCode: String = "USD"
-    ) -> (MultiProviderUserSessionData, MultiProviderSpendingData, CurrencyData) {
+        currencyCode: String = "USD") -> (MultiProviderUserSessionData, MultiProviderSpendingData, CurrencyData) {
         let userSession = mockUserSession(email: email)
         let spendingData = mockSpendingData(cents: cents)
         let currencyData = mockCurrencyData(code: currencyCode)
-        
+
         return (userSession, spendingData, currencyData)
     }
-    
+
     /// Complete preview setup for logged-out state.
     ///
     /// - Returns: Tuple containing (userSession, spendingData, currencyData)
@@ -174,7 +164,7 @@ public extension PreviewData {
         let userSession = emptyUserSession()
         let spendingData = emptySpendingData()
         let currencyData = mockCurrencyData()
-        
+
         return (userSession, spendingData, currencyData)
     }
 }

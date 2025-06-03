@@ -20,9 +20,8 @@ struct CostTableView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             totalSpendingSection
-            
+
             if !spendingData.providersWithData.isEmpty {
-                lastRefreshSection
                 providerBreakdownSection
             }
 
@@ -93,32 +92,6 @@ struct CostTableView: View {
         .padding(.vertical, 10)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
-    
-    private var lastRefreshSection: some View {
-        HStack(alignment: .center) {
-            Text("Last Updated")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.tertiary)
-            
-            Spacer()
-            
-            if let lastRefreshDate = mostRecentRefreshDate {
-                RelativeTimestampView(
-                    date: lastRefreshDate,
-                    style: .short,
-                    showFreshnessColor: true
-                )
-                .font(.system(size: 11, weight: .medium))
-            } else {
-                Text("Never")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .standardPadding(horizontal: 14)
-        .padding(.vertical, 6)
-        .materialBackground(cornerRadius: 6, material: .ultraThinMaterial)
-    }
 
     // MARK: - Helper Properties
 
@@ -146,28 +119,18 @@ struct CostTableView: View {
             from: "USD",
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
     }
-    
-    private var mostRecentRefreshDate: Date? {
-        spendingData.providersWithData
-            .compactMap { provider in
-                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
-            }
-            .max()
-    }
 }
 
 // MARK: - Preview
 
 #Preview {
     let spendingData = PreviewData.mockSpendingData(cents: 1997, currentRequests: 1535, maxRequests: 500)
-    
+
     return CostTableView(
         settingsManager: MockServices.settingsManager(currency: "EUR"),
-        loginManager: nil
-    )
-    .withSpendingEnvironment(spendingData)
-    .componentFrame(width: 280)
-    .previewBackground()
-    .padding()
+        loginManager: nil)
+        .withSpendingEnvironment(spendingData)
+        .componentFrame(width: 280)
+        .previewBackground()
+        .padding()
 }
-
