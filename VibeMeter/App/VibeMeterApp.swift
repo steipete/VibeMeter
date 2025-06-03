@@ -149,13 +149,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             currencyData: currencyData)
 
         // Set up the status bar controller with orchestrator access
+        guard let orchestrator = multiProviderOrchestrator else {
+            logger.error("Failed to initialize MultiProviderDataOrchestrator")
+            return
+        }
+        
         statusBarController = StatusBarController(
             settingsManager: settingsManager,
             userSession: userSession,
             loginManager: loginManager,
             spendingData: spendingData,
             currencyData: currencyData,
-            orchestrator: multiProviderOrchestrator!)
+            orchestrator: orchestrator)
 
         // Don't show login window automatically - wait for user to click login button
 
