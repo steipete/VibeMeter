@@ -2,17 +2,18 @@ import SwiftUI
 
 struct ProviderSpendingRowView: View {
     let provider: ServiceProvider
-    @Binding var selectedProvider: ServiceProvider?
-    
+    @Binding
+    var selectedProvider: ServiceProvider?
+
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
-    
+
     var body: some View {
         VStack(spacing: 8) {
             mainProviderRow
-            
+
             if let providerData = spendingData.getSpendingData(for: provider),
                let usage = providerData.usageData {
                 usageDataRow(usage: usage)
@@ -29,7 +30,7 @@ struct ProviderSpendingRowView: View {
             }
         }
     }
-    
+
     private var mainProviderRow: some View {
         HStack(spacing: 0) {
             // Icon column - fixed width to align with "Total Spending" label
@@ -37,7 +38,7 @@ struct ProviderSpendingRowView: View {
                 .font(.system(size: 14))
                 .foregroundStyle(provider.accentColor)
                 .frame(width: 20, alignment: .leading)
-            
+
             // Provider name column - aligned with "Total Spending" text
             Text(provider.displayName)
                 .font(.system(size: 12))
@@ -58,13 +59,13 @@ struct ProviderSpendingRowView: View {
             }
         }
     }
-    
+
     private func usageDataRow(usage: ProviderUsageData) -> some View {
         HStack(spacing: 0) {
             // Icon space to align with provider icon above
             Color.clear
                 .frame(width: 20)
-            
+
             HStack(spacing: 8) {
                 Label("\(usage.currentRequests) / \(usage.maxRequests ?? 0)",
                       systemImage: "number.circle")
@@ -79,7 +80,7 @@ struct ProviderSpendingRowView: View {
 
                 // Usage bar
                 if let maxRequests = usage.maxRequests, maxRequests > 0 {
-                    let progress = Double(usage.currentRequests) / Double(maxRequests)
+                    let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
                     ProgressView(value: progress)
                         .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
                         .frame(width: 60, height: 4)
@@ -88,7 +89,7 @@ struct ProviderSpendingRowView: View {
             .padding(.leading, 8)
         }
     }
-    
+
     private func progressColor(for progress: Double) -> Color {
         if progress >= 0.9 {
             .red

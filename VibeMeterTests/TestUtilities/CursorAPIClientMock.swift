@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
     let provider: ServiceProvider = .cursor
-    
+
     var fetchTeamInfoCallCount = 0
     var fetchUserInfoCallCount = 0
     var fetchMonthlyInvoiceCallCount = 0
@@ -14,7 +14,10 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
     // MARK: - Controllable Responses
 
     var teamInfoToReturn: ProviderTeamInfo? = ProviderTeamInfo(id: 123, name: "Mock Team", provider: .cursor)
-    var userInfoToReturn: ProviderUserInfo? = ProviderUserInfo(email: "mock@example.com", teamId: 12345, provider: .cursor)
+    var userInfoToReturn: ProviderUserInfo? = ProviderUserInfo(
+        email: "mock@example.com",
+        teamId: 12345,
+        provider: .cursor)
     var monthlyInvoiceToReturn: ProviderMonthlyInvoice? = ProviderMonthlyInvoice(
         items: [
             ProviderInvoiceItem(cents: 5000, description: "Mock Pro Usage", provider: .cursor),
@@ -93,7 +96,7 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
 
         return invoice
     }
-    
+
     func fetchUsageData(authToken: String) async throws -> ProviderUsageData {
         fetchUsageDataCallCount += 1
         lastAuthTokenUsed = authToken
@@ -108,19 +111,19 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
 
         return usageData
     }
-    
+
     func validateToken(authToken: String) async -> Bool {
         validateTokenCallCount += 1
         lastAuthTokenUsed = authToken
         return tokenValidationResult
     }
-    
-    func getAuthenticationURL() -> URL {
-        return URL(string: "https://authenticator.cursor.sh")!
+
+    nonisolated func getAuthenticationURL() -> URL {
+        URL(string: "https://authenticator.cursor.sh")!
     }
-    
-    func extractAuthToken(from callbackData: [String: Any]) -> String? {
-        return callbackData["token"] as? String
+
+    nonisolated func extractAuthToken(from callbackData: [String: Any]) -> String? {
+        callbackData["token"] as? String
     }
 
     // MARK: - Reset

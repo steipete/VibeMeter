@@ -74,7 +74,6 @@ enum MultiProviderSettingsTab: CaseIterable {
     }
 }
 
-
 // MARK: - Preview
 
 #Preview("Settings - Not Logged In") {

@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct AdvancedSettingsView: View {
     var body: some View {

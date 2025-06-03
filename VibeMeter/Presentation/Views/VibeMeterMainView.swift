@@ -20,9 +20,7 @@ struct VibeMeterMainView: View {
         }
         .frame(width: 320, height: userSessionData.isLoggedInToAnyProvider ? 400 : 300)
     }
-
 }
-
 
 // MARK: - Preview
 

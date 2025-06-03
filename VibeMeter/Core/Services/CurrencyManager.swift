@@ -3,9 +3,9 @@ import Foundation
 /// Manages currency selection and formatting for the application.
 final class CurrencyManager: Sendable {
     static let shared = CurrencyManager()
-    
+
     private init() {}
-    
+
     /// Available currencies from macOS system with commonly used currencies prioritized
     var availableCurrencies: [(String, String)] {
         let availableCurrencies = Locale.availableIdentifiers
@@ -28,7 +28,7 @@ final class CurrencyManager: Sendable {
             "UYU", "ZAR", "EGP", "MAD", "TND", "KES", "NGN", "GHS", "XOF", "XAF", "ILS", "SAR",
             "AED", "QAR", "KWD", "BHD", "OMR", "JOD", "LBP", "PKR", "BDT", "LKR", "NPR", "AFN",
             "IRR", "IQD", "SYP", "YER", "AZN", "AMD", "GEL", "KZT", "KGS", "TJS", "TMT", "UZS",
-            "MNT", "LAK", "KHR", "MMK", "NZD"
+            "MNT", "LAK", "KHR", "MMK", "NZD",
         ]
 
         return uniqueCurrencies.sorted { first, second in
@@ -41,12 +41,12 @@ final class CurrencyManager: Sendable {
             return first.key < second.key
         }
     }
-    
+
     /// Gets the system default currency code
     var systemCurrencyCode: String? {
         Locale.current.currency?.identifier
     }
-    
+
     /// Checks if a currency code is available in the system
     func isValidCurrencyCode(_ code: String) -> Bool {
         availableCurrencies.contains { $0.0 == code }

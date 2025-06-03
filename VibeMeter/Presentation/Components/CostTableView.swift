@@ -2,27 +2,27 @@ import SwiftUI
 
 struct CostTableView: View {
     let settingsManager: any SettingsManagerProtocol
-    
+
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
-    
+
     @State
     private var selectedProvider: ServiceProvider?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             totalSpendingSection
-            
+
             if !spendingData.providersWithData.isEmpty {
                 providerBreakdownSection
             }
-            
+
             spendingLimitsSection
         }
     }
-    
+
     private var totalSpendingSection: some View {
         HStack {
             Text("Total Spending")
@@ -47,14 +47,13 @@ struct CostTableView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.regularMaterial))
     }
-    
+
     private var providerBreakdownSection: some View {
         VStack(spacing: 8) {
             ForEach(spendingData.providersWithData, id: \.self) { provider in
                 ProviderSpendingRowView(
                     provider: provider,
-                    selectedProvider: $selectedProvider
-                )
+                    selectedProvider: $selectedProvider)
             }
         }
         .padding(.horizontal, 16)
@@ -63,7 +62,7 @@ struct CostTableView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.regularMaterial))
     }
-    
+
     private var spendingLimitsSection: some View {
         VStack(spacing: 8) {
             HStack {
@@ -96,9 +95,9 @@ struct CostTableView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.regularMaterial))
     }
-    
+
     // MARK: - Helper Properties
-    
+
     private var currentSpendingDisplay: String? {
         let providers = spendingData.providersWithData
         guard !providers.isEmpty else { return nil }

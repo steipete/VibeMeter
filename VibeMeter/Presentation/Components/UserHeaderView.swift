@@ -2,12 +2,12 @@ import SwiftUI
 
 struct UserHeaderView: View {
     let userSessionData: MultiProviderUserSessionData
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
-                
+
                 VStack(alignment: .leading, spacing: 6) {
                     if let email = userSessionData.mostRecentSession?.userEmail {
                         Text(email)
@@ -24,7 +24,7 @@ struct UserHeaderView: View {
             }
         }
     }
-    
+
     private var providerCountText: String {
         let count = userSessionData.loggedInProviders.count
         return "\(count) provider\(count == 1 ? "" : "s") connected"

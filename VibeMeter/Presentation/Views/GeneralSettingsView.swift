@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct GeneralSettingsView: View {
     let settingsManager: SettingsManager

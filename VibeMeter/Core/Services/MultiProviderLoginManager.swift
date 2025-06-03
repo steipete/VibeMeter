@@ -39,10 +39,10 @@ public final class MultiProviderLoginManager: ObservableObject {
         self.tokenManager = AuthenticationTokenManager()
         self.stateManager = ProviderStateManager(tokenManager: tokenManager)
         self.webViewManager = LoginWebViewManager()
-        
+
         setupDelegation()
         syncPublishedProperties()
-        
+
         logger.info("MultiProviderLoginManager initialized for \(ServiceProvider.allCases.count) providers")
     }
 
@@ -66,18 +66,18 @@ public final class MultiProviderLoginManager: ObservableObject {
     /// Shows login window for a specific provider.
     public func showLoginWindow(for provider: ServiceProvider) {
         logger.info("showLoginWindow called for \(provider.displayName)")
-        
+
         // Reset processing flag for new session
         stateManager.setProcessingLogin(false, for: provider)
         stateManager.clearError(for: provider)
-        
+
         webViewManager.showLoginWindow(for: provider)
     }
 
     /// Logs out from a specific provider.
     public func logOut(from provider: ServiceProvider) {
         logger.info("logOut called for \(provider.displayName)")
-        
+
         _ = tokenManager.deleteToken(for: provider)
         stateManager.setLoginState(false, for: provider)
         stateManager.clearError(for: provider)
@@ -127,41 +127,41 @@ public final class MultiProviderLoginManager: ObservableObject {
     }
 
     // MARK: - Private Methods
-    
+
     private func setupDelegation() {
         webViewManager.onLoginCompletion = { [weak self] provider, result in
             self?.handleLoginCompletion(provider: provider, result: result)
         }
-        
+
         webViewManager.onLoginDismiss = { [weak self] provider in
             self?.onLoginDismiss?(provider)
         }
     }
-    
+
     private func syncPublishedProperties() {
         providerLoginStates = stateManager.providerLoginStates
         loginErrors = stateManager.loginErrors
-        
+
         // Observe state manager changes
         stateManager.$providerLoginStates
             .assign(to: &$providerLoginStates)
-        
+
         stateManager.$loginErrors
             .assign(to: &$loginErrors)
     }
-    
+
     private func handleLoginCompletion(provider: ServiceProvider, result: Result<String, Error>) {
         switch result {
-        case .success(let token):
+        case let .success(token):
             handleSuccessfulLogin(for: provider, token: token)
-        case .failure(let error):
+        case let .failure(error):
             onLoginFailure?(provider, error)
         }
     }
 
     private func handleSuccessfulLogin(for provider: ServiceProvider, token: String) {
         logger.info("handleSuccessfulLogin called for \(provider.displayName)")
-        
+
         if tokenManager.saveToken(token, for: provider) {
             stateManager.setLoginState(true, for: provider)
             stateManager.clearError(for: provider)

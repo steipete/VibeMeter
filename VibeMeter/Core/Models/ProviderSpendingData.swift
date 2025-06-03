@@ -195,7 +195,7 @@ public final class MultiProviderSpendingData {
         if let rate = rates[currency] {
             return totalUSD * rate
         }
-        
+
         // If no rate available, try ExchangeRateManager fallback
         return ExchangeRateManager.shared.convert(
             totalUSD,

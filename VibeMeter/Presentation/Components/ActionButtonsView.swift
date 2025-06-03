@@ -1,23 +1,23 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct ActionButtonsView: View {
     let onRefresh: () async -> Void
-    
+
     @State
     private var isRefreshing = false
-    
+
     var body: some View {
         HStack(spacing: 16) {
             refreshButton
             settingsButton
-            
+
             Spacer()
-            
+
             quitButton
         }
     }
-    
+
     private var refreshButton: some View {
         Button(action: refreshData) {
             Image(systemName: "arrow.clockwise")
@@ -30,7 +30,7 @@ struct ActionButtonsView: View {
         .buttonStyle(IconButtonStyle())
         .help("Refresh")
     }
-    
+
     private var settingsButton: some View {
         Button(action: openSettings) {
             Image(systemName: "gearshape")
@@ -39,7 +39,7 @@ struct ActionButtonsView: View {
         .buttonStyle(IconButtonStyle())
         .help("Settings")
     }
-    
+
     private var quitButton: some View {
         Button(action: quit) {
             Image(systemName: "power")
@@ -48,7 +48,7 @@ struct ActionButtonsView: View {
         .buttonStyle(IconButtonStyle(isDestructive: true))
         .help("Quit VibeMeter")
     }
-    
+
     private func refreshData() {
         Task {
             isRefreshing = true

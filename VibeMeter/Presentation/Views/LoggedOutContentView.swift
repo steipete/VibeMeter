@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct LoggedOutContentView: View {
     let loginManager: MultiProviderLoginManager

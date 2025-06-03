@@ -81,7 +81,21 @@ final class StatusBarController: NSObject {
                     to: "USD",
                     rates: currencyData.effectiveRates)
                 let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
-                stateManager.setState(.data(value: gaugeValue))
+                
+                // Only set new data state if the value has changed significantly (more than 1%)
+                // or if we're currently in loading state (to trigger the loading->data transition)
+                if case .loading = stateManager.currentState {
+                    // Always animate from loading to data state
+                    stateManager.setState(.data(value: gaugeValue))
+                } else if case let .data(currentValue) = stateManager.currentState {
+                    // Only update if the change is significant enough to warrant animation
+                    if abs(currentValue - gaugeValue) > 0.01 {
+                        stateManager.setState(.data(value: gaugeValue))
+                    }
+                } else {
+                    // For any other state, set the data state
+                    stateManager.setState(.data(value: gaugeValue))
+                }
             }
         }
 
@@ -162,9 +176,12 @@ final class StatusBarController: NSObject {
             .sink { [weak self] _ in
                 guard let self else { return }
 
-                // Only update frequently if animating or transitioning
-                if self.stateManager.currentState.isAnimated || self.stateManager.animatedGaugeValue != self
-                    .lastRenderedValue {
+                // Update animation state first
+                self.stateManager.updateAnimation()
+
+                // Only update frequently if animating, transitioning, or value changed
+                if self.stateManager.currentState.isAnimated || 
+                   abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001 {
                     self.updateStatusItemDisplay()
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
                 }
