@@ -17,7 +17,7 @@ struct ProviderSpendingRowView: View {
     private var currencyData
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 2) {
             mainProviderRow
 
             if let providerData = spendingData.getSpendingData(for: provider),
@@ -25,8 +25,8 @@ struct ProviderSpendingRowView: View {
                 usageDataRow(usage: usage)
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
@@ -67,8 +67,16 @@ struct ProviderSpendingRowView: View {
             // Amount with consistent number formatting
             Group {
                 if let providerData = spendingData.getSpendingData(for: provider),
-                   let spending = providerData.displaySpending {
-                    Text("\(currencyData.selectedSymbol)\(spending.formatted(.number.precision(.fractionLength(2))))")
+                   let spendingUSD = providerData.currentSpendingUSD {
+                    // Convert using current rates for consistency with total
+                    let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
+                        ExchangeRateManager.shared.convert(
+                            spendingUSD,
+                            from: "USD",
+                            to: currencyData.selectedCode,
+                            rates: currencyData.effectiveRates) ?? spendingUSD
+                    
+                    Text("\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 } else {
