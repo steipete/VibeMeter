@@ -2,7 +2,7 @@ import Foundation
 @testable import VibeMeter
 
 @MainActor
-final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
+final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked Sendable {
     let provider: ServiceProvider = .cursor
 
     var fetchTeamInfoCallCount = 0
@@ -130,12 +130,22 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
     // MARK: - Reset
 
     func reset() {
+        resetTracking()
+        resetReturnValues()
+    }
+    
+    func resetTracking() {
         fetchTeamInfoCallCount = 0
         fetchUserInfoCallCount = 0
         fetchMonthlyInvoiceCallCount = 0
         fetchUsageDataCallCount = 0
         validateTokenCallCount = 0
-
+        lastAuthTokenUsed = nil
+        lastMonthRequested = nil
+        lastYearRequested = nil
+    }
+    
+    func resetReturnValues() {
         teamInfoToReturn = ProviderTeamInfo(id: 123, name: "Mock Team", provider: .cursor)
         userInfoToReturn = ProviderUserInfo(email: "mock@example.com", teamId: 12345, provider: .cursor)
         monthlyInvoiceToReturn = ProviderMonthlyInvoice(
@@ -153,15 +163,10 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
             maxRequests: 500,
             startOfMonth: Date(),
             provider: .cursor)
-
         teamInfoError = nil
         userInfoError = nil
         monthlyInvoiceError = nil
         usageDataError = nil
         tokenValidationResult = true
-
-        lastAuthTokenUsed = nil
-        lastMonthRequested = nil
-        lastYearRequested = nil
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 @testable import VibeMeter
 
 @MainActor
-final class ExchangeRateManagerMock: ExchangeRateManagerProtocol, @unchecked Sendable {
+final class ExchangeRateManagerMock: ExchangeRateManagerProtocol, MockResetProtocol, @unchecked Sendable {
     var supportedCurrencies: [String] = ["USD", "EUR", "GBP"]
 
     // Make this nonisolated to match protocol requirement
@@ -51,10 +51,18 @@ final class ExchangeRateManagerMock: ExchangeRateManagerProtocol, @unchecked Sen
     }
 
     func reset() {
+        resetTracking()
+        resetReturnValues()
+    }
+    
+    func resetTracking() {
         fetchExchangeRatesCallCount = 0
         getRatesCallCount = 0
         convertCallCount = 0
-        ratesToReturn = ["USD": 1.0, "EUR": 0.92, "GBP": 0.82] // Reset to default mock rates
+    }
+    
+    func resetReturnValues() {
+        ratesToReturn = ["USD": 1.0, "EUR": 0.92, "GBP": 0.82]
         errorToReturn = nil
         mockConvertedAmount = nil
         supportedCurrencies = ["USD", "EUR", "GBP"]

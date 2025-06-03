@@ -2,7 +2,7 @@ import Foundation
 @testable import VibeMeter
 
 @MainActor
-final class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sendable {
+final class NotificationManagerMock: NotificationManagerProtocol, MockResetProtocol, @unchecked Sendable {
     var requestAuthorizationCalled = false
     var authorizationGrantedToReturn: Bool = true
 
@@ -59,18 +59,26 @@ final class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sen
     }
 
     func reset() {
+        resetTracking()
+        resetReturnValues()
+    }
+    
+    func resetTracking() {
         requestAuthorizationCalled = false
-        authorizationGrantedToReturn = true
         showWarningNotificationCalled = false
+        showUpperLimitNotificationCalled = false
+        resetAllNotificationStatesCalled = false
+        resetNotificationStateIfBelowCalled = false
+    }
+    
+    func resetReturnValues() {
+        authorizationGrantedToReturn = true
         lastWarningSpending = nil
         lastWarningLimit = nil
         lastWarningCurrency = nil
-        showUpperLimitNotificationCalled = false
         lastUpperLimitSpending = nil
         lastUpperLimitAmount = nil
         lastUpperLimitCurrency = nil
-        resetAllNotificationStatesCalled = false
-        resetNotificationStateIfBelowCalled = false
         lastResetLimitType = nil
         lastResetCurrentSpendingUSD = nil
         lastResetWarningLimitUSD = nil
