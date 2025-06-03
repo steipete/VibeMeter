@@ -129,15 +129,13 @@ public struct ProviderConfiguration: Codable, Sendable {
 /// provider-specific configurations. Unlike a traditional "current provider" model,
 /// this supports multi-tenancy where users can be logged into multiple services
 /// simultaneously (e.g., Cursor, Anthropic, OpenAI all at once).
+@Observable
 @MainActor
-public final class ProviderRegistry: ObservableObject {
-    // MARK: - Published Properties
+public final class ProviderRegistry {
+    // MARK: - Observable Properties
 
-    @Published
     public private(set) var availableProviders: [ServiceProvider]
-    @Published
     public private(set) var providerConfigurations: [ServiceProvider: ProviderConfiguration]
-    @Published
     public private(set) var enabledProviders: Set<ServiceProvider>
 
     // MARK: - Private Properties

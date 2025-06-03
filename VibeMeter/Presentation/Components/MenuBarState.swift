@@ -46,18 +46,14 @@ enum MenuBarState: Equatable {
 }
 
 /// Manages animated transitions between menu bar states
+@Observable
 @MainActor
-class MenuBarStateManager: ObservableObject {
-    @Published
-    private(set) var currentState: MenuBarState = .notLoggedIn
-    @Published
-    private(set) var animatedGaugeValue: Double = 0.0
-    @Published
-    private(set) var isTransitioning = false
-    @Published
-    private(set) var animatedCostValue: Double = 0.0
-    @Published
-    private(set) var isCostTransitioning = false
+class MenuBarStateManager {
+    var currentState: MenuBarState = .notLoggedIn
+    var animatedGaugeValue: Double = 0.0
+    var isTransitioning = false
+    var animatedCostValue: Double = 0.0
+    var isCostTransitioning = false
 
     private var animationStartTime: TimeInterval = 0
     private var transitionStartValue: Double = 0

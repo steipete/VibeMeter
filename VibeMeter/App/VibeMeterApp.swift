@@ -20,8 +20,8 @@ struct VibeMeterApp: App {
     @State
     private var gravatarService = GravatarService.shared
 
-    // Reactive computed property for menu bar display text
-    @ObservedObject
+    // Settings manager for reactive updates
+    @State
     private var settingsManager = SettingsManager.shared
 
     private var menuBarDisplayText: String {

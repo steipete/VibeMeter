@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import Foundation
 import os.log
 
@@ -68,10 +67,11 @@ public struct ProviderSession: Codable, Sendable {
 /// - Spending limits (warning and upper thresholds in USD)
 /// - Application behavior settings (launch at login)
 ///
-/// All properties are published to enable reactive UI updates via Combine.
+/// All properties are observable to enable reactive UI updates.
 /// The manager follows the singleton pattern and is accessible via `SettingsManager.shared`.
+@Observable
 @MainActor
-public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
+public final class SettingsManager: SettingsManagerProtocol {
     // MARK: - Constants
 
     public static let refreshIntervalOptions = [1, 2, 5, 10, 15, 30, 60]
@@ -99,7 +99,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     private let startupManager: StartupControlling
 
     // Multi-provider sessions
-    @Published
     public var providerSessions: [ServiceProvider: ProviderSession] {
         didSet {
             saveProviderSessions()
@@ -113,7 +112,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     // Enabled providers
-    @Published
     public var enabledProviders: Set<ServiceProvider> {
         didSet {
             let enabledArray = Array(enabledProviders).map(\.rawValue)
@@ -124,7 +122,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     // Display preferences
-    @Published
     public var selectedCurrencyCode: String {
         didSet {
             userDefaults.set(selectedCurrencyCode, forKey: Keys.selectedCurrencyCode)
@@ -132,7 +129,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         }
     }
 
-    @Published
     public var refreshIntervalMinutes: Int {
         didSet {
             userDefaults.set(refreshIntervalMinutes, forKey: Keys.refreshIntervalMinutes)
@@ -141,7 +137,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     // Spending limits
-    @Published
     public var warningLimitUSD: Double {
         didSet {
             userDefaults.set(warningLimitUSD, forKey: Keys.warningLimitUSD)
@@ -149,7 +144,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         }
     }
 
-    @Published
     public var upperLimitUSD: Double {
         didSet {
             userDefaults.set(upperLimitUSD, forKey: Keys.upperLimitUSD)
@@ -158,7 +152,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     // App behavior
-    @Published
     public var launchAtLoginEnabled: Bool {
         didSet {
             guard launchAtLoginEnabled != oldValue else { return }
@@ -170,7 +163,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         }
     }
 
-    @Published
     public var showCostInMenuBar: Bool {
         didSet {
             userDefaults.set(showCostInMenuBar, forKey: Keys.showCostInMenuBar)
@@ -178,7 +170,6 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         }
     }
 
-    @Published
     public var showInDock: Bool {
         didSet {
             guard showInDock != oldValue else { return }

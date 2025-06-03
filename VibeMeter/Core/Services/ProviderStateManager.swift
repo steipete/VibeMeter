@@ -1,17 +1,14 @@
-import Combine
 import Foundation
 import os.log
 
 /// Manages login states and errors for service providers.
+@Observable
 @MainActor
-final class ProviderStateManager: ObservableObject {
-    // MARK: - Published Properties
+final class ProviderStateManager {
+    // MARK: - Observable Properties
 
-    @Published
     private(set) var providerLoginStates: [ServiceProvider: Bool] = [:]
-    @Published
     private(set) var loginErrors: [ServiceProvider: String] = [:]
-    @Published
     private(set) var isProcessingLogin: [ServiceProvider: Bool] = [:]
 
     // MARK: - Private Properties
