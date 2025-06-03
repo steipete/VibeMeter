@@ -27,6 +27,7 @@ struct MultiProviderSettingsView: View {
                 settingsManager: settingsManager,
                 userSessionData: userSessionData,
                 loginManager: loginManager,
+                orchestrator: orchestrator,
                 showingProviderDetail: $showingProviderDetail)
                 .tabItem {
                     Label("Providers", systemImage: "server.rack")
@@ -47,7 +48,7 @@ struct MultiProviderSettingsView: View {
                 }
                 .tag(MultiProviderSettingsTab.about)
         }
-        .frame(width: 620, height: 500)
+        .frame(width: 570, height: 500)
         .sheet(item: $showingProviderDetail) { provider in
             ProviderDetailView(
                 provider: provider,
@@ -82,7 +83,7 @@ enum MultiProviderSettingsTab: CaseIterable {
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
         orchestrator: nil)
-        .frame(width: 620, height: 500)
+        .frame(width: 570, height: 500)
 }
 
 @MainActor
@@ -103,5 +104,5 @@ private func makeUserSessionData() -> MultiProviderUserSessionData {
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
         orchestrator: nil)
-        .frame(width: 620, height: 500)
+        .frame(width: 570, height: 500)
 }

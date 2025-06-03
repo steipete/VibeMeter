@@ -34,6 +34,9 @@ struct ActionButtonsView: View {
         }
         .buttonStyle(IconButtonStyle())
         .help("Refresh")
+        .accessibilityLabel("Refresh spending data")
+        .accessibilityHint("Updates AI service spending information from all connected providers")
+        .keyboardShortcut("r", modifiers: .command)
     }
 
     private var settingsButton: some View {
@@ -43,6 +46,9 @@ struct ActionButtonsView: View {
         }
         .buttonStyle(IconButtonStyle())
         .help("Settings")
+        .accessibilityLabel("Open settings")
+        .accessibilityHint("Opens VibeMeter preferences and configuration options")
+        .keyboardShortcut(",", modifiers: .command)
     }
 
     private var quitButton: some View {
@@ -52,6 +58,9 @@ struct ActionButtonsView: View {
         }
         .buttonStyle(IconButtonStyle(isDestructive: true))
         .help("Quit VibeMeter")
+        .accessibilityLabel("Quit application")
+        .accessibilityHint("Closes VibeMeter completely")
+        .keyboardShortcut("q", modifiers: .command)
     }
 
     private func refreshData() {

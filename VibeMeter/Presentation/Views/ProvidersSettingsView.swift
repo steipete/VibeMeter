@@ -9,6 +9,7 @@ struct ProvidersSettingsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager
+    let orchestrator: MultiProviderDataOrchestrator?
     @Binding
     var showingProviderDetail: ServiceProvider?
 
@@ -29,8 +30,19 @@ struct ProvidersSettingsView: View {
                             })
                     }
                 } header: {
-                    Text("Service Providers")
-                        .font(.headline)
+                    HStack {
+                        Text("Service Providers")
+                            .font(.headline)
+
+                        Spacer()
+
+                        if let orchestrator {
+                            NetworkStatusIndicator(
+                                networkStatus: orchestrator.networkStatus,
+                                isConnected: orchestrator.isNetworkConnected,
+                                compact: true)
+                        }
+                    }
                 } footer: {
                     HStack {
                         Spacer()
@@ -130,8 +142,9 @@ struct ProvidersSettingsView: View {
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        orchestrator: nil,
         showingProviderDetail: $showingProviderDetail)
-        .frame(width: 620, height: 400)
+        .frame(width: 570, height: 400)
 }
 
 #Preview("Providers Settings - All Logged Out") {
@@ -143,6 +156,7 @@ struct ProvidersSettingsView: View {
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        orchestrator: nil,
         showingProviderDetail: $showingProviderDetail)
-        .frame(width: 620, height: 400)
+        .frame(width: 570, height: 400)
 }

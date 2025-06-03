@@ -49,6 +49,11 @@ final class StatusBarController: NSObject {
             button.action = #selector(togglePopover)
             button.target = self
 
+            // Accessibility support for menu bar button
+            button.setAccessibilityTitle("VibeMeter")
+            button.setAccessibilityRole(.button)
+            button.setAccessibilityHelp("Shows AI service spending information and opens VibeMeter menu")
+
             updateStatusItemDisplay()
         }
     }
@@ -182,6 +187,9 @@ final class StatusBarController: NSObject {
 
         // Set tooltip with spending percentage and last refresh info
         button.toolTip = createTooltipText()
+
+        // Update accessibility description with current spending information
+        button.setAccessibilityValue(createAccessibilityDescription())
     }
 
     @objc
@@ -244,6 +252,52 @@ final class StatusBarController: NSObject {
         return tooltip
     }
 
+    /// Creates accessibility-friendly description for VoiceOver users
+    private func createAccessibilityDescription() -> String {
+        guard userSession.isLoggedInToAnyProvider else {
+            return "Not logged in to any AI service provider. Click to open VibeMeter and log in."
+        }
+
+        let providers = spendingData.providersWithData
+        guard !providers.isEmpty else {
+            return "Loading AI service spending data. Please wait."
+        }
+
+        // Calculate spending percentage
+        let totalSpendingUSD = spendingData.totalSpendingConverted(
+            to: "USD",
+            rates: currencyData.effectiveRates)
+        let upperLimit = settingsManager.upperLimitUSD
+        let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
+
+        // Convert to user's preferred currency for accessibility
+        let userSpending = spendingData.totalSpendingConverted(
+            to: currencyData.selectedCode,
+            rates: currencyData.effectiveRates)
+        let userLimit = settingsManager.upperLimitUSD * currencyData.effectiveRates[
+            currencyData.selectedCode,
+            default: 1.0
+        ]
+
+        let spendingText =
+            "\(currencyData.selectedSymbol)\(userSpending.formatted(.number.precision(.fractionLength(2))))"
+        let limitText = "\(currencyData.selectedSymbol)\(userLimit.formatted(.number.precision(.fractionLength(2))))"
+
+        // Provide context about spending level
+        let statusText = switch percentage {
+        case 0 ..< 50:
+            "Low usage"
+        case 50 ..< 80:
+            "Moderate usage"
+        case 80 ..< 100:
+            "High usage, approaching limit"
+        default:
+            "Over limit"
+        }
+
+        return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used. Click to view details."
+    }
+
     private func observeDataChanges() {
         // Observe settings changes
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
@@ -257,7 +311,8 @@ final class StatusBarController: NSObject {
             .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
             .sink { [weak self] _ in
                 // Delay slightly to ensure the appearance change has propagated
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(100))
                     self?.updateStatusItemDisplay()
                 }
             }

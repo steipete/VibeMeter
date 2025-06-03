@@ -67,12 +67,15 @@ public actor CursorProvider: ProviderProtocol {
         logger.debug("Request URL: \(request.url?.absoluteString ?? "nil")")
         logger.debug("Request Headers: \(request.allHTTPHeaderFields ?? [:])")
 
-        // GET request (default)
-
-        let response: CursorUserResponse = try await performRequest(request)
-
-        logger.info("Successfully fetched Cursor user: \(response.email, privacy: .public)")
-        return ProviderUserInfo(email: response.email, teamId: response.teamId, provider: .cursor)
+        do {
+            let response: CursorUserResponse = try await performRequest(request)
+            logger.info("Successfully fetched Cursor user: \(response.email, privacy: .public)")
+            return ProviderUserInfo(email: response.email, teamId: response.teamId, provider: .cursor)
+        } catch let ProviderError.decodingError(message, statusCode) where statusCode == 204 {
+            // 204 No Content from /auth/me means the session/cookie is invalid or expired
+            logger.warning("Received 204 from auth endpoint - session expired or invalid")
+            throw ProviderError.unauthorized
+        }
     }
 
     public func fetchMonthlyInvoice(authToken: String, month: Int, year: Int,

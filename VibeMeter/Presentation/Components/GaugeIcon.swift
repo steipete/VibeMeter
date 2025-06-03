@@ -94,6 +94,11 @@ struct GaugeIcon: View {
             }
         }
         .frame(width: 22, height: 22) // menu-bar size (@1×; doubles on Retina)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Gauge showing AI service spending level")
+        .drawingGroup() // Optimize canvas rendering for macOS 15+
         .onAppear {
             if animateOnAppear {
                 animationProgress = 0.0
@@ -104,22 +109,54 @@ struct GaugeIcon: View {
         }
     }
 
-    /// Theme-aware gauge colors that adapt to light/dark mode
+    // MARK: - Accessibility Support
+
+    /// Accessibility label for VoiceOver
+    private var accessibilityLabel: String {
+        if isDisabled {
+            "Spending gauge - disabled"
+        } else if isLoading {
+            "Spending gauge - loading data"
+        } else {
+            "Spending gauge"
+        }
+    }
+
+    /// Accessibility value for VoiceOver
+    private var accessibilityValue: String {
+        if isDisabled {
+            return "No data available"
+        } else if isLoading {
+            return "Loading spending information"
+        } else {
+            let percentage = Int((value * 100).rounded())
+            let level = switch percentage {
+            case 0 ..< 50:
+                "Low usage"
+            case 50 ..< 80:
+                "Moderate usage"
+            case 80 ..< 100:
+                "High usage, approaching limit"
+            default:
+                "Over limit"
+            }
+            return "\(percentage) percent. \(level)"
+        }
+    }
+
+    /// Theme-aware gauge colors that adapt to light/dark mode and accessibility settings
     private func color(for v: Double) -> Color {
-        // Use brighter, more vibrant colors in dark mode for better visibility
-        let palette: [Color] = colorScheme == .dark
-            ? [
-                Color.cyan.opacity(0.9), // Bright cyan instead of dark teal
-                Color.green.opacity(0.9), // Bright green
-                Color.yellow.opacity(0.95), // Bright yellow
-                Color.orange.opacity(0.9), // Bright orange
-                Color.red.opacity(0.9) // Bright red
-            ]
-            : [.teal, .green, .yellow, .orange, .red] // Standard colors for light mode
+        // Use accessibility-aware colors that respect high contrast mode
+        let palette: [Color] = Color.accessibleGaugeColors(for: colorScheme)
+
+        // Apply dark mode brightness adjustments if not in high contrast mode
+        let adjustedPalette: [Color] = Color.isHighContrastEnabled ? palette :
+            (colorScheme == .dark ? palette.map { $0.opacity(0.9) } : palette)
 
         let seg = min(4, Int(v * 4))
         let t = v * 4 - Double(seg)
-        return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
+        return adjustedPalette[seg].blend(with: adjustedPalette[min(seg + 1, 4)], ratio: t)
+            .withAccessibilityContrast()
     }
 
     /// Loading state uses theme-aware blue gradient

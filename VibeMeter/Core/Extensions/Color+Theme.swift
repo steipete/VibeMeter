@@ -6,6 +6,18 @@ import SwiftUI
 /// ensuring consistent visual appearance across all system themes. Colors are optimized
 /// for accessibility and follow macOS design guidelines.
 extension Color {
+    // MARK: - Accessibility Support
+
+    /// Returns whether the system is currently in high contrast mode
+    static var isHighContrastEnabled: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+    }
+
+    /// Returns whether the system should reduce transparency
+    static var shouldReduceTransparency: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    }
+
     // MARK: - App Semantic Colors
 
     /// Primary app accent color that adapts to theme
@@ -25,28 +37,26 @@ extension Color {
     static let gaugeDanger = Color.red
     static let gaugeDisabled = Color.gray
 
+    /// Standard gauge color progression from healthy to danger
+    static let gaugeColorProgression: [Color] = [
+        gaugeHealthy,
+        gaugeModerate,
+        gaugeWarning,
+        gaugeDanger,
+    ]
+
     /// Gauge stroke colors for different themes
     static func gaugeStroke(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return .white.opacity(0.25)
-        case .light:
-            return .black.opacity(0.15)
-        @unknown default:
-            return .gray.opacity(0.2)
-        }
+        colorScheme == .dark 
+            ? .white.opacity(0.25)
+            : .black.opacity(0.15)
     }
 
     /// Gauge background colors
     static func gaugeBackground(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return .white.opacity(0.1)
-        case .light:
-            return .black.opacity(0.05)
-        @unknown default:
-            return .gray.opacity(0.1)
-        }
+        colorScheme == .dark 
+            ? .white.opacity(0.1)
+            : .black.opacity(0.05)
     }
 
     // MARK: - Connection Status Colors
@@ -63,38 +73,21 @@ extension Color {
 
     /// Menu bar colors that work with system appearance
     static func menuBarContent(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return .white
-        case .light:
-            return .black
-        @unknown default:
-            return .primary
-        }
+        colorScheme == .dark ? .white : .black
     }
 
     /// Hover state colors
     static func hoverBackground(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return .white.opacity(0.08)
-        case .light:
-            return .black.opacity(0.05)
-        @unknown default:
-            return .gray.opacity(0.1)
-        }
+        colorScheme == .dark 
+            ? .white.opacity(0.08)
+            : .black.opacity(0.05)
     }
 
     /// Selection background colors
     static func selectionBackground(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return .white.opacity(0.12)
-        case .light:
-            return .black.opacity(0.08)
-        @unknown default:
-            return .accentColor.opacity(0.15)
-        }
+        colorScheme == .dark 
+            ? .white.opacity(0.12)
+            : .black.opacity(0.08)
     }
 
     // MARK: - Spending Colors with Theme Awareness
@@ -112,13 +105,56 @@ extension Color {
         }
 
         // Adjust opacity/saturation for dark mode if needed
-        switch colorScheme {
-        case .dark:
-            return baseColor.opacity(0.9)
-        case .light:
-            return baseColor
-        @unknown default:
-            return baseColor
+        return colorScheme == .dark 
+            ? baseColor.opacity(0.9)
+            : baseColor
+    }
+
+    // MARK: - High Contrast Support
+
+    /// Returns high-contrast version of the color if accessibility requires it
+    func withAccessibilityContrast() -> Color {
+        if Color.isHighContrastEnabled {
+            // For high contrast mode, use more vibrant, saturated colors
+            self.opacity(1.0)
+        } else {
+            self
+        }
+    }
+
+    /// Returns gauge colors with proper accessibility contrast
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Array of colors optimized for accessibility
+    static func accessibleGaugeColors(for colorScheme: ColorScheme) -> [Color] {
+        if isHighContrastEnabled {
+            // Use more saturated, high contrast colors
+            colorScheme == .dark
+                ? [
+                    Color.cyan,
+                    Color.green,
+                    Color.yellow,
+                    Color.orange,
+                    Color.red
+                ]
+                : [
+                    Color.blue,
+                    Color.green,
+                    Color.yellow,
+                    Color.orange,
+                    Color.red,
+                ]
+        } else {
+            gaugeColorProgression
+        }
+    }
+
+    /// Returns background color with reduced transparency for accessibility
+    static func accessibleBackground(for colorScheme: ColorScheme) -> Color {
+        if shouldReduceTransparency {
+            // Use solid colors instead of transparent materials
+            return Color(NSColor.windowBackgroundColor)
+        } else {
+            return vibeMeterBackground
         }
     }
 }
@@ -131,14 +167,7 @@ struct AdaptiveColor {
     let dark: Color
 
     func color(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            return dark
-        case .light:
-            return light
-        @unknown default:
-            return light
-        }
+        colorScheme == .dark ? dark : light
     }
 }
 
@@ -147,16 +176,9 @@ struct AdaptiveColor {
 extension Color {
     /// Returns a color with enhanced contrast for accessibility
     func withAccessibilityContrast(for colorScheme: ColorScheme) -> Color {
-        switch colorScheme {
-        case .dark:
-            // Increase brightness in dark mode
-            return self.opacity(0.95)
-        case .light:
-            // Increase saturation in light mode
-            return self.opacity(1.0)
-        @unknown default:
-            return self
-        }
+        colorScheme == .dark 
+            ? self.opacity(0.95) // Increase brightness in dark mode
+            : self.opacity(1.0)  // Increase saturation in light mode
     }
 
     /// Returns an appropriate text color for this background

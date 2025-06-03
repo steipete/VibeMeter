@@ -19,7 +19,6 @@ struct AboutView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     appInfoSection
-                    systemStatusSection
                     descriptionSection
                     linksSection
 
@@ -49,42 +48,6 @@ struct AboutView: View {
         .padding(.top, 20)
     }
 
-    @ViewBuilder
-    private var systemStatusSection: some View {
-        if let orchestrator {
-            VStack(spacing: 8) {
-                Text("System Status")
-                    .font(.headline)
-                    .fontWeight(.medium)
-
-                VStack(spacing: 6) {
-                    HStack {
-                        Text("Network:")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-
-                        Spacer()
-
-                        NetworkStatusIndicator(
-                            networkStatus: orchestrator.networkStatus,
-                            isConnected: orchestrator.isNetworkConnected,
-                            compact: true)
-                    }
-
-                    if !orchestrator.isNetworkConnected {
-                        Text("Some features may not work without internet")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.orange)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-            }
-        }
-    }
-
     private var descriptionSection: some View {
         Text("Monitor your monthly Cursor AI spending")
             .foregroundStyle(.secondary)
@@ -96,16 +59,19 @@ struct AboutView: View {
                 Label("View on GitHub", systemImage: "link")
             }
             .buttonStyle(.link)
+            .pointingHandCursor()
 
             Link(destination: URL(string: "https://github.com/steipete/VibeMeter/issues")!) {
                 Label("Report an Issue", systemImage: "exclamationmark.bubble")
             }
             .buttonStyle(.link)
+            .pointingHandCursor()
 
             Link(destination: URL(string: "https://x.com/steipete")!) {
-                Label("Follow on X", systemImage: "x.squareroot")
+                Label("Follow @steipete on X", systemImage: "bird")
             }
             .buttonStyle(.link)
+            .pointingHandCursor()
         }
     }
 
@@ -149,6 +115,7 @@ struct InteractiveAppIcon: View {
         .onHover { hovering in
             isHovering = hovering
         }
+        .pointingHandCursor()
         .pressEvents(
             onPress: { isPressed = true },
             onRelease: { isPressed = false })
@@ -190,9 +157,27 @@ struct PressEventModifier: ViewModifier {
     }
 }
 
+/// View modifier for showing pointing hand cursor on hover.
+struct PointingHandCursorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .onHover { isHovering in
+                if isHovering {
+                    NSCursor.pointingHand.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+    }
+}
+
 extension View {
     func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
         modifier(PressEventModifier(onPress: onPress, onRelease: onRelease))
+    }
+
+    func pointingHandCursor() -> some View {
+        modifier(PointingHandCursorModifier())
     }
 }
 
@@ -200,5 +185,5 @@ extension View {
 
 #Preview("About View") {
     AboutView(orchestrator: nil)
-        .frame(width: 620, height: 600)
+        .frame(width: 570, height: 600)
 }

@@ -25,6 +25,23 @@ struct VibeMeterMainView: View {
             }
         }
         .frame(width: 300, height: userSessionData.isLoggedInToAnyProvider ? 400 : 280)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("VibeMeter main interface")
+        .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?
+            "Shows AI service spending dashboard and controls" :
+            "Shows login options for AI service providers")
+        .onAppear {
+            // Enable keyboard navigation for the menu
+            NSApp.keyWindow?.makeFirstResponder(nil)
+        }
+        .onKeyPress(.escape) { _ in
+            // Modern key handling for ESC to close menu
+            if let customMenuWindow = NSApp.windows.first(where: { $0 is CustomMenuWindow }) as? CustomMenuWindow {
+                customMenuWindow.hide()
+                return .handled
+            }
+            return .ignored
+        }
     }
 }
 
