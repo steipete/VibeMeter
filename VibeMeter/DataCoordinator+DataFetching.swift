@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - Data Fetching
+
 extension RealDataCoordinator {
     func fetchUserAndTeamInfo(authToken: String) async throws {
         // First, fetch user info (/me endpoint) to get email and potentially team ID
@@ -57,7 +58,13 @@ extension RealDataCoordinator {
         latestInvoiceResponse = invoiceResponse
 
         // Log invoice details for debugging
-        if let items = invoiceResponse.items {
+        let items = invoiceResponse.items
+        if items.isEmpty {
+            LoggingService.info(
+                "Fetched Invoice: No usage items yet this month, Total $\(currentSpendingUSD ?? 0)",
+                category: .data
+            )
+        } else {
             LoggingService.info(
                 "Fetched Invoice: \(items.count) items, Total $\(currentSpendingUSD ?? 0)",
                 category: .data
@@ -65,14 +72,9 @@ extension RealDataCoordinator {
             for item in items {
                 LoggingService.debug("Invoice item: \(item.description) - \(item.cents) cents", category: .data)
             }
-        } else {
-            LoggingService.info(
-                "Fetched Invoice: No usage items yet this month, Total $\(currentSpendingUSD ?? 0)",
-                category: .data
-            )
-            if let pricingDesc = invoiceResponse.pricingDescription {
-                LoggingService.debug("Pricing description available: ID \(pricingDesc.id)", category: .data)
-            }
+        }
+        if let pricingDesc = invoiceResponse.pricingDescription {
+            LoggingService.debug("Pricing description available: ID \(pricingDesc.id)", category: .data)
         }
     }
 

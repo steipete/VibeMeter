@@ -25,7 +25,7 @@ struct VibeMeterApp: App {
         // However, to ensure the app has a scene to keep it alive if all manual windows are closed
         // (and to provide a settings scene if we switch to SwiftUI handling for it):
         Settings { // This makes the "Settings" menu item in the App menu work if users expect it
-            SettingsView(
+            MacSettingsView(
                 settingsManager: SettingsManager.shared,
                 dataCoordinator: DataCoordinator.shared as! RealDataCoordinator
             )
@@ -35,6 +35,7 @@ struct VibeMeterApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var menuBarController: MenuBarController?
+    var sparkleUpdaterManager: SparkleUpdaterManager?
     // DataCoordinator is initialized as a shared instance and will initialize its dependencies.
     // We don't need to explicitly hold an instance here if MenuBarController uses DataCoordinator.shared
 
@@ -49,6 +50,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Initialize MenuBarController
         menuBarController = MenuBarController() // It will use DataCoordinator.shared by default
+
+        // Initialize Sparkle updater for auto-updates
+        sparkleUpdaterManager = SparkleUpdaterManager()
 
         // Perform initial data load or check login status if needed explicitly here,
         // though DataCoordinator's init should handle its own startup logic.

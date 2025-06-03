@@ -125,6 +125,13 @@ class LoginManager: NSObject {
         settingsManager.clearUserSessionData()
         // Any other state clearing for logout
         LoggingService.info("User logged out, session data cleared.", category: .login)
+        
+        // Notify that logout has occurred - this ensures the UI updates properly
+        onLoginFailure?(NSError(
+            domain: "LoginManager",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "User logged out."]
+        ))
     }
 
     @MainActor

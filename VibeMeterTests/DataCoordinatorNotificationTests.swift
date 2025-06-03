@@ -22,42 +22,42 @@ class DataCoordinatorNotificationTests: XCTestCase, @unchecked Sendable {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             cancellables = []
             testUserDefaults = suite
             // 1. Setup mock SettingsManager (as it's used by other mocks too)
             SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
             mockSettingsManager = SettingsManager.shared
-        // 2. Setup other mocks
-        mockExchangeRateManager = ExchangeRateManagerMock()
-        mockApiClient = CursorAPIClientMock()
-        mockNotificationManager = NotificationManagerMock()
-        keychainMockForLoginManager = KeychainServiceMock()
-        let apiClientForLoginManager = CursorAPIClient.__init(session: MockURLSession(), settingsManager: mockSettingsManager)
-        mockLoginManager = LoginManager(
-            settingsManager: mockSettingsManager,
-            apiClient: apiClientForLoginManager,
-            keychainService: keychainMockForLoginManager,
-            webViewFactory: { MockWebView() }
-        )
-        // 3. Initialize DataCoordinator with all mocks
-        dataCoordinator = RealDataCoordinator(
-            loginManager: mockLoginManager,
-            settingsManager: mockSettingsManager,
-            exchangeRateManager: mockExchangeRateManager,
-            apiClient: mockApiClient,
-            notificationManager: mockNotificationManager
-        )
-        // Reset mocks to a clean state before each test
-        mockSettingsManager.selectedCurrencyCode = "USD"
-        mockSettingsManager.warningLimitUSD = 200.0
-        mockSettingsManager.upperLimitUSD = 1000.0
-        mockSettingsManager.refreshIntervalMinutes = 5
-        mockSettingsManager.clearUserSessionData()
-        mockExchangeRateManager.reset()
-        mockApiClient.reset()
-        mockNotificationManager.reset()
+            // 2. Setup other mocks
+            mockExchangeRateManager = ExchangeRateManagerMock()
+            mockApiClient = CursorAPIClientMock()
+            mockNotificationManager = NotificationManagerMock()
+            keychainMockForLoginManager = KeychainServiceMock()
+            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
+            mockLoginManager = LoginManager(
+                settingsManager: mockSettingsManager,
+                apiClient: apiClientForLoginManager,
+                keychainService: keychainMockForLoginManager,
+                webViewFactory: { MockWebView() }
+            )
+            // 3. Initialize DataCoordinator with all mocks
+            dataCoordinator = RealDataCoordinator(
+                loginManager: mockLoginManager,
+                settingsManager: mockSettingsManager,
+                exchangeRateManager: mockExchangeRateManager,
+                apiClient: mockApiClient,
+                notificationManager: mockNotificationManager
+            )
+            // Reset mocks to a clean state before each test
+            mockSettingsManager.selectedCurrencyCode = "USD"
+            mockSettingsManager.warningLimitUSD = 200.0
+            mockSettingsManager.upperLimitUSD = 1000.0
+            mockSettingsManager.refreshIntervalMinutes = 5
+            mockSettingsManager.clearUserSessionData()
+            mockExchangeRateManager.reset()
+            mockApiClient.reset()
+            mockNotificationManager.reset()
             keychainMockForLoginManager?.reset()
         }
     }

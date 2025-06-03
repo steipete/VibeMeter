@@ -155,7 +155,8 @@ class RealExchangeRateManager: ExchangeRateManagerProtocol {
 
     func getRates() async -> [String: Double] {
         if let lastFetchTimestamp = userDefaults.object(forKey: Keys.lastExchangeRateFetchTimestamp) as? Date,
-           let cachedRates = userDefaults.dictionary(forKey: Keys.cachedExchangeRates) as? [String: Double] {
+           let cachedRates = userDefaults.dictionary(forKey: Keys.cachedExchangeRates) as? [String: Double]
+        {
             // Cache is considered valid if fetched within the last 24 hours (spec implies daily refresh)
             let twentyFourHoursAgo = Calendar.current.date(byAdding: .hour, value: -24, to: Date()) ?? Date.distantPast
             if lastFetchTimestamp > twentyFourHoursAgo {

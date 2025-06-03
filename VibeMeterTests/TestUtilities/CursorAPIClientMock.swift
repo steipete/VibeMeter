@@ -9,12 +9,10 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
     // MARK: - Controllable Responses
 
     var teamInfoToReturn: (id: Int, name: String)? = (123, "Mock Team")
-    var userInfoToReturn: CursorAPIClient.UserInfoResponse? = CursorAPIClient
-        .UserInfoResponse(email: "mock@example.com", teamId: 12345)
-    var monthlyInvoiceToReturn: CursorAPIClient.MonthlyInvoiceResponse? = CursorAPIClient
-        .MonthlyInvoiceResponse(items: [
-            CursorAPIClient.InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
-            CursorAPIClient.InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
+    var userInfoToReturn: UserInfo? = UserInfo(email: "mock@example.com", teamId: 12345)
+    var monthlyInvoiceToReturn: MonthlyInvoice? = MonthlyInvoice(items: [
+            InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
+            InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
         ], pricingDescription: nil)
 
     // MARK: - Controllable Errors
@@ -39,12 +37,12 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
             throw error
         }
         guard let teamInfo = teamInfoToReturn else {
-            throw CursorAPIClient.APIError.noTeamFound // Default error if not configured
+            throw CursorAPIError.noTeamFound // Default error if not configured
         }
         return teamInfo
     }
 
-    func fetchUserInfo(authToken: String) async throws -> CursorAPIClient.UserInfoResponse {
+    func fetchUserInfo(authToken: String) async throws -> UserInfo {
         fetchUserInfoCallCount += 1
         lastAuthTokenForUserInfo = authToken
         if let error = userInfoError ?? errorToThrow {
@@ -52,14 +50,13 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
         }
         guard let userInfo = userInfoToReturn else {
             // Simulate a generic decoding or network error if specific user info is not set for success
-            throw CursorAPIClient.APIError
-                .decodingError(CursorAPIClient.ErrorDetails(message: "Mock UserInfo decoding error"))
+            throw CursorAPIError
+                .decodingError(ErrorDetails(message: "Mock UserInfo decoding error"))
         }
         return userInfo
     }
 
-    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> CursorAPIClient
-        .MonthlyInvoiceResponse
+    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> MonthlyInvoice
     {
         fetchMonthlyInvoiceCallCount += 1
         lastAuthTokenForInvoice = authToken
@@ -70,8 +67,8 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
         }
         guard let invoice = monthlyInvoiceToReturn else {
             // Simulate a generic decoding or network error
-            throw CursorAPIClient.APIError
-                .networkError(CursorAPIClient.ErrorDetails(message: "Mock Invoice network error"))
+            throw CursorAPIError
+                .networkError(ErrorDetails(message: "Mock Invoice network error"))
         }
         return invoice
     }
@@ -82,10 +79,10 @@ class CursorAPIClientMock: CursorAPIClientProtocol {
         fetchMonthlyInvoiceCallCount = 0
 
         teamInfoToReturn = (123, "Mock Team")
-        userInfoToReturn = CursorAPIClient.UserInfoResponse(email: "mock@example.com", teamId: 12345)
-        monthlyInvoiceToReturn = CursorAPIClient.MonthlyInvoiceResponse(items: [
-            CursorAPIClient.InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
-            CursorAPIClient.InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
+        userInfoToReturn = UserInfo(email: "mock@example.com", teamId: 12345)
+        monthlyInvoiceToReturn = MonthlyInvoice(items: [
+            InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
+            InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
         ], pricingDescription: nil)
 
         errorToThrow = nil

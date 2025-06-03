@@ -12,7 +12,7 @@ class ExchangeRateManagerTests: XCTestCase, @unchecked Sendable {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             testUserDefaults = suite
             mockURLSession = MockURLSession()
@@ -56,7 +56,7 @@ class ExchangeRateManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(RealExchangeRateManager.getSymbol(for: "CNY"), "CN¥")
         XCTAssertEqual(RealExchangeRateManager.getSymbol(for: "INR"), "₹")
         XCTAssertEqual(RealExchangeRateManager.getSymbol(for: "PHP"), "₱")
-        XCTAssertEqual(RealExchangeRateManager.getSymbol(for: "XYZ"), "XYZ ") // Unknown currency
+        XCTAssertEqual(RealExchangeRateManager.getSymbol(for: "XYZ"), "XYZ") // Unknown currency falls back to code
     }
 
     func testFetchExchangeRatesSuccessfully() async {

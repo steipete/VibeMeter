@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - Currency Handling
+
 extension RealDataCoordinator {
     func convertAndDisplayAmounts() async {
         guard let spendingUSD = currentSpendingUSD else {
@@ -43,7 +44,7 @@ extension RealDataCoordinator {
             if let spending = currentSpendingConverted {
                 LoggingService.info(
                     "Conversion: $\(String(format: "%.2f", spendingUSD)) USD = " +
-                    "\(selectedCurrencySymbol)\(String(format: "%.2f", spending)) \(selectedCode)",
+                        "\(selectedCurrencySymbol)\(String(format: "%.2f", spending)) \(selectedCode)",
                     category: .data
                 )
             }
@@ -60,7 +61,8 @@ extension RealDataCoordinator {
             warningLimitConverted = settingsManager.warningLimitUSD
             upperLimitConverted = settingsManager.upperLimitUSD
             if isLoggedIn, currentSpendingUSD != nil, teamIdFetchFailed == false,
-               lastErrorMessage == nil || lastErrorMessage == "Vibe synced! ✨" {
+               lastErrorMessage == nil || lastErrorMessage == "Vibe synced! ✨"
+            {
                 lastErrorMessage = "Rates MIA! Showing USD for now. ✨"
             }
         }
@@ -74,14 +76,16 @@ extension RealDataCoordinator {
         } else if teamIdFetchFailed {
             menuBarDisplayText = "Error (No Team)" // More specific error
         } else if let specificError = lastErrorMessage,
-                  specificError != "Rates MIA! Showing USD for now. ✨", specificError != "Vibe synced! ✨" {
+                  specificError != "Rates MIA! Showing USD for now. ✨", specificError != "Vibe synced! ✨"
+        {
             menuBarDisplayText = "Error"
         } else if let spending = currentSpendingConverted, let warning = warningLimitConverted {
             let spendingText = "\(selectedCurrencySymbol)\(String(format: "%.2f", spending))"
             let warningText = "\(selectedCurrencySymbol)\(String(format: "%.2f", warning))"
             menuBarDisplayText = "\(spendingText) / \(warningText)"
         } else if let spendingUSD = currentSpendingUSD,
-                  !exchangeRatesAvailable { // Fallback to USD display if rates out, and converted values are nil
+                  !exchangeRatesAvailable
+        { // Fallback to USD display if rates out, and converted values are nil
             let warningUSD = settingsManager.warningLimitUSD
             menuBarDisplayText = "$\(String(format: "%.2f", spendingUSD)) / $\(String(format: "%.2f", warningUSD))"
         } else {

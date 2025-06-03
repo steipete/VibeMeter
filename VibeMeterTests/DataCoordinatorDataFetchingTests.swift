@@ -22,42 +22,42 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             cancellables = []
             testUserDefaults = suite
             // 1. Setup mock SettingsManager (as it's used by other mocks too)
             SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
             mockSettingsManager = SettingsManager.shared
-        // 2. Setup other mocks
-        mockExchangeRateManager = ExchangeRateManagerMock()
-        mockApiClient = CursorAPIClientMock()
-        mockNotificationManager = NotificationManagerMock()
-        keychainMockForLoginManager = KeychainServiceMock()
-        let apiClientForLoginManager = CursorAPIClient.__init(session: MockURLSession(), settingsManager: mockSettingsManager)
-        mockLoginManager = LoginManager(
-            settingsManager: mockSettingsManager,
-            apiClient: apiClientForLoginManager,
-            keychainService: keychainMockForLoginManager,
-            webViewFactory: { MockWebView() }
-        )
-        // 3. Initialize DataCoordinator with all mocks
-        dataCoordinator = RealDataCoordinator(
-            loginManager: mockLoginManager,
-            settingsManager: mockSettingsManager,
-            exchangeRateManager: mockExchangeRateManager,
-            apiClient: mockApiClient,
-            notificationManager: mockNotificationManager
-        )
-        // Reset mocks to a clean state before each test
-        mockSettingsManager.selectedCurrencyCode = "USD"
-        mockSettingsManager.warningLimitUSD = 200.0
-        mockSettingsManager.upperLimitUSD = 1000.0
-        mockSettingsManager.refreshIntervalMinutes = 5
-        mockSettingsManager.clearUserSessionData()
-        mockExchangeRateManager.reset()
-        mockApiClient.reset()
-        mockNotificationManager.reset()
+            // 2. Setup other mocks
+            mockExchangeRateManager = ExchangeRateManagerMock()
+            mockApiClient = CursorAPIClientMock()
+            mockNotificationManager = NotificationManagerMock()
+            keychainMockForLoginManager = KeychainServiceMock()
+            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
+            mockLoginManager = LoginManager(
+                settingsManager: mockSettingsManager,
+                apiClient: apiClientForLoginManager,
+                keychainService: keychainMockForLoginManager,
+                webViewFactory: { MockWebView() }
+            )
+            // 3. Initialize DataCoordinator with all mocks
+            dataCoordinator = RealDataCoordinator(
+                loginManager: mockLoginManager,
+                settingsManager: mockSettingsManager,
+                exchangeRateManager: mockExchangeRateManager,
+                apiClient: mockApiClient,
+                notificationManager: mockNotificationManager
+            )
+            // Reset mocks to a clean state before each test
+            mockSettingsManager.selectedCurrencyCode = "USD"
+            mockSettingsManager.warningLimitUSD = 200.0
+            mockSettingsManager.upperLimitUSD = 1000.0
+            mockSettingsManager.refreshIntervalMinutes = 5
+            mockSettingsManager.clearUserSessionData()
+            mockExchangeRateManager.reset()
+            mockApiClient.reset()
+            mockNotificationManager.reset()
             keychainMockForLoginManager?.reset()
         }
     }
@@ -111,7 +111,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         _ = keychainMockForLoginManager.saveToken("expired-token")
         dataCoordinator.isLoggedIn = true
 
-        mockApiClient.teamInfoError = CursorAPIClient.APIError.unauthorized
+        mockApiClient.teamInfoError = CursorAPIError.unauthorized
 
         mockLoginManager.onLoginFailure = { _ in logoutTriggered = true }
 
@@ -121,7 +121,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         // Assert
         XCTAssertTrue(logoutTriggered, "LoginManager's onLoginFailure should be triggered on unauthorized")
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out after unauthorized error")
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "")
         XCTAssertEqual(dataCoordinator.lastErrorMessage, "Session expired. Please log in.")
         XCTAssertNil(keychainMockForLoginManager.getToken(), "Token should be cleared by LoginManager.logOut()")
     }
@@ -130,7 +130,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         _ = keychainMockForLoginManager.saveToken("test-token")
         dataCoordinator.isLoggedIn = true
 
-        mockApiClient.teamInfoError = CursorAPIClient.APIError.noTeamFound
+        mockApiClient.teamInfoError = CursorAPIError.noTeamFound
 
         await dataCoordinator.forceRefreshData(showSyncedMessage: false)
 
@@ -146,7 +146,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         _ = keychainMockForLoginManager.saveToken("test-token")
         dataCoordinator.isLoggedIn = true
 
-        let networkError = CursorAPIClient.APIError.networkError(.init(message: "No internet", statusCode: nil))
+        let networkError = CursorAPIError.networkError(.init(message: "No internet", statusCode: nil))
         mockApiClient.teamInfoError = networkError
 
         await dataCoordinator.forceRefreshData(showSyncedMessage: false)

@@ -2,7 +2,7 @@
 import XCTest
 
 class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
-    var apiClient: RealCursorAPIClient!
+    var apiClient: CursorAPIClient!
     var mockURLSession: MockURLSession!
     var testUserDefaults: UserDefaults!
     var settingsManager: SettingsManager!
@@ -18,7 +18,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
             SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
             settingsManager = SettingsManager.shared
             mockURLSession = MockURLSession()
-            apiClient = CursorAPIClient.__init(session: mockURLSession, settingsManager: settingsManager)
+            apiClient = CursorAPIClient(session: mockURLSession, settingsManager: settingsManager)
         }
     }
 
@@ -75,8 +75,8 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
         do {
             _ = try await apiClient.fetchTeamInfo(authToken: "testToken")
             XCTFail("Should have thrown an error for empty teams array")
-        } catch let error as CursorAPIClient.APIError {
-            XCTAssertEqual(error, CursorAPIClient.APIError.noTeamFound)
+        } catch let error as CursorAPIError {
+            XCTAssertEqual(error, CursorAPIError.noTeamFound)
         } catch {
             XCTFail("Unexpected error type: \(error)")
         }
@@ -89,7 +89,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
         do {
             _ = try await apiClient.fetchTeamInfo(authToken: "testToken")
             XCTFail("Should have thrown an APIError.networkError")
-        } catch let error as CursorAPIClient.APIError {
+        } catch let error as CursorAPIError {
             if case let .networkError(errorDetails) = error {
                 XCTAssertEqual(
                     errorDetails.statusCode,
@@ -113,7 +113,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
         do {
             _ = try await apiClient.fetchTeamInfo(authToken: "testToken")
             XCTFail("Should have thrown APIError.decodingError")
-        } catch CursorAPIClient.APIError.decodingError {
+        } catch CursorAPIError.decodingError {
             // Correct error caught
         } catch {
             XCTFail("Unexpected error type: \(error)")
@@ -124,7 +124,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
 
     @MainActor
     func testFetchUserInfoSuccessfully() async throws {
-        let mockUserData = CursorAPIClient.UserInfoResponse(email: "test@example.com", teamId: nil)
+        let mockUserData = UserInfo(email: "test@example.com", teamId: nil)
         let mockData = try JSONEncoder().encode(mockUserData)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = createMockResponse(statusCode: 200, data: mockData)
@@ -144,9 +144,9 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
     @MainActor
     func testFetchMonthlyInvoiceSuccessfully() async throws {
         settingsManager.teamId = 123 // Prerequisite for this call
-        let mockInvoiceData = CursorAPIClient.MonthlyInvoiceResponse(items: [
-            CursorAPIClient.InvoiceItem(cents: 1000, description: "Usage 1"),
-            CursorAPIClient.InvoiceItem(cents: 250, description: "Usage 2"),
+        let mockInvoiceData = MonthlyInvoice(items: [
+            InvoiceItem(cents: 1000, description: "Usage 1"),
+            InvoiceItem(cents: 250, description: "Usage 2"),
         ], pricingDescription: nil)
         let mockData = try JSONEncoder().encode(mockInvoiceData)
         mockURLSession.nextData = mockData
@@ -179,7 +179,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
         do {
             _ = try await apiClient.fetchMonthlyInvoice(authToken: "testToken", month: 10, year: 2023)
             XCTFail("Should have thrown APIError.teamIdNotSet")
-        } catch CursorAPIClient.APIError.teamIdNotSet {
+        } catch CursorAPIError.teamIdNotSet {
             // Correct error
         } catch {
             XCTFail("Unexpected error type: \(error)")
@@ -189,7 +189,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
     @MainActor
     func testFetchMonthlyInvoiceEmptyItems() async throws {
         settingsManager.teamId = 123
-        let mockInvoiceData = CursorAPIClient.MonthlyInvoiceResponse(items: [], pricingDescription: nil)
+        let mockInvoiceData = MonthlyInvoice(items: [], pricingDescription: nil)
         let mockData = try JSONEncoder().encode(mockInvoiceData)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = createMockResponse(statusCode: 200, data: mockData)
@@ -208,7 +208,7 @@ class CursorAPIClientTests: XCTestCase, @unchecked Sendable {
         do {
             _ = try await apiClient.fetchTeamInfo(authToken: "testToken")
             XCTFail("Should have thrown APIError.unauthorized")
-        } catch CursorAPIClient.APIError.unauthorized {
+        } catch CursorAPIError.unauthorized {
             // Correct error
         } catch {
             XCTFail("Unexpected error type: \(error)")

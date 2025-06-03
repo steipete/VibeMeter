@@ -34,7 +34,8 @@ class MenuBarMenuBuilder {
         }
 
         if !dataCoordinator.exchangeRatesAvailable, dataCoordinator.isLoggedIn, dataCoordinator
-            .currentSpendingUSD != nil {
+            .currentSpendingUSD != nil
+        {
             let item = NSMenuItem(title: "Rates MIA! Showing USD for now. ✨", action: nil, keyEquivalent: "")
             item.isEnabled = false
             menu.addItem(item)
@@ -102,14 +103,15 @@ class MenuBarMenuBuilder {
                from: "USD",
                to: dataCoordinator.selectedCurrencyCode,
                rates: dataCoordinator.currentExchangeRates
-           ) {
+           )
+        {
             return "\(dataCoordinator.selectedCurrencySymbol)\(String(format: "%.2f", convertedAmount))"
         } else {
             return "$\(String(format: "%.2f", dollarsUSD))"
         }
     }
 
-    private func addInvoiceDetails(to menu: NSMenu, invoiceResponse: CursorAPIClient.MonthlyInvoiceResponse) {
+    private func addInvoiceDetails(to menu: NSMenu, invoiceResponse: MonthlyInvoice) {
         guard let dataCoordinator else { return }
 
         menu.addItem(NSMenuItem.separator())
@@ -129,7 +131,8 @@ class MenuBarMenuBuilder {
                                     from: "USD",
                                     to: dataCoordinator.selectedCurrencyCode,
                                     rates: dataCoordinator.currentExchangeRates
-                                ) {
+                                )
+        {
             "\(dataCoordinator.selectedCurrencySymbol)\(String(format: "%.2f", convertedTotal))"
         } else {
             "$\(String(format: "%.2f", totalUSD))"
@@ -154,7 +157,7 @@ class MenuBarMenuBuilder {
         }
     }
 
-    private func addInvoiceItems(to menu: NSMenu, items: [CursorAPIClient.InvoiceItem]?) {
+    private func addInvoiceItems(to menu: NSMenu, items: [InvoiceItem]?) {
         guard let items else {
             let noItemsItem = NSMenuItem(title: "No usage items this month", action: nil, keyEquivalent: "")
             noItemsItem.isEnabled = false
@@ -254,14 +257,6 @@ class MenuBarMenuBuilder {
 
         menu.addItem(NSMenuItem.separator())
 
-        let refreshItem = NSMenuItem(
-            title: "Refresh Now",
-            action: #selector(MenuBarController.refreshNowClicked),
-            keyEquivalent: "r"
-        )
-        refreshItem.target = controller
-        menu.addItem(refreshItem)
-
         let settingsItem = NSMenuItem(
             title: "Settings...",
             action: #selector(MenuBarController.settingsClicked),
@@ -272,23 +267,12 @@ class MenuBarMenuBuilder {
     }
 
     private func addCommonActions(to menu: NSMenu) {
-        guard let dataCoordinator else { return }
-
         menu.addItem(NSMenuItem.separator())
-
-        let launchAtLoginItem = NSMenuItem(
-            title: "Launch at Login",
-            action: #selector(MenuBarController.toggleLaunchAtLogin),
-            keyEquivalent: ""
-        )
-        launchAtLoginItem.target = controller
-        launchAtLoginItem.state = dataCoordinator.settingsManager.launchAtLoginEnabled ? .on : .off
-        menu.addItem(launchAtLoginItem)
 
         let quitItem = NSMenuItem(
             title: "Quit Vibe Meter",
             action: #selector(NSApplication.terminate(_:)),
-            keyEquivalent: "q"
+            keyEquivalent: "Q"
         )
         menu.addItem(quitItem)
     }
@@ -308,7 +292,8 @@ class MenuBarMenuBuilder {
 
             // Add invoice details if available
             if let coordinator = dataCoordinator as? RealDataCoordinator,
-               let invoiceResponse = coordinator.latestInvoiceResponse {
+               let invoiceResponse = coordinator.latestInvoiceResponse
+            {
                 addInvoiceDetails(to: menu, invoiceResponse: invoiceResponse)
             }
 

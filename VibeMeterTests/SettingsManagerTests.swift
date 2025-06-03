@@ -14,7 +14,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         // Use a specific UserDefaults suite for testing - this is OK since UserDefaults is Sendable
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName) // Clear before each test
-        
+
         MainActor.assumeIsolated {
             // Set the properties and configure manager on MainActor
             testUserDefaults = suite

@@ -22,7 +22,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             cancellables = []
             testUserDefaults = suite
@@ -34,7 +34,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
             keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient.__init(session: MockURLSession(), settingsManager: mockSettingsManager)
+            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
             mockLoginManager = LoginManager(
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
@@ -82,7 +82,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
 
     func testInitialState_WhenLoggedOut() {
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out initially")
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required", "Menu bar text should be Login Required")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "", "Menu bar text should be empty when logged out (icon only)")
         XCTAssertNil(dataCoordinator.userEmail)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
         XCTAssertNil(dataCoordinator.teamName)
@@ -196,7 +196,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         XCTAssertNil(dataCoordinator.teamName)
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "")
         XCTAssertTrue(mockSettingsManager.teamId == nil, "TeamID should be cleared in UserDefaults by SettingsManager")
         XCTAssertTrue(mockNotificationManager.resetAllNotificationStatesCalled)
     }

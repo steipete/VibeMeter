@@ -5,9 +5,9 @@ import Foundation
 class RealDataCoordinator: DataCoordinatorProtocol {
     // Managers - now using protocols where applicable, or concrete if testability is handled within them
     private let loginManager: LoginManager // Using concrete LoginManager for now
-    internal let apiClient: CursorAPIClientProtocol
+    let apiClient: CursorAPIClientProtocol
     let settingsManager: any SettingsManagerProtocol
-    internal let exchangeRateManager: ExchangeRateManagerProtocol
+    let exchangeRateManager: ExchangeRateManagerProtocol
     private let notificationManager: NotificationManagerProtocol
     // weak var menuBarController: MenuBarController? // Retain if direct calls are needed beyond observation
 
@@ -27,7 +27,7 @@ class RealDataCoordinator: DataCoordinatorProtocol {
     @Published var currentExchangeRates: [String: Double] = [:]
 
     // Store the latest invoice response for debug display
-    @Published var latestInvoiceResponse: CursorAPIClient.MonthlyInvoiceResponse?
+    @Published var latestInvoiceResponse: MonthlyInvoice?
 
     private var refreshTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
@@ -82,7 +82,12 @@ class RealDataCoordinator: DataCoordinatorProtocol {
                 "Login failed or was cancelled. Error: \(error.localizedDescription)",
                 category: .data
             )
-            self?.lastErrorMessage = "Login failed or cancelled."
+            // Check if this is a logout rather than a failed login
+            if error.localizedDescription.contains("logged out") {
+                self?.lastErrorMessage = nil // Clear error message on logout
+            } else {
+                self?.lastErrorMessage = "Login failed or cancelled."
+            }
             Task { await self?.handleLoginStatusChange(loggedIn: false, showSyncedMessage: false) }
         }
         loginManager.onLoginDismiss = { [weak self] in // If login window closed without explicit success/failure
@@ -116,9 +121,9 @@ class RealDataCoordinator: DataCoordinatorProtocol {
 
     private func handleLoginStatusChange(loggedIn: Bool, showSyncedMessage: Bool) async {
         isLoggedIn = loggedIn
-        // Token for apiClient is handled by its own shared instance, or if RealCursorAPIClient needs explicit update,
+        // Token for apiClient is handled by its own shared instance, or if CursorAPIClient needs explicit update,
         // how?
-        // The RealCursorAPIClient currently doesn't have an explicit token update method, it relies on SettingsManager
+        // The CursorAPIClient currently doesn't have an explicit token update method, it relies on SettingsManager
         // for teamID
         // and expects token to be passed into its methods. This interaction needs clarification for DataCoordinator.
         // For now, assume LoginManager gives token to API methods called in forceRefreshData.
@@ -182,12 +187,12 @@ class RealDataCoordinator: DataCoordinatorProtocol {
             }
             checkLimitsAndNotify()
 
-        } catch let error as CursorAPIClient.APIError where error == .unauthorized {
+        } catch let error as CursorAPIError where error == .unauthorized {
             LoggingService.warning("API Error: Not authenticated. Clearing session.", category: .data, error: error)
             lastErrorMessage = "Session expired. Please log in."
             loginManager.logOut() // This will trigger loginManager.onLoginSuccess/Failure via its own logic
             // which in turn calls handleLoginStatusChange.
-        } catch let error as CursorAPIClient.APIError where error == .noTeamFound {
+        } catch let error as CursorAPIError where error == .noTeamFound {
             LoggingService.error("API Error: Team not found after login.", category: .data, error: error)
             teamIdFetchFailed = true
             currentSpendingUSD = nil

@@ -16,29 +16,29 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
 
     override func setUp() {
         super.setUp()
-        
+
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             testUserDefaults = suite
             // Order of setup can be important if there are inter-dependencies in init, though not strictly here.
             mockSettingsManager = SettingsManager(userDefaults: testUserDefaults)
             SettingsManager
                 ._test_setSharedInstance(userDefaults: testUserDefaults) // If LoginManager internally uses .shared
-    
+
             mockKeychainService = KeychainServiceMock()
             // For LoginManager tests, we use the CursorAPIClientMock
             mockApiClient = CursorAPIClientMock()
             mockURLSession = MockURLSession()
-    
+
             mockWebView = MockWebView() // This is now an NSView
-    
+
             // Factory for LoginManager to produce our mockWebView
             let mockWebViewFactory: @MainActor () -> WebViewContract = {
                 self.mockWebView // Return the instance we hold and can control
             }
-    
+
             loginManager = LoginManager(
                 settingsManager: mockSettingsManager,
                 apiClient: mockApiClient,
@@ -125,7 +125,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         mockApiClient.teamInfoToReturn = (789, "Vibeville")
 
         // Configure mock for fetchUserInfo
-        mockApiClient.userInfoToReturn = CursorAPIClient.UserInfoResponse(email: "user@vibeville.com", teamId: nil)
+        mockApiClient.userInfoToReturn = UserInfo(email: "user@vibeville.com", teamId: nil)
         // We need a way to queue responses in MockURLSession or re-configure it per call.
         // For simplicity, assume MockURLSession is reconfigured before the second call or it can queue.
         // Let's assume re-configuration: (This part is tricky without a good queuing mock session)
@@ -197,7 +197,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
 
         // API calls will be mocked to succeed to isolate keychain failure
         mockApiClient.teamInfoToReturn = (1, "T")
-        mockApiClient.userInfoToReturn = CursorAPIClient.UserInfoResponse(email: "test@example.com", teamId: nil)
+        mockApiClient.userInfoToReturn = UserInfo(email: "test@example.com", teamId: nil)
 
         let dummyWKWebView = WKWebView()
         loginManager.webView(dummyWKWebView, didFinish: nil)
@@ -209,7 +209,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
     func testLoginFlowApiFetchTeamInfoFails() async {
         let expectation = XCTestExpectation(description: "Login failure callback for API fail")
         loginManager.onLoginFailure = { error in
-            if let apiError = error as? CursorAPIClient.APIError {
+            if let apiError = error as? CursorAPIError {
                 if case .networkError = apiError {
                     expectation.fulfill()
                 } else {
@@ -232,7 +232,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         mockWebView.mockCookieStore.cookiesToReturn = [mockCookie]
 
         // Mock API client to fail fetchTeamInfo
-        mockApiClient.teamInfoError = CursorAPIClient.APIError.networkError(.init(message: "Server error", statusCode: 500))
+        mockApiClient.teamInfoError = CursorAPIError.networkError(.init(message: "Server error", statusCode: 500))
 
         let dummyWKWebView = WKWebView()
         loginManager.webView(dummyWKWebView, didFinish: nil)

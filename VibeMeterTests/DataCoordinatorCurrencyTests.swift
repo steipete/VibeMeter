@@ -22,7 +22,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
         suite?.removePersistentDomain(forName: testSuiteName)
-        
+
         MainActor.assumeIsolated {
             cancellables = []
             testUserDefaults = suite
@@ -34,7 +34,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
             keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient.__init(session: MockURLSession(), settingsManager: mockSettingsManager)
+            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
             mockLoginManager = LoginManager(
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
@@ -83,7 +83,15 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     func testCurrencyChange_UpdatesConvertedValuesAndSymbol() async {
         _ = keychainMockForLoginManager.saveToken("test-token")
         dataCoordinator.isLoggedIn = true
-        dataCoordinator.currentSpendingUSD = 100.0
+
+        // Configure mock API to return $100 worth of items (10000 cents)
+        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [
+                InvoiceItem(cents: 10000, description: "Mock Pro Usage for test"),
+            ],
+            pricingDescription: nil
+        )
+
         mockSettingsManager.warningLimitUSD = 50.0
         mockSettingsManager.upperLimitUSD = 150.0
 
@@ -114,7 +122,15 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     func testExchangeRatesUnavailable_DisplaysInUSD() async {
         _ = keychainMockForLoginManager.saveToken("test-token")
         dataCoordinator.isLoggedIn = true
-        dataCoordinator.currentSpendingUSD = 120.0
+
+        // Configure mock API to return $120 worth of items (12000 cents)
+        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [
+                InvoiceItem(cents: 12000, description: "Mock Pro Usage for exchange test"),
+            ],
+            pricingDescription: nil
+        )
+
         mockSettingsManager.warningLimitUSD = 80.0
         mockSettingsManager.selectedCurrencyCode = "EUR"
 
