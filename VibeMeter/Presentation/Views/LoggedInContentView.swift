@@ -10,6 +10,9 @@ struct LoggedInContentView: View {
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager?
     let onRefresh: () async -> Void
+    
+    @Environment(MultiProviderSpendingData.self)
+    private var spendingData
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,15 +25,35 @@ struct LoggedInContentView: View {
             Divider()
                 .overlay(Color.white.opacity(0.08))
 
-            // Content section - reduced spacing
-            VStack(spacing: 6) {
-                CostTableView(settingsManager: settingsManager, loginManager: loginManager)
+            // Content section - tighter spacing
+            VStack(spacing: 4) {
+                CostTableView(settingsManager: settingsManager, loginManager: loginManager, showTimestamps: false)
             }
-            .frame(maxHeight: 200)
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
 
-            Spacer(minLength: 6)
+            Spacer(minLength: 4)
+
+            // Last updated section at bottom
+            if let lastUpdate = mostRecentRefresh {
+                VStack(spacing: 2) {
+                    Divider()
+                        .overlay(Color.white.opacity(0.06))
+                    
+                    HStack {
+                        RelativeTimeFormatter.RelativeTimestampView(
+                            date: lastUpdate,
+                            style: .withPrefix,
+                            showFreshnessColor: false)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.quaternary)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 4)
+                }
+            }
 
             // Action buttons footer - more compact
             VStack(spacing: 0) {
@@ -42,6 +65,15 @@ struct LoggedInContentView: View {
                     .padding(.vertical, 8)
             }
         }
+    }
+    
+    /// Gets the most recent refresh timestamp across all providers
+    private var mostRecentRefresh: Date? {
+        spendingData.providersWithData
+            .compactMap { provider in
+                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
+            }
+            .max()
     }
 }
 

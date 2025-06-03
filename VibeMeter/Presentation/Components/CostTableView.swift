@@ -8,6 +8,7 @@ import SwiftUI
 struct CostTableView: View {
     let settingsManager: any SettingsManagerProtocol
     let loginManager: MultiProviderLoginManager?
+    let showTimestamps: Bool
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
@@ -17,8 +18,14 @@ struct CostTableView: View {
     @State
     private var selectedProvider: ServiceProvider?
 
+    init(settingsManager: any SettingsManagerProtocol, loginManager: MultiProviderLoginManager?, showTimestamps: Bool = true) {
+        self.settingsManager = settingsManager
+        self.loginManager = loginManager
+        self.showTimestamps = showTimestamps
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             totalSpendingSection
 
             if !spendingData.providersWithData.isEmpty {
@@ -57,7 +64,8 @@ struct CostTableView: View {
                 ProviderSpendingRowView(
                     provider: provider,
                     loginManager: loginManager,
-                    selectedProvider: $selectedProvider)
+                    selectedProvider: $selectedProvider,
+                    showTimestamp: showTimestamps)
             }
         }
         .standardPadding(horizontal: 3, vertical: 3)
