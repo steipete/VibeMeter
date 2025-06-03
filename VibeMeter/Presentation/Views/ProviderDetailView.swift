@@ -9,8 +9,6 @@ struct ProviderDetailView: View {
     @Environment(\.dismiss)
     private var dismiss
     @State
-    private var isEnabled: Bool
-    @State
     private var customSettings: [String: String] = [:]
 
     private let providerRegistry = ProviderRegistry.shared
@@ -25,7 +23,6 @@ struct ProviderDetailView: View {
         self.userSessionData = userSessionData
         self.loginManager = loginManager
 
-        _isEnabled = State(initialValue: ProviderRegistry.shared.isEnabled(provider))
         _customSettings = State(initialValue: ProviderRegistry.shared.configuration(for: provider).customSettings)
     }
 
@@ -54,11 +51,20 @@ struct ProviderDetailView: View {
 
             // Content
             VStack(alignment: .leading, spacing: 24) {
-                Toggle("Enable \(provider.displayName) tracking", isOn: $isEnabled)
-
-                if isEnabled, let session = userSessionData.getSession(for: provider) {
+                if let session = userSessionData.getSession(for: provider) {
                     connectionStatusSection(session: session)
                     providerSettingsSection
+                    
+                    // Logout button for logged in users
+                    if userSessionData.isLoggedIn(to: provider) {
+                        HStack {
+                            Spacer()
+                            Button("Log Out", role: .destructive) {
+                                loginManager.logOut(from: provider)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
                 }
             }
 
@@ -66,17 +72,11 @@ struct ProviderDetailView: View {
 
             // Footer buttons
             HStack {
-                if isEnabled {
-                    if userSessionData.isLoggedIn(to: provider) {
-                        Button("Logout", role: .destructive) {
-                            loginManager.logOut(from: provider)
-                        }
-                    } else {
-                        Button("Login") {
-                            loginManager.showLoginWindow(for: provider)
-                        }
-                        .buttonStyle(.borderedProminent)
+                if !userSessionData.isLoggedIn(to: provider) {
+                    Button("Login") {
+                        loginManager.showLoginWindow(for: provider)
                     }
+                    .buttonStyle(.borderedProminent)
                 }
 
                 Spacer()
@@ -89,21 +89,6 @@ struct ProviderDetailView: View {
         }
         .padding(24)
         .frame(width: 500, height: 520)
-        .onChange(of: isEnabled) { _, newValue in
-            let configuration = ProviderConfiguration(
-                provider: provider,
-                isEnabled: newValue,
-                customSettings: customSettings)
-
-            if newValue {
-                providerRegistry.enableProvider(provider)
-            } else {
-                providerRegistry.disableProvider(provider)
-                loginManager.logOut(from: provider)
-            }
-
-            providerRegistry.updateConfiguration(configuration)
-        }
     }
 
     private func connectionStatusSection(session: ProviderSessionState) -> some View {
