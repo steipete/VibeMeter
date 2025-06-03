@@ -86,18 +86,22 @@ enum MultiProviderSettingsTab: CaseIterable {
 }
 
 #Preview("Settings - Logged In") {
-    let userSessionData = MultiProviderUserSessionData()
-    userSessionData.handleLoginSuccess(
-        for: .cursor,
-        email: "user@example.com",
-        teamName: "Example Team",
-        teamId: 123)
+    @MainActor func makeUserSessionData() -> MultiProviderUserSessionData {
+        let userSessionData = MultiProviderUserSessionData()
+        userSessionData.handleLoginSuccess(
+            for: .cursor,
+            email: "user@example.com",
+            teamName: "Example Team",
+            teamId: 123)
+        return userSessionData
+    }
 
-    return MultiProviderSettingsView(
+    MultiProviderSettingsView(
         settingsManager: MockSettingsManager(),
-        userSessionData: userSessionData,
+        userSessionData: makeUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        orchestrator: nil)
         .frame(width: 620, height: 500)
 }
 

@@ -131,14 +131,17 @@ struct SpendingLimitsView: View {
 }
 
 #Preview("Spending Limits - EUR") {
-    let currencyData = CurrencyData()
-    currencyData.selectedCode = "EUR"
-    currencyData.effectiveRates = ["EUR": 0.92]
+    @MainActor func makeCurrencyData() -> CurrencyData {
+        let currencyData = CurrencyData()
+        currencyData.updateSelectedCurrency("EUR")
+        currencyData.updateExchangeRates(["EUR": 0.92])
+        return currencyData
+    }
     
-    return SpendingLimitsView(
+    SpendingLimitsView(
         settingsManager: MockSettingsManager.withLimits(warning: 150, upper: 800),
         userSessionData: MultiProviderUserSessionData()
     )
-    .environment(currencyData)
+    .environment(makeCurrencyData())
     .frame(width: 620, height: 500)
 }

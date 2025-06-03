@@ -9,6 +9,7 @@ public struct MockServices {
     /// Shared MockSettingsManager instance for previews.
     ///
     /// Uses default values suitable for most preview scenarios.
+    @MainActor
     public static var settingsManager: MockSettingsManager {
         MockSettingsManager()
     }
@@ -20,6 +21,7 @@ public struct MockServices {
     ///   - warningLimit: Warning limit in USD (default: 200)
     ///   - upperLimit: Upper limit in USD (default: 500)
     /// - Returns: Configured MockSettingsManager
+    @MainActor
     public static func settingsManager(
         currency: String = "USD",
         warningLimit: Double = 200,
@@ -35,6 +37,7 @@ public struct MockServices {
     /// MultiProviderLoginManager with mock settings for previews.
     ///
     /// Uses a MockSettingsManager as the dependency.
+    @MainActor
     public static var loginManager: MultiProviderLoginManager {
         MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
@@ -45,6 +48,7 @@ public struct MockServices {
     ///
     /// - Parameter settingsManager: The settings manager to use
     /// - Returns: Configured MultiProviderLoginManager
+    @MainActor
     public static func loginManager(with settingsManager: MockSettingsManager) -> MultiProviderLoginManager {
         MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: settingsManager)
@@ -58,6 +62,7 @@ public extension MockServices {
     /// Standard services bundle for most previews.
     ///
     /// - Returns: Tuple containing (settingsManager, loginManager)
+    @MainActor
     static var standard: (MockSettingsManager, MultiProviderLoginManager) {
         let settings = settingsManager
         let login = loginManager(with: settings)
@@ -68,6 +73,7 @@ public extension MockServices {
     ///
     /// - Parameter currency: Currency code to use
     /// - Returns: Tuple containing (settingsManager, loginManager)
+    @MainActor
     static func withCurrency(_ currency: String) -> (MockSettingsManager, MultiProviderLoginManager) {
         let settings = settingsManager(currency: currency)
         let login = loginManager(with: settings)
@@ -80,6 +86,7 @@ public extension MockServices {
     ///   - warningLimit: Warning limit in USD
     ///   - upperLimit: Upper limit in USD
     /// - Returns: Tuple containing (settingsManager, loginManager)
+    @MainActor
     static func withLimits(warning: Double, upper: Double) -> (MockSettingsManager, MultiProviderLoginManager) {
         let settings = settingsManager(warningLimit: warning, upperLimit: upper)
         let login = loginManager(with: settings)

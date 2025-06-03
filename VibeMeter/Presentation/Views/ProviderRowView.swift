@@ -131,7 +131,7 @@ struct ProviderRowView: View {
         teamId: 123
     )
     
-    return ProviderRowView(
+    ProviderRowView(
         provider: .cursor,
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
@@ -163,8 +163,8 @@ struct ProviderRowView: View {
 #Preview("Provider Row - With Error") {
     let userSessionData = MultiProviderUserSessionData()
     let session = ProviderSessionState(
-        isLoggedIn: false,
         provider: .cursor,
+        isLoggedIn: false,
         userEmail: "user@example.com",
         teamName: nil,
         teamId: nil,
@@ -173,7 +173,7 @@ struct ProviderRowView: View {
     )
     userSessionData.updateSession(session)
     
-    return ProviderRowView(
+    ProviderRowView(
         provider: .cursor,
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
