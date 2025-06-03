@@ -188,7 +188,17 @@ public final class SettingsManager: SettingsManagerProtocol {
 
     // MARK: - Singleton
 
-    public static let shared = MainActor.assumeIsolated {
+    public static var shared: SettingsManager {
+        MainActor.assumeIsolated {
+            // Return test instance if available, otherwise return the singleton
+            if let testInstance = testInstance {
+                return testInstance
+            }
+            return _sharedInstance
+        }
+    }
+    
+    private static let _sharedInstance = MainActor.assumeIsolated {
         SettingsManager()
     }
 
@@ -327,8 +337,8 @@ public final class SettingsManager: SettingsManagerProtocol {
 
     private static var testInstance: SettingsManager?
 
-    static func _test_setSharedInstance(userDefaults: UserDefaults) {
-        testInstance = SettingsManager(userDefaults: userDefaults, startupManager: StartupManager())
+    static func _test_setSharedInstance(userDefaults: UserDefaults, startupManager: StartupControlling) {
+        testInstance = SettingsManager(userDefaults: userDefaults, startupManager: startupManager)
     }
 
     static func _test_clearSharedInstance() {

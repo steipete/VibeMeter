@@ -17,7 +17,7 @@ enum LogCategory: String {
     case settings = "Settings"
     case startup = "Startup"
     case notification = "Notification"
-    case data = "DataCoordinator"
+    case data = "DataOrchestrator"
 }
 
 /// Centralized logging service for VibeMeter.
