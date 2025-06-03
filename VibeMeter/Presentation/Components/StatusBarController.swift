@@ -164,6 +164,16 @@ final class StatusBarController: NSObject {
         }
     }
 
+    /// Shows the popover menu (used for initial display when not logged in)
+    func showPopover() {
+        guard let button = statusItem?.button,
+              let window = customMenuWindow else { return }
+
+        if !window.isVisible {
+            window.show(relativeTo: button)
+        }
+    }
+
     // Methods removed - handled by CustomMenuWindow
 
     private func observeDataChanges() {
