@@ -5,6 +5,8 @@ import Foundation
 /// Use between 0‒1
 struct GaugeIcon: View {
     var value: Double
+    var isLoading: Bool = false
+    var isDisabled: Bool = false
     
     private let lineRatio   = 0.18          // stroke thickness vs. frame
     private let startAngle  = 210.0         // ° (left-down)
@@ -31,27 +33,46 @@ struct GaugeIcon: View {
                          clockwise:  true)
             }
             
-            // track
-            ctx.stroke(trackPath,
-                       with: .color(.white.opacity(0.25)),
-                       style: StrokeStyle(lineWidth: line, lineCap: .round))
-            
-            // coloured arc
-            ctx.stroke(progPath,
-                       with: .color(color(for: value)),
-                       style: StrokeStyle(lineWidth: line, lineCap: .round))
-            
-            // optional needle
-            let needleLen = radius * 0.82
-            let rad = Double(endAngle) * .pi / 180
-            let tip = CGPoint(x: center.x + needleLen * CGFloat(Foundation.cos(rad)),
-                              y: center.y + needleLen * CGFloat(Foundation.sin(rad)))
-            var needle = Path()
-            needle.move(to: center)
-            needle.addLine(to: tip)
-            ctx.stroke(needle,
-                       with: .color(.white),
-                       style: StrokeStyle(lineWidth: line * 0.5, lineCap: .round))
+            // Only draw gauge if not disabled
+            if !isDisabled {
+                // track
+                ctx.stroke(trackPath,
+                           with: .color(.white.opacity(isLoading ? 0.15 : 0.25)),
+                           style: StrokeStyle(lineWidth: line, lineCap: .round))
+                
+                // coloured arc
+                let fillColor = isLoading ? loadingColor(for: value) : color(for: value)
+                ctx.stroke(progPath,
+                           with: .color(fillColor),
+                           style: StrokeStyle(lineWidth: line, lineCap: .round))
+                
+                // Add shimmer effect for loading state
+                if isLoading {
+                    let shimmerPath = progPath
+                    ctx.stroke(shimmerPath,
+                               with: .linearGradient(
+                                   Gradient(colors: [
+                                       Color.white.opacity(0.3),
+                                       Color.white.opacity(0)
+                                   ]),
+                                   startPoint: .zero,
+                                   endPoint: CGPoint(x: size.width, y: 0)
+                               ),
+                               style: StrokeStyle(lineWidth: line * 0.8, lineCap: .round))
+                }
+                
+                // optional needle
+                let needleLen = radius * 0.82
+                let rad = Double(endAngle) * .pi / 180
+                let tip = CGPoint(x: center.x + needleLen * CGFloat(Foundation.cos(rad)),
+                                  y: center.y + needleLen * CGFloat(Foundation.sin(rad)))
+                var needle = Path()
+                needle.move(to: center)
+                needle.addLine(to: tip)
+                ctx.stroke(needle,
+                           with: .color(isLoading ? .white.opacity(0.6) : .white),
+                           style: StrokeStyle(lineWidth: line * 0.5, lineCap: .round))
+            }
         }
         .frame(width: 22, height: 22)       // menu-bar size (@1×; doubles on Retina)
     }
@@ -59,6 +80,20 @@ struct GaugeIcon: View {
     /// Rainbow-ish gradient from teal→green→yellow→orange→red
     private func color(for v: Double) -> Color {
         let palette: [Color] = [.teal, .green, .yellow, .orange, .red]
+        let seg = min(4, Int(v * 4))
+        let t   = v * 4 - Double(seg)
+        return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
+    }
+    
+    /// Loading state uses a more subtle blue gradient
+    private func loadingColor(for v: Double) -> Color {
+        let palette: [Color] = [
+            Color.blue.opacity(0.4),
+            Color.blue.opacity(0.6),
+            Color.blue.opacity(0.8),
+            Color.blue.opacity(0.6),
+            Color.blue.opacity(0.4)
+        ]
         let seg = min(4, Int(v * 4))
         let t   = v * 4 - Double(seg)
         return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)

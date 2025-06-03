@@ -98,15 +98,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_: Notification) {
+        // Skip single instance check for SwiftUI previews
+        let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
         // process early.
-        let runningApps = NSRunningApplication
-            .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
-        if runningApps.count > 1 {
-            DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
-            NSApp.terminate(nil)
-            return
+        if !isRunningInPreview {
+            let runningApps = NSRunningApplication
+                .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            if runningApps.count > 1 {
+                DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
+                NSApp.terminate(nil)
+                return
+            }
         }
 
         // Register to listen for the settings-window request from any subsequent launches.
@@ -117,6 +122,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil)
 
         logger.info("VibeMeter launching...")
+
+        // Set activation policy based on user preference
+        if settingsManager.showInDock {
+            NSApp.setActivationPolicy(.regular)
+        } else {
+            NSApp.setActivationPolicy(.accessory)
+        }
+        logger.info("Activation policy set to: \(self.settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)")")
 
         // Initialize auto-updater
         #if !DEBUG
@@ -144,13 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             currencyData: currencyData
         )
 
-        // Show login window automatically if user is not logged into any provider
-        if !loginManager.isLoggedInToAnyProvider {
-            // Delay slightly to ensure the app is fully loaded before showing login
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.loginManager.showLoginWindow(for: .cursor) // Default to Cursor for now
-            }
-        }
+        // Don't show login window automatically - wait for user to click login button
 
         logger.info("VibeMeter launched successfully")
     }

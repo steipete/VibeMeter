@@ -478,7 +478,7 @@ struct ProviderDetailView: View {
             }
         }
         .padding(24)
-        .frame(width: 500, height: 450)
+        .frame(width: 500, height: 520)
         .onChange(of: isEnabled) { _, newValue in
             let configuration = ProviderConfiguration(
                 provider: provider,
@@ -538,7 +538,7 @@ struct SpendingLimitsView: View {
             
             Section {
                 LabeledContent("Amount") {
-                    TextField("Warning limit", value: $warningLimitUSD, format: .currency(code: "USD"))
+                    TextField("", value: $warningLimitUSD, format: .currency(code: "USD"))
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 150)
                 }
@@ -553,7 +553,7 @@ struct SpendingLimitsView: View {
             
             Section {
                 LabeledContent("Amount") {
-                    TextField("Upper limit", value: $upperLimitUSD, format: .currency(code: "USD"))
+                    TextField("", value: $upperLimitUSD, format: .currency(code: "USD"))
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 150)
                 }
@@ -616,6 +616,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var refreshIntervalMinutes: Int = 5
     var launchAtLoginEnabled: Bool = false
     var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
     
     func clearUserSessionData() {

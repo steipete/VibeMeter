@@ -50,6 +50,12 @@ public final class MultiProviderLoginManager: NSObject, ObservableObject {
         }
 
         logger.info("MultiProviderLoginManager initialized for \(ServiceProvider.allCases.count) providers")
+        
+        // Log initial login states
+        for provider in ServiceProvider.allCases {
+            let isLoggedIn = providerLoginStates[provider, default: false]
+            logger.info("\(provider.displayName) initial login state: \(isLoggedIn ? "logged in" : "not logged in")")
+        }
     }
 
     // MARK: - Public API
@@ -82,8 +88,11 @@ public final class MultiProviderLoginManager: NSObject, ObservableObject {
 
     /// Shows login window for a specific provider.
     public func showLoginWindow(for provider: ServiceProvider) {
+        logger.info("showLoginWindow called for \(provider.displayName)")
+        
         // Check if login window is already visible
         if let existingWindow = loginWindows[provider], existingWindow.isVisible {
+            logger.info("Login window already visible for \(provider.displayName), bringing to front")
             existingWindow.orderFrontRegardless()
             return
         }
@@ -117,12 +126,16 @@ public final class MultiProviderLoginManager: NSObject, ObservableObject {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
-        logger.info("Login window presented for \(provider.displayName)")
+        logger.info("Login window presented for \(provider.displayName) with URL: \(authURL)")
     }
 
     /// Logs out from a specific provider.
     public func logOut(from provider: ServiceProvider) {
-        guard let keychain = keychainHelpers[provider] else { return }
+        logger.info("logOut called for \(provider.displayName)")
+        guard let keychain = keychainHelpers[provider] else {
+            logger.error("No keychain helper found for \(provider.displayName)")
+            return
+        }
 
         if keychain.deleteToken() {
             logger.info("Auth token deleted for \(provider.displayName)")
@@ -136,6 +149,7 @@ public final class MultiProviderLoginManager: NSObject, ObservableObject {
         logger.info("User logged out from \(provider.displayName)")
 
         // Notify that logout occurred
+        logger.info("Calling onLoginFailure callback for \(provider.displayName) logout")
         let logoutError = NSError(
             domain: "MultiProviderLoginManager",
             code: 0,
@@ -187,13 +201,19 @@ public final class MultiProviderLoginManager: NSObject, ObservableObject {
     }
 
     private func handleSuccessfulLogin(for provider: ServiceProvider, token: String) {
-        guard let keychain = keychainHelpers[provider] else { return }
+        logger.info("handleSuccessfulLogin called for \(provider.displayName)")
+        guard let keychain = keychainHelpers[provider] else {
+            logger.error("No keychain helper found for \(provider.displayName)")
+            return
+        }
 
         if keychain.saveToken(token) {
             logger.info("Auth token saved for \(provider.displayName)")
             providerLoginStates[provider] = true
+            logger.info("Updated login state for \(provider.displayName) to: true")
             clearError(for: provider)
             closeLoginWindow(for: provider)
+            logger.info("Calling onLoginSuccess callback for \(provider.displayName)")
             onLoginSuccess?(provider)
         } else {
             logger.error("Failed to save auth token for \(provider.displayName)")
@@ -266,10 +286,14 @@ extension MultiProviderLoginManager: WKNavigationDelegate {
         webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { [weak self] cookies in
             guard let self, self.isProcessingLogin[provider] != true else { return }
 
+            let relevantCookies = cookies.filter { $0.domain.contains(provider.cookieDomain.dropFirst()) }
+            logger.debug("Found \(relevantCookies.count) cookies for \(provider.displayName) domain")
+            
             if let sessionCookie = cookies.first(where: {
                 $0.name == provider.authCookieName && $0.domain.contains(provider.cookieDomain.dropFirst())
             }) {
                 logger.info("Found \(provider.authCookieName) cookie for \(provider.displayName), login complete!")
+                logger.debug("Cookie value length: \(sessionCookie.value.count)")
                 self.isProcessingLogin[provider] = true
 
                 Task { @MainActor in

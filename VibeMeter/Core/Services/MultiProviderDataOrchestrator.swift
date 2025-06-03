@@ -68,6 +68,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         // Initialize refresh states
         for provider in ServiceProvider.allCases {
             isRefreshing[provider] = false
+        logger.info("Set isRefreshing=false for \(provider.displayName)")
         }
 
         setupLoginCallbacks()
@@ -75,6 +76,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
         // Initialize user session state for providers with existing tokens
         for provider in loginManager.loggedInProviders {
+            logger.info("Initializing session state for logged-in provider: \(provider.displayName)")
             // Create a basic logged-in session state until we fetch full data
             userSessionData.handleLoginSuccess(
                 for: provider,
@@ -83,11 +85,13 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 teamId: nil)
         }
 
-        logger.info("MultiProviderDataOrchestrator initialized")
+        logger.info("MultiProviderDataOrchestrator initialized with \(loginManager.loggedInProviders.count) logged-in providers")
         
         // Trigger initial data refresh for providers with existing tokens
         Task {
+            logger.info("Starting initial data refresh for logged-in providers")
             for provider in loginManager.loggedInProviders {
+                logger.info("Triggering initial refresh for \(provider.displayName)")
                 await refreshData(for: provider, showSyncedMessage: false)
             }
         }
@@ -99,7 +103,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     public func refreshAllProviders(showSyncedMessage: Bool = false) async {
         let enabledProviders = ProviderRegistry.shared.activeProviders
 
-        logger.info("Refreshing data for \(enabledProviders.count) providers")
+        logger.info("refreshAllProviders called for \(enabledProviders.count) providers: \(enabledProviders.map { $0.displayName }.joined(separator: ", "))")
 
         await withTaskGroup(of: Void.self) { group in
             for provider in enabledProviders {
@@ -118,6 +122,8 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
     /// Refreshes data for a specific provider.
     public func refreshData(for provider: ServiceProvider, showSyncedMessage _: Bool = false) async {
+        logger.info("refreshData called for \(provider.displayName)")
+        
         guard ProviderRegistry.shared.isEnabled(provider) else {
             logger.debug("Provider \(provider.displayName) is disabled, skipping refresh")
             return
@@ -128,9 +134,12 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             userSessionData.handleLogout(from: provider)
             return
         }
+        
+        logger.info("Found auth token for \(provider.displayName), proceeding with data fetch")
 
         isRefreshing[provider] = true
         refreshErrors.removeValue(forKey: provider)
+        logger.info("Set isRefreshing=true for \(provider.displayName)")
 
         do {
             let providerClient = providerFactory.createProvider(for: provider)
@@ -142,12 +151,16 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             let userInfo = try await userTask
             let teamInfo = try await teamTask
 
+            logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
+            logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
+            
             // Update session data
             userSessionData.handleLoginSuccess(
                 for: provider,
                 email: userInfo.email,
                 teamName: teamInfo.name,
                 teamId: teamInfo.id)
+            logger.info("Updated userSessionData for \(provider.displayName)")
             
             // Sync with SettingsManager
             let providerSession = ProviderSession(
@@ -157,6 +170,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 userEmail: userInfo.email,
                 isActive: true)
             settingsManager.updateSession(for: provider, session: providerSession)
+            logger.info("Updated SettingsManager session for \(provider.displayName)")
 
             // Fetch current month invoice
             let calendar = Calendar.current
@@ -168,15 +182,19 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 month: month,
                 year: year)
 
+            logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
+            
             // Update spending data
             let rates = await exchangeRateManager.getExchangeRates()
             let targetCurrency = settingsManager.selectedCurrencyCode
+            logger.info("Currency conversion: target=\(targetCurrency), rates available=\(!rates.isEmpty)")
 
             spendingData.updateSpending(
                 for: provider,
                 from: invoice,
                 rates: rates,
                 targetCurrency: targetCurrency)
+            logger.info("Updated spending data for \(provider.displayName)")
 
             spendingData.updateLimits(
                 for: provider,
@@ -194,6 +212,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             }
 
             logger.info("Successfully refreshed data for \(provider.displayName)")
+            logger.info("Current spending for \(provider.displayName): USD=\(self.spendingData.getSpendingData(for: provider)?.currentSpendingUSD ?? 0), display=\(self.spendingData.getSpendingData(for: provider)?.displaySpending ?? 0)")
 
         } catch let error as ProviderError where error == .unauthorized {
             logger.warning("Unauthorized for \(provider.displayName), logging out")
@@ -214,6 +233,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         }
 
         isRefreshing[provider] = false
+        logger.info("Set isRefreshing=false for \(provider.displayName)")
     }
 
     /// Updates currency for all providers.
@@ -249,19 +269,24 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     // MARK: - Private Methods
 
     private func setupLoginCallbacks() {
+        logger.info("Setting up login callbacks")
+        
         loginManager.onLoginSuccess = { [weak self] provider in
+            self?.logger.info("Login success callback triggered for \(provider.displayName)")
             Task { @MainActor in
+                self?.logger.info("Starting data refresh after login for \(provider.displayName)")
                 await self?.refreshData(for: provider, showSyncedMessage: true)
             }
         }
 
         loginManager.onLoginFailure = { [weak self] provider, error in
+            self?.logger.info("Login failure callback triggered for \(provider.displayName): \(error.localizedDescription)")
             self?.userSessionData.handleLoginFailure(for: provider, error: error)
         }
 
         loginManager.onLoginDismiss = { [weak self] provider in
             // Handle dismiss if needed
-            self?.logger.debug("Login dismissed for \(provider.displayName)")
+            self?.logger.info("Login dismissed for \(provider.displayName)")
         }
     }
 
@@ -285,8 +310,10 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     }
 
     private func updateCurrencyConversions() async {
+        logger.info("Updating currency conversions")
         let rates = await exchangeRateManager.getExchangeRates()
         let targetCurrency = settingsManager.selectedCurrencyCode
+        logger.info("Got exchange rates: \(rates.count) rates, target currency: \(targetCurrency)")
 
         currencyData.updateExchangeRates(rates, available: !rates.isEmpty)
 

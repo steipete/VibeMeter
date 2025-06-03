@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Foundation
 import os.log
@@ -21,6 +22,7 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     // App behavior
     var launchAtLoginEnabled: Bool { get set }
     var showCostInMenuBar: Bool { get set }
+    var showInDock: Bool { get set }
 
     // Provider management
     var enabledProviders: Set<ServiceProvider> { get set }
@@ -72,7 +74,7 @@ public struct ProviderSession: Codable, Sendable {
 public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     // MARK: - Constants
 
-    public static let refreshIntervalOptions = [5, 10, 15, 30, 60]
+    public static let refreshIntervalOptions = [1, 2, 5, 10, 15, 30, 60]
 
     // Made internal for testing
     enum Keys {
@@ -87,6 +89,7 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         static let upperLimitUSD = "upperLimitUSD"
         static let launchAtLoginEnabled = "launchAtLoginEnabled"
         static let showCostInMenuBar = "showCostInMenuBar"
+        static let showInDock = "showInDock"
     }
 
     // MARK: - Properties
@@ -100,7 +103,10 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     public var providerSessions: [ServiceProvider: ProviderSession] {
         didSet {
             saveProviderSessions()
-            logger.debug("Provider sessions updated")
+            logger.info("Provider sessions updated: \(self.providerSessions.count) sessions")
+            for (provider, session) in self.providerSessions {
+                logger.debug("  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+            }
         }
     }
 
@@ -169,6 +175,23 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
             logger.debug("Show cost in menu bar: \(self.showCostInMenuBar)")
         }
     }
+    
+    @Published
+    public var showInDock: Bool {
+        didSet {
+            guard showInDock != oldValue else { return }
+            userDefaults.set(showInDock, forKey: Keys.showInDock)
+            
+            // Apply the dock visibility change
+            if showInDock {
+                NSApp.setActivationPolicy(.regular)
+            } else {
+                NSApp.setActivationPolicy(.accessory)
+            }
+            
+            logger.debug("Show in dock: \(self.showInDock)")
+        }
+    }
 
     // MARK: - Singleton
 
@@ -204,6 +227,7 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
         showCostInMenuBar = userDefaults.object(forKey: Keys.showCostInMenuBar) as? Bool ?? false // Default to false (icon-only)
+        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
 
         // Validate refresh interval
         if !Self.refreshIntervalOptions.contains(refreshIntervalMinutes) {
@@ -211,6 +235,9 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         }
 
         logger.info("SettingsManager initialized with \(self.providerSessions.count) provider sessions")
+        for (provider, session) in providerSessions {
+            logger.info("  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+        }
     }
 
     // For testing
@@ -240,11 +267,14 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
         showCostInMenuBar = userDefaults.object(forKey: Keys.showCostInMenuBar) as? Bool ?? false
+        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false
     }
 
     // MARK: - Public Methods
 
     public func clearUserSessionData() {
+        logger.info("clearUserSessionData called - clearing all \(self.providerSessions.count) sessions")
+        
         // Clear all provider sessions
         providerSessions.removeAll()
         saveProviderSessions()
@@ -253,6 +283,14 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     public func clearUserSessionData(for provider: ServiceProvider) {
+        logger.info("clearUserSessionData called for \(provider.displayName)")
+        
+        if let session = providerSessions[provider] {
+            logger.info("  Clearing session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none")")
+        } else {
+            logger.info("  No existing session found for \(provider.displayName)")
+        }
+        
         providerSessions.removeValue(forKey: provider)
         saveProviderSessions()
 
@@ -264,17 +302,24 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     public func updateSession(for provider: ServiceProvider, session: ProviderSession) {
+        logger.info("updateSession called for \(provider.displayName)")
+        logger.info("  New session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+        
         providerSessions[provider] = session
         saveProviderSessions()
 
-        logger.debug("Session updated for \(provider.displayName)")
+        logger.info("Session successfully updated for \(provider.displayName)")
     }
 
     // MARK: - Private Methods
 
     private func saveProviderSessions() {
+        logger.debug("saveProviderSessions called")
         if let sessionsData = try? JSONEncoder().encode(providerSessions) {
             userDefaults.set(sessionsData, forKey: Keys.providerSessions)
+            logger.debug("Provider sessions saved to UserDefaults (\(sessionsData.count) bytes)")
+        } else {
+            logger.error("Failed to encode provider sessions")
         }
     }
 

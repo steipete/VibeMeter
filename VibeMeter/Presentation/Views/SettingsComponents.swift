@@ -55,20 +55,31 @@ struct SettingsRow<Content: View>: View {
 struct GeneralSettingsView: View {
     let settingsManager: SettingsManager
 
-    @State
-    private var launchAtLogin: Bool
-    @State
-    private var refreshInterval: Int
-    @State
-    private var showCostInMenuBar: Bool
+    // Using @AppStorage for direct UserDefaults binding
+    @AppStorage("launchAtLoginEnabled") private var launchAtLogin: Bool = false
+    @AppStorage("refreshIntervalMinutes") private var refreshInterval: Int = 5
+    @AppStorage("showCostInMenuBar") private var showCostInMenuBar: Bool = false
+    @AppStorage("showInDock") private var showInDock: Bool = false
+    @AppStorage("selectedCurrencyCode") private var selectedCurrency: String = "USD"
 
     private let startupManager = StartupManager()
+    
+    // Available currencies with display names
+    private let currencies = [
+        ("USD", "US Dollar ($)"),
+        ("EUR", "Euro (€)"),
+        ("GBP", "British Pound (£)"),
+        ("JPY", "Japanese Yen (¥)"),
+        ("AUD", "Australian Dollar (A$)"),
+        ("CAD", "Canadian Dollar (C$)"),
+        ("CHF", "Swiss Franc (CHF)"),
+        ("CNY", "Chinese Yuan (¥)"),
+        ("SEK", "Swedish Krona (kr)"),
+        ("NZD", "New Zealand Dollar (NZ$)")
+    ]
 
     init(settingsManager: SettingsManager) {
         self.settingsManager = settingsManager
-        _launchAtLogin = State(initialValue: settingsManager.launchAtLoginEnabled)
-        _refreshInterval = State(initialValue: settingsManager.refreshIntervalMinutes)
-        _showCostInMenuBar = State(initialValue: settingsManager.showCostInMenuBar)
     }
 
     var body: some View {
@@ -76,7 +87,6 @@ struct GeneralSettingsView: View {
             Section {
                 Toggle("Launch at Login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in
-                        settingsManager.launchAtLoginEnabled = newValue
                         startupManager.setLaunchAtLogin(enabled: newValue)
                     }
             } header: {
@@ -93,8 +103,18 @@ struct GeneralSettingsView: View {
                 Text("Display current spending next to the menu bar icon. When disabled, only the icon is shown.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                
+                Toggle("Show in Dock", isOn: $showInDock)
+                    .onChange(of: showInDock) { _, newValue in
+                        settingsManager.showInDock = newValue
+                    }
+                    .padding(.top, 8)
+                
+                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } header: {
-                Text("Menu Bar")
+                Text("Appearance")
                     .font(.headline)
             }
             

@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import os.log
 
 @MainActor
 struct MenuBarContentView: View {
@@ -11,6 +12,8 @@ struct MenuBarContentView: View {
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
+    
+    private let logger = Logger(subsystem: "com.vibemeter", category: "MenuBarContentView")
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +29,11 @@ struct MenuBarContentView: View {
         .frame(minWidth: 200, maxWidth: 250)
         .environment(spendingData)
         .environment(currencyData)
+        .onAppear {
+            logger.info("MenuBarContentView appeared")
+            logger.info("Logged in providers: \(userSessionData.loggedInProviders.map { $0.displayName }.joined(separator: ", "))")
+            logger.info("Providers with data: \(spendingData.providersWithData.map { $0.displayName }.joined(separator: ", "))")
+        }
     }
 }
 
@@ -40,6 +48,8 @@ struct LoggedInMenuContent: View {
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
+    
+    private let logger = Logger(subsystem: "com.vibemeter", category: "LoggedInMenuContent")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -67,10 +77,16 @@ struct LoggedInMenuContent: View {
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
                     .font(.headline)
+                    .onAppear {
+                        logger.info("Displaying spending: \(totalSpending)")
+                    }
             } else {
                 Text("No spending data")
                     .font(.headline)
                     .foregroundStyle(.secondary)
+                    .onAppear {
+                        logger.info("No spending data to display")
+                    }
             }
 
             // Limits (compact)
@@ -104,6 +120,7 @@ struct LoggedInMenuContent: View {
                 .keyboardShortcut(",")
 
                 Button("Log Out All") {
+                    logger.info("User requested logout from all providers")
                     loginManager.logOutFromAll()
                 }
                 .keyboardShortcut("q")
@@ -120,6 +137,16 @@ struct LoggedInMenuContent: View {
             .buttonStyle(.plain)
         }
         .padding(12)
+        .onAppear {
+            logger.info("LoggedInMenuContent appeared")
+            logger.info("Most recent session: \(userSessionData.mostRecentSession?.provider.displayName ?? "none")")
+            logger.info("Currency: \(currencyData.selectedCode), Symbol: \(currencyData.selectedSymbol)")
+            if let spending = currentSpendingDisplay {
+                logger.info("Current spending display: \(spending)")
+            } else {
+                logger.info("No spending data available")
+            }
+        }
     }
 
     private var currentSpendingDisplay: String? {
@@ -158,6 +185,7 @@ struct LoggedInMenuContent: View {
 
 struct LoggedOutMenuContent: View {
     let loginManager: MultiProviderLoginManager
+    private let logger = Logger(subsystem: "com.vibemeter", category: "LoggedOutMenuContent")
 
     var body: some View {
         VStack(spacing: 8) {
@@ -173,6 +201,7 @@ struct LoggedOutMenuContent: View {
             Divider()
 
             Button("Login to Cursor") {
+                logger.info("User clicked login button for Cursor")
                 loginManager.showLoginWindow(for: .cursor)
             }
             .keyboardShortcut("l")
@@ -196,6 +225,9 @@ struct LoggedOutMenuContent: View {
             .buttonStyle(.plain)
         }
         .padding(12)
+        .onAppear {
+            logger.info("LoggedOutMenuContent appeared")
+        }
     }
 }
 
@@ -271,6 +303,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var refreshIntervalMinutes: Int = 5
     var launchAtLoginEnabled: Bool = false
     var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
     
     func clearUserSessionData() {

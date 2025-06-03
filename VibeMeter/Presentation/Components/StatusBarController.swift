@@ -8,6 +8,7 @@ final class StatusBarController: NSObject {
     private var popover: NSPopover?
     private var eventMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
+    private let stateManager = MenuBarStateManager()
     
     private let settingsManager: any SettingsManagerProtocol
     private let userSession: MultiProviderUserSessionData
@@ -57,6 +58,7 @@ final class StatusBarController: NSObject {
         )
         .environment(spendingData)
         .environment(currencyData)
+        .environment(GravatarService.shared)
         
         popover?.contentViewController = NSHostingController(rootView: contentView)
     }
@@ -64,29 +66,58 @@ final class StatusBarController: NSObject {
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
         
-        // Calculate total spending in USD for gauge calculation
-        let providers = spendingData.providersWithData
-        let totalSpendingUSD: Double = if !providers.isEmpty {
-            spendingData.totalSpendingConverted(to: "USD", rates: currencyData.currentExchangeRates)
+        // Determine current state
+        if !userSession.isLoggedInToAnyProvider {
+            stateManager.setState(.notLoggedIn)
         } else {
-            0.0
+            let providers = spendingData.providersWithData
+            if providers.isEmpty {
+                // Logged in but no data yet - loading state
+                stateManager.setState(.loading)
+            } else {
+                // Calculate spending percentage
+                let totalSpendingUSD = spendingData.totalSpendingConverted(to: "USD", rates: currencyData.currentExchangeRates)
+                let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+                stateManager.setState(.data(value: gaugeValue))
+            }
         }
         
-        // Calculate gauge value (0-1) based on upper limit
-        let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+        // Update animation
+        stateManager.updateAnimation()
         
-        // Create and render the gauge icon
-        let gaugeIcon = GaugeIcon(value: gaugeValue)
-        let renderer = ImageRenderer(content: gaugeIcon)
+        // Create and render the gauge icon based on state
+        let gaugeView: some View = {
+            switch stateManager.currentState {
+            case .notLoggedIn:
+                // Grey icon with no gauge
+                return GaugeIcon(value: 0, isLoading: false, isDisabled: true)
+                    .frame(width: 18, height: 18)
+            case .loading:
+                // Animated loading gauge
+                return GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: true, isDisabled: false)
+                    .frame(width: 18, height: 18)
+            case .data:
+                // Static gauge at spending level
+                return GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: false, isDisabled: false)
+                    .frame(width: 18, height: 18)
+            }
+        }()
+        
+        let renderer = ImageRenderer(content: gaugeView)
         renderer.scale = 2.0 // Retina display
         
         if let nsImage = renderer.nsImage {
             button.image = nsImage
             button.image?.isTemplate = true // Allow it to adapt to dark/light mode
+        } else {
+            // Fallback to a system image if rendering fails
+            button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
+            button.image?.isTemplate = true
         }
         
-        // Set the text title if enabled
-        if settingsManager.showCostInMenuBar && !providers.isEmpty {
+        // Set the text title if enabled and we have data
+        if settingsManager.showCostInMenuBar && stateManager.currentState.showsGauge && !spendingData.providersWithData.isEmpty {
+            let providers = spendingData.providersWithData
             let spending: Double = if providers.count == 1,
                                       let providerData = spendingData.getSpendingData(for: providers[0]),
                                       let providerSpending = providerData.displaySpending {
@@ -142,8 +173,21 @@ final class StatusBarController: NSObject {
             }
             .store(in: &cancellables)
         
-        // Update display whenever data changes
-        // Note: In a production app, you'd want proper Combine publishers on your data models
+        // Update display with appropriate frequency based on state
+        Timer.publish(every: 0.03, on: .main, in: .common) // 30ms for smooth animations
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                
+                // Only update frequently if animating or transitioning
+                if self.stateManager.currentState.isAnimated || self.stateManager.animatedGaugeValue != self.lastRenderedValue {
+                    self.updateStatusItemDisplay()
+                    self.lastRenderedValue = self.stateManager.animatedGaugeValue
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Also update periodically for data changes (less frequently)
         Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -151,6 +195,8 @@ final class StatusBarController: NSObject {
             }
             .store(in: &cancellables)
     }
+    
+    private var lastRenderedValue: Double = 0
     
     deinit {
         // Cleanup handled in closePopover method

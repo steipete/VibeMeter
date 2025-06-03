@@ -18,8 +18,8 @@ struct VibeMeterMainView: View {
     
     var body: some View {
         ZStack {
-            // Glass background
-            VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
+            // Dark glass background for better contrast
+            VisualEffectBlur(material: .underWindowBackground, blendingMode: .behindWindow)
             
             VStack(spacing: 0) {
                 if userSessionData.isLoggedInToAnyProvider {
@@ -61,26 +61,59 @@ struct VibeMeterMainView: View {
             // Action buttons
             actionButtons
                 .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+                .padding(.bottom, 24)
         }
     }
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                // User avatar/icon
-                Circle()
-                    .fill(LinearGradient(
-                        colors: [Color.blue, Color.purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Text(userInitial)
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(.white)
-                    )
+                // User avatar using Gravatar
+                if let email = userSessionData.mostRecentSession?.userEmail,
+                   let gravatarURL = GravatarService.shared.gravatarURL(for: email) {
+                    AsyncImage(url: gravatarURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 40, height: 40)
+                                .clipShape(Circle())
+                        case .failure(_), .empty:
+                            // Fallback to initial
+                            Circle()
+                                .fill(LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 40, height: 40)
+                                .overlay(
+                                    Text(userInitial)
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundStyle(.white)
+                                )
+                        @unknown default:
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 40, height: 40)
+                        }
+                    }
+                } else {
+                    // No email, show initial
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color.blue, Color.purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 40, height: 40)
+                        .overlay(
+                            Text(userInitial)
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.white)
+                        )
+                }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     if let email = userSessionData.mostRecentSession?.userEmail {
@@ -204,24 +237,32 @@ struct VibeMeterMainView: View {
     }
     
     private var actionButtons: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
+            // Refresh button
             Button(action: refreshData) {
-                Label("Refresh", systemImage: "arrow.clockwise")
-                    .font(.system(size: 12))
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 14, weight: .medium))
             }
-            .buttonStyle(GlassButtonStyle())
+            .buttonStyle(IconButtonStyle())
+            .help("Refresh")
             
+            // Settings button
             Button(action: openSettings) {
-                Label("Settings", systemImage: "gearshape")
-                    .font(.system(size: 12))
+                Image(systemName: "gearshape")
+                    .font(.system(size: 14, weight: .medium))
             }
-            .buttonStyle(GlassButtonStyle())
+            .buttonStyle(IconButtonStyle())
+            .help("Settings")
             
+            Spacer()
+            
+            // Quit button
             Button(action: quit) {
-                Label("Quit", systemImage: "power")
-                    .font(.system(size: 12))
+                Image(systemName: "power")
+                    .font(.system(size: 14, weight: .medium))
             }
-            .buttonStyle(GlassButtonStyle(isDestructive: true))
+            .buttonStyle(IconButtonStyle(isDestructive: true))
+            .help("Quit VibeMeter")
         }
     }
     
@@ -236,7 +277,6 @@ struct VibeMeterMainView: View {
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable()
                     .frame(width: 64, height: 64)
-                    .foregroundStyle(.primary)
                 
                 Text("VibeMeter")
                     .font(.system(size: 24, weight: .medium))
@@ -259,21 +299,25 @@ struct VibeMeterMainView: View {
             Spacer()
             
             // Bottom buttons
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 Button(action: openSettings) {
-                    Label("Settings", systemImage: "gearshape")
-                        .font(.system(size: 12))
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 14, weight: .medium))
                 }
-                .buttonStyle(GlassButtonStyle())
+                .buttonStyle(IconButtonStyle())
+                .help("Settings")
+                
+                Spacer()
                 
                 Button(action: quit) {
-                    Label("Quit", systemImage: "power")
-                        .font(.system(size: 12))
+                    Image(systemName: "power")
+                        .font(.system(size: 14, weight: .medium))
                 }
-                .buttonStyle(GlassButtonStyle(isDestructive: true))
+                .buttonStyle(IconButtonStyle(isDestructive: true))
+                .help("Quit VibeMeter")
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 40)
+            .padding(.bottom, 24)
         }
     }
     
@@ -393,6 +437,35 @@ struct ProminentGlassButtonStyle: ButtonStyle {
     }
 }
 
+struct IconButtonStyle: ButtonStyle {
+    let isDestructive: Bool
+    @State private var isHovering = false
+    
+    init(isDestructive: Bool = false) {
+        self.isDestructive = isDestructive
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(8)
+            .background(
+                Circle()
+                    .fill((isHovering || configuration.isPressed) ? 
+                        Color.white.opacity(0.15) : 
+                        Color.clear)
+            )
+            .foregroundStyle(isDestructive ? 
+                (isHovering ? .red : .red.opacity(0.8)) : 
+                (isHovering ? .primary : .secondary))
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.15), value: isHovering)
+            .onHover { hovering in
+                isHovering = hovering
+            }
+    }
+}
+
 // MARK: - Provider Extensions
 
 private extension ServiceProvider {
@@ -463,6 +536,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var refreshIntervalMinutes: Int = 5
     var launchAtLoginEnabled: Bool = false
     var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
     
     func clearUserSessionData() {

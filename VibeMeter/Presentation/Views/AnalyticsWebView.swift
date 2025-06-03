@@ -158,6 +158,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var refreshIntervalMinutes: Int = 5
     var launchAtLoginEnabled: Bool = false
     var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
     
     func clearUserSessionData() {
