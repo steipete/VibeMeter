@@ -13,84 +13,90 @@ struct SpendingLimitsView: View {
     }
 
     var body: some View {
-        Form {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Spending Limits")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .padding(.top, 10)
-                    .padding(.horizontal, 10)
+        NavigationStack {
+            Form {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(
+                        "Spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.bottom, 10)
+                }
 
-                Text(
-                    "Set spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 10)
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        LabeledContent("Amount") {
+                            HStack(spacing: 8) {
+                                Text("$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
+                                    .font(.system(.body, design: .monospaced))
+                                    .foregroundStyle(.primary)
+                                Text("USD")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            if !currencyData.isUSD {
+                                HStack {
+                                    Text("Approximately")
+                                    Text(
+                                        "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(2))))")
+                                        .fontWeight(.medium)
+                                    Text("in \(currencyData.selectedCode)")
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+
+                            Text("You'll receive a notification when spending exceeds this amount.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Warning Limit")
+                        .font(.headline)
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        LabeledContent("Amount") {
+                            HStack(spacing: 8) {
+                                Text("$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
+                                    .font(.system(.body, design: .monospaced))
+                                    .foregroundStyle(.primary)
+                                Text("USD")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            if !currencyData.isUSD {
+                                HStack {
+                                    Text("Approximately")
+                                    Text(
+                                        "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(2))))")
+                                        .fontWeight(.medium)
+                                    Text("in \(currencyData.selectedCode)")
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+
+                            Text("You'll receive a critical notification when spending exceeds this amount.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Upper Limit")
+                        .font(.headline)
+                }
             }
-
-            Section {
-                LabeledContent("Amount") {
-                    HStack(spacing: 8) {
-                        Text("$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
-                            .font(.system(.body, design: .monospaced))
-                            .foregroundStyle(.primary)
-                        Text("USD")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if !currencyData.isUSD {
-                    HStack {
-                        Text("Approximately")
-                        Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(2))))")
-                            .fontWeight(.medium)
-                        Text("in \(currencyData.selectedCode)")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-
-                Text("You'll receive a notification when spending exceeds this amount.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } header: {
-                Text("Warning Limit")
-                    .font(.headline)
-            }
-
-            Section {
-                LabeledContent("Amount") {
-                    HStack(spacing: 8) {
-                        Text("$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
-                            .font(.system(.body, design: .monospaced))
-                            .foregroundStyle(.primary)
-                        Text("USD")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if !currencyData.isUSD {
-                    HStack {
-                        Text("Approximately")
-                        Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(2))))")
-                            .fontWeight(.medium)
-                        Text("in \(currencyData.selectedCode)")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-
-                Text("You'll receive a critical notification when spending exceeds this amount.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } header: {
-                Text("Upper Limit")
-                    .font(.headline)
-            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .navigationTitle("Spending Limits")
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
     }
 
     private var convertedWarningLimit: Double {

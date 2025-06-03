@@ -9,20 +9,23 @@ struct AboutView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                appInfoSection
-                descriptionSection
-                linksSection
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    appInfoSection
+                    descriptionSection
+                    linksSection
 
-                Spacer(minLength: 40)
+                    Spacer(minLength: 40)
 
-                copyrightSection
+                    copyrightSection
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
             }
-            .frame(maxWidth: .infinity)
-            .padding()
+            .scrollContentBackground(.hidden)
+            .navigationTitle("About VibeMeter")
         }
-        .scrollContentBackground(.hidden)
     }
 
     private var appInfoSection: some View {

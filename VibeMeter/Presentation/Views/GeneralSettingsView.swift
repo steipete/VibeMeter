@@ -24,14 +24,16 @@ struct GeneralSettingsView: View {
     }
 
     var body: some View {
-        Form {
-            startupSection
-            appearanceSection
-            dataRefreshSection
-            currencySection
+        NavigationStack {
+            Form {
+                applicationSection
+                currencySection
+                softwareUpdatesSection
+            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .navigationTitle("General Settings")
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
         .onChange(of: refreshInterval) { _, newValue in
             validateRefreshInterval(newValue)
         }
@@ -43,27 +45,24 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private var startupSection: some View {
+    private var applicationSection: some View {
         Section {
+            // Launch at Login
             Toggle("Launch at Login", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, newValue in
                     startupManager.setLaunchAtLogin(enabled: newValue)
                 }
-        } header: {
-            Text("Startup")
-                .font(.headline)
-        }
-    }
-
-    private var appearanceSection: some View {
-        Section {
+            
+            // Show cost in menu bar
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Show cost in menu bar", isOn: $showCostInMenuBar)
                 Text("Display current spending next to the menu bar icon. When disabled, only the icon is shown.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .padding(.top, 8)
 
+            // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Show in Dock", isOn: $showInDock)
                     .onChange(of: showInDock) { _, newValue in
@@ -78,14 +77,8 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 8)
-        } header: {
-            Text("Appearance")
-                .font(.headline)
-        }
-    }
-
-    private var dataRefreshSection: some View {
-        Section {
+            
+            // Refresh Interval
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Refresh Interval") {
                     Picker("", selection: $refreshInterval) {
@@ -104,8 +97,9 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .padding(.top, 8)
         } header: {
-            Text("Data Refresh")
+            Text("Application")
                 .font(.headline)
         }
     }
@@ -132,12 +126,51 @@ struct GeneralSettingsView: View {
         }
     }
 
+    private var softwareUpdatesSection: some View {
+        Section {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Check for Updates")
+                    Text("Check for new versions of VibeMeter")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button("Check Now") {
+                    checkForUpdates()
+                }
+                .buttonStyle(.bordered)
+                .disabled(isDebugBuild)
+            }
+        } header: {
+            Text("Software Updates")
+                .font(.headline)
+        }
+    }
+
     private func validateRefreshInterval(_ newValue: Int) {
         if SettingsManager.refreshIntervalOptions.contains(newValue) {
             // Valid interval, it's already saved via @AppStorage
         } else {
             // Invalid interval, reset to default
             refreshInterval = 5
+        }
+    }
+
+    private var isDebugBuild: Bool {
+        #if DEBUG
+            return true
+        #else
+            return false
+        #endif
+    }
+
+    private func checkForUpdates() {
+        if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
+           let sparkleManager = appDelegate.sparkleUpdaterManager {
+            sparkleManager.updaterController.checkForUpdates(nil)
         }
     }
 

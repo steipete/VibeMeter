@@ -10,25 +10,28 @@ struct ProvidersSettingsView: View {
     private let providerRegistry = ProviderRegistry.shared
 
     var body: some View {
-        Form {
-            Section {
-                ForEach(ServiceProvider.allCases) { provider in
-                    ProviderRowView(
-                        provider: provider,
-                        userSessionData: userSessionData,
-                        loginManager: loginManager,
-                        providerRegistry: providerRegistry,
-                        showDetail: {
-                            showingProviderDetail = provider
-                        })
+        NavigationStack {
+            Form {
+                Section {
+                    ForEach(ServiceProvider.allCases) { provider in
+                        ProviderRowView(
+                            provider: provider,
+                            userSessionData: userSessionData,
+                            loginManager: loginManager,
+                            providerRegistry: providerRegistry,
+                            showDetail: {
+                                showingProviderDetail = provider
+                            })
+                    }
+                } header: {
+                    Text("Service Providers")
+                        .font(.headline)
                 }
-            } header: {
-                Text("Service Providers")
-                    .font(.headline)
             }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .navigationTitle("Providers")
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
         .onAppear {
             setupLoginCallbacks()
         }
