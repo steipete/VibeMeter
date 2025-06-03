@@ -44,3 +44,87 @@ struct SettingsRow<Content: View>: View {
         .background(.background.secondary)
     }
 }
+
+// MARK: - Previews
+
+#Preview("Settings Section") {
+    VStack(spacing: 16) {
+        SettingsSection(title: "General Settings") {
+            SettingsRow {
+                Text("Setting 1")
+                Spacer()
+                Toggle("", isOn: .constant(true))
+                    .toggleStyle(.switch)
+            }
+            
+            Divider()
+                .padding(.horizontal, 16)
+            
+            SettingsRow {
+                Text("Setting 2")
+                Spacer()
+                Text("Value")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        
+        SettingsSection(title: "Advanced Options") {
+            SettingsRow {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Complex Setting")
+                    Text("Description of the setting")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Configure") {}
+                    .buttonStyle(.bordered)
+            }
+        }
+    }
+    .padding()
+    .frame(width: 400)
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("Settings Row Variations") {
+    VStack(spacing: 1) {
+        SettingsRow {
+            Label("Toggle Setting", systemImage: "togglepower")
+            Spacer()
+            Toggle("", isOn: .constant(true))
+                .toggleStyle(.switch)
+        }
+        
+        Divider()
+            .padding(.horizontal, 16)
+        
+        SettingsRow {
+            Label("Picker Setting", systemImage: "paintbrush")
+            Spacer()
+            Picker("", selection: .constant("Blue")) {
+                Text("Red").tag("Red")
+                Text("Blue").tag("Blue")
+                Text("Green").tag("Green")
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+        }
+        
+        Divider()
+            .padding(.horizontal, 16)
+        
+        SettingsRow {
+            Label("Action Setting", systemImage: "gear")
+            Spacer()
+            Button("Action") {}
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+        }
+    }
+    .background(.background.secondary)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
+    .padding()
+    .frame(width: 450)
+    .background(Color(NSColor.windowBackgroundColor))
+}
