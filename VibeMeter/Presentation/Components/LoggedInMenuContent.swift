@@ -35,7 +35,7 @@ struct LoggedInMenuContent: View {
 
             quitButtonSection
         }
-        .padding(12)
+        .standardPadding(.all, 12)
         .onAppear {
             logger.info("LoggedInMenuContent appeared")
             logger.info("Most recent session: \(userSessionData.mostRecentSession?.provider.displayName ?? "none")")
@@ -172,4 +172,70 @@ struct LoggedInMenuContent: View {
         // For now, this is a placeholder
         // TODO: Implement multi-provider data refresh
     }
+}
+
+// MARK: - Preview
+
+#Preview("Logged In Menu - With Data") {
+    let userSessionData = MultiProviderUserSessionData()
+    let spendingData = MultiProviderSpendingData()
+    let currencyData = CurrencyData()
+    
+    // Set up session
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    // Add spending data
+    spendingData.updateSpending(
+        for: .cursor,
+        from: ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 15750, description: "Pro Usage", provider: .cursor)
+            ],
+            pricingDescription: nil,
+            provider: .cursor,
+            month: 5,
+            year: 2025
+        ),
+        rates: [:],
+        targetCurrency: "USD"
+    )
+    
+    return LoggedInMenuContent(
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+    .environment(spendingData)
+    .environment(currencyData)
+    .frame(width: 250)
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("Logged In Menu - No Data") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "john.doe@company.com",
+        teamName: "Company Team",
+        teamId: 456
+    )
+    
+    return LoggedInMenuContent(
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+    .environment(MultiProviderSpendingData())
+    .environment(CurrencyData())
+    .frame(width: 250)
+    .background(Color(NSColor.windowBackgroundColor))
 }

@@ -47,11 +47,9 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(.horizontal, 14)
+        .standardPadding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.thickMaterial))
+        .materialBackground(material: .thickMaterial, cornerRadius: 10)
     }
 
     private var providerBreakdownSection: some View {
@@ -63,10 +61,8 @@ struct CostTableView: View {
                     selectedProvider: $selectedProvider)
             }
         }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.thickMaterial))
+        .standardPadding(.all, 4)
+        .materialBackground(material: .thickMaterial, cornerRadius: 10)
     }
 
     private var spendingLimitsSection: some View {
@@ -92,11 +88,9 @@ struct CostTableView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.red)
         }
-        .padding(.horizontal, 14)
+        .standardPadding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.thickMaterial))
+        .materialBackground(material: .thickMaterial, cornerRadius: 10)
     }
 
     // MARK: - Helper Properties
@@ -130,58 +124,15 @@ struct CostTableView: View {
 // MARK: - Preview
 
 #Preview {
-    let spendingData = MultiProviderSpendingData()
-    let currencyData = CurrencyData()
-
-    // Add sample data
-    spendingData.updateSpending(
-        for: .cursor,
-        from: ProviderMonthlyInvoice(
-            items: [
-                ProviderInvoiceItem(cents: 1997, description: "Pro Usage", provider: .cursor),
-            ],
-            pricingDescription: nil,
-            provider: .cursor,
-            month: 5,
-            year: 2025),
-        rates: [:],
-        targetCurrency: "EUR")
-
-    spendingData.updateUsage(
-        for: .cursor,
-        from: ProviderUsageData(
-            currentRequests: 1535,
-            totalRequests: 4387,
-            maxRequests: 500,
-            startOfMonth: Date(),
-            provider: .cursor))
-
+    let spendingData = PreviewData.mockSpendingData(cents: 1997, currentRequests: 1535, maxRequests: 500)
+    
     return CostTableView(
-        settingsManager: MockSettingsManager(),
-        loginManager: nil)
-        .environment(spendingData)
-        .environment(currencyData)
-        .padding()
-        .frame(width: 280)
-        .background(Color(NSColor.windowBackgroundColor))
+        settingsManager: MockServices.settingsManager(currency: "EUR"),
+        loginManager: nil
+    )
+    .withSpendingEnvironment(spendingData)
+    .componentFrame(width: 280)
+    .previewBackground()
+    .padding()
 }
 
-// MARK: - Mock Settings Manager
-
-@MainActor
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "EUR"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 1000
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var showCostInMenuBar: Bool = true
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-
-    func clearUserSessionData() {}
-    func clearUserSessionData(for _: ServiceProvider) {}
-    func getSession(for _: ServiceProvider) -> ProviderSession? { nil }
-    func updateSession(for _: ServiceProvider, session _: ProviderSession) {}
-}

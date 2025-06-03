@@ -171,3 +171,36 @@ struct CustomMenuContainer<Content: View>: View {
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }
+
+// MARK: - Preview
+
+#Preview("Custom Menu Container") {
+    CustomMenuContainer {
+        VStack(spacing: 16) {
+            Text("VibeMeter")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis")
+                Label("Settings", systemImage: "gear")
+                Label("About", systemImage: "info.circle")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            Button("Log In") {}
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+            
+            Spacer()
+        }
+        .padding()
+    }
+    .padding()
+    .background(Color(NSColor.windowBackgroundColor))
+}
