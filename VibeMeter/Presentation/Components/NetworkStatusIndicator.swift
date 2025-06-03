@@ -20,7 +20,7 @@ struct NetworkStatusIndicator: View {
         HStack(spacing: compact ? 4 : 6) {
             // Status icon
             Image(systemName: statusIcon)
-                .font(.system(size: compact ? 10 : 12, weight: .medium))
+                .font(compact ? .caption2.weight(.medium) : .caption.weight(.medium))
                 .foregroundStyle(statusColor)
                 .symbolEffect(
                     .pulse.byLayer,
@@ -29,7 +29,7 @@ struct NetworkStatusIndicator: View {
 
             if !compact {
                 Text(networkStatus)
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(statusColor)
             }
         }
@@ -39,6 +39,9 @@ struct NetworkStatusIndicator: View {
             RoundedRectangle(cornerRadius: compact ? 4 : 6)
                 .fill(statusColor.opacity(0.1)))
         .help(fullStatusDescription + " (⌘R to refresh)")
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Network status: \(fullStatusDescription)")
+        .accessibilityValue(isConnected ? "Connected" : "Disconnected")
     }
 
     private var statusIcon: String {
@@ -72,6 +75,8 @@ struct CompactNetworkStatus: View {
             networkStatus: networkStatus,
             isConnected: isConnected,
             compact: true)
+            .accessibilityLabel("Compact network status")
+            .accessibilityValue(isConnected ? "Connected via \(networkStatus)" : "Disconnected")
     }
 }
 

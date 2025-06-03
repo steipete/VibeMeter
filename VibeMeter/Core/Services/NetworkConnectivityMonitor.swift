@@ -176,15 +176,15 @@ extension NWInterface.InterfaceType {
     var displayName: String {
         switch self {
         case .wifi:
-            return "WiFi"
+            "WiFi"
         case .cellular:
-            return "Cellular"
+            "Cellular"
         case .wiredEthernet:
-            return "Ethernet"
+            "Ethernet"
         case .loopback:
-            return "Loopback"
+            "Loopback"
         default:
-            return "Other"
+            "Other"
         }
     }
 
@@ -192,9 +192,9 @@ extension NWInterface.InterfaceType {
     var isTypicallyExpensive: Bool {
         switch self {
         case .cellular:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 }

@@ -17,7 +17,11 @@ struct ProviderSpendingRowView: View {
     @Environment(CurrencyData.self)
     private var currencyData
 
-    init(provider: ServiceProvider, loginManager: MultiProviderLoginManager?, selectedProvider: Binding<ServiceProvider?>, showTimestamp: Bool = true) {
+    init(
+        provider: ServiceProvider,
+        loginManager: MultiProviderLoginManager?,
+        selectedProvider: Binding<ServiceProvider?>,
+        showTimestamp: Bool = true) {
         self.provider = provider
         self.loginManager = loginManager
         self._selectedProvider = selectedProvider
@@ -51,7 +55,7 @@ struct ProviderSpendingRowView: View {
                         date: lastRefresh,
                         style: .withPrefix,
                         showFreshnessColor: false)
-                        .font(.system(size: 9))
+                        .font(.caption2)
                         .foregroundStyle(.quaternary)
                 }
             }
@@ -70,6 +74,11 @@ struct ProviderSpendingRowView: View {
         .onTapGesture {
             openProviderDashboard()
         }
+        .id(providerRowId)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(providerAccessibilityLabel)
+        .accessibilityHint("Double tap to open \(provider.displayName) dashboard")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var mainProviderRow: some View {
@@ -80,7 +89,7 @@ struct ProviderSpendingRowView: View {
                     if provider.iconName.contains(".") {
                         // System symbol - use font sizing
                         Image(systemName: provider.iconName)
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                     } else {
                         // Custom asset - use resizable with explicit sizing
                         Image(provider.iconName)
@@ -103,8 +112,9 @@ struct ProviderSpendingRowView: View {
 
             // Provider name
             Text(provider.displayName)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.primary)
+                .accessibilityAddTraits(.isHeader)
 
             Spacer()
 
@@ -122,12 +132,15 @@ struct ProviderSpendingRowView: View {
 
                     Text(
                         "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.caption.weight(.semibold).monospaced())
                         .foregroundStyle(.primary)
+                        .accessibilityLabel(
+                            "Spending: \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
                 } else {
                     Text("--")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .accessibilityLabel("No spending data")
                 }
             }
         }
@@ -135,16 +148,21 @@ struct ProviderSpendingRowView: View {
 
     private func usageDataBadge(usage: ProviderUsageData, maxRequests: Int) -> some View {
         let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
+        let progressPercentage = Int((progress * 100).rounded())
         return HStack(spacing: 6) {
             Text("\(usage.currentRequests)/\(maxRequests)")
-                .font(.system(size: 10, weight: .medium))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(.secondary)
+                .accessibilityLabel("Usage: \(usage.currentRequests) of \(maxRequests) requests")
 
             ProgressView(value: progress)
                 .progressViewStyle(LinearProgressViewStyle(tint: ProgressColorHelper.color(for: progress)))
                 .frame(width: showTimestamp ? 60 : 80, height: 3) // Extended width, larger when no timestamp
                 .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
+                .accessibilityLabel("Usage progress: \(progressPercentage) percent")
+                .accessibilityValue("\(usage.currentRequests) requests used out of \(maxRequests) allowed")
         }
+        .accessibilityElement(children: .combine)
     }
 
     // Progress color logic moved to ProgressColorHelper
@@ -166,6 +184,41 @@ struct ProviderSpendingRowView: View {
                 BrowserAuthenticationHelper.openURL(provider.dashboardURL)
             }
         }
+    }
+
+    /// Unique identifier for SwiftUI performance optimization
+    private var providerRowId: String {
+        let providerData = spendingData.getSpendingData(for: provider)
+        var hasher = Hasher()
+        hasher.combine(provider.rawValue)
+        hasher.combine(providerData?.currentSpendingUSD ?? 0)
+        hasher.combine(providerData?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)
+        hasher.combine(currencyData.selectedCode)
+        hasher.combine(selectedProvider == provider)
+        hasher.combine(showTimestamp)
+        return "\(provider.rawValue)-\(hasher.finalize())"
+    }
+
+    /// Accessibility label for the entire provider row
+    private var providerAccessibilityLabel: String {
+        var components: [String] = [provider.displayName]
+
+        if let providerData = spendingData.getSpendingData(for: provider),
+           let spendingUSD = providerData.currentSpendingUSD {
+            let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
+                ExchangeRateManager.shared.convert(
+                    spendingUSD,
+                    from: "USD",
+                    to: currencyData.selectedCode,
+                    rates: currencyData.effectiveRates) ?? spendingUSD
+            components
+                .append(
+                    "spending \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
+        } else {
+            components.append("no spending data")
+        }
+
+        return components.joined(separator: ", ")
     }
 }
 

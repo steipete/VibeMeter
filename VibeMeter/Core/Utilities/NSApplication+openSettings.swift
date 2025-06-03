@@ -22,7 +22,7 @@ extension NSApplication {
             // Additional step to ensure the settings window comes to front
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
-                
+
                 // Find and bring the settings window to front
                 for window in NSApp.windows {
                     if window.title.contains("Settings") || window.title.contains("Preferences") {

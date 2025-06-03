@@ -1,6 +1,6 @@
 import AppKit
-import SwiftUI
 import Observation
+import SwiftUI
 
 /// Manages the macOS status bar item and its associated dropdown menu.
 ///
@@ -248,7 +248,7 @@ final class StatusBarController: NSObject {
             let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .withPrefix)
             let freshnessIndicator = RelativeTimeFormatter.isFresh(lastRefresh) ? "🟢" : "🟡"
             tooltip += "\n\(freshnessIndicator) \(refreshText)"
-            
+
             // Add data freshness context
             if !RelativeTimeFormatter.isFresh(lastRefresh, withinMinutes: 15) {
                 tooltip += " (May be outdated)"
@@ -256,11 +256,11 @@ final class StatusBarController: NSObject {
         } else {
             tooltip += "\n🔴 Never updated"
         }
-        
+
         // Add keyboard shortcuts info
         tooltip += "\n\nKeyboard shortcuts:"
         tooltip += "\n⌘R - Refresh data"
-        tooltip += "\n⌘, - Open Settings" 
+        tooltip += "\n⌘, - Open Settings"
         tooltip += "\n⌘Q - Quit VibeMeter"
         tooltip += "\nESC - Close menu"
 
@@ -317,18 +317,19 @@ final class StatusBarController: NSObject {
                 spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
             }
             .max()
-        
-        var accessibilityText = "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used."
-        
+
+        var accessibilityText =
+            "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used."
+
         if let lastRefresh = mostRecentRefresh {
             let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .medium)
             accessibilityText += " Data \(refreshText)."
         } else {
             accessibilityText += " Data never updated."
         }
-        
+
         accessibilityText += " Click to view details."
-        
+
         return accessibilityText
     }
 
@@ -336,55 +337,53 @@ final class StatusBarController: NSObject {
         // Start modern observation using structured concurrency
         observationTask = Task { @MainActor [weak self] in
             guard let self else { return }
-            
+
             // Set up notification observers and model observation using structured concurrency
             await withTaskGroup(of: Void.self) { group in
                 // Observe settings changes
                 group.addTask {
                     await self.observeSettingsChanges()
                 }
-                
-                // Observe appearance changes  
+
+                // Observe appearance changes
                 group.addTask {
                     await self.observeAppearanceChanges()
                 }
-                
+
                 // Observe @Observable model changes
                 group.addTask {
                     await self.observeModelChanges()
                 }
             }
         }
-        
+
         // Set up animation timer
         setupAnimationTimer()
-        
+
         // Set up periodic update timer
         setupPeriodicTimer()
     }
-    
+
     private func observeSettingsChanges() async {
         let notificationSequence = NotificationCenter.default.notifications(
-            named: UserDefaults.didChangeNotification
-        )
-        
+            named: UserDefaults.didChangeNotification)
+
         for await _ in notificationSequence {
             updateStatusItemDisplay()
         }
     }
-    
+
     private func observeAppearanceChanges() async {
         let notificationSequence = DistributedNotificationCenter.default.notifications(
-            named: Notification.Name("AppleInterfaceThemeChangedNotification")
-        )
-        
+            named: Notification.Name("AppleInterfaceThemeChangedNotification"))
+
         for await _ in notificationSequence {
             // Delay slightly to ensure the appearance change has propagated
             try? await Task.sleep(for: .milliseconds(100))
             updateStatusItemDisplay()
         }
     }
-    
+
     private func observeModelChanges() async {
         // Use withObservationTracking to observe @Observable models
         while !Task.isCancelled {
@@ -399,20 +398,20 @@ final class StatusBarController: NSObject {
                     self.updateStatusItemDisplay()
                 }
             }
-            
+
             // Small delay to prevent excessive updates
             try? await Task.sleep(for: .milliseconds(50))
         }
     }
-    
+
     private func setupAnimationTimer() {
         animationTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                
+
                 // Update animation state first
                 self.stateManager.updateAnimation()
-                
+
                 // Only update frequently if animating, transitioning, or value changed
                 if self.stateManager.currentState.isAnimated ||
                     self.stateManager.isTransitioning ||
@@ -424,7 +423,7 @@ final class StatusBarController: NSObject {
             }
         }
     }
-    
+
     private func setupPeriodicTimer() {
         periodicTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -438,7 +437,7 @@ final class StatusBarController: NSObject {
     deinit {
         // Cancel observation task
         observationTask?.cancel()
-        
+
         // Note: Cannot safely invalidate MainActor-isolated timers from deinit
         // They will be cleaned up when the class is deallocated
         // customMenuWindow is also MainActor-isolated and will be cleaned up automatically

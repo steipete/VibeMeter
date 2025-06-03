@@ -139,6 +139,7 @@ struct GeneralSettingsView: View {
                     Picker("", selection: $selectedCurrency) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
                             Text(name).tag(code)
+                                .id("\(code)-\(selectedCurrency)")
                         }
                     }
                     .pickerStyle(.menu)

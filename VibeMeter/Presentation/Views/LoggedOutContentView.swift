@@ -20,23 +20,32 @@ struct LoggedOutContentView: View {
                     Image(nsImage: NSApp.applicationIconImage)
                         .resizable()
                         .frame(width: 64, height: 64)
+                        .transition(.scale(scale: 0.8).combined(with: .opacity))
+                        .accessibilityLabel("VibeMeter application icon")
 
                     Text("VibeMeter")
-                        .font(.system(size: 24, weight: .medium))
+                        .font(.title2.weight(.medium))
                         .foregroundStyle(.primary)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Multi-Provider Cost Tracking")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .accessibilityLabel("Application subtitle: Multi-Provider Cost Tracking")
                 }
 
                 // Login button
                 Button(action: { loginManager.showLoginWindow(for: .cursor) }) {
                     Label("Login to Cursor", systemImage: "person.crop.circle.badge.plus")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(ProminentGlassButtonStyle())
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .accessibilityLabel("Login to Cursor AI")
+                .accessibilityHint("Opens browser window to authenticate with Cursor service")
 
                 Spacer(minLength: 20)
             }
@@ -54,20 +63,24 @@ struct LoggedOutContentView: View {
             // Settings button
             Button(action: openSettings) {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline.weight(.medium))
             }
             .buttonStyle(IconButtonStyle())
             .help("Settings (⌘,)")
+            .accessibilityLabel("Open settings")
+            .accessibilityHint("Opens VibeMeter preferences and configuration options")
 
             Spacer()
 
             // Quit button
             Button(action: quit) {
                 Image(systemName: "power")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline.weight(.medium))
             }
             .buttonStyle(IconButtonStyle(isDestructive: true))
             .help("Quit VibeMeter (⌘Q)")
+            .accessibilityLabel("Quit application")
+            .accessibilityHint("Closes VibeMeter completely")
         }
     }
 

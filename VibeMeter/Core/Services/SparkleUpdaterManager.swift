@@ -35,10 +35,10 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - Sparkle disabled")
             return
         #else
-            // Accessing the lazy var here will trigger its initialization.
-            _ = updaterController
+            // Initialize the updater controller
+            initializeUpdaterController()
             Self.staticLogger
-                .info("SparkleUpdaterManager initialized. Updater controller lazy initialization triggered.")
+                .info("SparkleUpdaterManager initialized. Updater controller initialization completed.")
 
             // Schedule startup update check
             scheduleStartupUpdateCheck()
@@ -48,13 +48,9 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     // MARK: Public
 
     // Initialize controller after self is available
-    private var _updaterController: SPUStandardUpdaterController?
-    
-    public var updaterController: SPUStandardUpdaterController {
-        if let controller = _updaterController {
-            return controller
-        }
-        
+    public private(set) var updaterController: SPUStandardUpdaterController!
+
+    private func initializeUpdaterController() {
         let controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
@@ -66,9 +62,8 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         Self.staticLogger
             .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
-        
-        _updaterController = controller
-        return controller
+
+        updaterController = controller
     }
 
     // MARK: Private

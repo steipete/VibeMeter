@@ -47,14 +47,14 @@ extension Color {
 
     /// Gauge stroke colors for different themes
     static func gaugeStroke(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark 
+        colorScheme == .dark
             ? .white.opacity(0.25)
             : .black.opacity(0.15)
     }
 
     /// Gauge background colors
     static func gaugeBackground(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark 
+        colorScheme == .dark
             ? .white.opacity(0.1)
             : .black.opacity(0.05)
     }
@@ -78,14 +78,14 @@ extension Color {
 
     /// Hover state colors
     static func hoverBackground(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark 
+        colorScheme == .dark
             ? .white.opacity(0.08)
             : .black.opacity(0.05)
     }
 
     /// Selection background colors
     static func selectionBackground(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark 
+        colorScheme == .dark
             ? .white.opacity(0.12)
             : .black.opacity(0.08)
     }
@@ -105,7 +105,7 @@ extension Color {
         }
 
         // Adjust opacity/saturation for dark mode if needed
-        return colorScheme == .dark 
+        return colorScheme == .dark
             ? baseColor.opacity(0.9)
             : baseColor
     }
@@ -149,12 +149,12 @@ extension Color {
     }
 
     /// Returns background color with reduced transparency for accessibility
-    static func accessibleBackground(for colorScheme: ColorScheme) -> Color {
+    static func accessibleBackground(for _: ColorScheme) -> Color {
         if shouldReduceTransparency {
             // Use solid colors instead of transparent materials
-            return Color(NSColor.windowBackgroundColor)
+            Color(NSColor.windowBackgroundColor)
         } else {
-            return vibeMeterBackground
+            vibeMeterBackground
         }
     }
 }
@@ -176,9 +176,9 @@ struct AdaptiveColor {
 extension Color {
     /// Returns a color with enhanced contrast for accessibility
     func withAccessibilityContrast(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark 
+        colorScheme == .dark
             ? self.opacity(0.95) // Increase brightness in dark mode
-            : self.opacity(1.0)  // Increase saturation in light mode
+            : self.opacity(1.0) // Increase saturation in light mode
     }
 
     /// Returns an appropriate text color for this background

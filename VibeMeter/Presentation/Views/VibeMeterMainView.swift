@@ -20,11 +20,22 @@ struct VibeMeterMainView: View {
                     userSessionData: userSessionData,
                     loginManager: loginManager,
                     onRefresh: onRefresh)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)))
+                    .id("logged-in")
             } else {
                 LoggedOutContentView(loginManager: loginManager)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)))
+                    .id("logged-out")
             }
         }
-        .frame(width: 300, height: userSessionData.isLoggedInToAnyProvider ? 400 : 280)
+        .animation(.easeInOut(duration: 0.4), value: userSessionData.isLoggedInToAnyProvider)
+        .frame(width: 300)
+        .fixedSize(horizontal: false, vertical: true)
+        .animation(.easeInOut(duration: 0.4), value: userSessionData.isLoggedInToAnyProvider)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("VibeMeter main interface")
         .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?

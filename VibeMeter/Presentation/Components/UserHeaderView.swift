@@ -15,19 +15,26 @@ struct UserHeaderView: View {
             VStack(alignment: .leading, spacing: 2) {
                 if let email = userSessionData.mostRecentSession?.userEmail {
                     Text(email)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityLabel("User email: \(email)")
                 }
 
                 Text(providerCountText)
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
+                    .accessibilityLabel(providerCountText)
             }
+            .accessibilityElement(children: .combine)
 
             Spacer()
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("User account header")
+        .accessibilityValue(userSessionData.mostRecentSession?.userEmail ?? "No user logged in")
     }
 
     private var providerCountText: String {

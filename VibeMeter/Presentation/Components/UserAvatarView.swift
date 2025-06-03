@@ -26,6 +26,7 @@ struct UserAvatarView: View {
                             .aspectRatio(contentMode: .fill)
                             .frame(width: size, height: size)
                             .clipShape(Circle())
+                            .accessibilityLabel("User avatar for \(email)")
                     default:
                         fallbackAvatar
                     }
@@ -45,8 +46,9 @@ struct UserAvatarView: View {
             .frame(width: size, height: size)
             .overlay(
                 Text(userInitial)
-                    .font(.system(size: size * 0.45, weight: .medium))
+                    .font(.system(size: size * 0.45, weight: .medium, design: .rounded))
                     .foregroundStyle(.white))
+            .accessibilityLabel(email != nil ? "User avatar with initial \(userInitial)" : "Default user avatar")
     }
 
     private var userInitial: String {

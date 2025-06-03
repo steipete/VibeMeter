@@ -20,7 +20,7 @@ struct ProviderStatusBadge: View {
 
             // Status icon
             Image(systemName: status.iconName)
-                .font(.system(size: size * 0.55, weight: .medium))
+                .font(.system(size: size * 0.55, weight: .medium, design: .rounded))
                 .foregroundStyle(status.displayColor)
                 .symbolEffect(
                     .pulse.byLayer,
@@ -28,6 +28,8 @@ struct ProviderStatusBadge: View {
                     isActive: status.isActive)
         }
         .help(status.description + (status.isActive ? "" : " (⌘R to refresh)")) // Tooltip on hover
+        .accessibilityLabel("Status: \(status.description)")
+        .accessibilityValue(status.isActive ? "Active" : "Inactive")
         .onAppear {
             isAnimating = status.isActive
         }
@@ -50,7 +52,7 @@ struct ProviderStatusIndicator: View {
 
             if showText {
                 Text(status.shortDescription)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(status.displayColor)
             }
         }
@@ -60,6 +62,9 @@ struct ProviderStatusIndicator: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(status.displayColor.opacity(0.1))
                 .opacity(showText ? 1 : 0))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Provider status: \(status.description)")
+        .accessibilityValue(status.isActive ? "Active" : "Inactive")
     }
 }
 
@@ -73,6 +78,8 @@ struct MenuBarStatusDot: View {
                 .fill(status.displayColor)
                 .frame(width: 5, height: 5)
                 .shadow(color: status.displayColor.opacity(0.6), radius: 2)
+                .accessibilityLabel("Error indicator")
+                .accessibilityHint("Connection error detected")
         }
     }
 }

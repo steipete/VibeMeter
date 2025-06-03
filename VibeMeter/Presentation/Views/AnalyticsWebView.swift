@@ -90,7 +90,7 @@ struct AnalyticsSettingsView: View {
                     Spacer()
 
                     Image(systemName: "chart.line.uptrend.xyaxis.circle.fill")
-                        .font(.system(size: 80))
+                        .font(.system(size: 80, design: .rounded))
                         .foregroundStyle(.secondary)
                         .symbolRenderingMode(.hierarchical)
 

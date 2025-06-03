@@ -17,8 +17,10 @@ final class CustomMenuWindow: NSPanel {
         hostingController = NSHostingController(rootView: contentView)
 
         // Initialize window with appropriate style
+        // Start with a minimal height – the real height will be determined from
+        // the SwiftUI view's intrinsic content size before the panel is shown.
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 100),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false)
@@ -58,10 +60,24 @@ final class CustomMenuWindow: NSPanel {
         let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
         let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
 
-        // Calculate optimal position with screen boundary awareness
+        // First, make sure the SwiftUI hierarchy has laid itself out so the
+        // hosting view reports an accurate fitting size.
+        hostingController.view.layoutSubtreeIfNeeded()
+
+        // Determine the preferred height based on the content. We fix the
+        // width to 300 pt for consistency with the design language.
+        let preferredHeight = hostingController.view.fittingSize.height
+        let preferredSize = NSSize(width: 300, height: preferredHeight)
+
+        // Update the panel's content size so auto-layout inside the window gets
+        // the right dimensions.
+        setContentSize(preferredSize)
+
+        // Calculate optimal position with screen boundary awareness using the
+        // freshly computed preferred size.
         let targetFrame = calculateOptimalFrame(
             relativeTo: buttonFrameInScreen,
-            preferredSize: NSSize(width: frame.width, height: frame.height))
+            preferredSize: preferredSize)
 
         setFrame(targetFrame, display: false)
 
@@ -167,7 +183,10 @@ struct CustomMenuContainer<Content: View>: View {
 
     var body: some View {
         content
-            .frame(width: 300, height: 400)
+            .frame(width: 300)
+            // Let the height be dictated by the intrinsic size so the panel
+            // grows or shrinks exactly to the content we supply.
+            .fixedSize(horizontal: false, vertical: true)
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }

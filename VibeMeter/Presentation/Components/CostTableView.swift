@@ -18,7 +18,10 @@ struct CostTableView: View {
     @State
     private var selectedProvider: ServiceProvider?
 
-    init(settingsManager: any SettingsManagerProtocol, loginManager: MultiProviderLoginManager?, showTimestamps: Bool = true) {
+    init(
+        settingsManager: any SettingsManagerProtocol,
+        loginManager: MultiProviderLoginManager?,
+        showTimestamps: Bool = true) {
         self.settingsManager = settingsManager
         self.loginManager = loginManager
         self.showTimestamps = showTimestamps
@@ -34,28 +37,34 @@ struct CostTableView: View {
 
             spendingLimitsSection
         }
+        .id("cost-table-\(spendingData.providersWithData.count)-\(currencyData.selectedCode)-\(totalSpendingHash)")
     }
 
     private var totalSpendingSection: some View {
         HStack(alignment: .center) {
             Text("Total Spending")
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .font(.title2.weight(.semibold).monospaced())
                     .foregroundStyle(.primary)
+                    .accessibilityLabel("Total spending: \(totalSpending)")
             } else {
                 Text("No data")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(.tertiary)
+                    .accessibilityLabel("No spending data available")
             }
         }
         .standardPadding(horizontal: 12, vertical: 8)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Total spending section")
+        .accessibilityValue(currentSpendingDisplay ?? "No data available")
     }
 
     private var providerBreakdownSection: some View {
@@ -66,37 +75,52 @@ struct CostTableView: View {
                     loginManager: loginManager,
                     selectedProvider: $selectedProvider,
                     showTimestamp: showTimestamps)
+                    .id(
+                        "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
             }
         }
         .standardPadding(horizontal: 3, vertical: 3)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Provider spending breakdown")
+        .accessibilityHint("Lists spending for each connected AI service provider")
     }
 
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
             Text("Limits")
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.system(size: 13, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.orange)
+                .accessibilityLabel(
+                    "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
             Text("•")
-                .font(.system(size: 10))
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
+                .accessibilityHidden(true)
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.system(size: 13, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.red)
+                .accessibilityLabel(
+                    "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
         }
         .standardPadding(horizontal: 12, vertical: 8)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Spending limits")
+        .accessibilityValue(
+            "Warning at \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0)))), upper limit at \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+        .accessibilityHint("Configure these limits in settings")
     }
 
     // MARK: - Helper Properties
@@ -124,6 +148,24 @@ struct CostTableView: View {
             settingsManager.upperLimitUSD,
             from: "USD",
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
+    }
+
+    /// Hash for total spending state to optimize SwiftUI performance
+    private var totalSpendingHash: Int {
+        let providers = spendingData.providersWithData
+        guard !providers.isEmpty else { return 0 }
+
+        let totalSpending = spendingData.totalSpendingConverted(
+            to: "USD", // Use USD for consistency
+            rates: currencyData.effectiveRates)
+
+        // Create hash from key spending values that affect display
+        var hasher = Hasher()
+        hasher.combine(totalSpending)
+        hasher.combine(settingsManager.warningLimitUSD)
+        hasher.combine(settingsManager.upperLimitUSD)
+        hasher.combine(providers.count)
+        return hasher.finalize()
     }
 }
 

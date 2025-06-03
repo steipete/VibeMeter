@@ -10,7 +10,7 @@ struct LoggedInContentView: View {
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager?
     let onRefresh: () async -> Void
-    
+
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
 
@@ -21,6 +21,10 @@ struct LoggedInContentView: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 12)
                 .padding(.bottom, 10)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("User account information")
+                .accessibilityHint("Shows current user and connected providers")
 
             Divider()
                 .overlay(Color.white.opacity(0.08))
@@ -31,20 +35,25 @@ struct LoggedInContentView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-
-            Spacer(minLength: 8)
+            .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Spending dashboard")
+            .accessibilityHint("Shows total spending, provider breakdown, and spending limits")
+            .id("logged-in-content-\(spendingData.providersWithData.count)")
 
             // Last updated section at bottom
             if let lastUpdate = mostRecentRefresh {
                 VStack(spacing: 2) {
                     Divider()
                         .overlay(Color.white.opacity(0.06))
-                    
+
                     HStack {
                         Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundStyle(.quaternary)
-                        
+                            .accessibilityLabel(
+                                "Last updated \(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))")
+
                         Spacer()
                     }
                     .padding(.horizontal, 14)
@@ -60,10 +69,13 @@ struct LoggedInContentView: View {
                 ActionButtonsView(onRefresh: onRefresh)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Action buttons")
+                    .accessibilityHint("Contains refresh, settings, and quit buttons")
             }
         }
     }
-    
+
     /// Gets the most recent refresh timestamp across all providers
     private var mostRecentRefresh: Date? {
         spendingData.providersWithData
