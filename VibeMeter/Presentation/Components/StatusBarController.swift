@@ -2,6 +2,12 @@ import AppKit
 import Combine
 import SwiftUI
 
+/// Manages the macOS status bar item and its associated dropdown menu.
+///
+/// StatusBarController is responsible for creating and maintaining the menu bar presence
+/// of the application. It handles the status item display, updates the gauge icon based
+/// on spending data, manages the dropdown menu window, and responds to appearance changes
+/// for proper dark/light mode support.
 @MainActor
 final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?

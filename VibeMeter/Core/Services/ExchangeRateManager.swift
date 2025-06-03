@@ -174,12 +174,20 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
 
 // MARK: - Supporting Types
 
+/// API response structure for the Frankfurter exchange rate service.
+///
+/// Contains the base currency, date of rates, and a dictionary of
+/// currency codes to their exchange rates relative to the base.
 private struct ExchangeRatesResponse: Codable {
     let base: String
     let date: String
     let rates: [String: Double]
 }
 
+/// Errors that can occur during exchange rate operations.
+///
+/// Provides specific error cases for API failures including network issues,
+/// invalid responses, and HTTP errors with descriptive error messages.
 enum ExchangeRateError: LocalizedError {
     case invalidURL
     case invalidResponse

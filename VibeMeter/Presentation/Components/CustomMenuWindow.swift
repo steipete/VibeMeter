@@ -1,7 +1,12 @@
 import AppKit
 import SwiftUI
 
-/// A custom window that appears below the menu bar without an arrow
+/// Custom borderless window that appears below the menu bar icon.
+///
+/// CustomMenuWindow provides a dropdown-style window for the menu bar application
+/// without the standard macOS popover arrow. It handles automatic positioning below
+/// the status item, click-outside dismissal, and proper window management for a
+/// seamless menu bar app experience.
 @MainActor
 final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?

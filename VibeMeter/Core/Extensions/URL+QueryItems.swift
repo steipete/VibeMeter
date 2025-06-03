@@ -1,5 +1,9 @@
 import Foundation
 
+/// URL extension providing convenient methods for query parameter manipulation.
+///
+/// This extension adds functionality for appending query items to URLs while
+/// preserving existing query parameters, useful for API request construction.
 extension URL {
     /// Appends query items to the URL.
     /// - Parameter items: Array of URLQueryItem to append

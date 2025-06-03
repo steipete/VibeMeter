@@ -269,10 +269,16 @@ public final class ProviderRegistry {
 
 // MARK: - Extensions
 
+/// ServiceProvider conformance to Identifiable for SwiftUI list management.
+///
+/// Uses the raw value as a stable identifier for SwiftUI views and collections.
 extension ServiceProvider: Identifiable {
     public var id: String { rawValue }
 }
 
+/// ServiceProvider conformance to CustomStringConvertible for debugging.
+///
+/// Returns the human-readable display name when converting to string.
 extension ServiceProvider: CustomStringConvertible {
     public var description: String { displayName }
 }

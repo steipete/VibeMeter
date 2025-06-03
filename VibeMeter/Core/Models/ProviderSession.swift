@@ -47,6 +47,10 @@ public struct ProviderSession: Codable, Sendable {
 
 // MARK: - Session Helper Extensions
 
+/// ProviderSession extension adding computed properties for UI display and validation.
+///
+/// Provides convenience methods for determining display names and checking session
+/// completeness based on provider requirements.
 public extension ProviderSession {
     /// Returns a display name for the session, using team name or email as fallback.
     var displayName: String {

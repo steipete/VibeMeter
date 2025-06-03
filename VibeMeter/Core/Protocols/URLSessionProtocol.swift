@@ -10,4 +10,8 @@ public protocol URLSessionProtocol: Sendable {
 }
 
 // Make URLSession conform to the protocol
+/// URLSession conformance to URLSessionProtocol for production use.
+///
+/// This extension enables the standard URLSession to be used with the protocol,
+/// allowing seamless switching between real network requests and test mocks.
 extension URLSession: URLSessionProtocol {}
