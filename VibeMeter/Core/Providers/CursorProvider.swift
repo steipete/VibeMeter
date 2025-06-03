@@ -199,6 +199,27 @@ public actor CursorProvider: ProviderProtocol {
 
                 switch httpResponse.statusCode {
                 case 200 ... 299:
+                    // Handle 204 No Content responses
+                    if httpResponse.statusCode == 204 {
+                        // For 204 responses, check if we're expecting an optional type
+                        if T.self == Any?.self {
+                            return Any?.none as! T
+                        }
+                        // If we're not expecting optional, throw an error
+                        logger.error("Received 204 No Content but expecting data of type \(T.self)")
+                        throw ProviderError.decodingError(
+                            message: "API returned 204 No Content but response data was expected",
+                            statusCode: 204)
+                    }
+
+                    // Handle empty data for successful responses
+                    if data.isEmpty {
+                        logger.error("Received empty data for successful response")
+                        throw ProviderError.decodingError(
+                            message: "Received empty response data",
+                            statusCode: httpResponse.statusCode)
+                    }
+
                     do {
                         return try decoder.decode(T.self, from: data)
                     } catch {
