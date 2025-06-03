@@ -11,14 +11,25 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
 
     override func setUp() {
         super.setUp()
-        // Use a specific UserDefaults suite for testing
-        let suite = UserDefaults(suiteName: testSuiteName)
-        suite?.removePersistentDomain(forName: testSuiteName)
-
+        
         MainActor.assumeIsolated {
+            // Clear any existing shared instance first
+            SettingsManager._test_clearSharedInstance()
+            
+            // Use a specific UserDefaults suite for testing
+            let suite = UserDefaults(suiteName: testSuiteName)
+            suite?.removePersistentDomain(forName: testSuiteName)
+            
+            // Ensure we start fresh by clearing the suite entirely
+            if let suite = suite {
+                for key in Array(suite.dictionaryRepresentation().keys) {
+                    suite.removeObject(forKey: key)
+                }
+            }
+            
             testUserDefaults = suite
             // Configure the SettingsManager.shared instance to use our test UserDefaults
-            SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults)
+            SettingsManager._test_setSharedInstance(userDefaults: testUserDefaults, startupManager: StartupManagerMock())
             settingsManager = SettingsManager.shared
         }
     }
@@ -45,7 +56,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     }
 
     func testDefaultUpperLimit() {
-        XCTAssertEqual(settingsManager.upperLimitUSD, 500.0, "Default upper limit USD should be 500.0")
+        XCTAssertEqual(settingsManager.upperLimitUSD, 1000.0, "Default upper limit USD should be 1000.0")
     }
 
     func testDefaultRefreshInterval() {
