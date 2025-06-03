@@ -39,16 +39,14 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
                 keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() }
-            )
+                webViewFactory: { MockWebView() })
             // 3. Initialize DataCoordinator with all mocks
             dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
                 settingsManager: mockSettingsManager,
                 exchangeRateManager: mockExchangeRateManager,
                 apiClient: mockApiClient,
-                notificationManager: mockNotificationManager
-            )
+                notificationManager: mockNotificationManager)
             // Reset mocks to a clean state before each test
             mockSettingsManager.selectedCurrencyCode = "USD"
             mockSettingsManager.warningLimitUSD = 200.0
@@ -86,7 +84,9 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
 
         mockApiClient.teamInfoToReturn = TeamInfo(id: 111, name: "RefreshedTeam")
         mockApiClient.userInfoToReturn = UserInfo(email: "refreshed@example.com", teamId: nil)
-        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(items: [InvoiceItem(cents: 54321, description: "new usage")], pricingDescription: nil)
+        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [InvoiceItem(cents: 54321, description: "new usage")],
+            pricingDescription: nil)
         mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "JPY": 150.0]
         mockSettingsManager.selectedCurrencyCode = "JPY"
 
@@ -124,9 +124,14 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         // Assert
         // The lastErrorMessage is cleared by the onLoginFailure callback when it detects a logout
         XCTAssertNil(dataCoordinator.lastErrorMessage, "Error message should be cleared on logout")
-        XCTAssertNil(keychainMockForLoginManager.getToken(), "Token should be cleared by LoginManager.logOut()")
+        XCTAssertNil(
+            keychainMockForLoginManager.getToken(),
+            "Token should be cleared by LoginManager.logOut()")
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out after unauthorized error")
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required", "Menu bar should show login required after logout")
+        XCTAssertEqual(
+            dataCoordinator.menuBarDisplayText,
+            "",
+            "Menu bar should be empty after logout")
     }
 
     func testForceRefreshData_TeamNotFoundError_UpdatesUIAppropriately() async {
@@ -140,7 +145,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(dataCoordinator.teamIdFetchFailed)
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Team Error")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Error")
         XCTAssertEqual(dataCoordinator.lastErrorMessage, "Hmm, can't find your team vibe right now. 😕 Try a refresh?")
     }
 
@@ -155,7 +160,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(dataCoordinator.isLoggedIn, "Still logged in, but data fetch failed")
         XCTAssertFalse(dataCoordinator.teamIdFetchFailed, "teamIdFetchFailed should be false for generic network error")
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Loading...")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "...")
         XCTAssertTrue(dataCoordinator.lastErrorMessage?.starts(with: "Error fetching data:") ?? false)
     }
 }

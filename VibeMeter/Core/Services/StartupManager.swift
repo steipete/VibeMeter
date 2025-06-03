@@ -44,12 +44,11 @@ class RealStartupManager: StartupManagerProtocol {
             LoggingService.error(
                 "Failed to \(enabled ? "register" : "unregister") for launch at login",
                 category: .startup,
-                error: error
-            )
+                error: error)
         }
     }
 
     var isLaunchAtLoginEnabled: Bool {
-        return SMAppService.mainApp.status == .enabled
+        SMAppService.mainApp.status == .enabled
     }
 }

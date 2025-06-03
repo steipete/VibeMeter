@@ -32,8 +32,7 @@ final class ExchangeRateManagerMock: ExchangeRateManagerProtocol, @unchecked Sen
         _ amount: Double,
         from sourceCurrency: String,
         to targetCurrency: String,
-        rates: [String: Double]
-    ) -> Double? {
+        rates: [String: Double]) -> Double? {
         // Basic mock conversion, not a full re-implementation
         if sourceCurrency == targetCurrency { return amount }
 

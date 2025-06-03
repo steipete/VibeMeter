@@ -53,21 +53,24 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     private let startupManager: StartupManagerProtocol
 
     // User session
-    @Published public var teamId: Int? {
+    @Published
+    public var teamId: Int? {
         didSet {
             userDefaults.set(teamId, forKey: Keys.teamId)
-            logger.debug("Team ID updated: \(teamId ?? -1)")
+            logger.debug("Team ID updated: \(self.teamId ?? -1)")
         }
     }
 
-    @Published public var teamName: String? {
+    @Published
+    public var teamName: String? {
         didSet {
             userDefaults.set(teamName, forKey: Keys.teamName)
-            logger.debug("Team name updated: \(teamName ?? "nil")")
+            logger.debug("Team name updated: \(self.teamName ?? "nil")")
         }
     }
 
-    @Published public var userEmail: String? {
+    @Published
+    public var userEmail: String? {
         didSet {
             userDefaults.set(userEmail, forKey: Keys.userEmail)
             logger.debug("User email updated")
@@ -75,44 +78,49 @@ public final class SettingsManager: SettingsManagerProtocol, ObservableObject {
     }
 
     // Display preferences
-    @Published public var selectedCurrencyCode: String {
+    @Published
+    public var selectedCurrencyCode: String {
         didSet {
             userDefaults.set(selectedCurrencyCode, forKey: Keys.selectedCurrencyCode)
-            logger.debug("Currency updated: \(selectedCurrencyCode)")
+            logger.debug("Currency updated: \(self.selectedCurrencyCode)")
         }
     }
 
-    @Published public var refreshIntervalMinutes: Int {
+    @Published
+    public var refreshIntervalMinutes: Int {
         didSet {
             userDefaults.set(refreshIntervalMinutes, forKey: Keys.refreshIntervalMinutes)
-            logger.debug("Refresh interval updated: \(refreshIntervalMinutes) minutes")
+            logger.debug("Refresh interval updated: \(self.refreshIntervalMinutes) minutes")
         }
     }
 
     // Spending limits
-    @Published public var warningLimitUSD: Double {
+    @Published
+    public var warningLimitUSD: Double {
         didSet {
             userDefaults.set(warningLimitUSD, forKey: Keys.warningLimitUSD)
-            logger.debug("Warning limit updated: $\(warningLimitUSD)")
+            logger.debug("Warning limit updated: $\(self.warningLimitUSD)")
         }
     }
 
-    @Published public var upperLimitUSD: Double {
+    @Published
+    public var upperLimitUSD: Double {
         didSet {
             userDefaults.set(upperLimitUSD, forKey: Keys.upperLimitUSD)
-            logger.debug("Upper limit updated: $\(upperLimitUSD)")
+            logger.debug("Upper limit updated: $\(self.upperLimitUSD)")
         }
     }
 
     // App behavior
-    @Published public var launchAtLoginEnabled: Bool {
+    @Published
+    public var launchAtLoginEnabled: Bool {
         didSet {
             guard launchAtLoginEnabled != oldValue else { return }
             userDefaults.set(launchAtLoginEnabled, forKey: Keys.launchAtLoginEnabled)
 
             startupManager.setLaunchAtLogin(enabled: launchAtLoginEnabled)
 
-            logger.debug("Launch at login: \(launchAtLoginEnabled)")
+            logger.debug("Launch at login: \(self.launchAtLoginEnabled)")
         }
     }
 

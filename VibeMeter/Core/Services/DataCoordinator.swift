@@ -36,21 +36,36 @@ public protocol DataCoordinatorProtocol: AnyObject, Sendable {
 public final class DataCoordinator: DataCoordinatorProtocol, ObservableObject {
     // MARK: - Published State
 
-    @Published public private(set) var isLoggedIn = false
-    @Published public private(set) var userEmail: String?
-    @Published public private(set) var teamName: String?
-    @Published public private(set) var currentSpendingUSD: Double?
-    @Published public private(set) var currentSpendingConverted: Double?
-    @Published public private(set) var warningLimitConverted: Double?
-    @Published public private(set) var upperLimitConverted: Double?
-    @Published public private(set) var selectedCurrencyCode = "USD"
-    @Published public private(set) var selectedCurrencySymbol = "$"
-    @Published public private(set) var exchangeRatesAvailable = true
-    @Published public private(set) var menuBarDisplayText = "Loading..."
-    @Published public private(set) var lastErrorMessage: String?
-    @Published public private(set) var teamIdFetchFailed = false
-    @Published public private(set) var currentExchangeRates: [String: Double] = [:]
-    @Published public private(set) var latestInvoiceResponse: MonthlyInvoice?
+    @Published
+    public private(set) var isLoggedIn = false
+    @Published
+    public private(set) var userEmail: String?
+    @Published
+    public private(set) var teamName: String?
+    @Published
+    public private(set) var currentSpendingUSD: Double?
+    @Published
+    public private(set) var currentSpendingConverted: Double?
+    @Published
+    public private(set) var warningLimitConverted: Double?
+    @Published
+    public private(set) var upperLimitConverted: Double?
+    @Published
+    public private(set) var selectedCurrencyCode = "USD"
+    @Published
+    public private(set) var selectedCurrencySymbol = "$"
+    @Published
+    public private(set) var exchangeRatesAvailable = true
+    @Published
+    public private(set) var menuBarDisplayText = "Loading..."
+    @Published
+    public private(set) var lastErrorMessage: String?
+    @Published
+    public private(set) var teamIdFetchFailed = false
+    @Published
+    public private(set) var currentExchangeRates: [String: Double] = [:]
+    @Published
+    public private(set) var latestInvoiceResponse: MonthlyInvoice?
 
     // MARK: - Dependencies
 
@@ -80,8 +95,7 @@ public final class DataCoordinator: DataCoordinatorProtocol, ObservableObject {
                 settingsManager: settingsManager,
                 exchangeRateManager: ExchangeRateManager.shared,
                 apiClient: apiClient,
-                notificationManager: NotificationManager()
-            )
+                notificationManager: NotificationManager())
         }
 
     public static var shared: DataCoordinatorProtocol {
@@ -96,8 +110,7 @@ public final class DataCoordinator: DataCoordinatorProtocol, ObservableObject {
         settingsManager: any SettingsManagerProtocol,
         exchangeRateManager: ExchangeRateManagerProtocol,
         apiClient: CursorAPIClientProtocol,
-        notificationManager: NotificationManagerProtocol
-    ) {
+        notificationManager: NotificationManagerProtocol) {
         self.loginManager = loginManager
         self.settingsManager = settingsManager
         self.exchangeRateManager = exchangeRateManager
@@ -310,15 +323,15 @@ public final class DataCoordinator: DataCoordinatorProtocol, ObservableObject {
 
     private func updateMenuBarDisplay() {
         if !isLoggedIn {
-            menuBarDisplayText = "Login Required"
+            menuBarDisplayText = "" // Show only icon when logged out
         } else if teamIdFetchFailed {
-            menuBarDisplayText = "Team Error"
+            menuBarDisplayText = "Error"
         } else if let spending = currentSpendingConverted {
             menuBarDisplayText = "\(selectedCurrencySymbol)\(String(format: "%.2f", spending))"
         } else if let spendingUSD = currentSpendingUSD {
             menuBarDisplayText = "$\(String(format: "%.2f", spendingUSD))"
         } else {
-            menuBarDisplayText = "Loading..."
+            menuBarDisplayText = "..."
         }
     }
 }
@@ -362,13 +375,12 @@ extension DataCoordinator {
         let invoiceResponse = try await apiClient.fetchMonthlyInvoice(
             authToken: authToken,
             month: month,
-            year: year
-        )
+            year: year)
 
         currentSpendingUSD = Double(invoiceResponse.totalSpendingCents) / 100.0
         latestInvoiceResponse = invoiceResponse
 
-        logger.info("Fetched invoice: \(invoiceResponse.items.count) items, total $\(currentSpendingUSD ?? 0)")
+        logger.info("Fetched invoice: \(invoiceResponse.items.count) items, total $\(self.currentSpendingUSD ?? 0)")
     }
 
     private func refreshExchangeRates() async {
@@ -410,8 +422,7 @@ extension DataCoordinator {
                 spendingUSD,
                 from: "USD",
                 to: targetCurrency,
-                rates: rates
-            ) ?? spendingUSD
+                rates: rates) ?? spendingUSD
         }
 
         // Warning limit
@@ -420,8 +431,7 @@ extension DataCoordinator {
             warningUSD,
             from: "USD",
             to: targetCurrency,
-            rates: rates
-        ) ?? warningUSD
+            rates: rates) ?? warningUSD
 
         // Upper limit
         let upperUSD = settingsManager.upperLimitUSD
@@ -429,8 +439,7 @@ extension DataCoordinator {
             upperUSD,
             from: "USD",
             to: targetCurrency,
-            rates: rates
-        ) ?? upperUSD
+            rates: rates) ?? upperUSD
 
         updateMenuBarDisplay()
     }
@@ -446,36 +455,32 @@ extension DataCoordinator {
             limitType: .warning,
             currentSpendingUSD: spendingUSD,
             warningLimitUSD: warningLimitUSD,
-            upperLimitUSD: upperLimitUSD
-        )
+            upperLimitUSD: upperLimitUSD)
 
         await notificationManager.resetNotificationStateIfBelow(
             limitType: .upper,
             currentSpendingUSD: spendingUSD,
             warningLimitUSD: warningLimitUSD,
-            upperLimitUSD: upperLimitUSD
-        )
+            upperLimitUSD: upperLimitUSD)
 
         if spendingUSD >= warningLimitUSD {
             let displaySpending = exchangeRateManager.convert(
                 spendingUSD,
                 from: "USD",
                 to: displayCurrency,
-                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates
-            ) ?? spendingUSD
+                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates) ?? spendingUSD
 
             let displayWarningLimit = exchangeRateManager.convert(
                 warningLimitUSD,
                 from: "USD",
                 to: displayCurrency,
-                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates
-            ) ?? warningLimitUSD
+                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates) ??
+                warningLimitUSD
 
             await notificationManager.showWarningNotification(
                 currentSpending: displaySpending,
                 limitAmount: displayWarningLimit,
-                currencyCode: displayCurrency
-            )
+                currencyCode: displayCurrency)
         }
 
         if spendingUSD >= upperLimitUSD {
@@ -483,21 +488,19 @@ extension DataCoordinator {
                 spendingUSD,
                 from: "USD",
                 to: displayCurrency,
-                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates
-            ) ?? spendingUSD
+                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates) ?? spendingUSD
 
             let displayUpperLimit = exchangeRateManager.convert(
                 upperLimitUSD,
                 from: "USD",
                 to: displayCurrency,
-                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates
-            ) ?? upperLimitUSD
+                rates: exchangeRatesAvailable ? currentExchangeRates : exchangeRateManager.fallbackRates) ??
+                upperLimitUSD
 
             await notificationManager.showUpperLimitNotification(
                 currentSpending: displaySpending,
                 limitAmount: displayUpperLimit,
-                currencyCode: displayCurrency
-            )
+                currencyCode: displayCurrency)
         }
     }
 }

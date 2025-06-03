@@ -29,8 +29,7 @@ public final class MockURLSession: URLSessionProtocol, @unchecked Sendable {
                 userInfo: [
                     NSLocalizedDescriptionKey:
                         "MockURLSession requires a nextResponse to be set if no error is thrown.",
-                ]
-            )
+                ])
         }
 
         return (nextData ?? Data(), response)

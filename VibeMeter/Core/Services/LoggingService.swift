@@ -19,8 +19,7 @@ enum LogCategory: String {
 enum LoggingService {
     private static func getLogger(
         category: LogCategory,
-        subsystem: String = Bundle.main.bundleIdentifier ?? "com.vibemeter.default"
-    ) -> Logger {
+        subsystem: String = Bundle.main.bundleIdentifier ?? "com.vibemeter.default") -> Logger {
         Logger(subsystem: subsystem, category: category.rawValue)
     }
 
@@ -28,8 +27,7 @@ enum LoggingService {
         _ message: String,
         category: LogCategory = .general,
         level: OSLogType = .default,
-        error: Error? = nil
-    ) {
+        error: Error? = nil) {
         let logger = getLogger(category: category)
         var logMessage = message
         if let err = error {

@@ -12,8 +12,7 @@ final class SettingsWindowController: NSWindowController {
             contentRect: NSRect(x: 0, y: 0, width: 700, height: 500),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
-            defer: false
-        )
+            defer: false)
         window.center()
         window.setFrameAutosaveName("SettingsWindow")
         window.title = "VibeMeter Settings"
@@ -33,8 +32,7 @@ final class SettingsWindowController: NSWindowController {
     private func setupContentView() {
         let settingsView = SettingsView(
             settingsManager: SettingsManager.shared,
-            dataCoordinator: DataCoordinator.shared as! DataCoordinator
-        )
+            dataCoordinator: DataCoordinator.shared as! DataCoordinator)
 
         let hostingView = NSHostingView(rootView: settingsView)
         window?.contentView = hostingView

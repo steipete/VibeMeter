@@ -1,9 +1,3 @@
-//
-//  NSApplication+openSettings.swift
-//
-//  Created by Stephan Casas on 12/3/23.
-//
-
 import SwiftUI
 
 private let kAppMenuInternalIdentifier = "app"
@@ -14,10 +8,8 @@ extension NSApplication {
     func openSettings() {
         // macOS 14 Sonoma
         if let internalItemAction = NSApp.mainMenu?.item(
-            withInternalIdentifier: kAppMenuInternalIdentifier
-        )?.submenu?.item(
-            withLocalizedTitle: kSettingsLocalizedStringKey
-        )?.internalItemAction {
+            withInternalIdentifier: kAppMenuInternalIdentifier)?.submenu?.item(
+            withLocalizedTitle: kSettingsLocalizedStringKey)?.internalItemAction {
             internalItemAction()
             return
         }
@@ -46,8 +38,8 @@ extension NSMenuItem {
     /// An internal SwiftUI menu item identifier that should be a public property on `NSMenuItem`.
     var internalIdentifier: String? {
         guard let id = Mirror.firstChild(
-            withLabel: "id", in: self
-        )?.value else {
+            withLabel: "id", in: self)?.value
+        else {
             return nil
         }
 
@@ -58,8 +50,7 @@ extension NSMenuItem {
     var internalItemAction: (() -> Void)? {
         guard
             let platformItemAction = Mirror.firstChild(
-                withLabel: "platformItemAction", in: self
-            )?.value,
+                withLabel: "platformItemAction", in: self)?.value,
             let typeErasedCallback = Mirror.firstChild(
                 in: platformItemAction)?.value
         else {
@@ -67,8 +58,7 @@ extension NSMenuItem {
         }
 
         return Mirror.firstChild(
-            in: typeErasedCallback
-        )?.value as? () -> Void
+            in: typeErasedCallback)?.value as? () -> Void
     }
 }
 
@@ -88,8 +78,7 @@ extension NSMenu {
     func item(
         withLocalizedTitle localizedTitleKey: String,
         inTable tableName: String = "MenuCommands",
-        fromBundle bundlePath: String = "/System/Library/Frameworks/AppKit.framework"
-    ) -> NSMenuItem? {
+        fromBundle bundlePath: String = "/System/Library/Frameworks/AppKit.framework") -> NSMenuItem? {
         guard let localizationResource = Bundle(path: bundlePath) else {
             return nil
         }
@@ -98,8 +87,7 @@ extension NSMenu {
             localizedTitleKey,
             tableName: tableName,
             bundle: localizationResource,
-            comment: ""
-        ))
+            comment: ""))
     }
 }
 
@@ -123,8 +111,7 @@ private extension Mirror {
 
     /// The first child of the given subject whose label matches the given string.
     static func firstChild(
-        withLabel label: String, in subject: Any
-    ) -> Child? {
+        withLabel label: String, in subject: Any) -> Child? {
         Mirror(reflecting: subject).firstChild(withLabel: label)
     }
 }

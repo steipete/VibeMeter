@@ -45,8 +45,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
         // Check cache validity
         if let lastFetch = lastFetchDate,
            !cachedRates.isEmpty,
-           Date().timeIntervalSince(lastFetch) < cacheValidityDuration
-        {
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration {
             logger.debug("Returning cached exchange rates")
             return cachedRates
         }
@@ -68,8 +67,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
         _ amount: Double,
         from sourceCurrency: String,
         to targetCurrency: String,
-        rates: [String: Double]
-    ) -> Double? {
+        rates: [String: Double]) -> Double? {
         // Same currency - no conversion needed
         if sourceCurrency == targetCurrency {
             return amount
@@ -89,8 +87,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
         if let sourceRate = rates[sourceCurrency],
            let targetRate = rates[targetCurrency],
            sourceRate > 0,
-           targetRate > 0
-        {
+           targetRate > 0 {
             let amountInUSD = amount / sourceRate
             return amountInUSD * targetRate
         }
@@ -118,7 +115,9 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
         var components = URLComponents(url: apiURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "base", value: baseCurrency),
-            URLQueryItem(name: "symbols", value: supportedCurrencies.filter { $0 != baseCurrency }.joined(separator: ",")),
+            URLQueryItem(
+                name: "symbols",
+                value: supportedCurrencies.filter { $0 != baseCurrency }.joined(separator: ",")),
         ]
 
         guard let url = components.url else {
@@ -147,17 +146,17 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
 
     public static func getSymbol(for currencyCode: String) -> String {
         switch currencyCode {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY": return "¥"
-        case "AUD": return "A$"
-        case "CAD": return "C$"
-        case "CHF": return "CHF"
-        case "CNY": return "¥"
-        case "SEK": return "kr"
-        case "NZD": return "NZ$"
-        default: return currencyCode
+        case "USD": "$"
+        case "EUR": "€"
+        case "GBP": "£"
+        case "JPY": "¥"
+        case "AUD": "A$"
+        case "CAD": "C$"
+        case "CHF": "CHF"
+        case "CNY": "¥"
+        case "SEK": "kr"
+        case "NZD": "NZ$"
+        default: currencyCode
         }
     }
 }
@@ -178,11 +177,11 @@ enum ExchangeRateError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid API URL"
+            "Invalid API URL"
         case .invalidResponse:
-            return "Invalid response from exchange rate API"
+            "Invalid response from exchange rate API"
         case let .httpError(statusCode):
-            return "HTTP error: \(statusCode)"
+            "HTTP error: \(statusCode)"
         }
     }
 }

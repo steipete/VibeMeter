@@ -22,8 +22,7 @@ public actor CursorAPIClient: CursorAPIClientProtocol {
 
     public init(
         urlSession: URLSessionProtocol = URLSession.shared,
-        settingsManager: any SettingsManagerProtocol
-    ) {
+        settingsManager: any SettingsManagerProtocol) {
         self.urlSession = urlSession
         self.settingsManager = settingsManager
     }
@@ -82,8 +81,7 @@ public actor CursorAPIClient: CursorAPIClientProtocol {
 
         return MonthlyInvoice(
             items: response.items ?? [],
-            pricingDescription: response.pricingDescription
-        )
+            pricingDescription: response.pricingDescription)
     }
 
     // MARK: - Private Helpers
@@ -112,8 +110,7 @@ public actor CursorAPIClient: CursorAPIClientProtocol {
                     logger.error("Decoding error: \(error.localizedDescription)")
                     throw CursorAPIError.decodingError(
                         message: error.localizedDescription,
-                        statusCode: httpResponse.statusCode
-                    )
+                        statusCode: httpResponse.statusCode)
                 }
 
             case 401:
@@ -125,8 +122,7 @@ public actor CursorAPIClient: CursorAPIClientProtocol {
                 logger.error("API error \(httpResponse.statusCode): \(message)")
                 throw CursorAPIError.networkError(
                     message: message,
-                    statusCode: httpResponse.statusCode
-                )
+                    statusCode: httpResponse.statusCode)
             }
         } catch let error as CursorAPIError {
             throw error

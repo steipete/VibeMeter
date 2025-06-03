@@ -3,6 +3,9 @@ disabled_rules:
   - identifier_name # Allow shorter names like 'ui' and test functions with underscores
   - force_cast # Allow force casts in tests
   - force_try # Allow force try in tests
+  - redundant_optional_initialization # Swift 6 sometimes requires explicit nil initialization
+  - explicit_self # Let SwiftFormat handle self usage consistently
+  - opening_brace # Let SwiftFormat handle brace formatting to avoid conflicts
 
 opt_in_rules:
   - empty_count

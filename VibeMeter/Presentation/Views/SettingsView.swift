@@ -3,51 +3,65 @@ import SwiftUI
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    @ObservedObject var settingsManager: SettingsManager
-    @ObservedObject var dataCoordinator: DataCoordinator
+    @ObservedObject
+    var settingsManager: SettingsManager
+    @ObservedObject
+    var dataCoordinator: DataCoordinator
 
-    @State private var selectedTab = SettingsTab.general
-    @State private var warningLimitInput = ""
-    @State private var upperLimitInput = ""
-    @State private var limitInputCurrencySymbol = "$"
-    @State private var limitInputCurrencyCode = "USD"
+    @State
+    private var selectedTab = SettingsTab.general
+    @State
+    private var warningLimitInput = ""
+    @State
+    private var upperLimitInput = ""
+    @State
+    private var limitInputCurrencySymbol = "$"
+    @State
+    private var limitInputCurrencyCode = "USD"
 
     private let exchangeRateManager = ExchangeRateManager.shared
 
     var body: some View {
-        HSplitView {
-            // Sidebar
-            SettingsSidebar(selectedTab: $selectedTab)
-                .frame(width: 180)
-
-            // Content
-            Group {
-                switch selectedTab {
-                case .general:
-                    GeneralSettingsView(
-                        settingsManager: settingsManager,
-                        dataCoordinator: dataCoordinator
-                    )
-                case .account:
-                    AccountSettingsView(dataCoordinator: dataCoordinator)
-                case .limits:
-                    LimitsSettingsView(
-                        settingsManager: settingsManager,
-                        dataCoordinator: dataCoordinator,
-                        warningLimitInput: $warningLimitInput,
-                        upperLimitInput: $upperLimitInput,
-                        limitInputCurrencySymbol: $limitInputCurrencySymbol,
-                        limitInputCurrencyCode: $limitInputCurrencyCode
-                    )
-                case .advanced:
-                    AdvancedSettingsView()
-                case .about:
-                    AboutView()
+        TabView(selection: $selectedTab) {
+            GeneralSettingsView(
+                settingsManager: settingsManager,
+                dataCoordinator: dataCoordinator)
+                .tabItem {
+                    Label("General", systemImage: "gear")
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag(SettingsTab.general)
+
+            AccountSettingsView(dataCoordinator: dataCoordinator)
+                .tabItem {
+                    Label("Account", systemImage: "person.circle")
+                }
+                .tag(SettingsTab.account)
+
+            LimitsSettingsView(
+                settingsManager: settingsManager,
+                dataCoordinator: dataCoordinator,
+                warningLimitInput: $warningLimitInput,
+                upperLimitInput: $upperLimitInput,
+                limitInputCurrencySymbol: $limitInputCurrencySymbol,
+                limitInputCurrencyCode: $limitInputCurrencyCode)
+                .tabItem {
+                    Label("Limits", systemImage: "exclamationmark.triangle")
+                }
+                .tag(SettingsTab.limits)
+
+            AdvancedSettingsView()
+                .tabItem {
+                    Label("Advanced", systemImage: "gearshape.2")
+                }
+                .tag(SettingsTab.advanced)
+
+            AboutView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
+                .tag(SettingsTab.about)
         }
-        .frame(width: 700, height: 500)
+        .frame(width: 600, height: 450)
         .onAppear {
             updateLimitInputFieldsAndCurrency()
         }
@@ -82,8 +96,7 @@ struct SettingsView: View {
             warningUSD,
             from: "USD",
             to: limitInputCurrencyCode,
-            rates: currentRates
-        ) {
+            rates: currentRates) {
             warningLimitInput = String(format: "%.2f", convertedWarning)
         } else {
             warningLimitInput = String(format: "%.2f", warningUSD)
@@ -95,8 +108,7 @@ struct SettingsView: View {
             upperUSD,
             from: "USD",
             to: limitInputCurrencyCode,
-            rates: currentRates
-        ) {
+            rates: currentRates) {
             upperLimitInput = String(format: "%.2f", convertedUpper)
         } else {
             upperLimitInput = String(format: "%.2f", upperUSD)
@@ -112,8 +124,7 @@ struct SettingsView: View {
                 warningValue,
                 from: sourceCurrencyForInput,
                 to: "USD",
-                rates: currentRates
-            ) {
+                rates: currentRates) {
                 settingsManager.warningLimitUSD = warningUSD
             } else if sourceCurrencyForInput == "USD" {
                 settingsManager.warningLimitUSD = warningValue
@@ -125,8 +136,7 @@ struct SettingsView: View {
                 upperValue,
                 from: sourceCurrencyForInput,
                 to: "USD",
-                rates: currentRates
-            ) {
+                rates: currentRates) {
                 settingsManager.upperLimitUSD = upperUSD
             } else if sourceCurrencyForInput == "USD" {
                 settingsManager.upperLimitUSD = upperValue
@@ -146,37 +156,24 @@ enum SettingsTab: String, CaseIterable {
 
     var icon: String {
         switch self {
-        case .general: return "gear"
-        case .account: return "person.circle"
-        case .limits: return "exclamationmark.triangle"
-        case .advanced: return "gearshape.2"
-        case .about: return "info.circle"
+        case .general: "gear"
+        case .account: "person.circle"
+        case .limits: "exclamationmark.triangle"
+        case .advanced: "gearshape.2"
+        case .about: "info.circle"
         }
-    }
-}
-
-// MARK: - Sidebar View
-
-struct SettingsSidebar: View {
-    @Binding var selectedTab: SettingsTab
-
-    var body: some View {
-        List(SettingsTab.allCases, id: \.self, selection: $selectedTab) { tab in
-            Label(tab.rawValue, systemImage: tab.icon)
-                .tag(tab)
-        }
-        .listStyle(.sidebar)
-        .scrollContentBackground(.hidden)
-        .background(.regularMaterial)
     }
 }
 
 // MARK: - General Settings
 
 struct GeneralSettingsView: View {
-    @ObservedObject var settingsManager: SettingsManager
-    @ObservedObject var dataCoordinator: DataCoordinator
-    @State private var launchAtLogin = false
+    @ObservedObject
+    var settingsManager: SettingsManager
+    @ObservedObject
+    var dataCoordinator: DataCoordinator
+    @State
+    private var launchAtLogin = false
 
     var body: some View {
         Form {
@@ -214,8 +211,7 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color(NSColor.windowBackgroundColor))
+        .padding()
         .onAppear {
             launchAtLogin = settingsManager.launchAtLoginEnabled
         }
@@ -225,7 +221,8 @@ struct GeneralSettingsView: View {
 // MARK: - Account Settings
 
 struct AccountSettingsView: View {
-    @ObservedObject var dataCoordinator: DataCoordinator
+    @ObservedObject
+    var dataCoordinator: DataCoordinator
 
     var body: some View {
         VStack(spacing: 20) {
@@ -290,19 +287,24 @@ struct AccountSettingsView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(NSColor.windowBackgroundColor))
     }
 }
 
 // MARK: - Limits Settings
 
 struct LimitsSettingsView: View {
-    @ObservedObject var settingsManager: SettingsManager
-    @ObservedObject var dataCoordinator: DataCoordinator
-    @Binding var warningLimitInput: String
-    @Binding var upperLimitInput: String
-    @Binding var limitInputCurrencySymbol: String
-    @Binding var limitInputCurrencyCode: String
+    @ObservedObject
+    var settingsManager: SettingsManager
+    @ObservedObject
+    var dataCoordinator: DataCoordinator
+    @Binding
+    var warningLimitInput: String
+    @Binding
+    var upperLimitInput: String
+    @Binding
+    var limitInputCurrencySymbol: String
+    @Binding
+    var limitInputCurrencyCode: String
 
     var body: some View {
         Form {
@@ -352,7 +354,9 @@ struct LimitsSettingsView: View {
             // Info messages
             VStack(alignment: .leading, spacing: 8) {
                 if limitInputCurrencyCode != "USD" {
-                    Label("Amounts are displayed in \(limitInputCurrencyCode) but stored in USD", systemImage: "info.circle.fill")
+                    Label(
+                        "Amounts are displayed in \(limitInputCurrencyCode) but stored in USD",
+                        systemImage: "info.circle.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -371,8 +375,7 @@ struct LimitsSettingsView: View {
             .buttonStyle(.link)
         }
         .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color(NSColor.windowBackgroundColor))
+        .padding()
     }
 }
 
@@ -385,8 +388,7 @@ struct AdvancedSettingsView: View {
                 LabeledContent {
                     Button("Check Now") {
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
-                           let sparkleManager = appDelegate.sparkleUpdaterManager
-                        {
+                           let sparkleManager = appDelegate.sparkleUpdaterManager {
                             sparkleManager.updaterController.checkForUpdates(nil)
                         }
                     }
@@ -402,8 +404,7 @@ struct AdvancedSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color(NSColor.windowBackgroundColor))
+        .padding()
     }
 
     private var isDebugBuild: Bool {
@@ -465,6 +466,6 @@ struct AboutView: View {
                 .padding(.bottom, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(NSColor.windowBackgroundColor))
+        .padding()
     }
 }

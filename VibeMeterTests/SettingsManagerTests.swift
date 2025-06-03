@@ -133,7 +133,9 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
     func testTeamIdIsNilWhenNotSet() {
         // Ensure that a fresh SettingsManager (with cleared UserDefaults) reports nil for teamId
         let mockStartupManager = StartupManagerMock()
-        let freshManager = SettingsManager(userDefaults: testUserDefaults, startupManager: mockStartupManager) // testUserDefaults is empty here
+        let freshManager = SettingsManager(
+            userDefaults: testUserDefaults,
+            startupManager: mockStartupManager) // testUserDefaults is empty here
         XCTAssertNil(freshManager.teamId, "Team ID should be nil if not set in UserDefaults.")
     }
 
@@ -205,7 +207,9 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         let copiedDefaults = UserDefaults(suiteName: existingSuiteName)!
         // Initialize SettingsManager with these pre-populated UserDefaults
         let mockStartupManager = StartupManagerMock()
-        let managerWithExistingValues = SettingsManager(userDefaults: copiedDefaults, startupManager: mockStartupManager)
+        let managerWithExistingValues = SettingsManager(
+            userDefaults: copiedDefaults,
+            startupManager: mockStartupManager)
 
         XCTAssertEqual(managerWithExistingValues.selectedCurrencyCode, "EUR")
         XCTAssertEqual(managerWithExistingValues.warningLimitUSD, 150.0)

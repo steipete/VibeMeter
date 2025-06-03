@@ -39,16 +39,14 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
                 keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() }
-            )
+                webViewFactory: { MockWebView() })
             // 3. Initialize DataCoordinator with all mocks
             dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
                 settingsManager: mockSettingsManager,
                 exchangeRateManager: mockExchangeRateManager,
                 apiClient: mockApiClient,
-                notificationManager: mockNotificationManager
-            )
+                notificationManager: mockNotificationManager)
             // Reset mocks to a clean state before each test
             mockSettingsManager.selectedCurrencyCode = "USD"
             mockSettingsManager.warningLimitUSD = 200.0
@@ -88,8 +86,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             items: [
                 InvoiceItem(cents: 10000, description: "Mock Pro Usage for test"),
             ],
-            pricingDescription: nil
-        )
+            pricingDescription: nil)
 
         mockSettingsManager.warningLimitUSD = 50.0
         mockSettingsManager.upperLimitUSD = 150.0
@@ -126,8 +123,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             items: [
                 InvoiceItem(cents: 12000, description: "Mock Pro Usage for exchange test"),
             ],
-            pricingDescription: nil
-        )
+            pricingDescription: nil)
 
         mockSettingsManager.warningLimitUSD = 80.0
         mockSettingsManager.selectedCurrencyCode = "EUR"

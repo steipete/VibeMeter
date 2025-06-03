@@ -16,8 +16,7 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
             InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
             InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
         ],
-        pricingDescription: nil
-    )
+        pricingDescription: nil)
 
     // MARK: - Controllable Errors
 
@@ -94,8 +93,7 @@ final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
                 InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
                 InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
             ],
-            pricingDescription: nil
-        )
+            pricingDescription: nil)
 
         teamInfoError = nil
         userInfoError = nil

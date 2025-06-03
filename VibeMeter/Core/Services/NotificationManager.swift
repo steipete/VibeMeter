@@ -13,8 +13,7 @@ public protocol NotificationManagerProtocol: Sendable {
         limitType: NotificationLimitType,
         currentSpendingUSD: Double,
         warningLimitUSD: Double,
-        upperLimitUSD: Double
-    ) async
+        upperLimitUSD: Double) async
     func resetAllNotificationStatesForNewSession() async
 }
 
@@ -80,8 +79,7 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         let request = UNNotificationRequest(
             identifier: "warning_\(Date().timeIntervalSince1970)",
             content: content,
-            trigger: nil
-        )
+            trigger: nil)
         await scheduleNotification(request: request)
         warningNotificationShown = true
 
@@ -108,8 +106,7 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         let request = UNNotificationRequest(
             identifier: "upper_\(Date().timeIntervalSince1970)",
             content: content,
-            trigger: nil
-        )
+            trigger: nil)
         await scheduleNotification(request: request)
         upperLimitNotificationShown = true
 
@@ -120,16 +117,15 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         limitType: NotificationLimitType,
         currentSpendingUSD: Double,
         warningLimitUSD: Double,
-        upperLimitUSD: Double
-    ) async {
+        upperLimitUSD: Double) async {
         switch limitType {
         case .warning:
-            if currentSpendingUSD < warningLimitUSD && warningNotificationShown {
+            if currentSpendingUSD < warningLimitUSD, warningNotificationShown {
                 warningNotificationShown = false
                 logger.info("Reset warning notification state - spending below limit")
             }
         case .upper:
-            if currentSpendingUSD < upperLimitUSD && upperLimitNotificationShown {
+            if currentSpendingUSD < upperLimitUSD, upperLimitNotificationShown {
                 upperLimitNotificationShown = false
                 logger.info("Reset upper limit notification state - spending below limit")
             }
@@ -149,15 +145,13 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
             identifier: "SPENDING_WARNING",
             actions: [],
             intentIdentifiers: [],
-            options: []
-        )
+            options: [])
 
         let criticalCategory = UNNotificationCategory(
             identifier: "SPENDING_CRITICAL",
             actions: [],
             intentIdentifiers: [],
-            options: [.customDismissAction]
-        )
+            options: [.customDismissAction])
 
         UNUserNotificationCenter.current().setNotificationCategories([warningCategory, criticalCategory])
     }
@@ -177,16 +171,14 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
 extension NotificationManager: UNUserNotificationCenterDelegate {
     public nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
-        willPresent _: UNNotification
-    ) async -> UNNotificationPresentationOptions {
+        willPresent _: UNNotification) async -> UNNotificationPresentationOptions {
         // Show notifications even when app is in foreground
-        return [.banner, .sound, .badge]
+        [.banner, .sound, .badge]
     }
 
     public nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
+        didReceive response: UNNotificationResponse) async {
         let logger = Logger(subsystem: "com.vibemeter", category: "Notifications")
         logger.info("User interacted with notification: \(response.notification.request.identifier)")
 

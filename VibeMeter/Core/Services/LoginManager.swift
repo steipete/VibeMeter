@@ -35,8 +35,7 @@ class LoginManager: NSObject {
         settingsManager: SettingsManager = .shared,
         apiClient: CursorAPIClientProtocol, // apiClient usually not .shared if it depends on session token
         keychainService: KeychainServicing = KeychainHelper.shared,
-        webViewFactory: @escaping @MainActor () -> WebViewContract = LoginManager.createProductionWebView
-    ) {
+        webViewFactory: @escaping @MainActor () -> WebViewContract = LoginManager.createProductionWebView) {
         self.settingsManager = settingsManager
         self.apiClient = apiClient
         self.keychainService = keychainService
@@ -76,13 +75,11 @@ class LoginManager: NSObject {
         guard let viewForWindow = webView?.view else {
             LoggingService.critical(
                 "WebView from factory does not provide a view. Cannot show login window.",
-                category: .login
-            )
+                category: .login)
             onLoginFailure?(NSError(
                 domain: "LoginManager",
                 code: 3,
-                userInfo: [NSLocalizedDescriptionKey: "WebView setup error."]
-            ))
+                userInfo: [NSLocalizedDescriptionKey: "WebView setup error."]))
             return
         }
 
@@ -130,8 +127,7 @@ class LoginManager: NSObject {
         onLoginFailure?(NSError(
             domain: "LoginManager",
             code: 0,
-            userInfo: [NSLocalizedDescriptionKey: "User logged out."]
-        ))
+            userInfo: [NSLocalizedDescriptionKey: "User logged out."]))
     }
 
     @MainActor
@@ -147,8 +143,7 @@ class LoginManager: NSObject {
             onLoginFailure?(NSError(
                 domain: "LoginManager",
                 code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to save token."]
-            ))
+                userInfo: [NSLocalizedDescriptionKey: "Failed to save token."]))
         }
     }
 }
@@ -179,8 +174,7 @@ extension LoginManager: WKNavigationDelegate {
         let urlString = currentWebView.url?.absoluteString ?? "unknown URL"
         LoggingService.debug(
             "LoginManager (as WKNavigationDelegate) - didCommit navigation to: \(urlString)",
-            category: .login
-        )
+            category: .login)
 
         // Check for the session cookie on every URL change
         checkForSessionCookie()
@@ -196,8 +190,7 @@ extension LoginManager: WKNavigationDelegate {
         let urlString = currentWebView.url?.absoluteString ?? "unknown URL"
         LoggingService.debug(
             "LoginManager (as WKNavigationDelegate) - didFinish navigation to: \(urlString)",
-            category: .login
-        )
+            category: .login)
 
         // Check for the session cookie on every URL change, not just callback URLs
         checkForSessionCookie()
@@ -223,8 +216,7 @@ extension LoginManager: WKNavigationDelegate {
                 LoggingService.debug(
                     "Session cookie not yet available. Available cookies: " +
                         "\(cookies.map { "\($0.name)@\($0.domain)" }.joined(separator: ", "))",
-                    category: .login
-                )
+                    category: .login)
             }
         }
     }
@@ -233,8 +225,7 @@ extension LoginManager: WKNavigationDelegate {
     func webView(_: WKWebView, didFail _: WKNavigation!, withError error: Error) {
         LoggingService.error(
             "LoginManager (as WKNavigationDelegate) - navigation failed: \(error.localizedDescription)",
-            category: .login
-        )
+            category: .login)
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
             LoggingService.info("Navigation was cancelled.", category: .login)
@@ -248,12 +239,10 @@ extension LoginManager: WKNavigationDelegate {
     func webView(
         _: WKWebView,
         didFailProvisionalNavigation _: WKNavigation!,
-        withError error: Error
-    ) {
+        withError error: Error) {
         LoggingService.error(
             "LoginManager (as WKNavigationDelegate) - provisional navigation failed: \(error.localizedDescription)",
-            category: .login
-        )
+            category: .login)
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
             LoggingService.info("Provisional navigation was cancelled.", category: .login)

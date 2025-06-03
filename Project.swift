@@ -5,11 +5,12 @@ let project = Project(
     organizationName: "Peter Steinberger",
     options: .options(
         defaultKnownRegions: ["en"],
-        developmentRegion: "en"
-    ),
+        developmentRegion: "en"),
     packages: [
         .remote(url: "https://github.com/apple/swift-log.git", requirement: .upToNextMajor(from: "1.6.1")),
-        .remote(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", requirement: .upToNextMajor(from: "4.0.0")),
+        .remote(
+            url: "https://github.com/kishikawakatsumi/KeychainAccess.git",
+            requirement: .upToNextMajor(from: "4.0.0")),
         .remote(url: "https://github.com/sparkle-project/Sparkle.git", requirement: .upToNextMajor(from: "2.0.0")),
     ],
     settings: .settings(
@@ -48,8 +49,7 @@ let project = Project(
                     "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["DEBUG"],
                     "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
                 ],
-                xcconfig: nil
-            ),
+                xcconfig: nil),
             .release(
                 name: "Release",
                 settings: [
@@ -58,10 +58,8 @@ let project = Project(
                     "DEVELOPMENT_TEAM": "Y5PE65HELJ",
                     "SWIFT_OPTIMIZATION_LEVEL": "-O",
                 ],
-                xcconfig: nil
-            ),
-        ]
-    ),
+                xcconfig: nil),
+        ]),
     targets: [
         .target(
             name: "VibeMeter",
@@ -107,9 +105,7 @@ let project = Project(
                         "-strict-concurrency=complete",
                         "-enable-actor-data-race-checks",
                     ],
-                ]
-            )
-        ),
+                ])),
         .target(
             name: "VibeMeterTests",
             destinations: .macOS,
@@ -126,8 +122,5 @@ let project = Project(
                     "OTHER_SWIFT_FLAGS": [
                         "-strict-concurrency=complete",
                     ],
-                ]
-            )
-        ),
-    ]
-)
+                ])),
+    ])

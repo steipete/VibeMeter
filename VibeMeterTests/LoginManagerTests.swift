@@ -44,8 +44,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
                 settingsManager: mockSettingsManager,
                 apiClient: mockApiClient,
                 keychainService: mockKeychainService,
-                webViewFactory: mockWebViewFactory
-            )
+                webViewFactory: mockWebViewFactory)
         }
     }
 
@@ -73,8 +72,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(
             mockWebView.loadRequestCalledWith?.url,
             URL(string: "https://authenticator.cursor.sh/"),
-            "Should load the authenticator URL."
-        )
+            "Should load the authenticator URL.")
     }
 
     func testLogoutClearsTokenAndSessionData() {

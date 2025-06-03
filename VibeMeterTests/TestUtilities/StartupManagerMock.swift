@@ -18,8 +18,7 @@ class StartupManagerMock: StartupManagerProtocol {
     var isLaunchAtLoginEnabled: Bool {
         LoggingService.debug(
             "[StartupManagerMock] isLaunchAtLoginEnabled returning: \(launchAtLoginEnabledValue)",
-            category: .general
-        )
+            category: .general)
         return launchAtLoginEnabledValue
     }
 

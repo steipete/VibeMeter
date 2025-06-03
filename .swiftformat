@@ -1,0 +1,45 @@
+# SwiftFormat configuration for VibeMeter
+# This configuration aligns with SwiftLint rules to avoid conflicts
+
+# Disable redundantSelf rule to be compatible with Swift 6 strict concurrency
+# where self. is often required for @MainActor isolated code
+--disable redundantSelf
+
+# Enable explicit self in init to be consistent with Swift 6 patterns
+--self init-only
+
+# Set Swift version for proper parsing
+--swiftversion 6.0
+
+# File header
+--header strip
+
+# Indentation
+--indent 4
+--tabwidth 4
+--smarttabs enabled
+
+# Line length (match SwiftLint)
+--maxwidth 120
+
+# Trailing commas (match SwiftLint disabled rule)
+--commas always
+
+# Other formatting rules
+--trimwhitespace always
+--insertlines enabled
+--removelines enabled
+--allman false
+--wraparguments preserve
+--wrapcollections preserve
+--closingparen same-line
+--funcattributes prev-line
+--typeattributes prev-line
+--storedvarattrs prev-line
+--computedvarattrs prev-line
+
+# Disable conflicting brace rules that fight with SwiftLint
+--disable wrapMultilineStatementBraces
+
+# Exclude build directories and generated files
+--exclude Derived,build,VibeMeter.xcodeproj,VibeMeter.xcworkspace

@@ -39,16 +39,14 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
                 keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() }
-            )
+                webViewFactory: { MockWebView() })
             // 3. Initialize DataCoordinator with all mocks
             dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
                 settingsManager: mockSettingsManager,
                 exchangeRateManager: mockExchangeRateManager,
                 apiClient: mockApiClient,
-                notificationManager: mockNotificationManager
-            )
+                notificationManager: mockNotificationManager)
             // Reset mocks to a clean state before each test
             mockSettingsManager.selectedCurrencyCode = "USD"
             mockSettingsManager.warningLimitUSD = 200.0
@@ -82,14 +80,16 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
 
     func testInitialState_WhenLoggedOut() {
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out initially")
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required", "Menu bar text should show 'Login Required' when logged out")
+        XCTAssertEqual(
+            dataCoordinator.menuBarDisplayText,
+            "",
+            "Menu bar text should be empty when logged out")
         XCTAssertNil(dataCoordinator.userEmail)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
         XCTAssertNil(dataCoordinator.teamName)
         XCTAssertTrue(
             dataCoordinator.exchangeRatesAvailable,
-            "Exchange rates should be assumed available initially or use fallback."
-        )
+            "Exchange rates should be assumed available initially or use fallback.")
     }
 
     func testInitialState_WhenLoggedIn_StartsDataRefresh() async {
@@ -102,8 +102,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
             settingsManager: mockSettingsManager,
             apiClient: apiClientForLoginManager,
             keychainService: keychainMock,
-            webViewFactory: { MockWebView() }
-        )
+            webViewFactory: { MockWebView() })
 
         // Expect API calls during init if logged in
         mockApiClient.teamInfoToReturn = TeamInfo(id: 1, name: "InitTeam")
@@ -113,16 +112,14 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
             settingsManager: mockSettingsManager,
             exchangeRateManager: mockExchangeRateManager,
             apiClient: mockApiClient,
-            notificationManager: mockNotificationManager
-        )
+            notificationManager: mockNotificationManager)
 
         // Wait a bit for async operations in init to complete
         try? await Task.sleep(nanoseconds: 500_000_000)
 
         XCTAssertTrue(
             mockApiClient.fetchTeamInfoCallCount > 0,
-            "fetchTeamInfo should be called if logged in on init"
-        )
+            "fetchTeamInfo should be called if logged in on init")
         XCTAssertTrue(mockApiClient.fetchUserInfoCallCount > 0, "fetchUserInfo should be called")
         XCTAssertTrue(mockApiClient.fetchMonthlyInvoiceCallCount > 0, "fetchMonthlyInvoice should be called")
         XCTAssertEqual(mockSettingsManager.teamName, "InitTeam")
@@ -140,7 +137,9 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         // Configure mocks for successful login and data fetch
         mockApiClient.teamInfoToReturn = TeamInfo(id: 789, name: "LoginSuccessTeam")
         mockApiClient.userInfoToReturn = UserInfo(email: "success@example.com", teamId: nil)
-        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(items: [InvoiceItem(cents: 12345, description: "usage")], pricingDescription: nil)
+        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [InvoiceItem(cents: 12345, description: "usage")],
+            pricingDescription: nil)
         mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.9]
         mockSettingsManager.selectedCurrencyCode = "EUR"
 
@@ -185,7 +184,9 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         _ = keychainMockForLoginManager.saveToken("test-token")
         mockApiClient.teamInfoToReturn = TeamInfo(id: 1, name: "Test Team")
         mockApiClient.userInfoToReturn = UserInfo(email: "test@example.com", teamId: nil)
-        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(items: [InvoiceItem(cents: 1000, description: "usage")], pricingDescription: nil)
+        mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [InvoiceItem(cents: 1000, description: "usage")],
+            pricingDescription: nil)
 
         mockLoginManager.onLoginSuccess?()
 
@@ -204,7 +205,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         XCTAssertNil(dataCoordinator.teamName)
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Login Required")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "")
         XCTAssertTrue(mockSettingsManager.teamId == nil, "TeamID should be cleared in UserDefaults by SettingsManager")
         XCTAssertTrue(mockNotificationManager.resetAllNotificationStatesCalled)
     }

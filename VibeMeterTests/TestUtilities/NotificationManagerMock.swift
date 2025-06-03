@@ -46,8 +46,7 @@ final class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sen
         limitType: NotificationLimitType,
         currentSpendingUSD: Double,
         warningLimitUSD: Double,
-        upperLimitUSD: Double
-    ) async {
+        upperLimitUSD: Double) async {
         resetNotificationStateIfBelowCalled = true
         lastResetLimitType = limitType
         lastResetCurrentSpendingUSD = currentSpendingUSD

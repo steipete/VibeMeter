@@ -25,7 +25,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         super.init()
 
         // Skip Sparkle initialization in test environment to avoid dialogs
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
             Self.staticLogger.info("SparkleUpdaterManager initialized in test mode - Sparkle disabled")
             return
         }
@@ -34,14 +34,15 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         #if DEBUG
             Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - Sparkle disabled")
             return
+        #else
+            // Accessing the lazy var here will trigger its initialization.
+            _ = updaterController
+            Self.staticLogger
+                .info("SparkleUpdaterManager initialized. Updater controller lazy initialization triggered.")
+
+            // Schedule startup update check
+            scheduleStartupUpdateCheck()
         #endif
-
-        // Accessing the lazy var here will trigger its initialization.
-        _ = updaterController
-        Self.staticLogger.info("SparkleUpdaterManager initialized. Updater controller lazy initialization triggered.")
-
-        // Schedule startup update check
-        scheduleStartupUpdateCheck()
     }
 
     // MARK: Public
@@ -51,14 +52,14 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         let controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
-            userDriverDelegate: self
-        )
+            userDriverDelegate: self)
 
         // Enable automatic update checks
         controller.updater.automaticallyChecksForUpdates = true
         Self.staticLogger.info("Automatic update checks enabled")
 
-        Self.staticLogger.info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
+        Self.staticLogger
+            .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
         return controller
     }() // The () here executes the closure and assigns the result to updaterController
 
@@ -88,8 +89,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             if error.domain == "SUSparkleErrorDomain",
                error.code == 2001 || // SUAppcastError
                error.code == 2002 || // SUAppcastParseError
-               error.code == 2000
-            { // SUInvalidFeedURLError
+               error.code == 2000 { // SUInvalidFeedURLError
                 Self.staticLogger.warning("Appcast error (missing or invalid feed): \(error.localizedDescription)")
                 // Suppress the error dialog - we'll handle this silently
                 return
