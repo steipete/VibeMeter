@@ -7,6 +7,11 @@ import SwiftUI
 /// with proper hover states and animations.
 
 /// Glass-effect button style with subtle transparency and optional destructive styling.
+/// Glass-styled button with translucent background and subtle hover effects.
+///
+/// This button style provides a modern glass-morphism appearance with a blurred
+/// background material and smooth hover animations. It's the standard button
+/// style used throughout the application for secondary actions.
 struct GlassButtonStyle: ButtonStyle {
     let isDestructive: Bool
 
@@ -30,6 +35,11 @@ struct GlassButtonStyle: ButtonStyle {
 }
 
 /// Prominent button style with gradient background for primary actions.
+/// Prominent glass-styled button with stronger visual emphasis.
+///
+/// A variant of the glass button style with increased opacity and stronger
+/// hover effects, used for primary actions that need to stand out in the UI.
+/// Features enhanced hover states and more prominent visual feedback.
 struct ProminentGlassButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -51,6 +61,11 @@ struct ProminentGlassButtonStyle: ButtonStyle {
 }
 
 /// Icon button style with circular hover effect and optional destructive styling.
+/// Minimalist icon button style with subtle interaction states.
+///
+/// Designed for icon-only buttons, this style provides a clean appearance
+/// with minimal visual weight. Features subtle opacity changes on hover
+/// and press states for clear interaction feedback without overwhelming the UI.
 struct IconButtonStyle: ButtonStyle {
     let isDestructive: Bool
     @State
