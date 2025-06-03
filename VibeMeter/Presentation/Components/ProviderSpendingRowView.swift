@@ -220,6 +220,8 @@ private extension ServiceProvider {
 // MARK: - Preview
 
 #Preview("Provider Spending Row - With Data") {
+    @Previewable @State var selectedProvider: ServiceProvider?
+    
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
 
@@ -246,9 +248,6 @@ private extension ServiceProvider {
             startOfMonth: Date(),
             provider: .cursor))
 
-    @State
-    var selectedProvider: ServiceProvider?
-
     return VStack(spacing: 16) {
         ProviderSpendingRowView(
             provider: .cursor,
@@ -267,11 +266,10 @@ private extension ServiceProvider {
 }
 
 #Preview("Provider Spending Row - Loading") {
+    @Previewable @State var selectedProvider: ServiceProvider?
+    
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
-
-    @State
-    var selectedProvider: ServiceProvider?
 
     return ProviderSpendingRowView(
         provider: .cursor,

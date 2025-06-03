@@ -48,9 +48,9 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .standardPadding(.horizontal, 14)
+        .standardPadding(horizontal: 14)
         .padding(.vertical, 10)
-        .materialBackground(material: .thickMaterial, cornerRadius: 10)
+        .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
 
     private var providerBreakdownSection: some View {
@@ -62,8 +62,8 @@ struct CostTableView: View {
                     selectedProvider: $selectedProvider)
             }
         }
-        .standardPadding(.all, 4)
-        .materialBackground(material: .thickMaterial, cornerRadius: 10)
+        .standardPadding(horizontal: 4, vertical: 4)
+        .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
 
     private var spendingLimitsSection: some View {
@@ -89,9 +89,9 @@ struct CostTableView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.red)
         }
-        .standardPadding(.horizontal, 14)
+        .standardPadding(horizontal: 14)
         .padding(.vertical, 10)
-        .materialBackground(material: .thickMaterial, cornerRadius: 10)
+        .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
     
     private var lastRefreshSection: some View {
@@ -115,9 +115,9 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .standardPadding(.horizontal, 14)
+        .standardPadding(horizontal: 14)
         .padding(.vertical, 6)
-        .materialBackground(material: .ultraThinMaterial, cornerRadius: 6)
+        .materialBackground(cornerRadius: 6, material: .ultraThinMaterial)
     }
 
     // MARK: - Helper Properties

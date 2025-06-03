@@ -123,13 +123,16 @@ struct ProviderRowView: View {
 // MARK: - Preview
 
 #Preview("Provider Row - Logged In") {
-    let userSessionData = MultiProviderUserSessionData()
-    userSessionData.handleLoginSuccess(
-        for: .cursor,
-        email: "user@example.com",
-        teamName: "Example Team",
-        teamId: 123
-    )
+    @Previewable @State var userSessionData = {
+        let data = MultiProviderUserSessionData()
+        data.handleLoginSuccess(
+            for: .cursor,
+            email: "user@example.com",
+            teamName: "Example Team",
+            teamId: 123
+        )
+        return data
+    }()
     
     ProviderRowView(
         provider: .cursor,
@@ -161,17 +164,11 @@ struct ProviderRowView: View {
 }
 
 #Preview("Provider Row - With Error") {
-    let userSessionData = MultiProviderUserSessionData()
-    let session = ProviderSessionState(
-        provider: .cursor,
-        isLoggedIn: false,
-        userEmail: "user@example.com",
-        teamName: nil,
-        teamId: nil,
-        lastUpdated: Date(),
-        lastErrorMessage: "Authentication failed: Invalid credentials"
-    )
-    userSessionData.updateSession(session)
+    @Previewable @State var userSessionData = {
+        let data = MultiProviderUserSessionData()
+        data.setErrorMessage(for: .cursor, message: "Authentication failed: Invalid credentials")
+        return data
+    }()
     
     ProviderRowView(
         provider: .cursor,

@@ -49,6 +49,7 @@ struct AboutView: View {
         .padding(.top, 20)
     }
     
+    @ViewBuilder
     private var systemStatusSection: some View {
         if let orchestrator {
             VStack(spacing: 8) {

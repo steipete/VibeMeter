@@ -112,18 +112,19 @@ struct ProvidersSettingsView: View {
 // MARK: - Preview
 
 #Preview("Providers Settings - Multiple States") {
-    let userSessionData = MultiProviderUserSessionData()
-    @State var showingProviderDetail: ServiceProvider?
+    @Previewable @State var userSessionData = {
+        let data = MultiProviderUserSessionData()
+        data.handleLoginSuccess(
+            for: .cursor,
+            email: "user@example.com",
+            teamName: "Example Team",
+            teamId: 123
+        )
+        return data
+    }()
+    @Previewable @State var showingProviderDetail: ServiceProvider?
     
-    // Set up one logged in provider
-    userSessionData.handleLoginSuccess(
-        for: .cursor,
-        email: "user@example.com",
-        teamName: "Example Team",
-        teamId: 123
-    )
-    
-    return ProvidersSettingsView(
+    ProvidersSettingsView(
         settingsManager: MockSettingsManager(),
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
@@ -135,9 +136,9 @@ struct ProvidersSettingsView: View {
 }
 
 #Preview("Providers Settings - All Logged Out") {
-    @State var showingProviderDetail: ServiceProvider?
+    @Previewable @State var showingProviderDetail: ServiceProvider?
     
-    return ProvidersSettingsView(
+    ProvidersSettingsView(
         settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(

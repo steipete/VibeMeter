@@ -35,7 +35,7 @@ struct LoggedInMenuContent: View {
 
             quitButtonSection
         }
-        .standardPadding(.all, 12)
+        .standardPadding(horizontal: 12, vertical: 12)
         .onAppear {
             logger.info("LoggedInMenuContent appeared")
             logger.info("Most recent session: \(userSessionData.mostRecentSession?.provider.displayName ?? "none")")
