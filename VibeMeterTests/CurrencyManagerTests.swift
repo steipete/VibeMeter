@@ -29,7 +29,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_ReturnsNonEmptyArray() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Then
         XCTAssertFalse(currencies.isEmpty, "Should return at least some currencies")
@@ -41,7 +41,7 @@ final class CurrencyManagerTests: XCTestCase {
         let expectedCommonCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY"]
 
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
         let currencyCodes = currencies.map(\.0)
 
         // Then
@@ -52,7 +52,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_HasCorrectFormat() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Then
         for (code, name) in currencies {
@@ -72,7 +72,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_IsUnique() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
         let currencyCodes = currencies.map(\.0)
         let uniqueCodes = Set(currencyCodes)
 
@@ -82,7 +82,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_PrioritizesCommonCurrencies() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
         let first10Codes = Array(currencies.prefix(10)).map(\.0)
 
         // Then
@@ -98,7 +98,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_SortsAlphabeticallyAfterCommon() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Get currencies that are not in the common list
         let commonCurrencies = [
@@ -124,21 +124,18 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testSystemCurrencyCode_ReturnsValidCode() {
         // When
-        let systemCode = sut.systemCurrencyCode
+        let systemCode = sut?.systemCurrencyCode ?? "USD"
 
         // Then
-        if let code = systemCode {
-            XCTAssertEqual(code.count, 3, "System currency code should be 3 characters")
-            XCTAssertTrue(code.allSatisfy(\.isUppercase), "System currency code should be uppercase")
-            XCTAssertTrue(sut.isValidCurrencyCode(code), "System currency code should be valid")
-        }
-        // Note: systemCurrencyCode can be nil in some test environments, which is acceptable
+        XCTAssertEqual(systemCode.count, 3, "System currency code should be 3 characters")
+        XCTAssertTrue(systemCode.allSatisfy(\.isUppercase), "System currency code should be uppercase")
+        XCTAssertTrue(sut?.isValidCurrencyCode(systemCode) ?? false, "System currency code should be valid")
     }
 
     func testSystemCurrencyCode_ConsistentResults() {
         // When
-        let code1 = sut.systemCurrencyCode
-        let code2 = sut.systemCurrencyCode
+        let code1 = sut?.systemCurrencyCode ?? "USD"
+        let code2 = sut?.systemCurrencyCode ?? "USD"
 
         // Then
         XCTAssertEqual(code1, code2, "System currency code should be consistent")
@@ -152,7 +149,7 @@ final class CurrencyManagerTests: XCTestCase {
 
         for code in validCodes {
             // When
-            let isValid = sut.isValidCurrencyCode(code)
+            let isValid = sut?.isValidCurrencyCode(code) ?? false
 
             // Then
             XCTAssertTrue(isValid, "'\(code)' should be a valid currency code")
@@ -165,7 +162,7 @@ final class CurrencyManagerTests: XCTestCase {
 
         for code in invalidCodes {
             // When
-            let isValid = sut.isValidCurrencyCode(code)
+            let isValid = sut?.isValidCurrencyCode(code) ?? false
 
             // Then
             XCTAssertFalse(isValid, "'\(code)' should not be a valid currency code")
@@ -178,9 +175,9 @@ final class CurrencyManagerTests: XCTestCase {
         let mixedCaseCode = "Usd"
 
         // When
-        let lowercaseValid = sut.isValidCurrencyCode(lowercaseCode)
-        let mixedCaseValid = sut.isValidCurrencyCode(mixedCaseCode)
-        let uppercaseValid = sut.isValidCurrencyCode("USD")
+        let lowercaseValid = sut?.isValidCurrencyCode(lowercaseCode) ?? false
+        let mixedCaseValid = sut?.isValidCurrencyCode(mixedCaseCode) ?? false
+        let uppercaseValid = sut?.isValidCurrencyCode("USD") ?? false
 
         // Then
         XCTAssertTrue(uppercaseValid, "Uppercase USD should be valid")
@@ -192,7 +189,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_NameCapitalization() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Then
         for (code, name) in currencies {
@@ -219,7 +216,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_SymbolExtraction() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Then
         for (code, name) in currencies {
@@ -242,7 +239,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_UseSystemLocales() {
         // When
-        let currencies = sut.availableCurrencies
+        let _ = sut?.availableCurrencies ?? []
         let availableLocales = Locale.availableIdentifiers
 
         // Then
@@ -266,7 +263,7 @@ final class CurrencyManagerTests: XCTestCase {
     func testAvailableCurrencies_Performance() {
         // When
         let startTime = Date()
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
@@ -282,7 +279,7 @@ final class CurrencyManagerTests: XCTestCase {
         let startTime = Date()
         for _ in 0 ..< 1000 {
             for code in testCodes {
-                _ = sut.isValidCurrencyCode(code)
+                _ = sut?.isValidCurrencyCode(code) ?? false
             }
         }
         let duration = Date().timeIntervalSince(startTime)
@@ -295,8 +292,8 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_ConsistentResults() {
         // When
-        let currencies1 = sut.availableCurrencies
-        let currencies2 = sut.availableCurrencies
+        let currencies1 = sut?.availableCurrencies ?? []
+        let currencies2 = sut?.availableCurrencies ?? []
 
         // Then
         XCTAssertEqual(currencies1.count, currencies2.count, "Currency count should be consistent")
@@ -312,7 +309,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testIsValidCurrencyCode_EmptyString() {
         // When
-        let isValid = sut.isValidCurrencyCode("")
+        let isValid = sut?.isValidCurrencyCode("") ?? false
 
         // Then
         XCTAssertFalse(isValid, "Empty string should not be valid currency code")
@@ -324,7 +321,7 @@ final class CurrencyManagerTests: XCTestCase {
 
         for code in whitespaceCodes {
             // When
-            let isValid = sut.isValidCurrencyCode(code)
+            let isValid = sut?.isValidCurrencyCode(code) ?? false
 
             // Then
             XCTAssertFalse(isValid, "Whitespace-only string '\(code)' should not be valid")
@@ -333,7 +330,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_NoEmptyEntries() {
         // When
-        let currencies = sut.availableCurrencies
+        let currencies = sut?.availableCurrencies ?? []
 
         // Then
         for (code, name) in currencies {
@@ -360,10 +357,10 @@ final class CurrencyManagerTests: XCTestCase {
         // When - Perform concurrent reads
         await withTaskGroup(of: Bool.self) { group in
             for _ in 0 ..< taskCount {
-                group.addTask {
-                    let currencies = self.sut.availableCurrencies
-                    let systemCode = self.sut.systemCurrencyCode
-                    let isValidUSD = self.sut.isValidCurrencyCode("USD")
+                group.addTask { [sut] in
+                    let currencies = sut?.availableCurrencies ?? []
+                    let _ = sut?.systemCurrencyCode ?? "USD"
+                    let isValidUSD = sut?.isValidCurrencyCode("USD") ?? false
 
                     return !currencies.isEmpty && isValidUSD
                 }

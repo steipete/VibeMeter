@@ -27,7 +27,7 @@ private class MockStartupManager: StartupControlling {
 // MARK: - Tests
 
 @MainActor
-final class StartupManagerTests: XCTestCase {
+final class StartupManagerTests: XCTestCase, @unchecked Sendable {
     var sut: StartupManager!
 
     override func setUp() async throws {

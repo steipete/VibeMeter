@@ -1,4 +1,3 @@
-import Combine
 @testable import VibeMeter
 import XCTest
 
@@ -21,7 +20,6 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
 
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.MultiProviderDataOrchestratorTests"
-    private var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
         super.setUp()
@@ -29,7 +27,6 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         suite?.removePersistentDomain(forName: testSuiteName)
 
         MainActor.assumeIsolated {
-            cancellables = []
             testUserDefaults = suite
 
             // Setup mock SettingsManager
@@ -88,7 +85,6 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             SettingsManager._test_clearSharedInstance()
             testUserDefaults.removePersistentDomain(forName: testSuiteName)
             testUserDefaults = nil
-            cancellables = nil
         }
         super.tearDown()
     }
