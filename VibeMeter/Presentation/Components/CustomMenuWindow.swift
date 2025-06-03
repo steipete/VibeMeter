@@ -13,7 +13,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Initialize window with appropriate style
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 350),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false)
@@ -45,31 +45,69 @@ final class CustomMenuWindow: NSPanel {
     }
 
     func show(relativeTo statusItemButton: NSStatusBarButton) {
-        // Calculate position below status item
-        guard let window = statusItemButton.window else { return }
-        let buttonFrame = statusItemButton.convert(statusItemButton.bounds, to: nil)
-        let screenFrame = window.convertToScreen(buttonFrame)
+        // Use modern macOS 15 window positioning APIs for better reliability
+        guard let statusWindow = statusItemButton.window else { return }
+        
+        // Get status item frame in screen coordinates using modern APIs
+        let buttonBounds = statusItemButton.bounds
+        let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
+        let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
+        
+        // Calculate optimal position with screen boundary awareness
+        let targetFrame = calculateOptimalFrame(
+            relativeTo: buttonFrameInScreen,
+            preferredSize: NSSize(width: frame.width, height: frame.height)
+        )
+        
+        setFrame(targetFrame, display: false)
 
-        // Position window centered below the status item
-        let windowWidth = frame.width
-        let x = screenFrame.midX - windowWidth / 2
-        let y = screenFrame.minY - frame.height - 5 // 5px gap
-
-        setFrameOrigin(NSPoint(x: x, y: y))
-
-        // Animate in
+        // Use modern animation APIs with better timing
         alphaValue = 0
         makeKeyAndOrderFront(nil)
+        
+        // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.2
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = 0.25
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.0, 0.2, 1.0) // Material Design easing
+            context.allowsImplicitAnimation = true
             animator().alphaValue = 1
         }
 
-        // Set up event monitoring after a short delay to avoid immediate dismissal
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.setupEventMonitoring()
+        // Set up event monitoring with better timing
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            setupEventMonitoring()
         }
+    }
+    
+    /// Calculates optimal window frame position with screen boundary awareness
+    private func calculateOptimalFrame(relativeTo statusFrame: NSRect, preferredSize: NSSize) -> NSRect {
+        guard let screen = NSScreen.main else {
+            // Fallback to simple positioning
+            let x = statusFrame.midX - preferredSize.width / 2
+            let y = statusFrame.minY - preferredSize.height - 5
+            return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
+        }
+        
+        let screenFrame = screen.visibleFrame
+        let gap: CGFloat = 5
+        
+        // Start with centered position below status item
+        var x = statusFrame.midX - preferredSize.width / 2
+        let y = statusFrame.minY - preferredSize.height - gap
+        
+        // Ensure window stays within screen bounds
+        let minX = screenFrame.minX + 10 // 10px margin from screen edge
+        let maxX = screenFrame.maxX - preferredSize.width - 10
+        x = max(minX, min(maxX, x))
+        
+        // Ensure window doesn't go below screen
+        let finalY = max(screenFrame.minY + 10, y)
+        
+        return NSRect(
+            origin: NSPoint(x: x, y: finalY),
+            size: preferredSize
+        )
     }
 
     func hide() {
@@ -115,35 +153,14 @@ final class CustomMenuWindow: NSPanel {
     }
 }
 
-/// A visual effect view that provides the background for the custom menu
-struct CustomMenuBackground: NSViewRepresentable {
-    func makeNSView(context _: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
-        view.state = .active
-        view.wantsLayer = true
-        view.layer?.cornerRadius = 12
-        return view
-    }
-
-    func updateNSView(_: NSVisualEffectView, context _: Context) {
-        // No updates needed
-    }
-}
-
-/// A wrapper view that applies the custom background to content
+/// A wrapper view that applies the modern SwiftUI material background to content
 struct CustomMenuContainer<Content: View>: View {
     @ViewBuilder
     let content: Content
 
     var body: some View {
-        ZStack {
-            CustomMenuBackground()
-                .ignoresSafeArea()
-
-            content
-        }
-        .frame(width: 320, height: 400)
+        content
+            .frame(width: 300, height: 350)
+            .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }

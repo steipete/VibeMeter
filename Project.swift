@@ -30,7 +30,7 @@ let project = Project(
             "INFOPLIST_KEY_NSHumanReadableCopyright": "Copyright © 2025 Peter Steinberger",
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
-            "MACOSX_DEPLOYMENT_TARGET": "14.0",
+            "MACOSX_DEPLOYMENT_TARGET": "15.0",
             "MARKETING_VERSION": "1.0.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
@@ -66,7 +66,7 @@ let project = Project(
             destinations: .macOS,
             product: .app,
             bundleId: "com.steipete.vibemeter",
-            deploymentTargets: .macOS("14.0"),
+            deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": "1.0.0",
                 "CFBundleVersion": "1",
@@ -111,7 +111,7 @@ let project = Project(
             destinations: .macOS,
             product: .unitTests,
             bundleId: "com.steipete.vibemeter.tests",
-            deploymentTargets: .macOS("14.0"),
+            deploymentTargets: .macOS("15.0"),
             infoPlist: .default,
             sources: ["VibeMeterTests/**"],
             dependencies: [
