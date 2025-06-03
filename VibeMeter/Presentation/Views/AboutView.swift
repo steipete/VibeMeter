@@ -43,6 +43,7 @@ struct AboutView: View {
                 .fontWeight(.medium)
 
             Text("Version \(appVersion)")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
         .padding(.top, 20)
@@ -50,36 +51,53 @@ struct AboutView: View {
 
     private var descriptionSection: some View {
         Text("Monitor your monthly Cursor AI spending")
+            .font(.body)
             .foregroundStyle(.secondary)
     }
 
     private var linksSection: some View {
         VStack(spacing: 12) {
-            Link(destination: URL(string: "https://github.com/steipete/VibeMeter")!) {
-                Label("View on GitHub", systemImage: "link")
-            }
-            .buttonStyle(.link)
-            .pointingHandCursor()
-
-            Link(destination: URL(string: "https://github.com/steipete/VibeMeter/issues")!) {
-                Label("Report an Issue", systemImage: "exclamationmark.bubble")
-            }
-            .buttonStyle(.link)
-            .pointingHandCursor()
-
-            Link(destination: URL(string: "https://x.com/steipete")!) {
-                Label("Follow @steipete on X", systemImage: "bird")
-            }
-            .buttonStyle(.link)
-            .pointingHandCursor()
+            HoverableLink(url: "https://github.com/steipete/VibeMeter", title: "View on GitHub", icon: "link")
+            HoverableLink(
+                url: "https://github.com/steipete/VibeMeter/issues",
+                title: "Report an Issue",
+                icon: "exclamationmark.bubble")
+            HoverableLink(url: "https://x.com/steipete", title: "Follow @steipete on X", icon: "bird")
         }
     }
 
     private var copyrightSection: some View {
         Text("© 2025 Peter Steinberger • MIT Licensed")
-            .font(.caption)
+            .font(.footnote)
             .foregroundStyle(.secondary)
             .padding(.bottom, 32)
+    }
+}
+
+/// Hoverable link component with underline animation.
+///
+/// This component displays a link with an icon that shows an underline on hover
+/// and changes the cursor to a pointing hand for better user experience.
+struct HoverableLink: View {
+    let url: String
+    let title: String
+    let icon: String
+
+    @State
+    private var isHovering = false
+
+    var body: some View {
+        Link(destination: URL(string: url)!) {
+            Label(title, systemImage: icon)
+                .underline(isHovering, color: .accentColor)
+        }
+        .buttonStyle(.link)
+        .pointingHandCursor()
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovering = hovering
+            }
+        }
     }
 }
 
@@ -162,10 +180,12 @@ struct PointingHandCursorModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onHover { isHovering in
-                if isHovering {
-                    NSCursor.pointingHand.push()
-                } else {
-                    NSCursor.pop()
+                DispatchQueue.main.async {
+                    if isHovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
                 }
             }
     }
