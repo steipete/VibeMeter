@@ -1,221 +1,260 @@
-## Software Specification: Vibe Meter
+## Software Specification: VibeMeter
 https://aistudio.google.com/prompts/1K2XHHytMLpeecOT1sjHqmRXdpodqT-ge
 https://www.cursor.com/settings
 
-**Version:** 1.2
-**Date:** October 26, 2023 (Placeholder - Reflects latest updates)
+**Version:** 2.1
+**Date:** January 6, 2025
 
 **1. Overview & Purpose**
 
-Vibe Meter is a macOS menu bar application designed to help users monitor their monthly spending on the Cursor AI service. It provides at-a-glance cost information, configurable warning and upper spending limits with notifications, and multi-currency display options. The application requires users to log into their Cursor account via an embedded web view to obtain session cookies for data fetching. The application aims for a user-friendly and slightly "vibey" tone in its auxiliary communications, keeping it positive and approachable.
+VibeMeter is a macOS menu bar application designed with a **multi-provider architecture** to monitor monthly spending across multiple AI service providers. While currently supporting only Cursor AI, the application is architected to easily add support for OpenAI, Anthropic, GitHub Copilot, and other services. It provides at-a-glance cost information via an animated gauge icon, configurable spending limits with system notifications, multi-currency support, and a modern SwiftUI-based interface. The application uses provider-specific authentication methods (WebKit-based OAuth flows) to obtain session tokens for secure API access.
 
 **2. Target Platform**
 
-*   **Operating System:** Latest generally available (GA) version of macOS.
-*   **Architecture:** Universal Binary (Apple Silicon & Intel).
+*   **Operating System:** macOS 15.0+ (Sequoia)
+*   **Architecture:** Universal Binary (Apple Silicon & Intel)
+*   **Swift Version:** Swift 6 with strict concurrency checking
+*   **Minimum Deployment Target:** macOS 15.0
 
-**3. Core Components & Modules**
+**3. Architecture & Core Components**
 
-1.  **Menu Bar Controller:** Manages the status bar item, its icon, text display, and the dropdown menu.
-2.  **Login Manager:** Handles the embedded web view for Cursor login, cookie extraction, and secure cookie storage/retrieval (macOS Keychain). Manages session state (logged in/out).
-3.  **Cursor API Client:** Makes authenticated requests to the Cursor API to fetch team, user, and monthly invoice data. Handles request construction, response parsing, and error handling.
-4.  **Exchange Rate Manager:** Fetches and caches exchange rates from a public API for currency conversion. Manages a list of supported currencies. Handles failures by defaulting display to USD.
-5.  **Settings Manager:** Manages application settings (limits, selected currency, refresh interval, etc.) using `UserDefaults`.
-6.  **UI Manager:** Handles the Settings dialog window and system notifications. Uses SwiftUI preferentially for these windows.
-7.  **Startup Manager:** Manages the "Launch at Login" functionality.
-8.  **Logging Service:** Manages logging of key events and errors to Console.app.
+**3.1. Multi-Provider Architecture**
+
+The application uses a provider-agnostic architecture enabling support for multiple AI services:
+
+*   **ProviderProtocol:** Generic interface that all service providers must implement
+*   **ServiceProvider Enum:** Defines supported providers (currently: .cursor)
+*   **ProviderFactory:** Creates provider instances based on service type
+*   **Multi-Provider Models:** Observable models that maintain state for all providers simultaneously
+
+**3.2. Core Components**
+
+1.  **StatusBarController:** Manages the NSStatusItem with animated gauge icon and custom popover window
+2.  **MultiProviderDataOrchestrator:** Central coordinator managing data fetching, authentication, and state synchronization across all providers
+3.  **MultiProviderLoginManager:** Handles WebKit-based authentication for multiple providers simultaneously
+4.  **Provider Implementations:** Service-specific implementations (CursorProvider) conforming to ProviderProtocol
+5.  **ExchangeRateManager:** Singleton managing currency conversions with caching and fallback rates
+6.  **SettingsManager:** @Observable model managing preferences and provider sessions via UserDefaults
+7.  **NotificationManager:** Handles system notifications for spending alerts with per-session tracking
+8.  **Observable Data Models:**
+    *   MultiProviderSpendingData: Tracks spending/usage across all providers
+    *   MultiProviderUserSessionData: Manages authentication state for all providers
+    *   CurrencyData: Maintains currency selection and exchange rates
 
 **4. Detailed Feature Specifications**
 
-**4.1. Application Icon & Menu Bar Display**
+**4.1. Menu Bar Display**
 
-*   **Icon:** Use the `menubar-icon.png` asset (to be provided as a file).
-*   **Text Display:**
-    *   Format: `[CUR_SYMBOL][Current Spending] / [CUR_SYMBOL][Warning Limit]`
-        *   Example (USD): `$12.34 / $200.00`
-        *   Example (EUR): `€11.50 / €184.00`
-    *   Current Spending: Fetched from Cursor API (originally in USD cents), converted to selected currency.
-    *   Warning Limit: User-defined, converted to selected currency for display.
-    *   **If Exchange Rate Service Fails:** All monetary values in the menu bar (and throughout the app) will be displayed in USD ($) regardless of the user's selected currency preference, until the exchange rate service becomes available again.
-    *   If not logged in: Display "Login Required".
-    *   If data fetch error post-login (e.g., API error, network error, `teamId` fetch failure): Display "Error".
-    *   Updates periodically based on a user-configurable interval (default 5 minutes) and on manual refresh.
-    *   After successful login: Briefly (2-3 seconds) display "Vibe synced! ✨" before switching to spending data.
+*   **Icon:** Custom animated gauge icon (GaugeIcon.swift) with three states:
+    *   **Not Logged In:** Greyed out gauge with disabled appearance
+    *   **Loading:** Animated blue gradient gauge with shimmer effect
+    *   **Data:** Color-coded gauge (teal→green→yellow→orange→red) based on spending percentage
+*   **Text Display (Optional):**
+    *   Controlled by `showCostInMenuBar` setting (default: false/icon-only)
+    *   Format: `[CUR_SYMBOL][Total Spending]` (e.g., `$45.23`)
+    *   Shows total spending across ALL connected providers
+    *   Animated transitions between values using MenuBarStateManager
+*   **Custom Popover:** 
+    *   Uses CustomMenuWindow (not native NSMenu) for rich SwiftUI content
+    *   Fixed size: 300x400 (logged in) or 300x280 (logged out)
+    *   Material background with vibrancy effects
 
-**4.2. Dropdown Menu**
+**4.2. Popover Content**
 
-*   **Logged In As:** `[User's Email]` (fetched from `/api/auth/me`).
-    *   If user info fetch fails but login is active: Display "Logged In".
-*   **Current Spending:** `Current: [CUR_SYMBOL][Amount]` (converted to selected currency; defaults to USD if rates unavailable).
-*   **Warning Limit:** `Warning at: [CUR_SYMBOL][Amount]` (user-defined, converted; defaults to USD if rates unavailable).
-*   **Upper Limit (Cursor Cap):** `Max: [CUR_SYMBOL][Amount]` (user-defined, converted; defaults to USD if rates unavailable).
-*   **Team:** `Vibing with: [Team Name]` (fetched from `/api/dashboard/teams`).
-*   --- (Separator) ---
-*   **Refresh Now:**
-    *   Action: Immediately triggers a data fetch sequence (team info, user info, invoice data) and updates display.
-    *   If not logged in, **always** triggers the login prompt.
-*   **Vibe Meter Status/Error Messages (Contextual, displayed at the top if applicable):**
-    *   If `teamId` fetch failed post-login: `"Hmm, can't find your team vibe right now. 😕 Try a refresh?"` Other data fields will be blank or show loading state.
-    *   If exchange rates are unavailable: `"Rates MIA! Showing USD for now. ✨"`
-*   **Settings...:**
-    *   Action: Opens the Settings dialog window.
-*   **Log Out:**
-    *   Action:
-        1.  Clears `WorkosCursorSessionToken` from macOS Keychain.
-        2.  Clears stored `teamId` (Int), `teamName` (String), and `userEmail` (String) from `UserDefaults`.
-        3.  Updates menu bar display to "Login Required".
-        4.  Sets internal state to logged-out.
-*   --- (Separator) ---
-*   **Launch at Login:** (Checkbox menu item)
-    *   Action: Toggles adding/removing the application from system login items. State reflects current setting.
-*   **Quit Vibe Meter:**
-    *   Action: Terminates the application.
+**When Logged Out (LoggedOutContentView):**
+*   Large gauge icon with "No providers connected" message
+*   Login buttons for each available provider
+*   Quick access to Settings
 
-**4.3. Login Process**
+**When Logged In (LoggedInContentView):**
+*   **Header Section:**
+    *   User avatar (Gravatar) and email from most recent provider session
+    *   Total spending display with animated transitions
+    *   Circular progress gauge showing spending vs upper limit
+*   **Cost Breakdown (CostTableView):**
+    *   Per-provider spending rows with hover effects
+    *   Usage data (requests/tokens) display
+    *   Warning/Upper limit indicators with color coding
+*   **Footer Actions:**
+    *   Settings button
+    *   Refresh button with loading state
+    *   Quit button
 
-*   **Trigger:** On app start if no valid session cookie, on auth error during data fetch, or manual refresh while logged out.
-*   **Mechanism:**
-    1.  Display a modal window (preferentially SwiftUI) containing a `WKWebView`.
-    2.  Load `https://authenticator.cursor.sh/`.
-    3.  User authenticates.
-    4.  Monitor `WKNavigationDelegate` for redirect to URL starting with `https://www.cursor.com/api/auth/callback`.
-    5.  On successful completion of callback navigation:
-        *   Extract `WorkosCursorSessionToken` cookie (for `cursor.com` domain) from `WKWebView`'s cookie store.
-        *   Store cookie value securely in macOS Keychain.
-        *   Close login window.
-        *   Proceed to fetch team info, user info, then invoice data.
-        *   Update menu bar display (brief "Vibe synced! ✨" then spending data).
-    *   No additional introductory pop-ups beyond showing the login window are required for first launch.
+**4.3. Multi-Provider Features**
 
-**4.4. Data Fetching (Cursor API)**
+*   **Simultaneous Connections:** Users can be logged into multiple providers at once
+*   **Aggregate Spending:** Total spending calculated across all connected providers
+*   **Provider Management:** Enable/disable providers via ProviderRegistry
+*   **Independent Sessions:** Each provider maintains its own authentication state
+*   **Unified Display:** Single gauge icon represents combined spending percentage
 
-*   **Definition of "Current Month/Year":** Based on the user's local machine time.
-*   **A. Team Information:**
-    *   Endpoint: `POST https://www.cursor.com/api/dashboard/teams`
-    *   Request Body: Empty JSON (`{}`).
-    *   Headers: `Cookie: WorkosCursorSessionToken=[TOKEN]`, `Content-Type: application/json`.
-    *   Response: `{"teams": [{"id": TEAM_ID_INT, "name": "Team Name", ...}]}`.
-    *   Logic: Use `teams[0].id` (as Int) for `teamId` and `teams[0].name` (as String) for `teamName`. Store in `UserDefaults`. If `teams` array is empty or request fails, handle as a `teamId` fetch error (menu bar "Error", specific message in dropdown).
-*   **B. User Information:**
-    *   Endpoint: `GET https://www.cursor.com/api/auth/me`
-    *   Headers: `Cookie: WorkosCursorSessionToken=[TOKEN]`.
-    *   Response: `{"email": "user@example.com", ...}`.
-    *   Logic: Extract `email`. Store as `userEmail` (String) in `UserDefaults`.
-*   **C. Monthly Invoice Data:**
-    *   Endpoint: `POST https://www.cursor.com/api/dashboard/get-monthly-invoice`
-    *   Request Body (JSON):
-        ```json
-        {
-            "teamId": <INTEGER_TEAM_ID_FROM_USERDEFAULTS>,
-            "month": <CURRENT_MONTH_INTEGER_LOCAL_TIME>, // 1-12
-            "year": <CURRENT_YEAR_INTEGER_LOCAL_TIME>,
-            "includeUsageEvents": false
-        }
-        ```
-    *   Headers: `Cookie: WorkosCursorSessionToken=[TOKEN]`, `Content-Type: application/json`.
-    *   Response: `{"items": [{"description": "...", "cents": ...}, ...], "pricingDescription": ...}`.
-    *   Total Calculation: Sum all `cents` values from the `items` array. This sum is `totalSpendingCents`.
-    *   Convert `totalSpendingCents` to `currentSpendingUSD` (Double, divide by 100.0).
-*   **Frequency:** Periodically (user-configurable `refreshIntervalMinutes`, default 5 minutes) and on "Refresh Now". Fetch sequence: Team Info -> User Info -> Invoice Data.
+**4.4. Authentication System**
 
-**4.5. Settings Dialog (Preferentially SwiftUI)**
+*   **Per-Provider Login:** Each provider has independent login state and window
+*   **LoginWebViewManager:** Manages multiple WKWebView instances for concurrent logins
+*   **AuthenticationTokenManager:** Secure token storage in Keychain per provider
+*   **Provider-Specific Auth:**
+    *   Cursor: OAuth via `https://authenticator.cursor.sh/` extracting `WorkosCursorSessionToken`
+    *   Future providers will have their own auth flows defined in ServiceProvider enum
+*   **Session Validation:** Tokens validated on startup and during data fetch
+*   **Automatic Retry:** Failed auth triggers re-login prompt
 
-*   **Layout:** Standard macOS settings window.
-*   **Fields:**
-    1.  **Currency:**
-        *   UI: Dropdown/Picker.
-        *   Values: List of supported currencies (see 4.6).
-        *   Storage: `selectedCurrencyCode` (String) in `UserDefaults`. Remains on user's selection even if rates fail.
-    2.  **Warning Limit:**
-        *   UI: Number Input Field. Label shows selected currency symbol or "$" if rates unavailable (e.g., "Warning Limit (€):" or "Warning Limit ($):").
-        *   Behavior: User enters value in the displayed currency. If rates are unavailable, input is explicitly in USD.
-        *   Display: If re-opening, shows the re-converted value of stored USD limit to the selected currency using the current rate (or the USD value if rates unavailable).
-        *   Storage: On save, convert input to USD and store as `warningLimitUSD` (Double) in `UserDefaults`. Default: `200.0` (USD).
-    3.  **Upper Limit:** (Same UI/Behavior/Display/Storage logic as Warning Limit). Default: `1000.0` (USD).
-    4.  **Automatic Refresh Interval:**
-        *   UI: Dropdown/Picker.
-        *   Label: "Auto-Refresh Vibe Every:"
-        *   Values: 5 minutes (Default), 10 minutes, 15 minutes, 30 minutes, 60 minutes.
-        *   Storage: `refreshIntervalMinutes` (Int) in `UserDefaults`.
-*   **Buttons:**
-    *   **Save:** Persists all settings. Triggers display/timer refresh if relevant settings changed. Closes dialog.
-    *   **Cancel:** Discards changes made since dialog opened/last saved. Closes dialog.
-*   **Status:** Label: "Logged in as [userEmail]" or "Login Required."
+**4.5. Data Fetching & Provider APIs**
 
-**4.6. Currency Management**
+**Generic Provider Interface (ProviderProtocol):**
+*   `fetchTeamInfo()` → ProviderTeamInfo
+*   `fetchUserInfo()` → ProviderUserInfo  
+*   `fetchMonthlyInvoice()` → ProviderMonthlyInvoice
+*   `fetchUsageData()` → ProviderUsageData
+*   `validateToken()` → Bool
 
-*   **Supported Currencies:** USD (Default), EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, PHP. (Defined list).
-*   **Base Currency:** USD. Limits stored in USD. API data received as USD cents.
-*   **Exchange Rate API:** Frankfurter.app (`https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,...`). No API key.
-*   **Caching:** Store `cachedExchangeRates: [String: Double]` and `lastExchangeRateFetchTimestamp` in `UserDefaults`. Refresh daily or if older than 24h.
-*   **Failure Handling:** If exchange rate API fails or rates are unavailable:
-    *   All monetary display defaults to USD ($).
-    *   Settings dialog limit inputs show currency symbol as "$" and expect USD values, even if currency dropdown shows another selection.
-    *   Dropdown menu includes: `"Rates MIA! Showing USD for now. ✨"`
-*   **Fallback Rates:** Hardcode fallback rates (sourced at development time, infrequent updates to codebase needed).
+**Cursor Provider Implementation:**
+*   **Team Info:** `POST /api/dashboard/teams` (returns first team)
+*   **User Info:** `GET /api/auth/me` (returns email and teamId)
+*   **Monthly Invoice:** `POST /api/dashboard/get-monthly-invoice` with month/year/teamId
+*   **Usage Data:** `GET /api/usage` (GPT-4 usage as primary metric)
+*   **Error Handling:** Specific handling for 401 (unauthorized), 429 (rate limit), team not found
 
-**4.7. User Notifications**
+**Data Orchestration:**
+*   **BackgroundDataProcessor:** Processes API calls on background actor
+*   **Refresh Timers:** Per-provider timers based on user settings (default 5 min)
+*   **Parallel Fetching:** All providers refreshed concurrently via TaskGroup
+*   **Session Consistency:** Validates stored sessions against keychain tokens on startup
 
-*   **Framework:** macOS User Notifications.
-*   **Triggers:**
-    1.  Warning Limit Reached: `currentSpendingUSD >= warningLimitUSD`.
-    2.  Upper Limit Reached: `currentSpendingUSD >= upperLimitUSD`.
-*   **Content (Vibey):**
-    *   Warning: `"Heads up! Your Cursor spend ([CUR_SYMBOL][Amount]) is getting close to your [CUR_SYMBOL][Limit] warning vibe!"`
-    *   Upper: `"Whoa! Your Cursor spend ([CUR_SYMBOL][Amount]) is hitting the [CUR_SYMBOL][Limit] max vibe! Time to chill?"`
-    *   Amounts displayed in selected currency (or USD if rates unavailable).
-*   **Frequency:** Notify once per limit type (Warning/Upper) per app session, *unless spending dips below that specific limit and then crosses it again*. If spending goes below a limit for which a notification was sent, the "notified" state for that limit is reset for the current session.
+**4.6. Settings Window (MultiProviderSettingsView)**
 
-**4.8. Launch at Login**
+**Tab-based Interface:**
+1. **General Tab:**
+   *   Currency selector (USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, SEK, NZD)
+   *   Refresh interval (1, 2, 5, 10, 15, 30, 60 minutes)
+   *   Show cost in menu bar toggle
+   *   Show in Dock toggle
+   
+2. **Limits Tab:**
+   *   Warning limit input with live currency conversion
+   *   Upper limit input with live currency conversion
+   *   Visual gauge preview showing current spending
+   *   All limits stored in USD, displayed in selected currency
 
-*   Use `SMLoginItemSetEnabled` or equivalent for latest macOS. Checkbox in menu controls state.
+3. **Providers Tab (ProvidersSettingsView):**
+   *   List of all supported providers with connection status
+   *   Login/Logout buttons per provider
+   *   Provider details on click (team info, usage stats)
+   *   Enable/disable providers (future feature)
 
-**5. Data Storage Summary (`UserDefaults` & Keychain)**
+4. **About Tab:**
+   *   App version and build info
+   *   Sparkle update status
+   *   GitHub/support links
 
-*   **macOS Keychain:**
-    *   `WorkosCursorSessionToken` (String).
-*   **`UserDefaults`:**
-    *   `selectedCurrencyCode` (String, e.g., "USD").
-    *   `warningLimitUSD` (Double).
-    *   `upperLimitUSD` (Double).
-    *   `teamId` (Int).
-    *   `teamName` (String).
-    *   `userEmail` (String).
-    *   `cachedExchangeRates` ([String: Double]).
-    *   `lastExchangeRateFetchTimestamp` (Date/Timestamp).
-    *   `refreshIntervalMinutes` (Int, default 5).
-    *   `launchAtLoginEnabled` (Bool).
-    *   (Internal flags for notification state per limit, per session - not persisted across app restarts).
+**4.7. Currency Management**
 
-**6. Error Handling & Edge Cases**
+*   **Supported Currencies:** USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, SEK, NZD
+*   **Base Currency:** USD (all limits and API data in USD)
+*   **Exchange Rate Source:** Frankfurter.app API (no key required)
+*   **Caching:** 1-hour cache validity with automatic refresh
+*   **CurrencyData Model:** Observable model maintaining rates and conversions
+*   **Fallback Behavior:** Falls back to USD display if rates unavailable
+*   **Currency Symbols:** Automatic symbol selection based on currency code
 
-*   **No Internet:** Graceful fetch failure, "Error" in menu bar. Log.
-*   **Cursor API Down/Error:** "Error" in menu bar. Log details (URL, status, error message).
-*   **Invalid Session Cookie (401/403):** Clear cookie, prompt re-login. Log.
-*   **Exchange Rate API Down:** Default to USD display. Log.
-*   **`teamId` Fetch Failure (post-login):** Menu bar "Error", specific message in dropdown. Log.
-*   **First Launch:** Automatically show login window. Sensible defaults for settings.
+**4.8. Notifications System**
 
-**7. UI/UX Considerations**
+*   **NotificationManager:** Handles macOS User Notifications with per-session tracking
+*   **Trigger Conditions:**
+    *   Warning: Total spending >= warning limit
+    *   Upper: Total spending >= upper limit
+*   **Notification Content:**
+    *   Warning: "Spending Alert ⚠️" with current/limit amounts
+    *   Upper: "Spending Limit Reached! 🚨" with critical alert
+*   **Reset Logic:** Notifications reset when spending drops below thresholds
+*   **Permissions:** Requests notification authorization on first trigger
 
-*   Clear, at-a-glance info. Responsive. Minimalist. Friendly "vibey" tone in auxiliary text (notifications, contextual error messages); core data display remains standard. Privacy awareness.
+**4.9. Additional Features**
 
-**8. Technical Implementation Details**
+*   **Gravatar Integration:** Displays user avatars based on email
+*   **Launch at Login:** Via StartupManager using ServiceManagement framework
+*   **Auto-Updates:** Sparkle framework integration (disabled in debug builds)
+*   **Single Instance:** Ensures only one app instance runs at a time
+*   **Analytics WebView:** Opens provider dashboards in external browser
 
-*   **Language:** Swift 6 (or latest stable).
-*   **IDE:** Xcode (latest).
-*   **macOS Target:** Latest GA macOS version.
-*   **Architecture:** MVVM, Service/Manager classes, Swift Concurrency (`async/await`).
-*   **Frameworks:** AppKit, WebKit (for `WKWebView`, `WKNavigationDelegate`, cookie store), Security (Keychain), Foundation, UserNotifications, ServiceManagement. **SwiftUI preferred for Settings and Login windows.**
-*   **Menu Bar Only App:** `LSUIElement` set to `true` in `Info.plist`.
-*   **Testing:** XCTest for unit tests (core logic, data handling, services with mocks). High coverage desired. UI tests optional.
-*   **Dependencies:** Minimize.
-*   **Code Style:** Swift API Design Guidelines, linters (e.g., SwiftLint).
-*   **Logging:** Use `os_log` or `Logger` API to log key events and errors to Console.app for developer debugging. No user-facing log retrieval for V1.
+**5. Data Storage & Persistence**
 
-**9. Assumptions & Dependencies**
+**macOS Keychain (per provider):**
+*   Authentication tokens stored securely via KeychainHelper
+*   Service identifiers: `com.vibemeter.[provider]` (e.g., `com.vibemeter.cursor`)
 
-*   Stability of specified (unofficial) Cursor API endpoints, request/response structures, and `WorkosCursorSessionToken` usage. This is the primary external risk.
-*   Frankfurter.app exchange rate API remains available and free without keys.
-*   User has an active Cursor account.
-*   `menubar-icon.png` asset will be provided.
+**UserDefaults (SettingsManager):**
+*   `providerSessions`: JSON-encoded dictionary of ProviderSession objects
+*   `enabledProviders`: Array of enabled provider identifiers
+*   `selectedCurrencyCode`: String (default: "USD")
+*   `refreshIntervalMinutes`: Int (default: 5)
+*   `warningLimitUSD`: Double (default: 200.0)
+*   `upperLimitUSD`: Double (default: 1000.0)
+*   `launchAtLoginEnabled`: Bool
+*   `showCostInMenuBar`: Bool (default: false)
+*   `showInDock`: Bool (default: false)
+
+**6. Error Handling**
+
+*   **Network Errors:** Graceful degradation with error states in UI
+*   **Authentication Failures:** Automatic logout and re-login prompt
+*   **API Errors:** Provider-specific error handling (401, 429, 503)
+*   **Team Not Found:** Special handling to clear invalid session data
+*   **Currency Conversion Failures:** Falls back to USD display
+*   **Concurrent Operations:** All async operations use Swift concurrency
+
+**7. Technical Implementation**
+
+*   **Swift 6:** Strict concurrency with complete data race safety
+*   **Architecture:** Multi-provider MVVM with observable models
+*   **UI Framework:** SwiftUI for all windows and views
+*   **Menu Bar:** Custom NSStatusItem with Canvas-rendered gauge icon
+*   **Concurrency:** Async/await, @MainActor, background actors
+*   **Testing:** Protocol-based design enabling comprehensive mocking
+*   **Logging:** os.log with subsystem/category organization
+
+**8. Build System & Dependencies**
+
+**Project Management:**
+*   **Tuist:** Project generation with Swift 6 patches
+*   **Build Scripts:** Comprehensive automation for building, signing, notarization
+*   **CI/CD:** GitHub Actions support (see CI-SETUP.md)
+
+**Dependencies (Swift Package Manager):**
+*   **swift-log (1.6.1+):** Structured logging
+*   **KeychainAccess (4.0.0+):** Simplified keychain operations
+*   **Sparkle (2.0.0+):** Auto-update framework
+
+**Code Signing & Distribution:**
+*   **Hardened Runtime:** Enabled for notarization
+*   **Entitlements:** Network access, user notifications
+*   **DMG Creation:** Automated via create-dmg.sh
+*   **Notarization:** App Store Connect API integration
+
+**9. File Organization**
+
+```
+VibeMeter/
+├── App/                    # App entry point and delegate
+├── Core/
+│   ├── Environment/        # SwiftUI environment setup
+│   ├── Extensions/         # Swift extensions
+│   ├── Models/            # Data models and observable objects
+│   ├── Networking/        # URL session protocols
+│   ├── Protocols/         # Core protocols
+│   ├── Providers/         # Provider implementations
+│   ├── Services/          # Business logic services
+│   └── Utilities/         # Helper classes
+├── Presentation/
+│   ├── Components/        # Reusable UI components
+│   ├── ViewModels/        # View-specific models
+│   └── Views/             # SwiftUI views
+└── Resources/             # Assets and configs
+```
+
+**10. Future Extensibility**
+
+*   **Additional Providers:** Architecture supports OpenAI, Anthropic, GitHub Copilot
+*   **Provider Features:** Usage quotas, billing cycles, team management
+*   **UI Enhancements:** Spending trends, historical data, export functionality
+*   **Platform Expansion:** iOS/iPadOS companion apps via shared Swift packages
