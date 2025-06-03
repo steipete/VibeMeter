@@ -2,7 +2,11 @@ import Foundation
 import SwiftUI
 
 /// A gauge icon for the menu bar that displays spending as a percentage of the limit.
-/// Use between 0‒1
+///
+/// GaugeIcon renders a circular gauge with a colored arc representing the current
+/// spending level. It supports both static display and animated loading states,
+/// adapts to light/dark mode, and uses a color gradient from teal to red based
+/// on the spending percentage. The gauge accepts values between 0 and 1.
 struct GaugeIcon: View {
     var value: Double
     var isLoading: Bool = false
@@ -111,7 +115,11 @@ struct GaugeIcon: View {
     }
 }
 
-/// Handy blending helper
+/// Color extension providing color blending functionality.
+///
+/// This private extension adds the ability to blend two colors together
+/// with a specified ratio, useful for creating smooth color gradients
+/// in the gauge display.
 private extension Color {
     func blend(with other: Color, ratio: Double) -> Color {
         let nsColor1 = NSColor(self).usingColorSpace(.deviceRGB)!

@@ -2,7 +2,11 @@ import Foundation
 import KeychainAccess
 
 #if DEBUG
-    /// Mock keychain storage for debug builds that persists across app restarts
+    /// Mock keychain storage for debug builds that persists across app restarts.
+    ///
+    /// This class provides a file-based alternative to the system keychain for debug builds,
+    /// storing credentials in JSON format in the Application Support directory. This allows
+    /// for easier debugging and testing without affecting the actual keychain.
     final class DebugKeychainStorage: @unchecked Sendable {
         private var storage: [String: String] = [:]
         private let queue = DispatchQueue(label: "com.vibemeter.debugkeychain")

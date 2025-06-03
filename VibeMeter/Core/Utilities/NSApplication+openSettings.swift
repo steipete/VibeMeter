@@ -39,6 +39,10 @@ extension NSApplication {
 
 // MARK: - NSMenuItem (Private)
 
+/// NSMenuItem extension for accessing internal properties.
+///
+/// This private extension provides access to internal menu item properties
+/// needed for reliably opening the settings window.
 extension NSMenuItem {
     /// An internal SwiftUI menu item identifier that should be a public property on `NSMenuItem`.
     var internalIdentifier: String? {
@@ -69,6 +73,10 @@ extension NSMenuItem {
 
 // MARK: - NSMenu (Private)
 
+/// NSMenu extension for finding menu items by internal identifier.
+///
+/// This private extension allows searching for menu items using their
+/// internal identifiers, which is more reliable than using titles.
 extension NSMenu {
     /// Get the first `NSMenuItem` whose internal identifier string matches the given value.
     func item(withInternalIdentifier identifier: String) -> NSMenuItem? {
@@ -98,6 +106,10 @@ extension NSMenu {
 
 // MARK: - Mirror (Helper)
 
+/// Mirror extension for safe property access via reflection.
+///
+/// This private extension provides a safe way to access object properties
+/// through reflection, used for accessing internal AppKit properties.
 private extension Mirror {
     /// The unconditional first child of the reflection subject.
     var firstChild: Child? { children.first }

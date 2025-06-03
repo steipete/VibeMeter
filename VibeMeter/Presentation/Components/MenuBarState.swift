@@ -1,7 +1,11 @@
 import Foundation
 import SwiftUI
 
-/// Represents the different states of the menu bar icon
+/// Represents the different states of the menu bar icon.
+///
+/// This enum defines the three possible states for the menu bar gauge icon:
+/// not logged in (grey), loading (animated), or displaying data (static value).
+/// Each state determines how the gauge icon should be rendered.
 enum MenuBarState: Equatable {
     /// User is not logged in - grey icon, no gauge
     case notLoggedIn
@@ -45,7 +49,11 @@ enum MenuBarState: Equatable {
     }
 }
 
-/// Manages animated transitions between menu bar states
+/// Manages animated transitions between menu bar states.
+///
+/// This class handles smooth animations for gauge value changes and loading states,
+/// including the pulsing animation during data loading and smooth transitions when
+/// spending values change. It also manages cost value animations for the menu bar text.
 @Observable
 @MainActor
 class MenuBarStateManager {

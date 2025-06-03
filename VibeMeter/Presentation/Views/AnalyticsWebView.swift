@@ -47,6 +47,10 @@ struct AnalyticsWebView: NSViewRepresentable {
         Coordinator(self)
     }
 
+    /// Coordinator handling WebKit navigation delegate callbacks.
+    ///
+    /// This class manages the web view's navigation events and error handling,
+    /// serving as the bridge between the UIKit-based WKWebView and SwiftUI.
     class Coordinator: NSObject, WKNavigationDelegate {
         var parent: AnalyticsWebView
 
@@ -144,6 +148,10 @@ struct AnalyticsSettingsView: View {
 
 // MARK: - Mock Settings Manager for Preview
 
+/// Mock implementation of SettingsManagerProtocol for SwiftUI previews.
+///
+/// Provides a non-persistent, in-memory implementation of the settings manager
+/// for use in SwiftUI previews and testing scenarios.
 @MainActor
 private class MockSettingsManager: SettingsManagerProtocol {
     var providerSessions: [ServiceProvider: ProviderSession] = [:]
