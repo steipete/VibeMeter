@@ -79,8 +79,7 @@ struct ProviderSpendingRowView: View {
                 .frame(width: 18)
 
             HStack(spacing: 6) {
-                Label("\(usage.currentRequests) / \(usage.maxRequests ?? 0)",
-                      systemImage: "chart.bar.fill")
+                Text("\(usage.currentRequests) / \(usage.maxRequests ?? 0)")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
 
