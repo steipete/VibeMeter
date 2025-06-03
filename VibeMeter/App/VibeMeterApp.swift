@@ -132,6 +132,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             currencyData: currencyData
         )
 
+        // Initialize the data orchestrator
+        multiProviderOrchestrator = MultiProviderDataOrchestrator(
+            providerFactory: providerFactory,
+            settingsManager: settingsManager,
+            exchangeRateManager: exchangeRateManager,
+            notificationManager: notificationManager,
+            loginManager: loginManager,
+            spendingData: spendingData,
+            userSessionData: userSession,
+            currencyData: currencyData
+        )
+
         // Show login window automatically if user is not logged into any provider
         if !loginManager.isLoggedInToAnyProvider {
             // Delay slightly to ensure the app is fully loaded before showing login

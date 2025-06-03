@@ -73,20 +73,6 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("General")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .padding(.top, 10)
-                    .padding(.horizontal, 10)
-                
-                Text("Configure general application preferences and behavior.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 10)
-            }
-            
             Section {
                 Toggle("Launch at Login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in
@@ -229,22 +215,7 @@ struct AboutView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("About")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .padding(.top, 10)
-                        .padding(.horizontal, 10)
-                    
-                    Text("Information about VibeMeter.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
-                        .padding(.bottom, 10)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
+            VStack(spacing: 24) {                
                 // App info
                 VStack(spacing: 16) {
                     Image(nsImage: NSApp.applicationIconImage)
@@ -288,4 +259,43 @@ struct AboutView: View {
         }
         .scrollContentBackground(.hidden)
     }
+}
+
+// MARK: - Previews
+
+#Preview("Settings Section") {
+    SettingsSection(title: "Example Section") {
+        SettingsRow {
+            HStack {
+                Text("Setting Name")
+                Spacer()
+                Toggle("", isOn: .constant(true))
+            }
+        }
+        SettingsRow {
+            HStack {
+                Text("Another Setting")
+                Spacer()
+                Text("Value")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+    .padding()
+    .frame(width: 400)
+}
+
+#Preview("General Settings") {
+    GeneralSettingsView(settingsManager: SettingsManager.shared)
+        .frame(width: 600, height: 400)
+}
+
+#Preview("Advanced Settings") {
+    AdvancedSettingsView()
+        .frame(width: 600, height: 400)
+}
+
+#Preview("About View") {
+    AboutView()
+        .frame(width: 600, height: 500)
 }

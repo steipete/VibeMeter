@@ -73,7 +73,24 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         setupLoginCallbacks()
         setupRefreshTimers()
 
+        // Initialize user session state for providers with existing tokens
+        for provider in loginManager.loggedInProviders {
+            // Create a basic logged-in session state until we fetch full data
+            userSessionData.handleLoginSuccess(
+                for: provider,
+                email: "", // Will be updated when data is fetched
+                teamName: nil,
+                teamId: nil)
+        }
+
         logger.info("MultiProviderDataOrchestrator initialized")
+        
+        // Trigger initial data refresh for providers with existing tokens
+        Task {
+            for provider in loginManager.loggedInProviders {
+                await refreshData(for: provider, showSyncedMessage: false)
+            }
+        }
     }
 
     // MARK: - Public Methods
@@ -131,6 +148,15 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 email: userInfo.email,
                 teamName: teamInfo.name,
                 teamId: teamInfo.id)
+            
+            // Sync with SettingsManager
+            let providerSession = ProviderSession(
+                provider: provider,
+                teamId: teamInfo.id,
+                teamName: teamInfo.name,
+                userEmail: userInfo.email,
+                isActive: true)
+            settingsManager.updateSession(for: provider, session: providerSession)
 
             // Fetch current month invoice
             let calendar = Calendar.current
@@ -204,6 +230,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
         loginManager.logOut(from: provider)
         userSessionData.handleLogout(from: provider)
         spendingData.clear(provider: provider)
+        settingsManager.clearUserSessionData(for: provider)
 
         logger.info("Logged out from \(provider.displayName)")
     }

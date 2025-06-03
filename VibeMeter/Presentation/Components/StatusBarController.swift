@@ -36,7 +36,6 @@ final class StatusBarController: NSObject {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(named: "menubar-icon")
             button.imagePosition = .imageLeading
             button.action = #selector(togglePopover)
             button.target = self
@@ -65,24 +64,41 @@ final class StatusBarController: NSObject {
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
         
-        if settingsManager.showCostInMenuBar {
-            let providers = spendingData.providersWithData
-            if !providers.isEmpty {
-                let spending: Double = if providers.count == 1,
-                                          let providerData = spendingData.getSpendingData(for: providers[0]),
-                                          let providerSpending = providerData.displaySpending {
-                    providerSpending
-                } else {
-                    spendingData.totalSpendingConverted(
-                        to: currencyData.selectedCode,
-                        rates: currencyData.currentExchangeRates
-                    )
-                }
-                
-                button.title = "\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
+        // Calculate total spending in USD for gauge calculation
+        let providers = spendingData.providersWithData
+        let totalSpendingUSD: Double = if !providers.isEmpty {
+            spendingData.totalSpendingConverted(to: "USD", rates: currencyData.currentExchangeRates)
+        } else {
+            0.0
+        }
+        
+        // Calculate gauge value (0-1) based on upper limit
+        let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+        
+        // Create and render the gauge icon
+        let gaugeIcon = GaugeIcon(value: gaugeValue)
+        let renderer = ImageRenderer(content: gaugeIcon)
+        renderer.scale = 2.0 // Retina display
+        
+        if let nsImage = renderer.nsImage {
+            button.image = nsImage
+            button.image?.isTemplate = true // Allow it to adapt to dark/light mode
+        }
+        
+        // Set the text title if enabled
+        if settingsManager.showCostInMenuBar && !providers.isEmpty {
+            let spending: Double = if providers.count == 1,
+                                      let providerData = spendingData.getSpendingData(for: providers[0]),
+                                      let providerSpending = providerData.displaySpending {
+                providerSpending
             } else {
-                button.title = ""
+                spendingData.totalSpendingConverted(
+                    to: currencyData.selectedCode,
+                    rates: currencyData.currentExchangeRates
+                )
             }
+            
+            button.title = "\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
         } else {
             button.title = ""
         }

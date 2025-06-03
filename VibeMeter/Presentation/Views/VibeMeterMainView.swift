@@ -273,7 +273,7 @@ struct VibeMeterMainView: View {
                 .buttonStyle(GlassButtonStyle(isDestructive: true))
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 20)
+            .padding(.bottom, 40)
         }
     }
     
@@ -401,5 +401,83 @@ private extension ServiceProvider {
         case .cursor:
             return .blue
         }
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Logged Out") {
+    VibeMeterMainView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: MultiProviderUserSessionData(),
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+    .environment(MultiProviderSpendingData())
+    .environment(CurrencyData())
+}
+
+#Preview("Logged In") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    let spendingData = MultiProviderSpendingData()
+    spendingData.updateSpending(
+        for: .cursor,
+        from: ProviderMonthlyInvoice(
+            items: [ProviderInvoiceItem(cents: 2500, description: "Usage", provider: .cursor)],
+            pricingDescription: nil,
+            provider: .cursor,
+            month: 5,
+            year: 2025
+        ),
+        rates: [:],
+        targetCurrency: "USD"
+    )
+    
+    return VibeMeterMainView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())
+        )
+    )
+    .environment(spendingData)
+    .environment(CurrencyData())
+}
+
+// MARK: - Mock Settings Manager for Preview
+
+@MainActor
+private class MockSettingsManager: SettingsManagerProtocol {
+    var providerSessions: [ServiceProvider: ProviderSession] = [:]
+    var selectedCurrencyCode: String = "USD"
+    var warningLimitUSD: Double = 200
+    var upperLimitUSD: Double = 500
+    var refreshIntervalMinutes: Int = 5
+    var launchAtLoginEnabled: Bool = false
+    var showCostInMenuBar: Bool = true
+    var enabledProviders: Set<ServiceProvider> = [.cursor]
+    
+    func clearUserSessionData() {
+        providerSessions.removeAll()
+    }
+    
+    func clearUserSessionData(for provider: ServiceProvider) {
+        providerSessions.removeValue(forKey: provider)
+    }
+    
+    func getSession(for provider: ServiceProvider) -> ProviderSession? {
+        providerSessions[provider]
+    }
+    
+    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
+        providerSessions[provider] = session
     }
 }

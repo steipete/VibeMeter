@@ -96,31 +96,44 @@ struct ProvidersSettingsView: View {
     private let providerRegistry = ProviderRegistry.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Service Providers")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Manage your cost tracking service account.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            LazyVStack(spacing: 12) {
-                ForEach(ServiceProvider.allCases) { provider in
-                    ProviderRowView(
-                        provider: provider,
-                        userSessionData: userSessionData,
-                        loginManager: loginManager,
-                        providerRegistry: providerRegistry,
-                        showDetail: {
-                            showingProviderDetail = provider
-                        })
-                }
+        Form {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Service Providers")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .padding(.top, 10)
+                    .padding(.horizontal, 10)
+                
+                Text("Manage your cost tracking service account.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 10)
             }
-
-            Spacer()
+            
+            Section {
+                VStack(spacing: 1) {
+                    ForEach(ServiceProvider.allCases) { provider in
+                        ProviderRowView(
+                            provider: provider,
+                            userSessionData: userSessionData,
+                            loginManager: loginManager,
+                            providerRegistry: providerRegistry,
+                            showDetail: {
+                                showingProviderDetail = provider
+                            })
+                            .background(Color(NSColor.controlBackgroundColor))
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(NSColor.separatorColor).opacity(0.3), lineWidth: 0.5)
+                )
+            }
         }
-        .padding()
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onAppear {
             setupLoginCallbacks()
         }
@@ -283,8 +296,9 @@ struct ProviderRowView: View {
                 .controlSize(.small)
             }
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusColor: Color {
@@ -565,10 +579,58 @@ struct SpendingLimitsView: View {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Settings - Not Logged In") {
     MultiProviderSettingsView(
-        settingsManager: SettingsManager.shared,
+        settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: SettingsManager.shared)))
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+    .frame(width: 700, height: 500)
+}
+
+#Preview("Settings - Logged In") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.handleLoginSuccess(
+        for: .cursor,
+        email: "user@example.com",
+        teamName: "Example Team",
+        teamId: 123
+    )
+    
+    return MultiProviderSettingsView(
+        settingsManager: MockSettingsManager(),
+        userSessionData: userSessionData,
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+    .frame(width: 700, height: 500)
+}
+
+// MARK: - Mock Settings Manager for Preview
+
+@MainActor
+private class MockSettingsManager: SettingsManagerProtocol {
+    var providerSessions: [ServiceProvider: ProviderSession] = [:]
+    var selectedCurrencyCode: String = "USD"
+    var warningLimitUSD: Double = 200
+    var upperLimitUSD: Double = 500
+    var refreshIntervalMinutes: Int = 5
+    var launchAtLoginEnabled: Bool = false
+    var showCostInMenuBar: Bool = true
+    var enabledProviders: Set<ServiceProvider> = [.cursor]
+    
+    func clearUserSessionData() {
+        providerSessions.removeAll()
+    }
+    
+    func clearUserSessionData(for provider: ServiceProvider) {
+        providerSessions.removeValue(forKey: provider)
+    }
+    
+    func getSession(for provider: ServiceProvider) -> ProviderSession? {
+        providerSessions[provider]
+    }
+    
+    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
+        providerSessions[provider] = session
+    }
 }

@@ -21,7 +21,7 @@ final class DebugKeychainStorage: @unchecked Sendable {
     
     func remove(_ key: String) {
         queue.sync {
-            storage.removeValue(forKey: key)
+            _ = storage.removeValue(forKey: key)
         }
     }
 }
