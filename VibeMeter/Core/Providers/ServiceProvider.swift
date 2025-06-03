@@ -30,6 +30,14 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         }
     }
 
+    /// Provider's dashboard URL for authenticated users.
+    public var dashboardURL: URL {
+        switch self {
+        case .cursor:
+            URL(string: "https://www.cursor.com/analytics")!
+        }
+    }
+
     /// Authentication URL for the provider's OAuth/login flow.
     public var authenticationURL: URL {
         switch self {
