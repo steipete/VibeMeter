@@ -23,7 +23,6 @@ struct ProviderRowView: View {
         HStack(spacing: 16) {
             // Provider icon
             providerIcon(for: provider)
-                .font(.title2)
                 .foregroundStyle(.primary)
                 .frame(width: 32, height: 32)
 
@@ -103,11 +102,18 @@ struct ProviderRowView: View {
         }
     }
 
-    private func providerIcon(for provider: ServiceProvider) -> Image {
-        if provider.iconName.contains(".") {
-            Image(systemName: provider.iconName)
-        } else {
-            Image(provider.iconName)
+    private func providerIcon(for provider: ServiceProvider) -> some View {
+        Group {
+            if provider.iconName.contains(".") {
+                // System symbol - use font sizing
+                Image(systemName: provider.iconName)
+                    .font(.title2)
+            } else {
+                // Custom asset - use resizable with explicit sizing
+                Image(provider.iconName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            }
         }
     }
 }

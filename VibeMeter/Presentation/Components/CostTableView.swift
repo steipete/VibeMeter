@@ -12,7 +12,7 @@ struct CostTableView: View {
     private var selectedProvider: ServiceProvider?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             totalSpendingSection
 
             if !spendingData.providersWithData.isEmpty {
@@ -24,38 +24,38 @@ struct CostTableView: View {
     }
 
     private var totalSpendingSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("Total Spending")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
 
             HStack(alignment: .firstTextBaseline) {
                 if let totalSpending = currentSpendingDisplay {
                     Text(totalSpending)
-                        .font(.system(size: 28, weight: .semibold, design: .rounded))
+                        .font(.system(size: 24, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 } else {
                     Text("No data")
-                        .font(.system(size: 16))
+                        .font(.system(size: 14))
                         .foregroundStyle(.tertiary)
                 }
 
                 Spacer()
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.regularMaterial))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.thickMaterial))
     }
 
     private var providerBreakdownSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Breakdown")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
 
             VStack(spacing: 2) {
                 ForEach(spendingData.providersWithData, id: \.self) { provider in
@@ -64,23 +64,23 @@ struct CostTableView: View {
                         selectedProvider: $selectedProvider)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 8)
+            .padding(.bottom, 6)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.regularMaterial))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.thickMaterial))
     }
 
     private var spendingLimitsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Limits")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 20)
-            
-            VStack(spacing: 12) {
+                .padding(.horizontal, 16)
+
+            VStack(spacing: 8) {
                 HStack {
                     Label("Warning", systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 12))
@@ -103,13 +103,13 @@ struct CostTableView: View {
                         .foregroundStyle(.red)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 6)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.regularMaterial))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.thickMaterial))
     }
 
     // MARK: - Helper Properties

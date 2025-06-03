@@ -7,34 +7,32 @@ struct LoggedInContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header section
+            // Header section - more compact
             UserHeaderView(userSessionData: userSessionData)
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 12)
 
             Divider()
                 .overlay(Color.white.opacity(0.08))
 
-            // Content section with consistent spacing
-            ScrollView {
-                VStack(spacing: 16) {
-                    CostTableView(settingsManager: settingsManager)
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 20)
+            // Content section - reduced spacing
+            VStack(spacing: 8) {
+                CostTableView(settingsManager: settingsManager)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
 
-            Spacer(minLength: 0)
+            Spacer(minLength: 8)
 
-            // Action buttons footer
+            // Action buttons footer - more compact
             VStack(spacing: 0) {
                 Divider()
-                    .overlay(Color.white.opacity(0.05))
+                    .overlay(Color.white.opacity(0.1))
 
                 ActionButtonsView(onRefresh: onRefresh)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
             }
         }
     }

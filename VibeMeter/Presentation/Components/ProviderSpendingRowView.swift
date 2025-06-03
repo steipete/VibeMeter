@@ -19,8 +19,8 @@ struct ProviderSpendingRowView: View {
                 usageDataRow(usage: usage)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
@@ -36,12 +36,16 @@ struct ProviderSpendingRowView: View {
             // Provider icon with consistent sizing
             Group {
                 if provider.iconName.contains(".") {
+                    // System symbol - use font sizing
                     Image(systemName: provider.iconName)
+                        .font(.system(size: 16))
                 } else {
+                    // Custom asset - use resizable with explicit sizing
                     Image(provider.iconName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
                 }
             }
-            .font(.system(size: 16))
             .foregroundStyle(provider.accentColor)
             .frame(width: 20, height: 20)
 

@@ -18,7 +18,7 @@ struct VibeMeterMainView: View {
                 LoggedOutContentView(loginManager: loginManager)
             }
         }
-        .frame(width: 320, height: userSessionData.isLoggedInToAnyProvider ? 400 : 300)
+        .frame(width: 300, height: userSessionData.isLoggedInToAnyProvider ? 350 : 280)
     }
 }
 
@@ -102,16 +102,5 @@ private class MockSettingsManager: SettingsManagerProtocol {
 
     func updateSession(for provider: ServiceProvider, session: ProviderSession) {
         providerSessions[provider] = session
-    }
-
-    private func providerIcon(for provider: ServiceProvider) -> Image {
-        // Check if it's a system symbol or custom asset
-        if provider.iconName.contains(".") {
-            // System symbol (contains dots like "terminal.fill")
-            Image(systemName: provider.iconName)
-        } else {
-            // Custom asset
-            Image(provider.iconName)
-        }
     }
 }
