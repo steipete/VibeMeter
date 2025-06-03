@@ -116,6 +116,31 @@ public actor CursorProvider: ProviderProtocol {
             year: year)
     }
 
+    public func fetchUsageData(authToken: String) async throws -> ProviderUsageData {
+        logger.debug("Fetching Cursor usage data")
+
+        let endpoint = baseURL.appendingPathComponent("usage")
+        let request = createRequest(for: endpoint, authToken: authToken)
+
+        let response: CursorUsageResponse = try await performRequest(request)
+
+        // Use GPT-4 usage as the primary metric since it has the largest quota
+        let primaryUsage = response.gpt4
+        
+        // Parse the start of month date
+        let dateFormatter = ISO8601DateFormatter()
+        let startOfMonth = dateFormatter.date(from: response.startOfMonth) ?? Date()
+
+        logger.info("Successfully fetched Cursor usage: \(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests")
+
+        return ProviderUsageData(
+            currentRequests: primaryUsage.numRequests,
+            totalRequests: primaryUsage.numRequestsTotal,
+            maxRequests: primaryUsage.maxRequestUsage,
+            startOfMonth: startOfMonth,
+            provider: .cursor)
+    }
+
     public func validateToken(authToken: String) async -> Bool {
         do {
             _ = try await fetchUserInfo(authToken: authToken)

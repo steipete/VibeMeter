@@ -173,17 +173,22 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
             settingsManager.updateSession(for: provider, session: providerSession)
             logger.info("Updated SettingsManager session for \(provider.displayName)")
 
-            // Fetch current month invoice
+            // Fetch current month invoice and usage data
             let calendar = Calendar.current
             let month = calendar.component(.month, from: Date()) - 1 // 0-based for API
             let year = calendar.component(.year, from: Date())
 
-            let invoice = try await providerClient.fetchMonthlyInvoice(
+            async let invoiceTask = providerClient.fetchMonthlyInvoice(
                 authToken: authToken,
                 month: month,
                 year: year)
+            async let usageTask = providerClient.fetchUsageData(authToken: authToken)
+
+            let invoice = try await invoiceTask
+            let usage = try await usageTask
 
             logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
+            logger.info("Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
             
             // Update spending data
             let rates = await exchangeRateManager.getExchangeRates()
@@ -196,6 +201,9 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
                 rates: rates,
                 targetCurrency: targetCurrency)
             logger.info("Updated spending data for \(provider.displayName)")
+
+            spendingData.updateUsage(for: provider, from: usage)
+            logger.info("Updated usage data for \(provider.displayName)")
 
             spendingData.updateLimits(
                 for: provider,

@@ -30,6 +30,11 @@ public protocol ProviderProtocol: Sendable {
     /// - Returns: Monthly invoice with itemized costs
     func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> ProviderMonthlyInvoice
 
+    /// Fetches current usage statistics and quotas.
+    /// - Parameter authToken: Authentication token for the provider
+    /// - Returns: Usage information including requests, quotas, and tokens
+    func fetchUsageData(authToken: String) async throws -> ProviderUsageData
+
     /// Validates that an authentication token is still valid.
     /// - Parameter authToken: Authentication token to validate
     /// - Returns: True if token is valid, false otherwise
@@ -216,6 +221,28 @@ public struct ProviderPricingDescription: Codable, Equatable, Sendable {
     public init(description: String, id: String, provider: ServiceProvider) {
         self.description = description
         self.id = id
+        self.provider = provider
+    }
+}
+
+/// Generic usage data that works across all providers.
+public struct ProviderUsageData: Codable, Equatable, Sendable {
+    public let currentRequests: Int
+    public let totalRequests: Int
+    public let maxRequests: Int?
+    public let startOfMonth: Date
+    public let provider: ServiceProvider
+
+    public init(
+        currentRequests: Int,
+        totalRequests: Int,
+        maxRequests: Int? = nil,
+        startOfMonth: Date,
+        provider: ServiceProvider) {
+        self.currentRequests = currentRequests
+        self.totalRequests = totalRequests
+        self.maxRequests = maxRequests
+        self.startOfMonth = startOfMonth
         self.provider = provider
     }
 }

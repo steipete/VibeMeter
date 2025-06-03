@@ -14,6 +14,7 @@ public struct ProviderSpendingData: Codable, Sendable {
     public var warningLimitConverted: Double?
     public var upperLimitConverted: Double?
     public var latestInvoiceResponse: ProviderMonthlyInvoice?
+    public var usageData: ProviderUsageData?
     public var lastUpdated: Date
 
     public init(
@@ -23,6 +24,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         warningLimitConverted: Double? = nil,
         upperLimitConverted: Double? = nil,
         latestInvoiceResponse: ProviderMonthlyInvoice? = nil,
+        usageData: ProviderUsageData? = nil,
         lastUpdated: Date = Date()) {
         self.provider = provider
         self.currentSpendingUSD = currentSpendingUSD
@@ -30,6 +32,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         self.warningLimitConverted = warningLimitConverted
         self.upperLimitConverted = upperLimitConverted
         self.latestInvoiceResponse = latestInvoiceResponse
+        self.usageData = usageData
         self.lastUpdated = lastUpdated
     }
 
@@ -94,6 +97,12 @@ public struct ProviderSpendingData: Codable, Sendable {
         lastUpdated = Date()
     }
 
+    /// Updates usage data from a provider usage response.
+    public mutating func updateUsage(from usageData: ProviderUsageData) {
+        self.usageData = usageData
+        lastUpdated = Date()
+    }
+
     /// Clears all spending data for this provider.
     public mutating func clear() {
         currentSpendingUSD = nil
@@ -101,6 +110,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         warningLimitConverted = nil
         upperLimitConverted = nil
         latestInvoiceResponse = nil
+        usageData = nil
         lastUpdated = Date()
     }
 }
@@ -141,6 +151,13 @@ public final class MultiProviderSpendingData {
         targetCurrency: String) {
         var data = providerSpending[provider] ?? ProviderSpendingData(provider: provider)
         data.updateLimits(warningUSD: warningUSD, upperUSD: upperUSD, rates: rates, targetCurrency: targetCurrency)
+        providerSpending[provider] = data
+    }
+
+    /// Updates usage data for a specific provider.
+    public func updateUsage(for provider: ServiceProvider, from usageData: ProviderUsageData) {
+        var data = providerSpending[provider] ?? ProviderSpendingData(provider: provider)
+        data.updateUsage(from: usageData)
         providerSpending[provider] = data
     }
 
