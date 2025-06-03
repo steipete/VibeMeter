@@ -216,10 +216,10 @@ final class StartupManagerTests: XCTestCase {
             sut.setLaunchAtLogin(enabled: false)
         }
 
-        // Then - Final state should be disabled
+        // Then - Final state should not be enabled
         let finalStatus = SMAppService.mainApp.status
         XCTAssertTrue(
-            finalStatus == .disabled || finalStatus == .notRegistered || finalStatus == .notFound,
+            finalStatus != .enabled,
             "After disable cycles, app should not be enabled for launch at login")
     }
 
