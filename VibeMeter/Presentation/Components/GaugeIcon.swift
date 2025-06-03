@@ -11,9 +11,13 @@ struct GaugeIcon: View {
     var value: Double
     var isLoading: Bool = false
     var isDisabled: Bool = false
+    var animateOnAppear: Bool = false
 
     @Environment(\.colorScheme)
     private var colorScheme
+
+    @State
+    private var animationProgress: Double = 1.0
 
     private let lineRatio = 0.18 // stroke thickness vs. frame
     private let startAngle = 210.0 // ° (left-down)
@@ -26,26 +30,25 @@ struct GaugeIcon: View {
             let margin = size.width * 0.1 // 10% margin
             let radius = size.width / 2 - line / 2 - margin
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let endAngle = startAngle + sweepAngle * value
             let trackPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
-                         endAngle: .degrees(startAngle + sweepAngle),
+                         endAngle: .degrees(startAngle + sweepAngle * animationProgress),
                          clockwise: true)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
-                         endAngle: .degrees(endAngle),
+                         endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
                          clockwise: true)
             }
 
-            // Draw track (always visible) - adjust for appearance
+            // Draw track (always visible) - adjust for appearance with better dark mode contrast
             let trackColor = isDisabled
-                ? (colorScheme == .dark ? Color.gray.opacity(0.3) : Color.gray.opacity(0.4))
-                : (colorScheme == .dark ? Color.gray.opacity(0.2) : Color.gray.opacity(0.3))
+                ? (colorScheme == .dark ? Color.white.opacity(0.2) : Color.gray.opacity(0.4))
+                : (colorScheme == .dark ? Color.white.opacity(0.15) : Color.gray.opacity(0.3))
             ctx.stroke(trackPath,
                        with: .color(trackColor),
                        style: StrokeStyle(lineWidth: line, lineCap: .round))
@@ -74,7 +77,8 @@ struct GaugeIcon: View {
 
                 // optional needle
                 let needleLen = radius * 0.82
-                let rad = Double(endAngle) * .pi / 180
+                let animatedEndAngle = startAngle + sweepAngle * value * animationProgress
+                let rad = Double(animatedEndAngle) * .pi / 180
                 let tip = CGPoint(x: center.x + needleLen * CGFloat(Foundation.cos(rad)),
                                   y: center.y + needleLen * CGFloat(Foundation.sin(rad)))
                 var needle = Path()
@@ -90,25 +94,51 @@ struct GaugeIcon: View {
             }
         }
         .frame(width: 22, height: 22) // menu-bar size (@1×; doubles on Retina)
+        .onAppear {
+            if animateOnAppear {
+                animationProgress = 0.0
+                withAnimation(.easeOut(duration: 0.6)) {
+                    animationProgress = 1.0
+                }
+            }
+        }
     }
 
-    /// Rainbow-ish gradient from teal→green→yellow→orange→red
+    /// Theme-aware gauge colors that adapt to light/dark mode
     private func color(for v: Double) -> Color {
-        let palette: [Color] = [.teal, .green, .yellow, .orange, .red]
+        // Use brighter, more vibrant colors in dark mode for better visibility
+        let palette: [Color] = colorScheme == .dark
+            ? [
+                Color.cyan.opacity(0.9), // Bright cyan instead of dark teal
+                Color.green.opacity(0.9), // Bright green
+                Color.yellow.opacity(0.95), // Bright yellow
+                Color.orange.opacity(0.9), // Bright orange
+                Color.red.opacity(0.9) // Bright red
+            ]
+            : [.teal, .green, .yellow, .orange, .red] // Standard colors for light mode
+
         let seg = min(4, Int(v * 4))
         let t = v * 4 - Double(seg)
         return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
     }
 
-    /// Loading state uses a more subtle blue gradient
+    /// Loading state uses theme-aware blue gradient
     private func loadingColor(for v: Double) -> Color {
-        let palette: [Color] = [
-            Color.blue.opacity(0.4),
-            Color.blue.opacity(0.6),
-            Color.blue.opacity(0.8),
-            Color.blue.opacity(0.6),
-            Color.blue.opacity(0.4),
-        ]
+        let palette: [Color] = colorScheme == .dark
+            ? [
+                Color.cyan.opacity(0.6), // Brighter blues for dark mode
+                Color.cyan.opacity(0.8),
+                Color.blue.opacity(0.9),
+                Color.cyan.opacity(0.8),
+                Color.cyan.opacity(0.6),
+            ]
+            : [
+                Color.blue.opacity(0.4), // Subtle blues for light mode
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.8),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.4),
+            ]
         let seg = min(4, Int(v * 4))
         let t = v * 4 - Double(seg)
         return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)

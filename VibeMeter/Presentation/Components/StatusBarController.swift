@@ -105,26 +105,34 @@ final class StatusBarController: NSObject {
             }
         }
 
-        // Determine current appearance
+        // Determine current appearance for explicit environment injection
         let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let colorScheme: ColorScheme = isDarkMode ? .dark : .light
 
-        // Create and render the gauge icon based on state with proper environment
+        // Create and render the gauge icon based on state with explicit colorScheme for ImageRenderer
         let gaugeView: some View = ZStack(alignment: .topTrailing) {
             switch stateManager.currentState {
             case .notLoggedIn:
                 // Grey icon with no gauge
-                GaugeIcon(value: 0, isLoading: false, isDisabled: true)
+                GaugeIcon(value: 0, isLoading: false, isDisabled: true, animateOnAppear: true)
                     .frame(width: 18, height: 18)
                     .environment(\.colorScheme, colorScheme)
             case .loading:
                 // Animated loading gauge
-                GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: true, isDisabled: false)
+                GaugeIcon(
+                    value: stateManager.animatedGaugeValue,
+                    isLoading: true,
+                    isDisabled: false,
+                    animateOnAppear: true)
                     .frame(width: 18, height: 18)
                     .environment(\.colorScheme, colorScheme)
             case .data:
                 // Static gauge at spending level
-                GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: false, isDisabled: false)
+                GaugeIcon(
+                    value: stateManager.animatedGaugeValue,
+                    isLoading: false,
+                    isDisabled: false,
+                    animateOnAppear: true)
                     .frame(width: 18, height: 18)
                     .environment(\.colorScheme, colorScheme)
             }

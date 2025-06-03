@@ -18,7 +18,7 @@ struct CostTableView: View {
     private var selectedProvider: ServiceProvider?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             totalSpendingSection
 
             if !spendingData.providersWithData.isEmpty {
@@ -47,8 +47,7 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .standardPadding(horizontal: 14)
-        .padding(.vertical, 10)
+        .standardPadding(horizontal: 12, vertical: 8)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
 
@@ -61,7 +60,7 @@ struct CostTableView: View {
                     selectedProvider: $selectedProvider)
             }
         }
-        .standardPadding(horizontal: 4, vertical: 4)
+        .standardPadding(horizontal: 3, vertical: 3)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
 
@@ -88,8 +87,7 @@ struct CostTableView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.red)
         }
-        .standardPadding(horizontal: 14)
-        .padding(.vertical, 10)
+        .standardPadding(horizontal: 12, vertical: 8)
         .materialBackground(cornerRadius: 10, material: .thickMaterial)
     }
 

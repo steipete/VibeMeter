@@ -17,7 +17,7 @@ struct LoggedInContentView: View {
             UserHeaderView(userSessionData: userSessionData)
                 .padding(.horizontal, 14)
                 .padding(.top, 10)
-                .padding(.bottom, 10)
+                .padding(.bottom, 8)
 
             Divider()
                 .overlay(Color.white.opacity(0.08))
@@ -27,9 +27,9 @@ struct LoggedInContentView: View {
                 CostTableView(settingsManager: settingsManager, loginManager: loginManager)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 6)
 
             // Action buttons footer - more compact
             VStack(spacing: 0) {
@@ -38,7 +38,7 @@ struct LoggedInContentView: View {
 
                 ActionButtonsView(onRefresh: onRefresh)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 8)
             }
         }
     }

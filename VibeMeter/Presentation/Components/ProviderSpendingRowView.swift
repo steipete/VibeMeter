@@ -17,30 +17,39 @@ struct ProviderSpendingRowView: View {
     private var currencyData
 
     var body: some View {
-        VStack(spacing: 2) {
-            HStack(spacing: 0) {
-                mainProviderRow
+        VStack(spacing: 1) {
+            mainProviderRow
 
-                // Integrate usage data inline instead of separate row
+            // Show usage data and last refresh on second line
+            HStack {
+                // Align with icon column above (20px wide from mainProviderRow)
+                Color.clear
+                    .frame(width: 20)
+
+                // Usage data badge
                 if let providerData = spendingData.getSpendingData(for: provider),
                    let usage = providerData.usageData,
                    let maxRequests = usage.maxRequests, maxRequests > 0 {
-                    Divider()
-                        .frame(height: 16)
-                        .padding(.horizontal, 8)
-
                     usageDataBadge(usage: usage, maxRequests: maxRequests)
                 }
-            }
 
-            // Show last refresh timestamp if available
-            if let providerData = spendingData.getSpendingData(for: provider),
-               let lastRefresh = providerData.lastSuccessfulRefresh {
-                lastRefreshRow(date: lastRefresh)
+                Spacer()
+
+                // Last refresh timestamp
+                if let providerData = spendingData.getSpendingData(for: provider),
+                   let lastRefresh = providerData.lastSuccessfulRefresh {
+                    RelativeTimestampView(
+                        date: lastRefresh,
+                        style: .withPrefix,
+                        showFreshnessColor: false)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.quaternary)
+                }
             }
+            .frame(minHeight: 12) // Reduce minimum height for tighter layout
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2) // Reduce vertical padding
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
@@ -81,7 +90,7 @@ struct ProviderSpendingRowView: View {
                         .offset(x: 4, y: -4)
                 }
             }
-            .frame(width: 20, height: 20) // Give space for badge
+            .frame(width: 20, height: 16) // Reduce height while keeping width for alignment
 
             // Provider name
             Text(provider.displayName)
@@ -129,30 +138,13 @@ struct ProviderSpendingRowView: View {
         }
     }
 
-    private func lastRefreshRow(date: Date) -> some View {
-        HStack {
-            // Align with icon column above (20px wide from mainProviderRow)
-            Color.clear
-                .frame(width: 20)
-
-            RelativeTimestampView(
-                date: date,
-                style: .withPrefix,
-                showFreshnessColor: false)
-                .font(.system(size: 9))
-                .foregroundStyle(.quaternary)
-
-            Spacer()
-        }
-    }
-
     // Progress color logic moved to ProgressColorHelper
 
     private func openProviderDashboard() {
         guard let loginManager,
               let authToken = loginManager.getAuthToken(for: provider) else {
             // Fallback to opening without auth
-            openProviderURL(provider.dashboardURL)
+            BrowserAuthenticationHelper.openURL(provider.dashboardURL)
             return
         }
 
@@ -160,45 +152,11 @@ struct ProviderSpendingRowView: View {
         // we can create a URL with the session token
         switch provider {
         case .cursor:
-            openCursorDashboardWithAuth(authToken: authToken)
+            if !BrowserAuthenticationHelper.openCursorDashboardWithAuth(authToken: authToken) {
+                // Fallback to opening dashboard without auth
+                BrowserAuthenticationHelper.openURL(provider.dashboardURL)
+            }
         }
-    }
-
-    private func openCursorDashboardWithAuth(authToken: String) {
-        // Create a temporary HTML file that sets the cookie and redirects to dashboard
-        let htmlContent = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Redirecting to Cursor Dashboard...</title>
-            <script>
-                // Set the authentication cookie
-                document.cookie = "WorkosCursorSessionToken=\(authToken); domain=.cursor.com; path=/";
-                // Redirect to analytics
-                window.location.href = "https://www.cursor.com/analytics";
-            </script>
-        </head>
-        <body>
-            <p>Redirecting to Cursor Dashboard...</p>
-        </body>
-        </html>
-        """
-
-        // Write to temporary file and open
-        let tempDir = FileManager.default.temporaryDirectory
-        let tempFile = tempDir.appendingPathComponent("cursor_redirect.html")
-
-        do {
-            try htmlContent.write(to: tempFile, atomically: true, encoding: .utf8)
-            NSWorkspace.shared.open(tempFile)
-        } catch {
-            // Fallback to opening dashboard without auth
-            openProviderURL(provider.dashboardURL)
-        }
-    }
-
-    private func openProviderURL(_ url: URL) {
-        NSWorkspace.shared.open(url)
     }
 }
 
@@ -260,7 +218,7 @@ private extension ServiceProvider {
             .foregroundStyle(.secondary)
     }
     .padding()
-    .frame(width: 320)
+    .frame(width: 320, height: 100)
     .background(Color(NSColor.windowBackgroundColor))
 }
 

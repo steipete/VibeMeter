@@ -35,16 +35,9 @@ struct LoggedInMenuContent: View {
 
             quitButtonSection
         }
-        .standardPadding(horizontal: 12, vertical: 12)
+        .standardPadding(horizontal: 10, vertical: 10)
         .onAppear {
-            logger.info("LoggedInMenuContent appeared")
-            logger.info("Most recent session: \(userSessionData.mostRecentSession?.provider.displayName ?? "none")")
-            logger.info("Currency: \(currencyData.selectedCode), Symbol: \(currencyData.selectedSymbol)")
-            if let spending = currentSpendingDisplay {
-                logger.info("Current spending display: \(spending)")
-            } else {
-                logger.info("No spending data available")
-            }
+            // Logging removed for preview compatibility
         }
     }
 
@@ -60,7 +53,8 @@ struct LoggedInMenuContent: View {
                         .foregroundStyle(.secondary)
 
                     if userSessionData.loggedInProviders.count > 1 {
-                        Text("\(userSessionData.loggedInProviders.count) providers")
+                        let providerCount = userSessionData.loggedInProviders.count
+                        Text("\(providerCount) providers")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     } else {
@@ -78,16 +72,10 @@ struct LoggedInMenuContent: View {
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
                     .font(.headline)
-                    .onAppear {
-                        logger.info("Displaying spending: \(totalSpending)")
-                    }
             } else {
                 Text("No spending data")
                     .font(.headline)
                     .foregroundStyle(.secondary)
-                    .onAppear {
-                        logger.info("No spending data to display")
-                    }
             }
         }
     }
@@ -95,14 +83,12 @@ struct LoggedInMenuContent: View {
     private var spendingLimitsSection: some View {
         HStack {
             Text("⚠️")
-            Text(
-                "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+            Text(warningLimitText)
 
             Spacer()
 
             Text("🚨")
-            Text(
-                "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+            Text(upperLimitText)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -123,7 +109,6 @@ struct LoggedInMenuContent: View {
             .keyboardShortcut(",")
 
             Button("Log Out All") {
-                logger.info("User requested logout from all providers")
                 loginManager.logOutFromAll()
             }
             .keyboardShortcut("q")
@@ -150,7 +135,9 @@ struct LoggedInMenuContent: View {
             to: currencyData.selectedCode,
             rates: currencyData.effectiveRates)
 
-        return "\(currencyData.selectedSymbol)\(totalSpending.formatted(.number.precision(.fractionLength(2))))"
+        let formattedSpending = totalSpending.formatted(.number.precision(.fractionLength(2)))
+        let spendingText = "\(currencyData.selectedSymbol)\(formattedSpending)"
+        return spendingText
     }
 
     private var convertedWarningLimit: Double {
@@ -167,6 +154,18 @@ struct LoggedInMenuContent: View {
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
     }
 
+    private var warningLimitText: String {
+        let formattedAmount = convertedWarningLimit.formatted(.number.precision(.fractionLength(0)))
+        let symbol = currencyData.selectedSymbol
+        return "\(symbol)\(formattedAmount)"
+    }
+
+    private var upperLimitText: String {
+        let formattedAmount = convertedUpperLimit.formatted(.number.precision(.fractionLength(0)))
+        let symbol = currencyData.selectedSymbol
+        return "\(symbol)\(formattedAmount)"
+    }
+
     private func refreshAllProviders() async {
         // In a full implementation, this would refresh data from all logged-in providers
         // For now, this is a placeholder
@@ -177,36 +176,13 @@ struct LoggedInMenuContent: View {
 // MARK: - Preview
 
 #Preview("Logged In Menu - With Data") {
-    let userSessionData = MultiProviderUserSessionData()
-    let spendingData = MultiProviderSpendingData()
-    let currencyData = CurrencyData()
-
-    // Set up session
-    userSessionData.handleLoginSuccess(
-        for: .cursor,
-        email: "user@example.com",
-        teamName: "Example Team",
-        teamId: 123)
-
-    // Add spending data
-    spendingData.updateSpending(
-        for: .cursor,
-        from: ProviderMonthlyInvoice(
-            items: [
-                ProviderInvoiceItem(cents: 15750, description: "Pro Usage", provider: .cursor),
-            ],
-            pricingDescription: nil,
-            provider: .cursor,
-            month: 5,
-            year: 2025),
-        rates: [:],
-        targetCurrency: "USD")
+    let (settingsManager, loginManager) = MockServices.standard
+    let (userSessionData, spendingData, currencyData) = PreviewData.loggedInWithSpending(cents: 15750)
 
     return LoggedInMenuContent(
-        settingsManager: MockSettingsManager(),
+        settingsManager: settingsManager,
         userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        loginManager: loginManager)
         .environment(spendingData)
         .environment(currencyData)
         .frame(width: 250)
@@ -214,20 +190,18 @@ struct LoggedInMenuContent: View {
 }
 
 #Preview("Logged In Menu - No Data") {
-    let userSessionData = MultiProviderUserSessionData()
-    userSessionData.handleLoginSuccess(
-        for: .cursor,
+    let (settingsManager, loginManager) = MockServices.standard
+    let userSessionData = PreviewData.mockUserSession(
         email: "john.doe@company.com",
         teamName: "Company Team",
         teamId: 456)
 
     return LoggedInMenuContent(
-        settingsManager: MockSettingsManager(),
+        settingsManager: settingsManager,
         userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
-        .environment(MultiProviderSpendingData())
-        .environment(CurrencyData())
+        loginManager: loginManager)
+        .environment(PreviewData.emptySpendingData())
+        .environment(PreviewData.mockCurrencyData())
         .frame(width: 250)
         .background(Color(NSColor.windowBackgroundColor))
 }

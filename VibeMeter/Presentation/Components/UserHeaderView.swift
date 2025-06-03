@@ -9,10 +9,10 @@ struct UserHeaderView: View {
     let userSessionData: MultiProviderUserSessionData
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 if let email = userSessionData.mostRecentSession?.userEmail {
                     Text(email)
                         .font(.system(size: 15, weight: .semibold))
