@@ -5,29 +5,16 @@ private let kSettingsLocalizedStringKey = "Settings\\U2026"
 
 extension NSApplication {
     /// Open the application settings/preferences window.
+    ///
+    /// This method uses SwiftUI's native Settings scene for macOS 15+.
+    /// The Settings scene is automatically managed by SwiftUI and integrates
+    /// with the standard macOS settings menu item.
     func openSettings() {
-        // macOS 14 Sonoma
+        // For macOS 15+ with SwiftUI Settings scene
         if let internalItemAction = NSApp.mainMenu?.item(
             withInternalIdentifier: kAppMenuInternalIdentifier)?.submenu?.item(
             withLocalizedTitle: kSettingsLocalizedStringKey)?.internalItemAction {
             internalItemAction()
-            return
-        }
-
-        guard let delegate = NSApp.delegate else { return }
-
-        // macOS 13 Ventura
-        var selector = Selector(("showSettingsWindow:"))
-        if delegate.responds(to: selector) {
-            delegate.perform(selector, with: nil, with: nil)
-            return
-        }
-
-        // macOS 12 Monterrey
-        selector = Selector(("showPreferencesWindow:"))
-        if delegate.responds(to: selector) {
-            delegate.perform(selector, with: nil, with: nil)
-            return
         }
     }
 }

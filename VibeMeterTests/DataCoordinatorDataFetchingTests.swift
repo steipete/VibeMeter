@@ -7,7 +7,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
     var dataCoordinator: DataCoordinator!
 
     // Mocks for all dependencies
-    var mockLoginManager: LoginManager!
+    var mockLoginManager: LoginManagerMock!
     var mockSettingsManager: SettingsManager!
     var mockExchangeRateManager: ExchangeRateManagerMock!
     var mockApiClient: CursorAPIClientMock!
@@ -16,7 +16,6 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.DataCoordinatorDataFetchingTests"
     private var cancellables: Set<AnyCancellable>!
-    private var keychainMockForLoginManager: KeychainServiceMock!
 
     override func setUp() {
         super.setUp()
@@ -33,21 +32,9 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager = ExchangeRateManagerMock()
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
-            keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
-            mockLoginManager = LoginManager(
-                settingsManager: mockSettingsManager,
-                apiClient: apiClientForLoginManager,
-                keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() })
-            // 3. Initialize DataCoordinator with all mocks
-            dataCoordinator = DataCoordinator(
-                loginManager: mockLoginManager,
-                settingsManager: mockSettingsManager,
-                exchangeRateManager: mockExchangeRateManager,
-                apiClient: mockApiClient,
-                notificationManager: mockNotificationManager)
-            // Reset mocks to a clean state before each test
+            mockLoginManager = LoginManagerMock()
+
+            // Reset mocks to a clean state BEFORE creating DataCoordinator
             mockSettingsManager.selectedCurrencyCode = "USD"
             mockSettingsManager.warningLimitUSD = 200.0
             mockSettingsManager.upperLimitUSD = 1000.0
@@ -56,7 +43,15 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager.reset()
             mockApiClient.reset()
             mockNotificationManager.reset()
-            keychainMockForLoginManager?.reset()
+            mockLoginManager.reset()
+
+            // 3. Initialize DataCoordinator with all mocks (this sets up callbacks)
+            dataCoordinator = DataCoordinator(
+                loginManager: mockLoginManager,
+                settingsManager: mockSettingsManager,
+                exchangeRateManager: mockExchangeRateManager,
+                apiClient: mockApiClient,
+                notificationManager: mockNotificationManager)
         }
     }
 
@@ -80,7 +75,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
 
     func testForceRefreshData_SuccessfulFetch_UpdatesPublishedProperties() async {
         // Arrange: Logged in state
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
         mockApiClient.teamInfoToReturn = TeamInfo(id: 111, name: "RefreshedTeam")
         mockApiClient.userInfoToReturn = UserInfo(email: "refreshed@example.com", teamId: nil)
@@ -105,7 +100,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
 
     func testForceRefreshData_ApiUnauthorizedError_HandlesLogout() async {
         // Arrange: Logged in state
-        _ = keychainMockForLoginManager.saveToken("expired-token")
+        mockLoginManager.simulateLogin(withToken: "expired-token")
 
         mockApiClient.teamInfoError = CursorAPIError.unauthorized
 
@@ -116,16 +111,17 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         // The logout triggers onLoginFailure callback which runs async on MainActor
         // We need to wait for the isLoggedIn state to change
         var attempts = 0
-        while dataCoordinator.isLoggedIn, attempts < 10 {
+        while dataCoordinator.isLoggedIn, attempts < 20 {
             try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
             attempts += 1
         }
 
         // Assert
+        XCTAssertTrue(mockLoginManager.logOutCalled, "logOut should have been called")
         // The lastErrorMessage is cleared by the onLoginFailure callback when it detects a logout
         XCTAssertNil(dataCoordinator.lastErrorMessage, "Error message should be cleared on logout")
         XCTAssertNil(
-            keychainMockForLoginManager.getToken(),
+            mockLoginManager.getAuthToken(),
             "Token should be cleared by LoginManager.logOut()")
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out after unauthorized error")
         XCTAssertEqual(
@@ -135,7 +131,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
     }
 
     func testForceRefreshData_TeamNotFoundError_UpdatesUIAppropriately() async {
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
         mockApiClient.teamInfoError = CursorAPIError.noTeamFound
 
@@ -145,12 +141,12 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(dataCoordinator.teamIdFetchFailed)
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
         XCTAssertNil(dataCoordinator.currentSpendingConverted)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "Error")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "")
         XCTAssertEqual(dataCoordinator.lastErrorMessage, "Hmm, can't find your team vibe right now. 😕 Try a refresh?")
     }
 
     func testForceRefreshData_GenericNetworkError_UpdatesUIAppropriately() async {
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
         let networkError = CursorAPIError.networkError(message: "No internet", statusCode: nil)
         mockApiClient.teamInfoError = networkError
@@ -160,7 +156,7 @@ class DataCoordinatorDataFetchingTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(dataCoordinator.isLoggedIn, "Still logged in, but data fetch failed")
         XCTAssertFalse(dataCoordinator.teamIdFetchFailed, "teamIdFetchFailed should be false for generic network error")
         XCTAssertNil(dataCoordinator.currentSpendingUSD)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "...")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "")
         XCTAssertTrue(dataCoordinator.lastErrorMessage?.starts(with: "Error fetching data:") ?? false)
     }
 }

@@ -8,5 +8,12 @@
     <true/>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
+    <!-- Temporarily disabled keychain access groups for development -->
+    <!--
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)com.steipete.vibemeter</string>
+    </array>
+    -->
 </dict>
 </plist>

@@ -1,6 +1,10 @@
 import Foundation
 import os.log
 
+/// Categories for organizing log messages by functional area.
+///
+/// Each category represents a different subsystem or component
+/// of the application, making it easier to filter logs in Console.app.
 enum LogCategory: String {
     case general = "General"
     case app = "AppLifecycle"
@@ -8,7 +12,7 @@ enum LogCategory: String {
     case ui = "UI"
     case login = "Login"
     case api = "API"
-    case apiClient = "APIClient" // Keep for compatibility
+    case apiClient = "APIClient"
     case exchangeRate = "ExchangeRate"
     case settings = "Settings"
     case startup = "Startup"
@@ -16,6 +20,17 @@ enum LogCategory: String {
     case data = "DataCoordinator"
 }
 
+/// Centralized logging service for VibeMeter.
+///
+/// LoggingService provides:
+/// - Structured logging with categories for different subsystems
+/// - Integration with Apple's os.log framework
+/// - Convenience methods for different log levels
+/// - Automatic error detail extraction
+/// - Enhanced error logging for network and API operations
+///
+/// All logs are visible in Console.app and can be filtered by
+/// subsystem (bundle ID) and category.
 enum LoggingService {
     private static func getLogger(
         category: LogCategory,

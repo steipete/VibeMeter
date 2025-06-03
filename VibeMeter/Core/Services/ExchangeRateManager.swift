@@ -3,6 +3,7 @@ import os.log
 
 // MARK: - Exchange Rate Manager Protocol
 
+/// Protocol defining the interface for currency exchange rate operations.
 public protocol ExchangeRateManagerProtocol: Sendable {
     func getExchangeRates() async -> [String: Double]
     func convert(_ amount: Double, from: String, to: String, rates: [String: Double]) -> Double?
@@ -11,6 +12,16 @@ public protocol ExchangeRateManagerProtocol: Sendable {
 
 // MARK: - Modern Exchange Rate Manager using Actor
 
+/// Manages currency exchange rates with caching and fallback support.
+///
+/// ExchangeRateManager provides:
+/// - Real-time exchange rates from the Frankfurter API
+/// - Intelligent caching with 1-hour validity
+/// - Fallback rates for offline operation
+/// - Currency conversion calculations
+///
+/// The manager uses the actor model for thread-safe access to cached data.
+/// All rates are based on USD as the base currency.
 public actor ExchangeRateManager: ExchangeRateManagerProtocol {
     // MARK: - Properties
 
@@ -185,9 +196,3 @@ enum ExchangeRateError: LocalizedError {
         }
     }
 }
-
-// MARK: - Legacy Compatibility
-
-// Provide compatibility with existing code expecting the old class name
-public typealias ExchangeRateManagerImpl = ExchangeRateManager
-public typealias RealExchangeRateManager = ExchangeRateManager

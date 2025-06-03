@@ -4,6 +4,7 @@ import os.log
 
 // MARK: - Notification Manager Protocol
 
+/// Protocol defining the interface for managing user notifications.
 @MainActor
 public protocol NotificationManagerProtocol: Sendable {
     func requestAuthorization() async -> Bool
@@ -19,6 +20,7 @@ public protocol NotificationManagerProtocol: Sendable {
 
 // MARK: - Limit Type
 
+/// Types of spending limit notifications that can be triggered.
 public enum NotificationLimitType: String, CaseIterable, Sendable {
     case warning
     case upper
@@ -26,6 +28,16 @@ public enum NotificationLimitType: String, CaseIterable, Sendable {
 
 // MARK: - Modern Notification Manager
 
+/// Manages system notifications for spending limit alerts.
+///
+/// NotificationManager handles:
+/// - Requesting notification permissions
+/// - Displaying warning and upper limit notifications
+/// - Tracking notification state to prevent duplicate alerts
+/// - Resetting notification states when spending drops below limits
+///
+/// The manager ensures that each limit notification is shown only once per session
+/// and resets when the spending drops below the threshold or a new session begins.
 @MainActor
 public final class NotificationManager: NSObject, NotificationManagerProtocol {
     // MARK: - Properties

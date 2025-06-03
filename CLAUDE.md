@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General Rules
+
+- Keep NSApplication+openSettings. This is the only reliable way to show settings.
+- Use modern SwiftUI material API, do not wrap NSVisualEffectsView.
+- We support Swift 6 and macOS 15 only.
+- Don't care about backwards compatibility, always properly refactor.
+
 ## Project Overview
 
 VibeMeter is a macOS menu bar application that monitors monthly spending on the Cursor AI service. It's a native Swift 6 application using AppKit and SwiftUI, built with Tuist for project generation.

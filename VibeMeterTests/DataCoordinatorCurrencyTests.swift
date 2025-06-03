@@ -7,7 +7,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     var dataCoordinator: DataCoordinator!
 
     // Mocks for all dependencies
-    var mockLoginManager: LoginManager!
+    var mockLoginManager: LoginManagerMock!
     var mockSettingsManager: SettingsManager!
     var mockExchangeRateManager: ExchangeRateManagerMock!
     var mockApiClient: CursorAPIClientMock!
@@ -16,7 +16,6 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.DataCoordinatorCurrencyTests"
     private var cancellables: Set<AnyCancellable>!
-    private var keychainMockForLoginManager: KeychainServiceMock!
 
     override func setUp() {
         super.setUp()
@@ -33,13 +32,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager = ExchangeRateManagerMock()
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
-            keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
-            mockLoginManager = LoginManager(
-                settingsManager: mockSettingsManager,
-                apiClient: apiClientForLoginManager,
-                keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() })
+            mockLoginManager = LoginManagerMock()
             // 3. Initialize DataCoordinator with all mocks
             dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
@@ -56,7 +49,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager.reset()
             mockApiClient.reset()
             mockNotificationManager.reset()
-            keychainMockForLoginManager?.reset()
+            mockLoginManager.reset()
         }
     }
 
@@ -79,7 +72,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     // MARK: - Currency Conversion & Display Tests
 
     func testCurrencyChange_UpdatesConvertedValuesAndSymbol() async {
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
         // Configure mock API to return $100 worth of items (10000 cents)
         mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
@@ -116,7 +109,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
     }
 
     func testExchangeRatesUnavailable_DisplaysInUSD() async {
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
         // Configure mock API to return $120 worth of items (12000 cents)
         mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(

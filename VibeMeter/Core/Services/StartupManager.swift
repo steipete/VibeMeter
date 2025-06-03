@@ -1,37 +1,24 @@
 import Foundation
 import ServiceManagement
 
-// Define a protocol that the StartupManager and its mock will conform to.
+/// Protocol defining the interface for managing launch at login functionality.
 @MainActor
-protocol StartupManagerProtocol {
+public protocol StartupControlling: Sendable {
     func setLaunchAtLogin(enabled: Bool)
     var isLaunchAtLoginEnabled: Bool { get }
-    // Add other methods/properties if any
 }
 
+/// Default implementation of startup management using ServiceManagement framework.
+///
+/// This struct handles:
+/// - Enabling/disabling launch at login
+/// - Checking current launch at login status
+/// - Integration with macOS ServiceManagement APIs
 @MainActor
-enum StartupManager {
-    // Allow shared instance to be replaced for testing
-    static var shared: StartupManagerProtocol = RealStartupManager()
+public struct StartupManager: StartupControlling {
+    public init() {}
 
-    // Test-only method to inject a mock shared instance
-    static func _test_setSharedInstance(instance: StartupManagerProtocol) {
-        shared = instance
-    }
-
-    // Test-only method to reset to the real shared instance
-    static func _test_resetSharedInstance() {
-        shared = RealStartupManager()
-    }
-}
-
-// The actual implementation
-@MainActor
-class RealStartupManager: StartupManagerProtocol {
-    // No public init for singleton unless through `shared`
-    fileprivate init() {}
-
-    func setLaunchAtLogin(enabled: Bool) {
+    public func setLaunchAtLogin(enabled: Bool) {
         do {
             if enabled {
                 try SMAppService.mainApp.register()
@@ -48,7 +35,7 @@ class RealStartupManager: StartupManagerProtocol {
         }
     }
 
-    var isLaunchAtLoginEnabled: Bool {
+    public var isLaunchAtLoginEnabled: Bool {
         SMAppService.mainApp.status == .enabled
     }
 }

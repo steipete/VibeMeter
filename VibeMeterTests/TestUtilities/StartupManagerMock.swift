@@ -1,9 +1,10 @@
 import Foundation
 @testable import VibeMeter
 
-// StartupManagerProtocol is defined in VibeMeter/StartupManager.swift
+// StartupControlling is defined in VibeMeter/StartupManager.swift
 
-class StartupManagerMock: StartupManagerProtocol {
+@MainActor
+class StartupManagerMock: StartupControlling {
     var setLaunchAtLoginCalledWith: Bool?
     var launchAtLoginEnabledValue: Bool = false
 

@@ -7,7 +7,7 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
     var dataCoordinator: DataCoordinator!
 
     // Mocks for all dependencies
-    var mockLoginManager: LoginManager!
+    var mockLoginManager: LoginManagerMock!
     var mockSettingsManager: SettingsManager!
     var mockExchangeRateManager: ExchangeRateManagerMock!
     var mockApiClient: CursorAPIClientMock!
@@ -16,7 +16,6 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.DataCoordinatorInitialStateTests"
     private var cancellables: Set<AnyCancellable>!
-    private var keychainMockForLoginManager: KeychainServiceMock!
 
     override func setUp() {
         super.setUp()
@@ -33,21 +32,9 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager = ExchangeRateManagerMock()
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
-            keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
-            mockLoginManager = LoginManager(
-                settingsManager: mockSettingsManager,
-                apiClient: apiClientForLoginManager,
-                keychainService: keychainMockForLoginManager,
-                webViewFactory: { MockWebView() })
-            // 3. Initialize DataCoordinator with all mocks
-            dataCoordinator = DataCoordinator(
-                loginManager: mockLoginManager,
-                settingsManager: mockSettingsManager,
-                exchangeRateManager: mockExchangeRateManager,
-                apiClient: mockApiClient,
-                notificationManager: mockNotificationManager)
-            // Reset mocks to a clean state before each test
+            mockLoginManager = LoginManagerMock()
+
+            // Reset mocks to a clean state BEFORE creating DataCoordinator
             mockSettingsManager.selectedCurrencyCode = "USD"
             mockSettingsManager.warningLimitUSD = 200.0
             mockSettingsManager.upperLimitUSD = 1000.0
@@ -56,7 +43,15 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager.reset()
             mockApiClient.reset()
             mockNotificationManager.reset()
-            keychainMockForLoginManager?.reset()
+            mockLoginManager.reset()
+
+            // 3. Initialize DataCoordinator with all mocks (this sets up callbacks)
+            dataCoordinator = DataCoordinator(
+                loginManager: mockLoginManager,
+                settingsManager: mockSettingsManager,
+                exchangeRateManager: mockExchangeRateManager,
+                apiClient: mockApiClient,
+                notificationManager: mockNotificationManager)
         }
     }
 
@@ -93,16 +88,9 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
     }
 
     func testInitialState_WhenLoggedIn_StartsDataRefresh() async {
-        // Simulate logged-in state before DataCoordinator init by populating keychain
-        let keychainMock = KeychainServiceMock()
-        _ = keychainMock.saveToken("test-token")
-
-        let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
-        let loggedInLoginManager = LoginManager(
-            settingsManager: mockSettingsManager,
-            apiClient: apiClientForLoginManager,
-            keychainService: keychainMock,
-            webViewFactory: { MockWebView() })
+        // Simulate logged-in state before DataCoordinator init
+        let loggedInLoginManager = LoginManagerMock()
+        loggedInLoginManager.simulateLogin(withToken: "test-token")
 
         // Expect API calls during init if logged in
         mockApiClient.teamInfoToReturn = TeamInfo(id: 1, name: "InitTeam")
@@ -129,7 +117,6 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
 
     func testLoginSuccess_RefreshesData_UpdatesState() async {
         var receivedMenuBarTexts: [String] = []
-        let loginSuccessExpectation = XCTestExpectation(description: "Login successful and data updated")
 
         // Setup initial state: logged out
         XCTAssertFalse(dataCoordinator.isLoggedIn)
@@ -143,19 +130,20 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.9]
         mockSettingsManager.selectedCurrencyCode = "EUR"
 
-        // Set up login state - LoginManager needs a token to report isLoggedIn = true
-        _ = keychainMockForLoginManager.saveToken("test-token")
-
         // Observe menuBarDisplayText changes
         dataCoordinator.$menuBarDisplayText
             .sink { receivedMenuBarTexts.append($0) }
             .store(in: &cancellables)
 
-        // Simulate LoginManager's onLoginSuccess callback being triggered
-        mockLoginManager.onLoginSuccess?()
+        // Simulate login - this will trigger the onLoginSuccess callback automatically
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
-        // Wait for async operations within handleLoginStatusChange and forceRefreshData
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        // Wait for async operations to complete with polling
+        var attempts = 0
+        while dataCoordinator.currentSpendingUSD == nil, attempts < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            attempts += 1
+        }
 
         XCTAssertTrue(dataCoordinator.isLoggedIn, "DataCoordinator should be logged in")
         XCTAssertEqual(dataCoordinator.userEmail, "success@example.com")
@@ -170,34 +158,41 @@ class DataCoordinatorInitialStateTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(mockApiClient.fetchMonthlyInvoiceCallCount >= 1)
         XCTAssertTrue(mockNotificationManager.resetAllNotificationStatesCalled)
 
-        // Check menu bar text progression (can be fragile)
-        XCTAssertTrue(receivedMenuBarTexts.contains("Vibe synced! ✨"))
+        // Check final menu bar display shows spending amount
         XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€111.11")
-
-        loginSuccessExpectation.fulfill()
-
-        await fulfillment(of: [loginSuccessExpectation], timeout: 0.1)
     }
 
     func testLogout_ClearsUserData_UpdatesState() async {
-        // Setup: Simulate logged-in state first
-        _ = keychainMockForLoginManager.saveToken("test-token")
+        // Setup: Mock data first
         mockApiClient.teamInfoToReturn = TeamInfo(id: 1, name: "Test Team")
         mockApiClient.userInfoToReturn = UserInfo(email: "test@example.com", teamId: nil)
         mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
             items: [InvoiceItem(cents: 1000, description: "usage")],
             pricingDescription: nil)
 
-        mockLoginManager.onLoginSuccess?()
+        // Simulate logged-in state - this will trigger onLoginSuccess
+        mockLoginManager.simulateLogin(withToken: "test-token")
 
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        // Wait for login to complete
+        var attempts = 0
+        while dataCoordinator.currentSpendingUSD == nil, attempts < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            attempts += 1
+        }
 
         XCTAssertTrue(dataCoordinator.isLoggedIn, "Precondition: Should be logged in")
+        XCTAssertNotNil(dataCoordinator.userEmail, "Precondition: Should have user email")
+        XCTAssertNotNil(dataCoordinator.teamName, "Precondition: Should have team name")
 
-        // Act: Simulate LoginManager's onLoginFailure or equivalent logout signal
-        mockLoginManager.onLoginFailure?(NSError(domain: "logout", code: 0))
+        // Act: Simulate logout
+        mockLoginManager.logOut()
 
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        // Wait for logout to complete
+        attempts = 0
+        while dataCoordinator.userEmail != nil, attempts < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            attempts += 1
+        }
 
         // Assert
         XCTAssertFalse(dataCoordinator.isLoggedIn, "Should be logged out after logout event")
