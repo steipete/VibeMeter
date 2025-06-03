@@ -151,7 +151,11 @@ final class CustomMenuWindow: NSPanel {
     }
 }
 
-/// A wrapper view that applies the modern SwiftUI material background to content
+/// A wrapper view that applies modern SwiftUI material background to menu content.
+///
+/// This container provides consistent styling for menu content with proper sizing,
+/// material background effects, and rounded corners. It ensures uniform appearance
+/// across different menu states and content types.
 struct CustomMenuContainer<Content: View>: View {
     @ViewBuilder
     let content: Content

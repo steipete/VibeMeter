@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Settings view for configuring spending notification thresholds.
+///
+/// This view allows users to review their warning and upper spending limits
+/// with currency conversion display. It shows both USD amounts (stored values)
+/// and converted amounts in the user's selected currency for better understanding.
 struct SpendingLimitsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData

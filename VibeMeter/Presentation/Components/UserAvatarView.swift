@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// User avatar component displaying Gravatar images with fallback initials.
+///
+/// This view shows user avatars by fetching Gravatar images based on email addresses.
+/// It includes fallback handling with user initials when Gravatar images are unavailable,
+/// and supports configurable sizing for different use cases.
 struct UserAvatarView: View {
     let email: String?
     let size: CGFloat

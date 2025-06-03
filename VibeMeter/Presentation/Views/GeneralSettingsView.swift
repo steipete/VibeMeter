@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+/// General settings view for application-wide preferences and behavior.
+///
+/// This view contains settings for launch behavior, currency selection, refresh intervals,
+/// menu bar display options, and dock visibility. It provides the core configuration
+/// options that affect the overall application experience.
 struct GeneralSettingsView: View {
     let settingsManager: SettingsManager
 
