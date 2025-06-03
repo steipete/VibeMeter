@@ -58,3 +58,47 @@ struct UserAvatarView: View {
         return String(firstChar).uppercased()
     }
 }
+
+// MARK: - Preview
+
+#Preview("User Avatar - Different Sizes") {
+    VStack(spacing: 20) {
+        HStack(spacing: 20) {
+            UserAvatarView(email: "user@example.com", size: 20)
+            UserAvatarView(email: "test@company.com", size: 40)
+            UserAvatarView(email: "hello@world.com", size: 60)
+            UserAvatarView(email: "john.doe@example.com", size: 80)
+        }
+        
+        HStack(spacing: 20) {
+            VStack {
+                UserAvatarView(email: nil, size: 40)
+                Text("No email")
+                    .font(.caption)
+            }
+            
+            VStack {
+                UserAvatarView(email: "jane@example.com", size: 40)
+                Text("With email")
+                    .font(.caption)
+            }
+        }
+    }
+    .padding()
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("User Avatar - Loading States") {
+    HStack(spacing: 20) {
+        ForEach(["a@example.com", "b@test.com", "c@demo.com"], id: \.self) { email in
+            VStack {
+                UserAvatarView(email: email, size: 60)
+                Text(email.prefix(1).uppercased())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+    .padding()
+    .background(Color(NSColor.windowBackgroundColor))
+}

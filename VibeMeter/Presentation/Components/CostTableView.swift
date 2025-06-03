@@ -127,3 +127,62 @@ struct CostTableView: View {
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    let spendingData = MultiProviderSpendingData()
+    let currencyData = CurrencyData()
+
+    // Add sample data
+    spendingData.updateSpending(
+        for: .cursor,
+        from: ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 1997, description: "Pro Usage", provider: .cursor),
+            ],
+            pricingDescription: nil,
+            provider: .cursor,
+            month: 5,
+            year: 2025),
+        rates: [:],
+        targetCurrency: "EUR")
+
+    spendingData.updateUsage(
+        for: .cursor,
+        from: ProviderUsageData(
+            currentRequests: 1535,
+            totalRequests: 4387,
+            maxRequests: 500,
+            startOfMonth: Date(),
+            provider: .cursor))
+
+    return CostTableView(
+        settingsManager: MockSettingsManager(),
+        loginManager: nil)
+        .environment(spendingData)
+        .environment(currencyData)
+        .padding()
+        .frame(width: 280)
+        .background(Color(NSColor.windowBackgroundColor))
+}
+
+// MARK: - Mock Settings Manager
+
+@MainActor
+private class MockSettingsManager: SettingsManagerProtocol {
+    var providerSessions: [ServiceProvider: ProviderSession] = [:]
+    var selectedCurrencyCode: String = "EUR"
+    var warningLimitUSD: Double = 200
+    var upperLimitUSD: Double = 1000
+    var refreshIntervalMinutes: Int = 5
+    var launchAtLoginEnabled: Bool = false
+    var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
+    var enabledProviders: Set<ServiceProvider> = [.cursor]
+
+    func clearUserSessionData() {}
+    func clearUserSessionData(for _: ServiceProvider) {}
+    func getSession(for _: ServiceProvider) -> ProviderSession? { nil }
+    func updateSession(for _: ServiceProvider, session _: ProviderSession) {}
+}

@@ -183,6 +183,10 @@ struct ProviderSpendingRowView: View {
     }
 }
 
+/// ServiceProvider extension defining accent colors for UI theming.
+///
+/// This private extension provides the accent color for each service provider,
+/// used for visual consistency in icons and highlights throughout the UI.
 private extension ServiceProvider {
     var accentColor: Color {
         switch self {
@@ -190,4 +194,75 @@ private extension ServiceProvider {
             .blue
         }
     }
+}
+
+// MARK: - Preview
+
+#Preview("Provider Spending Row - With Data") {
+    let spendingData = MultiProviderSpendingData()
+    let currencyData = CurrencyData()
+    
+    // Add sample data
+    spendingData.updateSpending(
+        for: .cursor,
+        from: ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 2497, description: "Pro Usage", provider: .cursor)
+            ],
+            pricingDescription: nil,
+            provider: .cursor,
+            month: 5,
+            year: 2025
+        ),
+        rates: [:],
+        targetCurrency: "USD"
+    )
+    
+    spendingData.updateUsage(
+        for: .cursor,
+        from: ProviderUsageData(
+            currentRequests: 350,
+            totalRequests: 4387,
+            maxRequests: 500,
+            startOfMonth: Date(),
+            provider: .cursor
+        )
+    )
+    
+    @State var selectedProvider: ServiceProvider?
+    
+    return VStack(spacing: 16) {
+        ProviderSpendingRowView(
+            provider: .cursor,
+            loginManager: nil,
+            selectedProvider: $selectedProvider
+        )
+        .environment(spendingData)
+        .environment(currencyData)
+        
+        Text("Selected: \(selectedProvider?.displayName ?? "None")")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+    .padding()
+    .frame(width: 320)
+    .background(Color(NSColor.windowBackgroundColor))
+}
+
+#Preview("Provider Spending Row - Loading") {
+    let spendingData = MultiProviderSpendingData()
+    let currencyData = CurrencyData()
+    
+    @State var selectedProvider: ServiceProvider?
+    
+    return ProviderSpendingRowView(
+        provider: .cursor,
+        loginManager: nil,
+        selectedProvider: $selectedProvider
+    )
+    .environment(spendingData)
+    .environment(currencyData)
+    .padding()
+    .frame(width: 320)
+    .background(Color(NSColor.windowBackgroundColor))
 }

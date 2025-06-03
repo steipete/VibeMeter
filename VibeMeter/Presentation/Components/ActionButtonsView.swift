@@ -70,3 +70,14 @@ struct ActionButtonsView: View {
         NSApp.terminate(nil)
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    ActionButtonsView(onRefresh: {
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+    })
+    .padding()
+    .frame(width: 280)
+    .background(Color(NSColor.windowBackgroundColor))
+}
