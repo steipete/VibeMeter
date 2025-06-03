@@ -45,7 +45,7 @@ struct LoggedOutContentView: View {
             // Bottom buttons section matching logged-in layout
             actionButtons
                 .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 10)
         }
     }
 

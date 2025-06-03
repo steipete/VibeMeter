@@ -46,7 +46,7 @@ struct MultiProviderSettingsView: View {
                 }
                 .tag(MultiProviderSettingsTab.about)
         }
-        .frame(width: 700, height: 500)
+        .frame(width: 620, height: 500)
         .sheet(item: $showingProviderDetail) { provider in
             ProviderDetailView(
                 provider: provider,
@@ -80,7 +80,7 @@ enum MultiProviderSettingsTab: CaseIterable {
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
-        .frame(width: 700, height: 500)
+        .frame(width: 620, height: 500)
 }
 
 #Preview("Settings - Logged In") {
@@ -96,7 +96,7 @@ enum MultiProviderSettingsTab: CaseIterable {
         userSessionData: userSessionData,
         loginManager: MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
-        .frame(width: 700, height: 500)
+        .frame(width: 620, height: 500)
 }
 
 // MARK: - Mock Settings Manager for Preview
