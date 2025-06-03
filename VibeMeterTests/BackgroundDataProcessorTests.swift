@@ -3,45 +3,148 @@ import XCTest
 
 // MARK: - Mock Provider for Background Processing Tests
 
-private final class MockBackgroundProvider: ProviderProtocol {
+private class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
     let provider: ServiceProvider
+    private let lock = NSLock()
 
     // Response data
-    var userInfoToReturn: ProviderUserInfo?
-    var teamInfoToReturn: ProviderTeamInfo?
-    var invoiceToReturn: ProviderMonthlyInvoice?
-    var usageToReturn: ProviderUsageData?
+    private var _userInfoToReturn: ProviderUserInfo?
+    private var _teamInfoToReturn: ProviderTeamInfo?
+    private var _invoiceToReturn: ProviderMonthlyInvoice?
+    private var _usageToReturn: ProviderUsageData?
 
     // Error simulation
-    var shouldThrowOnUserInfo = false
-    var shouldThrowOnTeamInfo = false
-    var shouldThrowOnInvoice = false
-    var shouldThrowOnUsage = false
-    var errorToThrow: Error = TestError.networkFailure
+    private var _shouldThrowOnUserInfo = false
+    private var _shouldThrowOnTeamInfo = false
+    private var _shouldThrowOnInvoice = false
+    private var _shouldThrowOnUsage = false
+    private var _errorToThrow: Error = TestError.networkFailure
 
     // Timing simulation
-    var userInfoDelay: TimeInterval = 0
-    var teamInfoDelay: TimeInterval = 0
-    var invoiceDelay: TimeInterval = 0
-    var usageDelay: TimeInterval = 0
+    private var _userInfoDelay: TimeInterval = 0
+    private var _teamInfoDelay: TimeInterval = 0
+    private var _invoiceDelay: TimeInterval = 0
+    private var _usageDelay: TimeInterval = 0
 
     // Call tracking
-    var fetchUserInfoCallCount = 0
-    var fetchTeamInfoCallCount = 0
-    var fetchMonthlyInvoiceCallCount = 0
-    var fetchUsageDataCallCount = 0
-    var lastInvoiceMonth: Int?
-    var lastInvoiceYear: Int?
-    var lastTeamId: Int?
+    private var _fetchUserInfoCallCount = 0
+    private var _fetchTeamInfoCallCount = 0
+    private var _fetchMonthlyInvoiceCallCount = 0
+    private var _fetchUsageDataCallCount = 0
+    private var _lastInvoiceMonth: Int?
+    private var _lastInvoiceYear: Int?
+    private var _lastTeamId: Int?
+
+    // Thread-safe property accessors
+    var userInfoToReturn: ProviderUserInfo? {
+        get { lock.withLock { _userInfoToReturn } }
+        set { lock.withLock { _userInfoToReturn = newValue } }
+    }
+
+    var teamInfoToReturn: ProviderTeamInfo? {
+        get { lock.withLock { _teamInfoToReturn } }
+        set { lock.withLock { _teamInfoToReturn = newValue } }
+    }
+
+    var invoiceToReturn: ProviderMonthlyInvoice? {
+        get { lock.withLock { _invoiceToReturn } }
+        set { lock.withLock { _invoiceToReturn = newValue } }
+    }
+
+    var usageToReturn: ProviderUsageData? {
+        get { lock.withLock { _usageToReturn } }
+        set { lock.withLock { _usageToReturn = newValue } }
+    }
+
+    var shouldThrowOnUserInfo: Bool {
+        get { lock.withLock { _shouldThrowOnUserInfo } }
+        set { lock.withLock { _shouldThrowOnUserInfo = newValue } }
+    }
+
+    var shouldThrowOnTeamInfo: Bool {
+        get { lock.withLock { _shouldThrowOnTeamInfo } }
+        set { lock.withLock { _shouldThrowOnTeamInfo = newValue } }
+    }
+
+    var shouldThrowOnInvoice: Bool {
+        get { lock.withLock { _shouldThrowOnInvoice } }
+        set { lock.withLock { _shouldThrowOnInvoice = newValue } }
+    }
+
+    var shouldThrowOnUsage: Bool {
+        get { lock.withLock { _shouldThrowOnUsage } }
+        set { lock.withLock { _shouldThrowOnUsage = newValue } }
+    }
+
+    var errorToThrow: Error {
+        get { lock.withLock { _errorToThrow } }
+        set { lock.withLock { _errorToThrow = newValue } }
+    }
+
+    var userInfoDelay: TimeInterval {
+        get { lock.withLock { _userInfoDelay } }
+        set { lock.withLock { _userInfoDelay = newValue } }
+    }
+
+    var teamInfoDelay: TimeInterval {
+        get { lock.withLock { _teamInfoDelay } }
+        set { lock.withLock { _teamInfoDelay = newValue } }
+    }
+
+    var invoiceDelay: TimeInterval {
+        get { lock.withLock { _invoiceDelay } }
+        set { lock.withLock { _invoiceDelay = newValue } }
+    }
+
+    var usageDelay: TimeInterval {
+        get { lock.withLock { _usageDelay } }
+        set { lock.withLock { _usageDelay = newValue } }
+    }
+
+    var fetchUserInfoCallCount: Int {
+        get { lock.withLock { _fetchUserInfoCallCount } }
+        set { lock.withLock { _fetchUserInfoCallCount = newValue } }
+    }
+
+    var fetchTeamInfoCallCount: Int {
+        get { lock.withLock { _fetchTeamInfoCallCount } }
+        set { lock.withLock { _fetchTeamInfoCallCount = newValue } }
+    }
+
+    var fetchMonthlyInvoiceCallCount: Int {
+        get { lock.withLock { _fetchMonthlyInvoiceCallCount } }
+        set { lock.withLock { _fetchMonthlyInvoiceCallCount = newValue } }
+    }
+
+    var fetchUsageDataCallCount: Int {
+        get { lock.withLock { _fetchUsageDataCallCount } }
+        set { lock.withLock { _fetchUsageDataCallCount = newValue } }
+    }
+
+    var lastInvoiceMonth: Int? {
+        get { lock.withLock { _lastInvoiceMonth } }
+        set { lock.withLock { _lastInvoiceMonth = newValue } }
+    }
+
+    var lastInvoiceYear: Int? {
+        get { lock.withLock { _lastInvoiceYear } }
+        set { lock.withLock { _lastInvoiceYear = newValue } }
+    }
+
+    var lastTeamId: Int? {
+        get { lock.withLock { _lastTeamId } }
+        set { lock.withLock { _lastTeamId = newValue } }
+    }
 
     init(provider: ServiceProvider) {
         self.provider = provider
     }
 
     func fetchUserInfo(authToken _: String) async throws -> ProviderUserInfo {
-        fetchUserInfoCallCount += 1
-        if userInfoDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(userInfoDelay * 1_000_000_000))
+        lock.withLock { _fetchUserInfoCallCount += 1 }
+        let delay = userInfoDelay
+        if delay > 0 {
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
         if shouldThrowOnUserInfo {
             throw errorToThrow
@@ -50,9 +153,10 @@ private final class MockBackgroundProvider: ProviderProtocol {
     }
 
     func fetchTeamInfo(authToken _: String) async throws -> ProviderTeamInfo {
-        fetchTeamInfoCallCount += 1
-        if teamInfoDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(teamInfoDelay * 1_000_000_000))
+        lock.withLock { _fetchTeamInfoCallCount += 1 }
+        let delay = teamInfoDelay
+        if delay > 0 {
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
         if shouldThrowOnTeamInfo {
             throw errorToThrow
@@ -62,13 +166,16 @@ private final class MockBackgroundProvider: ProviderProtocol {
 
     func fetchMonthlyInvoice(authToken _: String, month: Int, year: Int,
                              teamId: Int?) async throws -> ProviderMonthlyInvoice {
-        fetchMonthlyInvoiceCallCount += 1
-        lastInvoiceMonth = month
-        lastInvoiceYear = year
-        lastTeamId = teamId
+        lock.withLock {
+            _fetchMonthlyInvoiceCallCount += 1
+            _lastInvoiceMonth = month
+            _lastInvoiceYear = year
+            _lastTeamId = teamId
+        }
 
-        if invoiceDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(invoiceDelay * 1_000_000_000))
+        let delay = invoiceDelay
+        if delay > 0 {
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
         if shouldThrowOnInvoice {
             throw errorToThrow
@@ -82,9 +189,10 @@ private final class MockBackgroundProvider: ProviderProtocol {
     }
 
     func fetchUsageData(authToken _: String) async throws -> ProviderUsageData {
-        fetchUsageDataCallCount += 1
-        if usageDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(usageDelay * 1_000_000_000))
+        lock.withLock { _fetchUsageDataCallCount += 1 }
+        let delay = usageDelay
+        if delay > 0 {
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
         if shouldThrowOnUsage {
             throw errorToThrow
@@ -110,21 +218,34 @@ private final class MockBackgroundProvider: ProviderProtocol {
     }
 
     func reset() {
-        fetchUserInfoCallCount = 0
-        fetchTeamInfoCallCount = 0
-        fetchMonthlyInvoiceCallCount = 0
-        fetchUsageDataCallCount = 0
-        shouldThrowOnUserInfo = false
-        shouldThrowOnTeamInfo = false
-        shouldThrowOnInvoice = false
-        shouldThrowOnUsage = false
-        userInfoDelay = 0
-        teamInfoDelay = 0
-        invoiceDelay = 0
-        usageDelay = 0
-        lastInvoiceMonth = nil
-        lastInvoiceYear = nil
-        lastTeamId = nil
+        lock.withLock {
+            _fetchUserInfoCallCount = 0
+            _fetchTeamInfoCallCount = 0
+            _fetchMonthlyInvoiceCallCount = 0
+            _fetchUsageDataCallCount = 0
+            _shouldThrowOnUserInfo = false
+            _shouldThrowOnTeamInfo = false
+            _shouldThrowOnInvoice = false
+            _shouldThrowOnUsage = false
+            _userInfoDelay = 0
+            _teamInfoDelay = 0
+            _invoiceDelay = 0
+            _usageDelay = 0
+            _lastInvoiceMonth = nil
+            _lastInvoiceYear = nil
+            _lastTeamId = nil
+        }
+    }
+}
+
+// MARK: - Thread Capturing Mock Provider
+
+fileprivate final class ThreadCapturingMockProvider: MockBackgroundProvider {
+    var capturedExecutionThread: Thread?
+    
+    override func fetchUserInfo(authToken: String) async throws -> ProviderUserInfo {
+        capturedExecutionThread = Thread.current
+        return try await super.fetchUserInfo(authToken: authToken)
     }
 }
 
@@ -154,7 +275,7 @@ private enum TestError: Error, LocalizedError {
 
 final class BackgroundDataProcessorTests: XCTestCase {
     var sut: BackgroundDataProcessor!
-    var mockProvider: MockBackgroundProvider!
+    fileprivate var mockProvider: MockBackgroundProvider!
 
     override func setUp() async throws {
         try await super.setUp()
@@ -400,17 +521,8 @@ final class BackgroundDataProcessorTests: XCTestCase {
 
     func testBackgroundDataProcessor_RunsOffMainThread() async throws {
         // Given
-        var executionThread: Thread?
-
-        let customProvider = MockBackgroundProvider(provider: .cursor)
+        let customProvider = ThreadCapturingMockProvider(provider: .cursor)
         customProvider.userInfoToReturn = ProviderUserInfo(email: "thread@test.com", teamId: 999, provider: .cursor)
-
-        // Override one method to capture the execution thread
-        let originalFetchUser = customProvider.fetchUserInfo
-        customProvider.fetchUserInfo = { authToken in
-            executionThread = Thread.current
-            return try await originalFetchUser(authToken)
-        }
 
         // When
         _ = try await sut.processProviderData(
@@ -419,8 +531,8 @@ final class BackgroundDataProcessorTests: XCTestCase {
             providerClient: customProvider)
 
         // Then
-        XCTAssertNotNil(executionThread)
-        XCTAssertFalse(executionThread!.isMainThread, "Should execute off the main thread")
+        XCTAssertNotNil(customProvider.capturedExecutionThread)
+        XCTAssertFalse(customProvider.capturedExecutionThread!.isMainThread, "Should execute off the main thread")
     }
 
     // MARK: - Performance Tests

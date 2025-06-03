@@ -3,17 +3,20 @@ import XCTest
 
 final class UserDefaultsBackedTests: XCTestCase {
     var testUserDefaults: UserDefaults!
+    var testSuiteName: String!
 
     override func setUp() {
         super.setUp()
         // Create a temporary UserDefaults instance for testing
-        testUserDefaults = UserDefaults(suiteName: "UserDefaultsBackedTests-\(UUID().uuidString)")!
+        testSuiteName = "UserDefaultsBackedTests-\(UUID().uuidString)"
+        testUserDefaults = UserDefaults(suiteName: testSuiteName)!
     }
 
     override func tearDown() {
         // Clean up by removing the test suite
-        testUserDefaults.removePersistentDomain(forName: testUserDefaults.persistentDomainNames().first!)
+        testUserDefaults.removePersistentDomain(forName: testSuiteName)
         testUserDefaults = nil
+        testSuiteName = nil
         super.tearDown()
     }
 
@@ -450,36 +453,51 @@ final class UserDefaultsBackedTests: XCTestCase {
         }
     }
 
-    // MARK: - OptionalProtocol Tests
+    // MARK: - Optional Handling Tests
 
-    func testOptionalProtocol_StringOptional_DetectsNil() {
+    func testOptionalHandling_StringOptional_SetToNil_RemovesFromDefaults() {
         // Given
-        let nilString: String? = nil
-        let nonNilString: String? = "value"
+        @UserDefaultsBacked(key: "optionalStringTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
+        var optionalProperty: String?
+
+        // When
+        optionalProperty = "test value"
+        XCTAssertEqual(optionalProperty, "test value") // Precondition
+        optionalProperty = nil
 
         // Then
-        XCTAssertTrue((nilString as any OptionalProtocol).isNil)
-        XCTAssertFalse((nonNilString as any OptionalProtocol).isNil)
+        XCTAssertNil(optionalProperty)
+        XCTAssertNil(testUserDefaults.object(forKey: "optionalStringTest"))
     }
 
-    func testOptionalProtocol_IntOptional_DetectsNil() {
+    func testOptionalHandling_IntOptional_SetToNil_RemovesFromDefaults() {
         // Given
-        let nilInt: Int? = nil
-        let nonNilInt: Int? = 42
+        @UserDefaultsBacked(key: "optionalIntHandlingTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
+        var optionalProperty: Int?
+
+        // When
+        optionalProperty = 42
+        XCTAssertEqual(optionalProperty, 42) // Precondition
+        optionalProperty = nil
 
         // Then
-        XCTAssertTrue((nilInt as any OptionalProtocol).isNil)
-        XCTAssertFalse((nonNilInt as any OptionalProtocol).isNil)
+        XCTAssertNil(optionalProperty)
+        XCTAssertNil(testUserDefaults.object(forKey: "optionalIntHandlingTest"))
     }
 
-    func testOptionalProtocol_ArrayOptional_DetectsNil() {
+    func testOptionalHandling_ArrayOptional_SetToNil_RemovesFromDefaults() {
         // Given
-        let nilArray: [String]? = nil
-        let nonNilArray: [String]? = ["value"]
+        @UserDefaultsBacked(key: "optionalArrayTest", defaultValue: nil as [String]?, userDefaults: testUserDefaults)
+        var optionalProperty: [String]?
+
+        // When
+        optionalProperty = ["value"]
+        XCTAssertEqual(optionalProperty, ["value"]) // Precondition
+        optionalProperty = nil
 
         // Then
-        XCTAssertTrue((nilArray as any OptionalProtocol).isNil)
-        XCTAssertFalse((nonNilArray as any OptionalProtocol).isNil)
+        XCTAssertNil(optionalProperty)
+        XCTAssertNil(testUserDefaults.object(forKey: "optionalArrayTest"))
     }
 
     // MARK: - Performance Tests
@@ -565,46 +583,36 @@ final class UserDefaultsBackedTests: XCTestCase {
     // MARK: - Real-World Usage Tests
 
     func testSettingsManagerPattern_WorksCorrectly() {
-        // Given - Simulate SettingsManager usage pattern
-        struct MockSettings {
-            @UserDefaultsBacked(key: "lastUpdateCheck", defaultValue: Date.distantPast, userDefaults: testUserDefaults)
-            var lastUpdateCheck: Date
+        // Given - Test UserDefaults property wrapper directly
+        @UserDefaultsBacked(key: "lastUpdateCheck", defaultValue: Date.distantPast, userDefaults: testUserDefaults)
+        var lastUpdateCheck: Date
 
-            @UserDefaultsBacked(key: "username", defaultValue: nil as String?, userDefaults: testUserDefaults)
-            var username: String?
+        @UserDefaultsBacked(key: "username", defaultValue: nil as String?, userDefaults: testUserDefaults)
+        var username: String?
 
-            @UserDefaultsBacked(key: "isFirstLaunch", defaultValue: true, userDefaults: testUserDefaults)
-            var isFirstLaunch: Bool
+        @UserDefaultsBacked(key: "isFirstLaunch", defaultValue: true, userDefaults: testUserDefaults)
+        var isFirstLaunch: Bool
 
-            @UserDefaultsBacked(key: "spendingLimit", defaultValue: 100.0, userDefaults: testUserDefaults)
-            var spendingLimit: Double
-        }
-
-        var settings = MockSettings()
+        @UserDefaultsBacked(key: "spendingLimit", defaultValue: 100.0, userDefaults: testUserDefaults)
+        var spendingLimit: Double
 
         // When
         let now = Date()
-        settings.lastUpdateCheck = now
-        settings.username = "testuser"
-        settings.isFirstLaunch = false
-        settings.spendingLimit = 250.5
+        lastUpdateCheck = now
+        username = "testuser"
+        isFirstLaunch = false
+        spendingLimit = 250.5
 
         // Then
-        XCTAssertEqual(settings.lastUpdateCheck.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1.0)
-        XCTAssertEqual(settings.username, "testuser")
-        XCTAssertFalse(settings.isFirstLaunch)
-        XCTAssertEqual(settings.spendingLimit, 250.5, accuracy: 0.001)
+        XCTAssertEqual(lastUpdateCheck.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1.0)
+        XCTAssertEqual(username, "testuser")
+        XCTAssertFalse(isFirstLaunch)
+        XCTAssertEqual(spendingLimit, 250.5, accuracy: 0.001)
 
-        // Verify persistence
-        let newSettings = MockSettings()
-        XCTAssertEqual(newSettings.lastUpdateCheck.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1.0)
-        XCTAssertEqual(newSettings.username, "testuser")
-        XCTAssertFalse(newSettings.isFirstLaunch)
-        XCTAssertEqual(newSettings.spendingLimit, 250.5, accuracy: 0.001)
+        // Test values persisted to UserDefaults
+        XCTAssertEqual(testUserDefaults.object(forKey: "lastUpdateCheck") as? Date, lastUpdateCheck)
+        XCTAssertEqual(testUserDefaults.string(forKey: "username"), "testuser")
+        XCTAssertFalse(testUserDefaults.bool(forKey: "isFirstLaunch"))
+        XCTAssertEqual(testUserDefaults.double(forKey: "spendingLimit"), 250.5, accuracy: 0.001)
     }
-}
-
-// Make OptionalProtocol accessible for testing
-extension OptionalProtocol {
-    // This allows us to test the OptionalProtocol functionality
 }

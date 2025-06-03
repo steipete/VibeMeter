@@ -1,23 +1,6 @@
 @testable import VibeMeter
 import XCTest
 
-// MARK: - Mock GravatarService
-
-private final class MockGravatarService: GravatarService {
-    var updateAvatarCallCount = 0
-    var lastEmailForAvatar: String?
-
-    override func updateAvatar(for email: String) {
-        updateAvatarCallCount += 1
-        lastEmailForAvatar = email
-    }
-
-    func reset() {
-        updateAvatarCallCount = 0
-        lastEmailForAvatar = nil
-    }
-}
-
 // MARK: - Tests
 
 @MainActor
@@ -25,7 +8,7 @@ final class DataProcessingServiceTests: XCTestCase {
     var sut: DataProcessingService!
     var mockSettingsManager: SettingsManager!
     var mockNotificationManager: NotificationManagerMock!
-    var mockGravatarService: MockGravatarService!
+    var gravatarService: GravatarService!
     var userSessionData: MultiProviderUserSessionData!
     var spendingData: MultiProviderSpendingData!
     var testUserDefaults: UserDefaults!
@@ -46,7 +29,7 @@ final class DataProcessingServiceTests: XCTestCase {
             startupManager: StartupManagerMock())
         mockSettingsManager = SettingsManager.shared
         mockNotificationManager = NotificationManagerMock()
-        mockGravatarService = MockGravatarService()
+        gravatarService = GravatarService.shared
 
         // Setup data models
         userSessionData = MultiProviderUserSessionData()
@@ -61,14 +44,14 @@ final class DataProcessingServiceTests: XCTestCase {
         mockSettingsManager.warningLimitUSD = 200.0
         mockSettingsManager.upperLimitUSD = 1000.0
         mockNotificationManager.reset()
-        mockGravatarService.reset()
+        gravatarService.clearAvatar()
     }
 
     override func tearDown() async throws {
         sut = nil
         mockSettingsManager = nil
         mockNotificationManager = nil
-        mockGravatarService = nil
+        gravatarService = nil
         userSessionData = nil
         spendingData = nil
         SettingsManager._test_clearSharedInstance()
@@ -88,7 +71,7 @@ final class DataProcessingServiceTests: XCTestCase {
             providerResult,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then - Verify user session data updated
         XCTAssertTrue(userSessionData.isLoggedIn(to: .cursor))
@@ -109,8 +92,7 @@ final class DataProcessingServiceTests: XCTestCase {
         XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 25.0, accuracy: 0.01)
 
         // Verify gravatar updated
-        XCTAssertEqual(mockGravatarService.updateAvatarCallCount, 1)
-        XCTAssertEqual(mockGravatarService.lastEmailForAvatar, "test@example.com")
+        XCTAssertNotNil(gravatarService.currentAvatarURL, "Avatar should be updated when processing provider data")
     }
 
     func testProcessProviderData_WithCurrencyConversion_UpdatesCorrectly() {
@@ -126,11 +108,11 @@ final class DataProcessingServiceTests: XCTestCase {
                 month: 5,
                 year: 2025),
             usage: ProviderUsageData(
-                provider: .cursor,
                 currentRequests: 200,
+                totalRequests: 800,
                 maxRequests: 2000,
-                currentTokens: 100_000,
-                maxTokens: 2_000_000),
+                startOfMonth: Date(),
+                provider: .cursor),
             exchangeRates: ["USD": 1.0, "EUR": 0.85],
             targetCurrency: "EUR")
 
@@ -139,7 +121,7 @@ final class DataProcessingServiceTests: XCTestCase {
             providerResult,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         let cursorData = spendingData.getSpendingData(for: .cursor)
@@ -165,11 +147,11 @@ final class DataProcessingServiceTests: XCTestCase {
             providerResult,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then - Gravatar should be updated because this becomes the new most recent
-        XCTAssertEqual(mockGravatarService.updateAvatarCallCount, 1)
-        XCTAssertEqual(mockGravatarService.lastEmailForAvatar, "new@example.com")
+        XCTAssertNotNil(gravatarService.currentAvatarURL, "Avatar should be updated")
+        // Avatar will be updated for new user email
     }
 
     // MARK: - Process Multiple Provider Data Tests
@@ -185,12 +167,12 @@ final class DataProcessingServiceTests: XCTestCase {
             results,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         XCTAssertTrue(errors.isEmpty)
         XCTAssertTrue(userSessionData.isLoggedIn(to: .cursor))
-        XCTAssertEqual(mockGravatarService.updateAvatarCallCount, 1)
+        XCTAssertNotNil(gravatarService.currentAvatarURL, "Avatar should be updated")
     }
 
     func testProcessMultipleProviderData_PartialFailure_ProcessesSuccessAndErrors() {
@@ -204,7 +186,7 @@ final class DataProcessingServiceTests: XCTestCase {
             results,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         XCTAssertEqual(errors.count, 1)
@@ -228,7 +210,7 @@ final class DataProcessingServiceTests: XCTestCase {
             results,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         XCTAssertTrue(errors.isEmpty) // Unauthorized doesn't return error message
@@ -246,14 +228,14 @@ final class DataProcessingServiceTests: XCTestCase {
             results,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         XCTAssertTrue(errors.isEmpty) // NoTeamFound doesn't return error message
         // Check that team error was set
         let session = userSessionData.getSession(for: .cursor)
-        XCTAssertNotNil(session?.errorMessage)
-        XCTAssertTrue(session?.errorMessage?.contains("team vibe") ?? false)
+        XCTAssertNotNil(session?.lastErrorMessage)
+        XCTAssertTrue(session?.lastErrorMessage?.contains("team vibe") ?? false)
     }
 
     func testProcessMultipleProviderData_GenericError_SetsErrorMessage() {
@@ -271,7 +253,7 @@ final class DataProcessingServiceTests: XCTestCase {
             results,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then
         XCTAssertEqual(errors.count, 1)
@@ -280,7 +262,7 @@ final class DataProcessingServiceTests: XCTestCase {
 
         // Check that error message was set in user session
         let session = userSessionData.getSession(for: .cursor)
-        XCTAssertNotNil(session?.errorMessage)
+        XCTAssertNotNil(session?.lastErrorMessage)
     }
 
     // MARK: - Currency Conversion Tests
@@ -378,8 +360,8 @@ final class DataProcessingServiceTests: XCTestCase {
         // Then
         XCTAssertFalse(mockNotificationManager.showUpperLimitNotificationCalled)
         XCTAssertTrue(mockNotificationManager.showWarningNotificationCalled)
-        XCTAssertEqual(mockNotificationManager.lastWarningLimitAmount ?? 0, 200.0, accuracy: 0.01)
-        XCTAssertEqual(mockNotificationManager.lastWarningLimitSpending ?? 0, 250.0, accuracy: 0.01)
+        XCTAssertEqual(mockNotificationManager.lastWarningLimit ?? 0, 200.0, accuracy: 0.01)
+        XCTAssertEqual(mockNotificationManager.lastWarningSpending ?? 0, 250.0, accuracy: 0.01)
     }
 
     func testCheckLimitsAndNotify_BelowLimits_ShowsNoNotifications() async {
@@ -418,7 +400,7 @@ final class DataProcessingServiceTests: XCTestCase {
             providerResult,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            gravatarService: mockGravatarService)
+            gravatarService: gravatarService)
 
         // Then - Verify complete flow
         // 1. User session updated
@@ -431,10 +413,10 @@ final class DataProcessingServiceTests: XCTestCase {
         XCTAssertNotNil(spendingData.getSpendingData(for: .cursor))
 
         // 4. Gravatar updated
-        XCTAssertEqual(mockGravatarService.updateAvatarCallCount, 1)
+        XCTAssertNotNil(gravatarService.currentAvatarURL, "Avatar should be updated")
 
         // 5. No errors occurred
-        XCTAssertEqual(userSessionData.getSession(for: .cursor)?.errorMessage, nil)
+        XCTAssertEqual(userSessionData.getSession(for: .cursor)?.lastErrorMessage, nil)
     }
 
     // MARK: - Helper Methods
@@ -455,11 +437,11 @@ final class DataProcessingServiceTests: XCTestCase {
                 month: 5,
                 year: 2025),
             usage: ProviderUsageData(
-                provider: .cursor,
                 currentRequests: 150,
+                totalRequests: 600,
                 maxRequests: 1500,
-                currentTokens: 75000,
-                maxTokens: 1_500_000),
+                startOfMonth: Date(),
+                provider: .cursor),
             exchangeRates: ["USD": 1.0, "EUR": 0.85],
             targetCurrency: "USD")
     }

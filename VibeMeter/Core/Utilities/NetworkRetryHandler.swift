@@ -32,7 +32,7 @@ actor NetworkRetryHandler {
 
     // MARK: - Types
 
-    enum RetryableError: Error {
+    enum RetryableError: Error, Equatable {
         case networkTimeout
         case serverError(statusCode: Int)
         case connectionError
