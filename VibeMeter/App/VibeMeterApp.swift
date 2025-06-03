@@ -34,14 +34,11 @@ struct VibeMeterApp: App {
             return "" // No data = icon only
         }
 
-        let spending: Double = if providers.count == 1,
-                                  let providerData = appDelegate.spendingData.getSpendingData(for: providers[0]),
-                                  let providerSpending = providerData.displaySpending {
-            providerSpending
-        } else {
-            // Show total across all providers
-            appDelegate.spendingData.totalSpendingConverted(to: appDelegate.currencyData.selectedCode, rates: appDelegate.currencyData.currentExchangeRates)
-        }
+        // Always use total spending for consistency with the popover
+        let spending = appDelegate.spendingData.totalSpendingConverted(
+            to: appDelegate.currencyData.selectedCode, 
+            rates: appDelegate.currencyData.currentExchangeRates
+        )
 
         return "\(appDelegate.currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
     }

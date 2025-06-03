@@ -73,6 +73,7 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
 
         setupLoginCallbacks()
         setupRefreshTimers()
+        observeCurrencyChanges()
 
         // Initialize user session state for providers with existing tokens
         for provider in loginManager.loggedInProviders {
@@ -267,6 +268,31 @@ public final class MultiProviderDataOrchestrator: ObservableObject {
     }
 
     // MARK: - Private Methods
+    
+    private func observeCurrencyChanges() {
+        // Observe settings manager currency changes
+        Task {
+            // Initial currency setup
+            let selectedCurrency = settingsManager.selectedCurrencyCode
+            currencyData.updateSelectedCurrency(selectedCurrency)
+            
+            // Watch for currency changes
+            NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self else { return }
+                    let newCurrency = self.settingsManager.selectedCurrencyCode
+                    if newCurrency != self.currencyData.selectedCode {
+                        self.logger.info("Currency changed from \(self.currencyData.selectedCode) to \(newCurrency)")
+                        self.updateCurrency(to: newCurrency)
+                    }
+                }
+            }
+        }
+    }
 
     private func setupLoginCallbacks() {
         logger.info("Setting up login callbacks")
