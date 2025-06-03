@@ -23,6 +23,41 @@ final class StatusBarController: NSObject {
     private let spendingData: MultiProviderSpendingData
     private let currencyData: CurrencyData
     private weak var orchestrator: MultiProviderDataOrchestrator?
+    
+    // Change detection state
+    private struct DisplayState: Equatable {
+        let isLoggedIn: Bool
+        let hasData: Bool
+        let gaugeValue: Double
+        let totalSpending: Double
+        let currencyCode: String
+        let currencySymbol: String
+        let displayMode: MenuBarDisplayMode
+        let isDarkMode: Bool
+        let hasProviderIssues: Bool
+        let connectionStatus: ProviderConnectionStatus
+        let animatedGaugeValue: Double
+        let animatedCostValue: Double
+        
+        static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
+            return lhs.isLoggedIn == rhs.isLoggedIn &&
+                   lhs.hasData == rhs.hasData &&
+                   abs(lhs.gaugeValue - rhs.gaugeValue) < 0.001 &&
+                   abs(lhs.totalSpending - rhs.totalSpending) < 0.01 &&
+                   lhs.currencyCode == rhs.currencyCode &&
+                   lhs.currencySymbol == rhs.currencySymbol &&
+                   lhs.displayMode == rhs.displayMode &&
+                   lhs.isDarkMode == rhs.isDarkMode &&
+                   lhs.hasProviderIssues == rhs.hasProviderIssues &&
+                   lhs.connectionStatus == rhs.connectionStatus &&
+                   abs(lhs.animatedGaugeValue - rhs.animatedGaugeValue) < 0.001 &&
+                   abs(lhs.animatedCostValue - rhs.animatedCostValue) < 0.01
+        }
+    }
+    
+    private var lastDisplayState: DisplayState?
+    private var lastTooltip: String = ""
+    private var lastAccessibilityDescription: String = ""
 
     init(settingsManager: any SettingsManagerProtocol,
          userSession: MultiProviderUserSessionData,
@@ -80,118 +115,180 @@ final class StatusBarController: NSObject {
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
 
-        // Determine current state
-        if !userSession.isLoggedInToAnyProvider {
+        // Calculate current display state
+        let isLoggedIn = userSession.isLoggedInToAnyProvider
+        let providers = spendingData.providersWithData
+        let hasData = !providers.isEmpty
+        
+        // Update state manager first
+        if !isLoggedIn {
             stateManager.setState(.notLoggedIn)
+        } else if !hasData {
+            stateManager.setState(.loading)
         } else {
-            let providers = spendingData.providersWithData
-            if providers.isEmpty {
-                // Logged in but no data yet - loading state
-                stateManager.setState(.loading)
-            } else {
-                // Calculate spending percentage
-                let totalSpendingUSD = spendingData.totalSpendingConverted(
-                    to: "USD",
-                    rates: currencyData.effectiveRates)
-                let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+            let totalSpendingUSD = spendingData.totalSpendingConverted(
+                to: "USD",
+                rates: currencyData.effectiveRates)
+            let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
 
-                // Only set new data state if the value has changed significantly (more than 1%)
-                // or if we're currently in loading state (to trigger the loading->data transition)
-                if case .loading = stateManager.currentState {
-                    // Always animate from loading to data state
-                    stateManager.setState(.data(value: gaugeValue))
-                } else if case let .data(currentValue) = stateManager.currentState {
-                    // Only update if the change is significant enough to warrant animation
-                    if abs(currentValue - gaugeValue) > 0.01 {
-                        stateManager.setState(.data(value: gaugeValue))
-                    }
-                } else {
-                    // For any other state, set the data state
+            // Only set new data state if the value has changed significantly
+            if case .loading = stateManager.currentState {
+                stateManager.setState(.data(value: gaugeValue))
+            } else if case let .data(currentValue) = stateManager.currentState {
+                if abs(currentValue - gaugeValue) > 0.01 {
                     stateManager.setState(.data(value: gaugeValue))
                 }
+            } else {
+                stateManager.setState(.data(value: gaugeValue))
             }
         }
-
-        // Determine current appearance for explicit environment injection
+        
+        // Calculate current display values
+        let totalSpending = hasData ? spendingData.totalSpendingConverted(
+            to: currencyData.selectedCode,
+            rates: currencyData.effectiveRates) : 0.0
+        let totalSpendingUSD = hasData ? spendingData.totalSpendingConverted(
+            to: "USD",
+            rates: currencyData.effectiveRates) : 0.0
+        let gaugeValue = hasData ? min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0) : 0.0
         let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let colorScheme: ColorScheme = isDarkMode ? .dark : .light
-
-        // Create and render the gauge icon based on state with explicit colorScheme for ImageRenderer
-        let gaugeView: some View = ZStack(alignment: .topTrailing) {
-            switch stateManager.currentState {
-            case .notLoggedIn:
-                // Grey icon with no gauge
-                GaugeIcon(value: 0, isLoading: false, isDisabled: true, animateOnAppear: true)
-                    .frame(width: 18, height: 18)
-                    .environment(\.colorScheme, colorScheme)
-            case .loading:
-                // Animated loading gauge
-                GaugeIcon(
-                    value: stateManager.animatedGaugeValue,
-                    isLoading: true,
-                    isDisabled: false,
-                    animateOnAppear: true)
-                    .frame(width: 18, height: 18)
-                    .environment(\.colorScheme, colorScheme)
-            case .data:
-                // Static gauge at spending level
-                GaugeIcon(
-                    value: stateManager.animatedGaugeValue,
-                    isLoading: false,
-                    isDisabled: false,
-                    animateOnAppear: true)
-                    .frame(width: 18, height: 18)
-                    .environment(\.colorScheme, colorScheme)
-            }
-
-            // Add status indicator if there are any provider issues
-            if spendingData.hasProviderIssues {
-                MenuBarStatusDot(status: spendingData.overallConnectionStatus)
-                    .offset(x: 2, y: -2)
-            }
+        let displayMode = settingsManager.menuBarDisplayMode
+        
+        // Create current display state
+        let currentState = DisplayState(
+            isLoggedIn: isLoggedIn,
+            hasData: hasData,
+            gaugeValue: gaugeValue,
+            totalSpending: totalSpending,
+            currencyCode: currencyData.selectedCode,
+            currencySymbol: currencyData.selectedSymbol,
+            displayMode: displayMode,
+            isDarkMode: isDarkMode,
+            hasProviderIssues: spendingData.hasProviderIssues,
+            connectionStatus: spendingData.overallConnectionStatus,
+            animatedGaugeValue: stateManager.animatedGaugeValue,
+            animatedCostValue: stateManager.animatedCostValue
+        )
+        
+        // Check if we need to update anything
+        let stateChanged = lastDisplayState != currentState
+        if !stateChanged {
+            return // No changes detected, skip update
         }
+        
+        let lastState = lastDisplayState
+        lastDisplayState = currentState
+        
+        // Update icon if needed
+        let iconNeedsUpdate = lastState?.displayMode.showsIcon != currentState.displayMode.showsIcon ||
+                            lastState?.isDarkMode != currentState.isDarkMode ||
+                            lastState?.isLoggedIn != currentState.isLoggedIn ||
+                            lastState?.hasData != currentState.hasData ||
+                            lastState?.hasProviderIssues != currentState.hasProviderIssues ||
+                            lastState?.connectionStatus != currentState.connectionStatus ||
+                            abs((lastState?.animatedGaugeValue ?? 0) - currentState.animatedGaugeValue) > 0.001
+        
+        if iconNeedsUpdate {
+            updateIcon(button: button, state: currentState)
+        }
+        
+        // Update title if needed
+        let titleNeedsUpdate = lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
+                             lastState?.displayMode.showsIcon != currentState.displayMode.showsIcon ||
+                             lastState?.currencySymbol != currentState.currencySymbol ||
+                             lastState?.hasData != currentState.hasData ||
+                             abs((lastState?.animatedCostValue ?? 0) - currentState.animatedCostValue) > 0.01
+        
+        if titleNeedsUpdate {
+            updateTitle(button: button, state: currentState)
+        }
+        
+        // Update tooltip and accessibility (less frequently)
+        let tooltipNeedsUpdate = lastState?.isLoggedIn != currentState.isLoggedIn ||
+                               lastState?.hasData != currentState.hasData ||
+                               abs((lastState?.gaugeValue ?? 0) - currentState.gaugeValue) > 0.01 ||
+                               lastState?.currencyCode != currentState.currencyCode
+        
+        if tooltipNeedsUpdate {
+            updateTooltipAndAccessibility(button: button)
+        }
+    }
+    
+    private func updateIcon(button: NSStatusBarButton, state: DisplayState) {
+        if state.displayMode.showsIcon {
+            let colorScheme: ColorScheme = state.isDarkMode ? .dark : .light
+            
+            let gaugeView: some View = ZStack(alignment: .topTrailing) {
+                switch stateManager.currentState {
+                case .notLoggedIn:
+                    GaugeIcon(value: 0, isLoading: false, isDisabled: true, animateOnAppear: true)
+                        .frame(width: 18, height: 18)
+                        .environment(\.colorScheme, colorScheme)
+                case .loading:
+                    GaugeIcon(
+                        value: state.animatedGaugeValue,
+                        isLoading: true,
+                        isDisabled: false,
+                        animateOnAppear: true)
+                        .frame(width: 18, height: 18)
+                        .environment(\.colorScheme, colorScheme)
+                case .data:
+                    GaugeIcon(
+                        value: state.animatedGaugeValue,
+                        isLoading: false,
+                        isDisabled: false,
+                        animateOnAppear: true)
+                        .frame(width: 18, height: 18)
+                        .environment(\.colorScheme, colorScheme)
+                }
 
-        let renderer = ImageRenderer(content: gaugeView)
-        renderer.scale = 2.0 // Retina display
+                if state.hasProviderIssues {
+                    MenuBarStatusDot(status: state.connectionStatus)
+                        .offset(x: 2, y: -2)
+                }
+            }
 
-        if let nsImage = renderer.nsImage {
-            // Ensure the image has the correct size
-            nsImage.size = NSSize(width: 18, height: 18)
-            button.image = nsImage
-            // Don't use template mode since we handle light/dark mode colors in GaugeIcon
-            button.image?.isTemplate = false
+            let renderer = ImageRenderer(content: gaugeView)
+            renderer.scale = 2.0
+
+            if let nsImage = renderer.nsImage {
+                nsImage.size = NSSize(width: 18, height: 18)
+                button.image = nsImage
+                button.image?.isTemplate = false
+            } else {
+                print("GaugeIcon rendering failed, using fallback")
+                button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
+                button.image?.isTemplate = true
+            }
         } else {
-            // Fallback to a system image if rendering fails
-            print("GaugeIcon rendering failed, using fallback")
-            button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
-            button.image?.isTemplate = true
+            button.image = nil
         }
-
-        // Set the text title if enabled and we have data
-        if settingsManager.showCostInMenuBar, stateManager.currentState.showsGauge,
-           !spendingData.providersWithData.isEmpty {
-            // Always use total spending for consistency with the popover
-            let spending = spendingData.totalSpendingConverted(
-                to: currencyData.selectedCode,
-                rates: currencyData.effectiveRates)
-
-            // Update cost animation if spending changed
-            stateManager.setCostValue(spending)
-
-            // Use animated cost value for display with added spacing
-            let animatedSpending = stateManager.animatedCostValue
-            button
-                .title =
-                "  \(currencyData.selectedSymbol)\(animatedSpending.formatted(.number.precision(.fractionLength(2))))"
+    }
+    
+    private func updateTitle(button: NSStatusBarButton, state: DisplayState) {
+        if state.displayMode.showsMoney, stateManager.currentState.showsGauge, state.hasData {
+            stateManager.setCostValue(state.totalSpending)
+            let spacingPrefix = state.displayMode.showsIcon ? "  " : ""
+            button.title = "\(spacingPrefix)\(state.currencySymbol)\(state.animatedCostValue.formatted(.number.precision(.fractionLength(2))))"
         } else {
             button.title = ""
         }
-
-        // Set tooltip with spending percentage and last refresh info
-        button.toolTip = createTooltipText()
-
-        // Update accessibility description with current spending information
-        button.setAccessibilityValue(createAccessibilityDescription())
+    }
+    
+    private func updateTooltipAndAccessibility(button: NSStatusBarButton) {
+        let tooltip = createTooltipText()
+        let accessibility = createAccessibilityDescription()
+        
+        // Only update if text actually changed
+        if tooltip != lastTooltip {
+            button.toolTip = tooltip
+            lastTooltip = tooltip
+        }
+        
+        if accessibility != lastAccessibilityDescription {
+            button.setAccessibilityValue(accessibility)
+            lastAccessibilityDescription = accessibility
+        }
     }
 
     @objc
@@ -405,29 +502,70 @@ final class StatusBarController: NSObject {
     }
 
     private func setupAnimationTimer() {
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
+        // Start with a slower interval and adapt based on animation needs
+        startAdaptiveAnimationTimer()
+    }
+    
+    private func startAdaptiveAnimationTimer(interval: TimeInterval = 0.1) {
+        animationTimer?.invalidate()
+        
+        animationTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
 
                 // Update animation state first
                 self.stateManager.updateAnimation()
 
-                // Only update frequently if animating, transitioning, or value changed
-                if self.stateManager.currentState.isAnimated ||
+                let isActivelyAnimating = self.stateManager.currentState.isAnimated ||
                     self.stateManager.isTransitioning ||
-                    self.stateManager.isCostTransitioning ||
-                    abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001 {
+                    self.stateManager.isCostTransitioning
+                
+                let valueChanged = abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001
+
+                // Always update animation state, but only update display if needed
+                if isActivelyAnimating || valueChanged {
                     self.updateStatusItemDisplay()
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
+                } else {
+                    // Still call updateStatusItemDisplay but change detection will prevent unnecessary work
+                    self.updateStatusItemDisplay()
+                }
+                
+                // Adapt timer frequency based on animation state
+                let currentInterval = interval
+                let targetInterval: TimeInterval
+                
+                if isActivelyAnimating {
+                    // High frequency for smooth animations (30fps)
+                    targetInterval = 0.033
+                } else if valueChanged {
+                    // Medium frequency for value changes (15fps)
+                    targetInterval = 0.067
+                } else {
+                    // Low frequency when idle (5fps)
+                    targetInterval = 0.2
+                }
+                
+                // Only restart timer if frequency needs to change significantly
+                if abs(currentInterval - targetInterval) > 0.01 {
+                    self.startAdaptiveAnimationTimer(interval: targetInterval)
                 }
             }
         }
     }
 
     private func setupPeriodicTimer() {
-        periodicTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        // Periodic timer for tooltip updates and other non-critical updates
+        // Run every 30 seconds to reduce CPU usage while keeping tooltips reasonably fresh
+        periodicTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.updateStatusItemDisplay()
+                // Only update if not actively animating to avoid conflicts
+                guard let self,
+                      !self.stateManager.currentState.isAnimated,
+                      !self.stateManager.isTransitioning,
+                      !self.stateManager.isCostTransitioning else { return }
+                
+                self.updateStatusItemDisplay()
             }
         }
     }
@@ -438,8 +576,8 @@ final class StatusBarController: NSObject {
         // Cancel observation task
         observationTask?.cancel()
 
-        // Note: Cannot safely invalidate MainActor-isolated timers from deinit
-        // They will be cleaned up when the class is deallocated
+        // Note: Timer invalidation cannot be safely done from deinit in Swift 6 strict concurrency
+        // Timers will be cleaned up when the class is deallocated
         // customMenuWindow is also MainActor-isolated and will be cleaned up automatically
     }
 }
