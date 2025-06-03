@@ -2,7 +2,6 @@ import Foundation
 @testable import VibeMeter
 import XCTest
 
-@MainActor
 final class ExchangeRateManagerTests: XCTestCase {
     private var mockURLSession: MockURLSession!
     private var exchangeRateManager: ExchangeRateManager!
@@ -177,7 +176,7 @@ final class ExchangeRateManagerTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "USD", rates: rates)
 
         // Then
-        XCTAssertEqual(result, 100.0, accuracy: 0.01)
+        XCTAssertEqual(result!, 100.0, accuracy: 0.01)
     }
 
     func testConvert_CrossCurrencyConversion_Success() {
@@ -189,7 +188,7 @@ final class ExchangeRateManagerTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
 
         // Then - 92 EUR = 100 USD = 82 GBP
-        XCTAssertEqual(result, 82.0, accuracy: 0.01)
+        XCTAssertEqual(result!, 82.0, accuracy: 0.01)
     }
 
     func testConvert_MissingSourceCurrency_ReturnsNil() {

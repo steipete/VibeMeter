@@ -191,12 +191,7 @@ public final class MultiProviderSpendingData {
         let totalUSD = totalSpendingUSD
         guard currency != "USD" else { return totalUSD }
 
-        // Use direct conversion with fallback handling
-        if let rate = rates[currency] {
-            return totalUSD * rate
-        }
-
-        // If no rate available, try ExchangeRateManager fallback
+        // Convert using the same approach as ExchangeRateManager for consistency
         return ExchangeRateManager.shared.convert(
             totalUSD,
             from: "USD",

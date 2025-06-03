@@ -6,13 +6,18 @@ import os.log
 final class AuthenticationTokenManager {
     // MARK: - Private Properties
 
-    private var keychainHelpers: [ServiceProvider: KeychainHelper] = [:]
+    private var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
     private let logger = Logger(subsystem: "com.vibemeter", category: "AuthTokenManager")
 
     // MARK: - Initialization
 
     init() {
         setupKeychainHelpers()
+    }
+    
+    // For testing purposes
+    init(keychainHelpers: [ServiceProvider: KeychainServicing]) {
+        self.keychainHelpers = keychainHelpers
     }
 
     // MARK: - Public Methods

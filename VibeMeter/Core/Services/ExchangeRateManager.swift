@@ -38,7 +38,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
     private let baseCurrency = "USD"
 
     // Supported currencies
-    public let supportedCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
+    public nonisolated let supportedCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
 
     // MARK: - Singleton
 

@@ -2,7 +2,6 @@ import Foundation
 @testable import VibeMeter
 
 // Mock URLSession for testing network requests
-@MainActor
 public final class MockURLSession: URLSessionProtocol, @unchecked Sendable {
     public var nextData: Data?
     public var nextResponse: URLResponse?
