@@ -3,7 +3,7 @@ https://aistudio.google.com/prompts/1K2XHHytMLpeecOT1sjHqmRXdpodqT-ge
 https://www.cursor.com/settings
 
 **Version:** 2.1
-**Date:** January 6, 2025
+**Date:** June 3, 2025
 
 **1. Overview & Purpose**
 
@@ -32,11 +32,13 @@ The application uses a provider-agnostic architecture enabling support for multi
 1.  **StatusBarController:** Manages the NSStatusItem with animated gauge icon and custom popover window
 2.  **MultiProviderDataOrchestrator:** Central coordinator managing data fetching, authentication, and state synchronization across all providers
 3.  **MultiProviderLoginManager:** Handles WebKit-based authentication for multiple providers simultaneously
-4.  **Provider Implementations:** Service-specific implementations (CursorProvider) conforming to ProviderProtocol
-5.  **ExchangeRateManager:** Singleton managing currency conversions with caching and fallback rates
-6.  **SettingsManager:** @Observable model managing preferences and provider sessions via UserDefaults
-7.  **NotificationManager:** Handles system notifications for spending alerts with per-session tracking
-8.  **Observable Data Models:**
+4.  **AuthenticationTokenManager:** Manages secure token storage and retrieval per provider
+5.  **BackgroundDataProcessor:** Actor handling concurrent API operations off main thread
+6.  **Provider Implementations:** Service-specific implementations (CursorProvider) conforming to ProviderProtocol
+7.  **ExchangeRateManager:** Singleton managing currency conversions with caching and fallback rates
+8.  **SettingsManager:** @Observable model managing preferences and provider sessions via UserDefaults
+9.  **NotificationManager:** Handles system notifications for spending alerts with per-session tracking
+10. **Observable Data Models:**
     *   MultiProviderSpendingData: Tracks spending/usage across all providers
     *   MultiProviderUserSessionData: Manages authentication state for all providers
     *   CurrencyData: Maintains currency selection and exchange rates
@@ -57,7 +59,7 @@ The application uses a provider-agnostic architecture enabling support for multi
 *   **Custom Popover:** 
     *   Uses CustomMenuWindow (not native NSMenu) for rich SwiftUI content
     *   Fixed size: 300x400 (logged in) or 300x280 (logged out)
-    *   Material background with vibrancy effects
+    *   Modern SwiftUI Material (.regularMaterial) background replacing NSVisualEffectView
 
 **4.2. Popover Content**
 
@@ -116,14 +118,15 @@ The application uses a provider-agnostic architecture enabling support for multi
 *   **Error Handling:** Specific handling for 401 (unauthorized), 429 (rate limit), team not found
 
 **Data Orchestration:**
-*   **BackgroundDataProcessor:** Processes API calls on background actor
+*   **BackgroundDataProcessor:** Actor processing API calls concurrently on background threads
 *   **Refresh Timers:** Per-provider timers based on user settings (default 5 min)
 *   **Parallel Fetching:** All providers refreshed concurrently via TaskGroup
 *   **Session Consistency:** Validates stored sessions against keychain tokens on startup
+*   **Swift 6 Concurrency:** Complete actor isolation for data race safety
 
 **4.6. Settings Window (MultiProviderSettingsView)**
 
-**Tab-based Interface:**
+**Tab-based Interface (NavigationStack-based):**
 1. **General Tab:**
    *   Currency selector (USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, SEK, NZD)
    *   Refresh interval (1, 2, 5, 10, 15, 30, 60 minutes)
@@ -205,11 +208,13 @@ The application uses a provider-agnostic architecture enabling support for multi
 
 **7. Technical Implementation**
 
-*   **Swift 6:** Strict concurrency with complete data race safety
-*   **Architecture:** Multi-provider MVVM with observable models
-*   **UI Framework:** SwiftUI for all windows and views
+*   **Swift 6:** Complete concurrency checking with strict data race safety
+*   **Modern SwiftUI:** @Observable replacing @ObservableObject, NavigationStack, Material backgrounds
+*   **Enhanced String Formatting:** .formatted() APIs replacing legacy string interpolation
+*   **Architecture:** Multi-provider MVVM with observable models and background actors
+*   **UI Framework:** SwiftUI for all windows and views with macOS 15 APIs
 *   **Menu Bar:** Custom NSStatusItem with Canvas-rendered gauge icon
-*   **Concurrency:** Async/await, @MainActor, background actors
+*   **Concurrency:** Background actors (BackgroundDataProcessor), async/await, @MainActor isolation
 *   **Testing:** Protocol-based design enabling comprehensive mocking
 *   **Logging:** os.log with subsystem/category organization
 
@@ -236,20 +241,59 @@ The application uses a provider-agnostic architecture enabling support for multi
 ```
 VibeMeter/
 ├── App/                    # App entry point and delegate
+│   └── VibeMeterApp.swift  # Main app with @Observable environment
 ├── Core/
 │   ├── Environment/        # SwiftUI environment setup
 │   ├── Extensions/         # Swift extensions
+│   │   └── URL+QueryItems.swift
 │   ├── Models/            # Data models and observable objects
+│   │   ├── CurrencyData.swift          # @Observable currency state
+│   │   ├── MultiProviderUserSession.swift
+│   │   ├── ProviderSpendingData.swift  # Multi-provider spending model
+│   │   └── ProviderSession.swift       # Extracted session model
 │   ├── Networking/        # URL session protocols
 │   ├── Protocols/         # Core protocols
+│   │   ├── KeychainProtocol.swift
+│   │   └── URLSessionProtocol.swift
 │   ├── Providers/         # Provider implementations
+│   │   ├── Cursor/
+│   │   │   └── CursorResponseModels.swift
+│   │   ├── CursorProvider.swift
+│   │   ├── ProviderProtocol.swift
+│   │   └── ServiceProvider.swift
 │   ├── Services/          # Business logic services
+│   │   ├── AuthenticationTokenManager.swift    # Token management
+│   │   ├── BackgroundDataProcessor.swift       # Background actor
+│   │   ├── ExchangeRateManager.swift
+│   │   ├── GravatarService.swift
+│   │   ├── LoggingService.swift
+│   │   ├── MultiProviderDataOrchestrator.swift # Swift 6 modernized
+│   │   ├── MultiProviderLoginManager.swift
+│   │   ├── NotificationManager.swift
+│   │   ├── SettingsManager.swift               # @Observable migration
+│   │   ├── SparkleUpdaterManager.swift
+│   │   └── StartupManager.swift
 │   └── Utilities/         # Helper classes
+│       ├── KeychainHelper.swift
+│       ├── NSApplication+openSettings.swift
+│       └── StringExtensions.swift
 ├── Presentation/
 │   ├── Components/        # Reusable UI components
-│   ├── ViewModels/        # View-specific models
+│   │   ├── CustomMenuWindow.swift       # Material backgrounds
+│   │   ├── GaugeIcon.swift             # Canvas-based gauge
+│   │   ├── MenuBarContentView.swift
+│   │   ├── MenuBarState.swift
+│   │   ├── StatusBarController.swift    # Enhanced formatting
+│   │   ├── CostTableView.swift         # Structured display
+│   │   └── ProviderSpendingRowView.swift # Provider rows
+│   ├── ViewModels/        # View-specific models (deprecated)
 │   └── Views/             # SwiftUI views
+│       ├── AnalyticsWebView.swift
+│       ├── MultiProviderSettingsView.swift  # NavigationStack
+│       ├── SettingsComponents.swift
+│       └── VibeMeterMainView.swift
 └── Resources/             # Assets and configs
+    └── VibeMeter.entitlements
 ```
 
 **10. Future Extensibility**
