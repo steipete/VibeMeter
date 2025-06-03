@@ -57,22 +57,29 @@ fi
 log "Preparing app bundle for signing..."
 xattr -cr "$APP_BUNDLE" 2>/dev/null || true
 
+# Check if we're in CI and have a specific keychain
+KEYCHAIN_OPTS=""
+if [ -n "${KEYCHAIN_NAME:-}" ]; then
+    log "Using keychain: $KEYCHAIN_NAME"
+    KEYCHAIN_OPTS="--keychain $KEYCHAIN_NAME"
+fi
+
 # Sign frameworks first (if any)
 if [ -d "$APP_BUNDLE/Contents/Frameworks" ]; then
     log "Signing embedded frameworks..."
     find "$APP_BUNDLE/Contents/Frameworks" \( -type d -name "*.framework" -o -type f -name "*.dylib" \) 2>/dev/null | while read -r framework; do
         log "Signing framework: $framework"
-        codesign --force --options runtime --sign "$SIGN_IDENTITY" "$framework" || log "Warning: Failed to sign $framework"
+        codesign --force --options runtime --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$framework" || log "Warning: Failed to sign $framework"
     done
 fi
 
 # Sign the main executable
 log "Signing main executable..."
-codesign --force --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" "$APP_BUNDLE/Contents/MacOS/VibeMeter" || true
+codesign --force --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$APP_BUNDLE/Contents/MacOS/VibeMeter" || true
 
 # Sign the app bundle with deep signing and hardened runtime
 log "Signing complete app bundle..."
-codesign --force --deep --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
+codesign --force --deep --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$APP_BUNDLE"
 
 # Verify the signature
 log "Verifying code signature..."

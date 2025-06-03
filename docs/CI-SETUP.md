@@ -76,6 +76,7 @@ The workflow is configured in `.github/workflows/build-mac-app.yml` and runs on:
 ### Workflow Features
 
 - **Automatic building**: Builds the app with Xcode
+- **Certificate import**: Automatically imports signing certificate into a temporary keychain
 - **Code signing**: Signs the app with your Developer ID certificate
 - **Testing**: Runs unit tests
 - **Notarization**: Submits to Apple for notarization (main branch only)
@@ -83,6 +84,20 @@ The workflow is configured in `.github/workflows/build-mac-app.yml` and runs on:
 - **Artifact uploads**: Stores build artifacts for 14 days
 - **PR comments**: Adds download links to pull requests
 - **Release drafts**: Creates GitHub releases (manual trigger)
+- **Keychain cleanup**: Removes temporary keychain after build
+
+### How Certificate Import Works
+
+The CI workflow automatically handles certificate management:
+
+1. Creates a temporary keychain with a random password
+2. Decodes the base64 certificate from GitHub secrets
+3. Imports the certificate into the temporary keychain
+4. Configures keychain access for codesign tool
+5. Uses the certificate for signing
+6. Cleans up the temporary keychain after the build
+
+This ensures your certificate is never stored on disk and is properly secured during the CI process.
 
 ## Local Development
 
@@ -118,6 +133,10 @@ The workflow is configured in `.github/workflows/build-mac-app.yml` and runs on:
 
 ### Code Signing Issues
 
+- **"The specified item could not be found in the keychain"**: The certificate wasn't imported properly. Check:
+  - Base64 encoding is correct (no line breaks)
+  - Certificate password matches
+  - Certificate is valid Developer ID Application type
 - **"No identity found"**: Ensure your certificate is properly exported and base64-encoded
 - **"User interaction is not allowed"**: The keychain needs proper permissions (handled by scripts)
 - **"Resource fork, Finder information, or similar detritus"**: Clean your build directory

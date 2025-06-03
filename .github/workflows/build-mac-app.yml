@@ -101,6 +101,74 @@ jobs:
           -maximum-parallel-testing-workers 1 \
           | xcbeautify
 
+    - name: Import signing certificate
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
+      env:
+        MACOS_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_SIGNING_CERTIFICATE_P12_BASE64 }}
+        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
+      run: |
+        if [[ -n "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" ]]; then
+          echo "Importing signing certificate..."
+          
+          # Create a temporary keychain
+          KEYCHAIN_NAME="build.keychain"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+          
+          echo "Creating temporary keychain: $KEYCHAIN_NAME"
+          
+          # Create the keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          
+          # Set it as the default keychain
+          security default-keychain -s "$KEYCHAIN_NAME"
+          
+          # Unlock the keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          
+          # Increase keychain timeout (1 hour)
+          security set-keychain-settings -t 3600 -l "$KEYCHAIN_NAME"
+          
+          echo "Decoding certificate from base64..."
+          
+          # Decode the base64 certificate
+          echo "$MACOS_SIGNING_CERTIFICATE_P12_BASE64" | base64 --decode > certificate.p12
+          
+          # Check the certificate file
+          echo "Certificate file size: $(ls -lh certificate.p12 | awk '{print $5}')"
+          
+          echo "Importing certificate into keychain..."
+          
+          # Import the certificate
+          security import certificate.p12 -k "$KEYCHAIN_NAME" -P "$MACOS_SIGNING_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          
+          echo "Setting keychain access permissions..."
+          
+          # Allow codesign to access the keychain without prompting
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          
+          # Add to search list
+          security list-keychains -d user -s "$KEYCHAIN_NAME" $(security list-keychains -d user | sed s/\"//g)
+          
+          echo "Verifying certificate import..."
+          
+          # Verify the certificate was imported
+          security find-identity -v -p codesigning "$KEYCHAIN_NAME"
+          
+          # Also check default keychain
+          echo "Checking default keychain..."
+          security default-keychain
+          
+          # Export keychain name for later use
+          echo "KEYCHAIN_NAME=$KEYCHAIN_NAME" >> $GITHUB_ENV
+          
+          # Clean up
+          rm -f certificate.p12
+          
+          echo "✅ Certificate imported successfully"
+        else
+          echo "⚠️ No signing certificate configured - skipping certificate import"
+        fi
+
     - name: Sign and Notarize app
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
       env:
@@ -187,3 +255,12 @@ jobs:
           
           - macOS 12.0 or later
           - Apple Silicon or Intel Mac
+    
+    - name: Cleanup keychain
+      if: always()
+      run: |
+        # Clean up the temporary keychain if it exists
+        if security list-keychains | grep -q "build.keychain"; then
+          security delete-keychain "build.keychain"
+          echo "✅ Temporary keychain removed"
+        fi

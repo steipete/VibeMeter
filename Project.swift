@@ -10,13 +10,16 @@ let project = Project(
     packages: [
         .remote(url: "https://github.com/apple/swift-log.git", requirement: .upToNextMajor(from: "1.6.1")),
         .remote(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", requirement: .upToNextMajor(from: "4.0.0")),
+        .remote(url: "https://github.com/sparkle-project/Sparkle.git", requirement: .upToNextMajor(from: "2.0.0")),
     ],
     settings: .settings(
         base: [
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
             "CURRENT_PROJECT_VERSION": "1",
-            "DEVELOPMENT_TEAM": "$(inherited)",
+            "CODE_SIGN_IDENTITY": "Apple Development",
+            "CODE_SIGN_STYLE": "Automatic",
+            "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,
             "ENABLE_USER_SCRIPT_SANDBOXING": true,
             "GENERATE_INFOPLIST_FILE": true,
@@ -27,7 +30,7 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "14.0",
-            "MARKETING_VERSION": "1.0.0",
+            "MARKETING_VERSION": "0.9.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",
@@ -38,8 +41,9 @@ let project = Project(
             .debug(
                 name: "Debug",
                 settings: [
-                    "CODE_SIGN_IDENTITY": "-",
-                    "DEVELOPMENT_TEAM": "",
+                    "CODE_SIGN_IDENTITY": "Apple Development",
+                    "CODE_SIGN_STYLE": "Automatic",
+                    "DEVELOPMENT_TEAM": "Y5PE65HELJ",
                     "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["DEBUG"],
                     "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
                 ],
@@ -49,6 +53,8 @@ let project = Project(
                 name: "Release",
                 settings: [
                     "CODE_SIGN_IDENTITY": "Apple Development",
+                    "CODE_SIGN_STYLE": "Automatic",
+                    "DEVELOPMENT_TEAM": "Y5PE65HELJ",
                     "SWIFT_OPTIMIZATION_LEVEL": "-O",
                 ],
                 xcconfig: nil
@@ -63,7 +69,7 @@ let project = Project(
             bundleId: "com.steipete.vibemeter",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "1.0.0",
+                "CFBundleShortVersionString": "0.9.0",
                 "CFBundleVersion": "1",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
@@ -71,6 +77,12 @@ let project = Project(
                 "NSAppTransportSecurity": [
                     "NSAllowsArbitraryLoads": true,
                 ],
+                // Sparkle configuration
+                "SUFeedURL": "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml",
+                "SUPublicEDKey": "MCowBQYDK2VwAyEArLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=",
+                "SUEnableAutomaticChecks": true,
+                "SUAutomaticallyUpdate": false,
+                "SUCheckAtStartup": true,
             ]),
             sources: ["VibeMeter/**"],
             resources: [
@@ -80,6 +92,7 @@ let project = Project(
             dependencies: [
                 .package(product: "Logging"),
                 .package(product: "KeychainAccess"),
+                .package(product: "Sparkle"),
             ],
             settings: .settings(
                 base: [
