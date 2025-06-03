@@ -95,24 +95,28 @@ struct GeneralSettingsView: View {
             }
             
             Section {
-                Toggle("Show cost in menu bar", isOn: $showCostInMenuBar)
-                    .onChange(of: showCostInMenuBar) { _, newValue in
-                        settingsManager.showCostInMenuBar = newValue
-                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Show cost in menu bar", isOn: $showCostInMenuBar)
+                    Text("Display current spending next to the menu bar icon. When disabled, only the icon is shown.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 
-                Text("Display current spending next to the menu bar icon. When disabled, only the icon is shown.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Toggle("Show in Dock", isOn: $showInDock)
-                    .onChange(of: showInDock) { _, newValue in
-                        settingsManager.showInDock = newValue
-                    }
-                    .padding(.top, 8)
-                
-                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Show in Dock", isOn: $showInDock)
+                        .onChange(of: showInDock) { _, newValue in
+                            // Apply the dock visibility change
+                            if newValue {
+                                NSApp.setActivationPolicy(.regular)
+                            } else {
+                                NSApp.setActivationPolicy(.accessory)
+                            }
+                        }
+                    Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 8)
             } header: {
                 Text("Appearance")
                     .font(.headline)
@@ -140,15 +144,52 @@ struct GeneralSettingsView: View {
                 Text("Data Refresh")
                     .font(.headline)
             }
+            
+            Section {
+                LabeledContent("Currency") {
+                    Picker("", selection: $selectedCurrency) {
+                        ForEach(currencies, id: \.0) { code, name in
+                            Text(name).tag(code)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+                
+                Text("Select your preferred currency for displaying costs and limits.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("Currency")
+                    .font(.headline)
+            }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .onChange(of: refreshInterval) { _, newValue in
-            settingsManager.refreshIntervalMinutes = newValue
+            // Validate refresh interval
+            if SettingsManager.refreshIntervalOptions.contains(newValue) {
+                // Valid interval, it's already saved via @AppStorage
+            } else {
+                // Invalid interval, reset to default
+                refreshInterval = 5
+            }
+        }
+        .onChange(of: selectedCurrency) { _, newValue in
+            settingsManager.selectedCurrencyCode = newValue
         }
         .onAppear {
             // Sync with actual launch at login status
             launchAtLogin = startupManager.isLaunchAtLoginEnabled
+            
+            // Detect system currency if current selection is USD (default)
+            if selectedCurrency == "USD" {
+                if let systemCurrencyCode = Locale.current.currency?.identifier,
+                   currencies.contains(where: { $0.0 == systemCurrencyCode }) {
+                    selectedCurrency = systemCurrencyCode
+                    settingsManager.selectedCurrencyCode = systemCurrencyCode
+                }
+            }
         }
     }
 }
