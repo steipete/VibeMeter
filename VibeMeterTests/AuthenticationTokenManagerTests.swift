@@ -7,8 +7,8 @@ final class AuthenticationTokenManagerTests: XCTestCase {
     private var tokenManager: AuthenticationTokenManager!
     private var mockKeychainServices: [ServiceProvider: MockKeychainService] = [:]
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         setupMockKeychainServices()
 
         // Create token manager with mock keychain services
@@ -19,10 +19,10 @@ final class AuthenticationTokenManagerTests: XCTestCase {
         tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         tokenManager = nil
         mockKeychainServices.removeAll()
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func setupMockKeychainServices() {
@@ -379,7 +379,7 @@ final class AuthenticationTokenManagerTests: XCTestCase {
         // Verify security properties
         XCTAssertTrue(cookie.isSecure) // Should be HTTPS only
         XCTAssertEqual(cookie.path, "/") // Should be site-wide
-        XCTAssertTrue(cookie.domain!.hasPrefix(".")) // Should be domain-wide
+        XCTAssertTrue(cookie.domain.hasPrefix(".")) // Should be domain-wide
         XCTAssertNotNil(cookie.expiresDate) // Should have expiration
 
         // Expiration should be in the future (30 days)

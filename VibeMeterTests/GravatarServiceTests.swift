@@ -7,7 +7,7 @@ final class GravatarServiceTests: XCTestCase {
     var sut: GravatarService!
 
     override func setUp() async throws {
-        try await super.setUp()
+        await MainActor.run { super.setUp() }
         sut = GravatarService.shared
         sut.clearAvatar() // Reset state
     }
@@ -15,7 +15,7 @@ final class GravatarServiceTests: XCTestCase {
     override func tearDown() async throws {
         sut.clearAvatar()
         sut = nil
-        try await super.tearDown()
+        await MainActor.run { super.tearDown() }
     }
 
     // MARK: - Initialization Tests
@@ -135,7 +135,7 @@ final class GravatarServiceTests: XCTestCase {
             // SHA256 of "password" but this is "admin@site.net"
         ]
 
-        for (email, expectedHashStart) in testCases {
+        for (email, _) in testCases {
             // When
             let result = sut.gravatarURL(for: email)
 

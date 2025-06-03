@@ -235,10 +235,12 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchMonthlyInvoice_WithStoredTeamId() async throws {
         // Given
-        mockSettingsManager.sessions[.cursor] = ProviderSession(
-            email: "test@example.com",
+        mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
+            provider: .cursor,
             teamId: 999,
-            provider: .cursor)
+            teamName: "Test Team",
+            userEmail: "test@example.com",
+            isActive: true))
 
         let mockInvoiceData = """
         {
@@ -694,67 +696,31 @@ final class CursorProviderTests: XCTestCase {
 
 // MARK: - Mock Settings Manager
 
+@MainActor
 private class MockSettingsManager: SettingsManagerProtocol {
-    var sessions: [ServiceProvider: ProviderSession] = [:]
-    var spendingLimits: [ServiceProvider: Int] = [:]
-    var currencies: [ServiceProvider: String] = [:]
-    var refreshIntervals: [ServiceProvider: TimeInterval] = [:]
-    var notificationSettings: [ServiceProvider: Bool] = [:]
+    var providerSessions: [ServiceProvider: ProviderSession] = [:]
+    var selectedCurrencyCode: String = "USD"
+    var warningLimitUSD: Double = 200
+    var upperLimitUSD: Double = 500
+    var refreshIntervalMinutes: Int = 5
+    var launchAtLoginEnabled: Bool = false
+    var showCostInMenuBar: Bool = true
+    var showInDock: Bool = false
+    var enabledProviders: Set<ServiceProvider> = [.cursor]
 
-    func getSession(for provider: ServiceProvider) async -> ProviderSession? {
-        sessions[provider]
+    func clearUserSessionData() {
+        providerSessions.removeAll()
     }
 
-    func setSession(_ session: ProviderSession, for provider: ServiceProvider) async {
-        sessions[provider] = session
+    func clearUserSessionData(for provider: ServiceProvider) {
+        providerSessions.removeValue(forKey: provider)
     }
 
-    func clearSession(for provider: ServiceProvider) async {
-        sessions.removeValue(forKey: provider)
+    func getSession(for provider: ServiceProvider) -> ProviderSession? {
+        providerSessions[provider]
     }
 
-    func getSpendingLimit(for provider: ServiceProvider) async -> Int {
-        spendingLimits[provider] ?? 2000
-    }
-
-    func setSpendingLimit(_ limit: Int, for provider: ServiceProvider) async {
-        spendingLimits[provider] = limit
-    }
-
-    func getCurrency(for provider: ServiceProvider) async -> String {
-        currencies[provider] ?? "USD"
-    }
-
-    func setCurrency(_ currency: String, for provider: ServiceProvider) async {
-        currencies[provider] = currency
-    }
-
-    func getRefreshInterval(for provider: ServiceProvider) async -> TimeInterval {
-        refreshIntervals[provider] ?? 3600
-    }
-
-    func setRefreshInterval(_ interval: TimeInterval, for provider: ServiceProvider) async {
-        refreshIntervals[provider] = interval
-    }
-
-    func getNotificationsEnabled(for provider: ServiceProvider) async -> Bool {
-        notificationSettings[provider] ?? true
-    }
-
-    func setNotificationsEnabled(_ enabled: Bool, for provider: ServiceProvider) async {
-        notificationSettings[provider] = enabled
-    }
-
-    // Multi-provider methods
-    func getAllSessions() async -> [ServiceProvider: ProviderSession] {
-        sessions
-    }
-
-    func getAllSpendingLimits() async -> [ServiceProvider: Int] {
-        spendingLimits
-    }
-
-    func getAllCurrencies() async -> [ServiceProvider: String] {
-        currencies
+    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
+        providerSessions[provider] = session
     }
 }
