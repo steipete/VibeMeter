@@ -26,13 +26,13 @@ struct LoggedInMenuContent: View {
             userInfoSection
             currentSpendingSection
             spendingLimitsSection
-            
+
             Divider()
-            
+
             actionButtonsSection
-            
+
             Divider()
-            
+
             quitButtonSection
         }
         .padding(12)
@@ -47,9 +47,9 @@ struct LoggedInMenuContent: View {
             }
         }
     }
-    
+
     // MARK: - View Components
-    
+
     private var userInfoSection: some View {
         Group {
             if let mostRecentSession = userSessionData.mostRecentSession,
@@ -72,7 +72,7 @@ struct LoggedInMenuContent: View {
             }
         }
     }
-    
+
     private var currentSpendingSection: some View {
         Group {
             if let totalSpending = currentSpendingDisplay {
@@ -91,21 +91,23 @@ struct LoggedInMenuContent: View {
             }
         }
     }
-    
+
     private var spendingLimitsSection: some View {
         HStack {
             Text("⚠️")
-            Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+            Text(
+                "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
             Spacer()
 
             Text("🚨")
-            Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+            Text(
+                "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
         }
         .font(.caption)
         .foregroundStyle(.secondary)
     }
-    
+
     private var actionButtonsSection: some View {
         VStack(spacing: 4) {
             Button("Refresh") {
@@ -129,7 +131,7 @@ struct LoggedInMenuContent: View {
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
     private var quitButtonSection: some View {
         Button("Quit VibeMeter") {
             NSApp.terminate(nil)

@@ -80,7 +80,8 @@ final class CursorAPIClientMock: ProviderProtocol, @unchecked Sendable {
         return userInfo
     }
 
-    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> ProviderMonthlyInvoice {
+    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int,
+                             teamId _: Int?) async throws -> ProviderMonthlyInvoice {
         fetchMonthlyInvoiceCallCount += 1
         lastAuthTokenUsed = authToken
         lastMonthRequested = month

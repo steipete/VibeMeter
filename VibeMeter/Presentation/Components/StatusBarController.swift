@@ -102,7 +102,7 @@ final class StatusBarController: NSObject {
         // Determine current appearance
         let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let colorScheme: ColorScheme = isDarkMode ? .dark : .light
-        
+
         // Create and render the gauge icon based on state with proper environment
         let gaugeView: some View = switch stateManager.currentState {
         case .notLoggedIn:
@@ -190,9 +190,10 @@ final class StatusBarController: NSObject {
                 self?.updateStatusItemDisplay()
             }
             .store(in: &cancellables)
-        
+
         // Observe appearance changes (dark/light mode)
-        DistributedNotificationCenter.default.publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
+        DistributedNotificationCenter.default
+            .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
             .sink { [weak self] _ in
                 // Delay slightly to ensure the appearance change has propagated
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

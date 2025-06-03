@@ -85,10 +85,13 @@ struct AboutView: View {
 /// to user interaction. It includes hover effects for visual feedback and opens the
 /// VibeMeter website when clicked.
 struct InteractiveAppIcon: View {
-    @State private var isHovering = false
-    @State private var isPressed = false
-    @Environment(\.colorScheme) private var colorScheme
-    
+    @State
+    private var isHovering = false
+    @State
+    private var isPressed = false
+    @Environment(\.colorScheme)
+    private var colorScheme
+
     var body: some View {
         Button(action: openWebsite) {
             Image(nsImage: NSApp.applicationIconImage)
@@ -100,8 +103,7 @@ struct InteractiveAppIcon: View {
                     color: shadowColor,
                     radius: shadowRadius,
                     x: 0,
-                    y: shadowOffset
-                )
+                    y: shadowOffset)
                 .animation(.easeInOut(duration: 0.2), value: isHovering)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
         }
@@ -111,26 +113,25 @@ struct InteractiveAppIcon: View {
         }
         .pressEvents(
             onPress: { isPressed = true },
-            onRelease: { isPressed = false }
-        )
+            onRelease: { isPressed = false })
     }
-    
+
     private var shadowColor: Color {
         if colorScheme == .dark {
-            return .black.opacity(isHovering ? 0.6 : 0.4)
+            .black.opacity(isHovering ? 0.6 : 0.4)
         } else {
-            return .black.opacity(isHovering ? 0.3 : 0.2)
+            .black.opacity(isHovering ? 0.3 : 0.2)
         }
     }
-    
+
     private var shadowRadius: CGFloat {
         isHovering ? 20 : 12
     }
-    
+
     private var shadowOffset: CGFloat {
         isHovering ? 8 : 4
     }
-    
+
     private func openWebsite() {
         guard let url = URL(string: "https://vibemeter.ai") else { return }
         NSWorkspace.shared.open(url)
@@ -141,14 +142,13 @@ struct InteractiveAppIcon: View {
 struct PressEventModifier: ViewModifier {
     let onPress: () -> Void
     let onRelease: () -> Void
-    
+
     func body(content: Content) -> some View {
         content
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in onPress() }
-                    .onEnded { _ in onRelease() }
-            )
+                    .onEnded { _ in onRelease() })
     }
 }
 

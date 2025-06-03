@@ -11,23 +11,23 @@ import SwiftUI
 /// connect their accounts and start tracking spending.
 struct LoggedOutMenuContent: View {
     let loginManager: MultiProviderLoginManager
-    
+
     private let logger = Logger(subsystem: "com.vibemeter", category: "LoggedOutMenuContent")
 
     var body: some View {
         VStack(spacing: 8) {
             headerSection
-            
+
             Divider()
-            
+
             loginButtonsSection
-            
+
             Divider()
-            
+
             navigationSection
-            
+
             Divider()
-            
+
             quitButtonSection
         }
         .padding(12)
@@ -35,9 +35,9 @@ struct LoggedOutMenuContent: View {
             logger.info("LoggedOutMenuContent appeared")
         }
     }
-    
+
     // MARK: - View Components
-    
+
     private var headerSection: some View {
         VStack(spacing: 4) {
             Text("VibeMeter")
@@ -50,7 +50,7 @@ struct LoggedOutMenuContent: View {
                 .multilineTextAlignment(.center)
         }
     }
-    
+
     private var loginButtonsSection: some View {
         VStack(spacing: 6) {
             ForEach(ServiceProvider.allCases, id: \.self) { provider in
@@ -72,7 +72,7 @@ struct LoggedOutMenuContent: View {
             }
         }
     }
-    
+
     private var navigationSection: some View {
         Button("Settings...") {
             NSApp.openSettings()
@@ -80,7 +80,7 @@ struct LoggedOutMenuContent: View {
         .keyboardShortcut(",")
         .buttonStyle(.plain)
     }
-    
+
     private var quitButtonSection: some View {
         Button("Quit VibeMeter") {
             NSApp.terminate(nil)

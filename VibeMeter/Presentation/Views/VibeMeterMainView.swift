@@ -18,12 +18,13 @@ struct VibeMeterMainView: View {
                 LoggedInContentView(
                     settingsManager: settingsManager,
                     userSessionData: userSessionData,
+                    loginManager: loginManager,
                     onRefresh: onRefresh)
             } else {
                 LoggedOutContentView(loginManager: loginManager)
             }
         }
-        .frame(width: 300, height: userSessionData.isLoggedInToAnyProvider ? 350 : 280)
+        .frame(width: 300, height: userSessionData.isLoggedInToAnyProvider ? 400 : 280)
     }
 }
 

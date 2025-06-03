@@ -46,7 +46,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
 
     // MARK: - Initialization
 
-    private init(urlSession: URLSessionProtocol = URLSession.shared) {
+    public init(urlSession: URLSessionProtocol = URLSession.shared) {
         self.urlSession = urlSession
     }
 

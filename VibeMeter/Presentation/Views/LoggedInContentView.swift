@@ -8,6 +8,7 @@ import SwiftUI
 struct LoggedInContentView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData
+    let loginManager: MultiProviderLoginManager?
     let onRefresh: () async -> Void
 
     var body: some View {
@@ -23,7 +24,7 @@ struct LoggedInContentView: View {
 
             // Content section - reduced spacing
             VStack(spacing: 6) {
-                CostTableView(settingsManager: settingsManager)
+                CostTableView(settingsManager: settingsManager, loginManager: loginManager)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
