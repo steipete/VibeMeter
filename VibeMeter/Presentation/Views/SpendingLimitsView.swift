@@ -32,7 +32,7 @@ struct SpendingLimitsView: View {
             Section {
                 LabeledContent("Amount") {
                     HStack(spacing: 8) {
-                        Text("$\(String(format: "%.0f", settingsManager.warningLimitUSD))")
+                        Text("$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(.primary)
                         Text("USD")
@@ -43,7 +43,7 @@ struct SpendingLimitsView: View {
                 if !currencyData.isUSD {
                     HStack {
                         Text("Approximately")
-                        Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", convertedWarningLimit))")
+                        Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(2))))")
                             .fontWeight(.medium)
                         Text("in \(currencyData.selectedCode)")
                     }
@@ -62,7 +62,7 @@ struct SpendingLimitsView: View {
             Section {
                 LabeledContent("Amount") {
                     HStack(spacing: 8) {
-                        Text("$\(String(format: "%.0f", settingsManager.upperLimitUSD))")
+                        Text("$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(.primary)
                         Text("USD")
@@ -73,7 +73,7 @@ struct SpendingLimitsView: View {
                 if !currencyData.isUSD {
                     HStack {
                         Text("Approximately")
-                        Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", convertedUpperLimit))")
+                        Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(2))))")
                             .fontWeight(.medium)
                         Text("in \(currencyData.selectedCode)")
                     }
@@ -101,7 +101,7 @@ struct SpendingLimitsView: View {
 
     private var convertedUpperLimit: Double {
         currencyData
-            .convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager
-            .upperLimitUSD
+            .convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ??
+            settingsManager.upperLimitUSD
     }
 }

@@ -144,7 +144,7 @@ final class StatusBarController: NSObject {
 
             // Use animated cost value for display with added spacing
             let animatedSpending = stateManager.animatedCostValue
-            button.title = "  \(currencyData.selectedSymbol)\(String(format: "%.2f", animatedSpending))"
+            button.title = "  \(currencyData.selectedSymbol)\(animatedSpending.formatted(.number.precision(.fractionLength(2))))"
         } else {
             button.title = ""
         }

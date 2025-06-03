@@ -96,12 +96,12 @@ struct LoggedInMenuContent: View {
             // Limits (compact)
             HStack {
                 Text("⚠️")
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedWarningLimit))")
+                Text("\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
                 Spacer()
 
                 Text("🚨")
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.0f", convertedUpperLimit))")
+                Text("\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -160,7 +160,7 @@ struct LoggedInMenuContent: View {
             to: currencyData.selectedCode,
             rates: currencyData.effectiveRates)
 
-        return "\(currencyData.selectedSymbol)\(String(format: "%.2f", totalSpending))"
+        return "\(currencyData.selectedSymbol)\(totalSpending.formatted(.number.precision(.fractionLength(2))))"
     }
 
     private var convertedWarningLimit: Double {

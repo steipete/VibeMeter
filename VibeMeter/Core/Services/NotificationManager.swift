@@ -79,8 +79,8 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(String(format: "%.2f", currentSpending))"
-        let limitFormatted = "\(symbol)\(String(format: "%.2f", limitAmount))"
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2))))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -105,8 +105,8 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(String(format: "%.2f", currentSpending))"
-        let limitFormatted = "\(symbol)\(String(format: "%.2f", limitAmount))"
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2))))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"

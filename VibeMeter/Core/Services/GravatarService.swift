@@ -26,7 +26,7 @@ public final class GravatarService {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let inputData = Data(trimmedEmail.utf8)
         let hashed = SHA256.hash(data: inputData)
-        let hashString = hashed.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hashed.map { String(format: "%02x", $0) }.joined()
 
         // Double the size for retina displays
         let retinaSize = size * 2

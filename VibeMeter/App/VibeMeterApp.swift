@@ -40,7 +40,7 @@ struct VibeMeterApp: App {
             to: appDelegate.currencyData.selectedCode,
             rates: appDelegate.currencyData.effectiveRates)
 
-        return "\(appDelegate.currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
+        return "\(appDelegate.currencyData.selectedSymbol)\(spending.formatted(.number.precision(.fractionLength(2))))"
     }
 
     var body: some Scene {
