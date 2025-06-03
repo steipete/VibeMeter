@@ -14,7 +14,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeHealthy, "Progress \(progress) should return healthy gauge color")
+            XCTAssertEqual(color, .progressSafe, "Progress \(progress) should return healthy gauge color")
         }
     }
 
@@ -26,7 +26,7 @@ final class ProgressColorTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .gaugeModerate, "Progress 0.5 should return moderate gauge color")
+        XCTAssertEqual(color, .progressCaution, "Progress 0.5 should return moderate gauge color")
     }
 
     func testColor_BetweenHalfAndThreeQuarters_ReturnsModerate() {
@@ -38,7 +38,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeModerate, "Progress \(progress) should return moderate gauge color")
+            XCTAssertEqual(color, .progressCaution, "Progress \(progress) should return moderate gauge color")
         }
     }
 
@@ -50,7 +50,7 @@ final class ProgressColorTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .gaugeWarning, "Progress 0.75 should return warning gauge color")
+        XCTAssertEqual(color, .progressWarning, "Progress 0.75 should return warning gauge color")
     }
 
     func testColor_BetweenThreeQuartersAndNinetyPercent_ReturnsWarning() {
@@ -62,7 +62,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeWarning, "Progress \(progress) should return warning gauge color")
+            XCTAssertEqual(color, .progressWarning, "Progress \(progress) should return warning gauge color")
         }
     }
 
@@ -95,11 +95,11 @@ final class ProgressColorTests: XCTestCase {
     func testColor_ExactBoundaryValues() {
         // Test exact boundary values to ensure correct thresholds
         let testCases = [
-            (0.499999, Color.gaugeHealthy),
-            (0.5, Color.gaugeModerate),
-            (0.749999, Color.gaugeModerate),
-            (0.75, Color.gaugeWarning),
-            (0.899999, Color.gaugeWarning),
+            (0.499999, Color.progressSafe),
+            (0.5, Color.progressCaution),
+            (0.749999, Color.progressCaution),
+            (0.75, Color.progressWarning),
+            (0.899999, Color.progressWarning),
             (0.9, Color.gaugeDanger),
         ]
 
@@ -232,7 +232,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeHealthy, "Negative progress \(progress) should return green color")
+            XCTAssertEqual(color, .progressSafe, "Negative progress \(progress) should return green color")
         }
     }
 
@@ -343,13 +343,13 @@ final class ProgressColorTests: XCTestCase {
             // Then - Verify color and warning level are consistent
             switch progress {
             case ..<0.5:
-                XCTAssertEqual(color, .gaugeHealthy, "Color should be green for progress \(progress)")
+                XCTAssertEqual(color, .progressSafe, "Color should be green for progress \(progress)")
                 XCTAssertEqual(warningLevel, .normal, "Warning level should be normal for progress \(progress)")
             case 0.5 ..< 0.75:
-                XCTAssertEqual(color, .gaugeModerate, "Color should be yellow for progress \(progress)")
+                XCTAssertEqual(color, .progressCaution, "Color should be yellow for progress \(progress)")
                 XCTAssertEqual(warningLevel, .low, "Warning level should be low for progress \(progress)")
             case 0.75 ..< 0.9:
-                XCTAssertEqual(color, .gaugeWarning, "Color should be orange for progress \(progress)")
+                XCTAssertEqual(color, .progressWarning, "Color should be orange for progress \(progress)")
                 XCTAssertEqual(warningLevel, .medium, "Warning level should be medium for progress \(progress)")
             default:
                 XCTAssertEqual(color, .gaugeDanger, "Color should be red for progress \(progress)")
@@ -443,11 +443,11 @@ final class ProgressColorTests: XCTestCase {
     func testColor_TypicalSpendingScenarios() {
         // Test realistic spending progress scenarios
         let scenarios = [
-            (0.1, "10% of budget", Color.gaugeHealthy),
-            (0.3, "30% of budget", Color.gaugeHealthy),
-            (0.5, "50% of budget", Color.gaugeModerate),
-            (0.67, "67% of budget", Color.gaugeModerate),
-            (0.8, "80% of budget", Color.gaugeWarning),
+            (0.1, "10% of budget", Color.progressSafe),
+            (0.3, "30% of budget", Color.progressSafe),
+            (0.5, "50% of budget", Color.progressCaution),
+            (0.67, "67% of budget", Color.progressCaution),
+            (0.8, "80% of budget", Color.progressWarning),
             (0.95, "95% of budget", Color.gaugeDanger),
             (1.05, "5% over budget", Color.gaugeDanger),
             (1.2, "20% over budget", Color.gaugeDanger),

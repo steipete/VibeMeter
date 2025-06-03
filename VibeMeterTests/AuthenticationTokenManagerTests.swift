@@ -9,19 +9,23 @@ final class AuthenticationTokenManagerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        setupMockKeychainServices()
+        MainActor.assumeIsolated {
+            setupMockKeychainServices()
 
-        // Create token manager with mock keychain services
-        var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
-        for provider in ServiceProvider.allCases {
-            keychainHelpers[provider] = mockKeychainServices[provider]
+            // Create token manager with mock keychain services
+            var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
+            for provider in ServiceProvider.allCases {
+                keychainHelpers[provider] = mockKeychainServices[provider]
+            }
+            tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
         }
-        tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
     override func tearDown() {
-        tokenManager = nil
-        mockKeychainServices.removeAll()
+        MainActor.assumeIsolated {
+            tokenManager = nil
+            mockKeychainServices.removeAll()
+        }
         super.tearDown()
     }
 
