@@ -14,8 +14,8 @@ struct GeneralSettingsView: View {
     private var launchAtLogin: Bool = false
     @AppStorage("refreshIntervalMinutes")
     private var refreshInterval: Int = 5
-    @AppStorage("showCostInMenuBar")
-    private var showCostInMenuBar: Bool = false
+    @AppStorage("menuBarDisplayMode")
+    private var menuBarDisplayMode: MenuBarDisplayMode = .both
     @AppStorage("showInDock")
     private var showInDock: Bool = false
     @AppStorage("selectedCurrencyCode")
@@ -62,10 +62,19 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Show cost in menu bar
+            // Menu bar display mode
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Show cost in menu bar", isOn: $showCostInMenuBar)
-                Text("Display current spending next to the menu bar icon. When disabled, only the icon is shown.")
+                LabeledContent("Menu Bar Display") {
+                    Picker("", selection: $menuBarDisplayMode) {
+                        ForEach(MenuBarDisplayMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                                .id("\(mode.rawValue)-\(menuBarDisplayMode.rawValue)")
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+                Text(menuBarDisplayMode.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
