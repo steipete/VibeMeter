@@ -99,20 +99,27 @@ final class StatusBarController: NSObject {
             }
         }
 
-        // Create and render the gauge icon based on state
+        // Determine current appearance
+        let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let colorScheme: ColorScheme = isDarkMode ? .dark : .light
+        
+        // Create and render the gauge icon based on state with proper environment
         let gaugeView: some View = switch stateManager.currentState {
         case .notLoggedIn:
             // Grey icon with no gauge
             GaugeIcon(value: 0, isLoading: false, isDisabled: true)
                 .frame(width: 18, height: 18)
+                .environment(\.colorScheme, colorScheme)
         case .loading:
             // Animated loading gauge
             GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: true, isDisabled: false)
                 .frame(width: 18, height: 18)
+                .environment(\.colorScheme, colorScheme)
         case .data:
             // Static gauge at spending level
             GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: false, isDisabled: false)
                 .frame(width: 18, height: 18)
+                .environment(\.colorScheme, colorScheme)
         }
 
         let renderer = ImageRenderer(content: gaugeView)
@@ -181,6 +188,16 @@ final class StatusBarController: NSObject {
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .sink { [weak self] _ in
                 self?.updateStatusItemDisplay()
+            }
+            .store(in: &cancellables)
+        
+        // Observe appearance changes (dark/light mode)
+        DistributedNotificationCenter.default.publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
+            .sink { [weak self] _ in
+                // Delay slightly to ensure the appearance change has propagated
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self?.updateStatusItemDisplay()
+                }
             }
             .store(in: &cancellables)
 
