@@ -4,13 +4,12 @@
 //  Created by Stephan Casas on 12/3/23.
 //
 
-import SwiftUI;
+import SwiftUI
 
-fileprivate let kAppMenuInternalIdentifier  = "app"
-fileprivate let kSettingsLocalizedStringKey = "Settings\\U2026";
+private let kAppMenuInternalIdentifier = "app"
+private let kSettingsLocalizedStringKey = "Settings\\U2026"
 
 extension NSApplication {
-    
     /// Open the application settings/preferences window.
     func openSettings() {
         // macOS 14 Sonoma
@@ -19,73 +18,70 @@ extension NSApplication {
         )?.submenu?.item(
             withLocalizedTitle: kSettingsLocalizedStringKey
         )?.internalItemAction {
-            internalItemAction();
-            return;
+            internalItemAction()
+            return
         }
-        
+
         guard let delegate = NSApp.delegate else { return }
-        
+
         // macOS 13 Ventura
-        var selector = Selector(("showSettingsWindow:"));
+        var selector = Selector(("showSettingsWindow:"))
         if delegate.responds(to: selector) {
-            delegate.perform(selector, with: nil, with: nil);
-            return;
+            delegate.perform(selector, with: nil, with: nil)
+            return
         }
-        
+
         // macOS 12 Monterrey
-        selector = Selector(("showPreferencesWindow:"));
+        selector = Selector(("showPreferencesWindow:"))
         if delegate.responds(to: selector) {
-            delegate.perform(selector, with: nil, with: nil);
-            return;
+            delegate.perform(selector, with: nil, with: nil)
+            return
         }
     }
-    
 }
 
 // MARK: - NSMenuItem (Private)
 
 extension NSMenuItem {
-    
     /// An internal SwiftUI menu item identifier that should be a public property on `NSMenuItem`.
     var internalIdentifier: String? {
         guard let id = Mirror.firstChild(
             withLabel: "id", in: self
         )?.value else {
-            return nil;
+            return nil
         }
-        
-        return "\(id)";
+
+        return "\(id)"
     }
-    
+
     /// A callback which is associated directly with this `NSMenuItem`.
     var internalItemAction: (() -> Void)? {
-        guard 
+        guard
             let platformItemAction = Mirror.firstChild(
-                withLabel: "platformItemAction", in: self)?.value,
+                withLabel: "platformItemAction", in: self
+            )?.value,
             let typeErasedCallback = Mirror.firstChild(
                 in: platformItemAction)?.value
         else {
-            return nil;
+            return nil
         }
-            
+
         return Mirror.firstChild(
             in: typeErasedCallback
-        )?.value as? () -> Void;
+        )?.value as? () -> Void
     }
-    
 }
 
 // MARK: - NSMenu (Private)
 
 extension NSMenu {
-    
     /// Get the first `NSMenuItem` whose internal identifier string matches the given value.
     func item(withInternalIdentifier identifier: String) -> NSMenuItem? {
-        self.items.first(where: {
+        items.first(where: {
             $0.internalIdentifier?.elementsEqual(identifier) ?? false
         })
     }
-    
+
     /// Get the first `NSMenuItem` whose title is equivalent to the localized string referenced
     /// by the given localized string key in the localization table identified by the given table name
     /// from the bundle located at the given bundle path.
@@ -95,42 +91,40 @@ extension NSMenu {
         fromBundle bundlePath: String = "/System/Library/Frameworks/AppKit.framework"
     ) -> NSMenuItem? {
         guard let localizationResource = Bundle(path: bundlePath) else {
-            return nil;
+            return nil
         }
-        
-        return self.item(withTitle: NSLocalizedString(
+
+        return item(withTitle: NSLocalizedString(
             localizedTitleKey,
             tableName: tableName,
             bundle: localizationResource,
-            comment: ""));
+            comment: ""
+        ))
     }
-    
 }
 
 // MARK: - Mirror (Helper)
 
-fileprivate extension Mirror {
-    
+private extension Mirror {
     /// The unconditional first child of the reflection subject.
-    var firstChild: Child? { self.children.first }
-    
+    var firstChild: Child? { children.first }
+
     /// The first child of the reflection subject whose label matches the given string.
     func firstChild(withLabel label: String) -> Child? {
-        self.children.first(where: {
+        children.first(where: {
             $0.label?.elementsEqual(label) ?? false
         })
     }
-    
+
     /// The unconditional first child of the given subject.
     static func firstChild(in subject: Any) -> Child? {
         Mirror(reflecting: subject).firstChild
     }
-    
+
     /// The first child of the given subject whose label matches the given string.
     static func firstChild(
         withLabel label: String, in subject: Any
     ) -> Child? {
         Mirror(reflecting: subject).firstChild(withLabel: label)
     }
-    
 }

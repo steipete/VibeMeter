@@ -30,12 +30,13 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "14.0",
-            "MARKETING_VERSION": "0.9.0",
+            "MARKETING_VERSION": "1.0.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",
             "SWIFT_EMIT_LOC_STRINGS": true,
             "SWIFT_VERSION": "6.0",
+            "SWIFT_STRICT_CONCURRENCY": "complete",
         ],
         configurations: [
             .debug(
@@ -69,7 +70,7 @@ let project = Project(
             bundleId: "com.steipete.vibemeter",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "0.9.0",
+                "CFBundleShortVersionString": "1.0.0",
                 "CFBundleVersion": "1",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
@@ -84,9 +85,15 @@ let project = Project(
                 "SUAutomaticallyUpdate": false,
                 "SUCheckAtStartup": true,
             ]),
-            sources: ["VibeMeter/**"],
+            sources: [
+                "VibeMeter/App/**/*.swift",
+                "VibeMeter/Core/**/*.swift",
+                "VibeMeter/Presentation/**/*.swift",
+                "VibeMeter/Resources/**/*.swift",
+            ],
             resources: [
                 .glob(pattern: "VibeMeter/Assets.xcassets", excluding: []),
+                .glob(pattern: "VibeMeter/Resources/**", excluding: ["**/*.swift"]),
             ],
             entitlements: .file(path: "VibeMeter/VibeMeter.entitlements"),
             dependencies: [
@@ -100,7 +107,6 @@ let project = Project(
                         "-strict-concurrency=complete",
                         "-enable-actor-data-race-checks",
                     ],
-                    "ASSETCATALOG_COMPILER_GENERATE_SWIFT_SYMBOLS": true,
                 ]
             )
         ),
@@ -119,24 +125,8 @@ let project = Project(
                 base: [
                     "OTHER_SWIFT_FLAGS": [
                         "-strict-concurrency=complete",
-                        "-enable-actor-data-race-checks",
                     ],
                 ]
-            )
-        ),
-    ],
-    schemes: [
-        .scheme(
-            name: "VibeMeter",
-            shared: true,
-            buildAction: .buildAction(
-                targets: ["VibeMeter"]
-            ),
-            testAction: .targets(
-                ["VibeMeterTests"]
-            ),
-            runAction: .runAction(
-                executable: "VibeMeter"
             )
         ),
     ]

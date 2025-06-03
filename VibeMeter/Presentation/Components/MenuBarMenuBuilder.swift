@@ -34,8 +34,7 @@ class MenuBarMenuBuilder {
         }
 
         if !dataCoordinator.exchangeRatesAvailable, dataCoordinator.isLoggedIn, dataCoordinator
-            .currentSpendingUSD != nil
-        {
+            .currentSpendingUSD != nil {
             let item = NSMenuItem(title: "Rates MIA! Showing USD for now. ✨", action: nil, keyEquivalent: "")
             item.isEnabled = false
             menu.addItem(item)
@@ -291,7 +290,7 @@ class MenuBarMenuBuilder {
             addSpendingInfo(to: menu)
 
             // Add invoice details if available
-            if let coordinator = dataCoordinator as? RealDataCoordinator,
+            if let coordinator = dataCoordinator as? DataCoordinator,
                let invoiceResponse = coordinator.latestInvoiceResponse
             {
                 addInvoiceDetails(to: menu, invoiceResponse: invoiceResponse)

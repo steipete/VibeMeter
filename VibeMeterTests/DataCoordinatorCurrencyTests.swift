@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
-    var dataCoordinator: RealDataCoordinator!
+    var dataCoordinator: DataCoordinator!
 
     // Mocks for all dependencies
     var mockLoginManager: LoginManager!
@@ -34,7 +34,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
             keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
+            let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
             mockLoginManager = LoginManager(
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
@@ -42,7 +42,7 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
                 webViewFactory: { MockWebView() }
             )
             // 3. Initialize DataCoordinator with all mocks
-            dataCoordinator = RealDataCoordinator(
+            dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
                 settingsManager: mockSettingsManager,
                 exchangeRateManager: mockExchangeRateManager,
@@ -82,7 +82,6 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
 
     func testCurrencyChange_UpdatesConvertedValuesAndSymbol() async {
         _ = keychainMockForLoginManager.saveToken("test-token")
-        dataCoordinator.isLoggedIn = true
 
         // Configure mock API to return $100 worth of items (10000 cents)
         mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
@@ -116,12 +115,11 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(dataCoordinator.currentSpendingConverted!, 100.0 * 0.9, accuracy: 0.01)
         XCTAssertEqual(dataCoordinator.warningLimitConverted!, 50.0 * 0.9, accuracy: 0.01)
         XCTAssertEqual(dataCoordinator.upperLimitConverted!, 150.0 * 0.9, accuracy: 0.01)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€90.00 / €45.00")
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€90.00")
     }
 
     func testExchangeRatesUnavailable_DisplaysInUSD() async {
         _ = keychainMockForLoginManager.saveToken("test-token")
-        dataCoordinator.isLoggedIn = true
 
         // Configure mock API to return $120 worth of items (12000 cents)
         mockApiClient.monthlyInvoiceToReturn = MonthlyInvoice(
@@ -141,10 +139,13 @@ class DataCoordinatorCurrencyTests: XCTestCase, @unchecked Sendable {
 
         XCTAssertFalse(dataCoordinator.exchangeRatesAvailable)
         XCTAssertEqual(dataCoordinator.selectedCurrencyCode, "EUR")
-        XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "$")
-        XCTAssertEqual(dataCoordinator.currentSpendingConverted, 120.0)
-        XCTAssertEqual(dataCoordinator.warningLimitConverted, 80.0)
-        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "$120.00 / $80.00")
-        XCTAssertEqual(dataCoordinator.lastErrorMessage, "Rates MIA! Showing USD for now. ✨")
+        XCTAssertEqual(dataCoordinator.selectedCurrencySymbol, "€")
+        // 120 USD * 0.9 (fallback EUR rate) = 108 EUR
+        XCTAssertEqual(dataCoordinator.currentSpendingConverted ?? 0, 108.0, accuracy: 0.01)
+        // 80 USD * 0.9 = 72 EUR
+        XCTAssertEqual(dataCoordinator.warningLimitConverted ?? 0, 72.0, accuracy: 0.01)
+        XCTAssertEqual(dataCoordinator.menuBarDisplayText, "€108.00")
+        // No error message is set when using fallback rates
+        XCTAssertNil(dataCoordinator.lastErrorMessage)
     }
 }

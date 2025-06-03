@@ -1,20 +1,19 @@
 import Foundation
 @testable import VibeMeter
 
-// Assuming NotificationManager has a protocol or can be subclassed for mocking.
-// For now, let's define a simple mock class directly.
-
-class NotificationManagerMock: NotificationManagerProtocol {
+@MainActor
+final class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sendable {
     var requestAuthorizationCalled = false
-    var authorizationCompletionHandler: (@Sendable (Bool) -> Void)?
     var authorizationGrantedToReturn: Bool = true
 
     var showWarningNotificationCalled = false
     var lastWarningSpending: Double?
+    var lastWarningLimit: Double?
     var lastWarningCurrency: String?
 
     var showUpperLimitNotificationCalled = false
     var lastUpperLimitSpending: Double?
+    var lastUpperLimitAmount: Double?
     var lastUpperLimitCurrency: String?
 
     var resetAllNotificationStatesCalled = false
@@ -24,28 +23,23 @@ class NotificationManagerMock: NotificationManagerProtocol {
     var lastResetWarningLimitUSD: Double?
     var lastResetUpperLimitUSD: Double?
 
-    func requestAuthorization(completion: @escaping @Sendable (Bool) -> Void) {
+    func requestAuthorization() async -> Bool {
         requestAuthorizationCalled = true
-        authorizationCompletionHandler = completion
-        // Simulate async callback if needed for more complex tests
-        // For now, can call it directly or store it to be called by test.
-        completion(authorizationGrantedToReturn)
+        return authorizationGrantedToReturn
     }
 
-    func showWarningNotification(currentSpending: Double, limitAmount _: Double, currencyCode: String) {
+    func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
         showWarningNotificationCalled = true
         lastWarningSpending = currentSpending
+        lastWarningLimit = limitAmount
         lastWarningCurrency = currencyCode
     }
 
-    func showUpperLimitNotification(currentSpending: Double, limitAmount _: Double, currencyCode: String) {
+    func showUpperLimitNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
         showUpperLimitNotificationCalled = true
         lastUpperLimitSpending = currentSpending
+        lastUpperLimitAmount = limitAmount
         lastUpperLimitCurrency = currencyCode
-    }
-
-    func resetAllNotificationStatesForNewSession() {
-        resetAllNotificationStatesCalled = true
     }
 
     func resetNotificationStateIfBelow(
@@ -53,7 +47,7 @@ class NotificationManagerMock: NotificationManagerProtocol {
         currentSpendingUSD: Double,
         warningLimitUSD: Double,
         upperLimitUSD: Double
-    ) {
+    ) async {
         resetNotificationStateIfBelowCalled = true
         lastResetLimitType = limitType
         lastResetCurrentSpendingUSD = currentSpendingUSD
@@ -61,15 +55,20 @@ class NotificationManagerMock: NotificationManagerProtocol {
         lastResetUpperLimitUSD = upperLimitUSD
     }
 
+    func resetAllNotificationStatesForNewSession() async {
+        resetAllNotificationStatesCalled = true
+    }
+
     func reset() {
         requestAuthorizationCalled = false
-        authorizationCompletionHandler = nil
         authorizationGrantedToReturn = true
         showWarningNotificationCalled = false
         lastWarningSpending = nil
+        lastWarningLimit = nil
         lastWarningCurrency = nil
         showUpperLimitNotificationCalled = false
         lastUpperLimitSpending = nil
+        lastUpperLimitAmount = nil
         lastUpperLimitCurrency = nil
         resetAllNotificationStatesCalled = false
         resetNotificationStateIfBelowCalled = false

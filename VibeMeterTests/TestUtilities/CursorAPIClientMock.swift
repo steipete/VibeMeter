@@ -1,99 +1,108 @@
 import Foundation
 @testable import VibeMeter
 
-class CursorAPIClientMock: CursorAPIClientProtocol {
+@MainActor
+final class CursorAPIClientMock: CursorAPIClientProtocol, @unchecked Sendable {
     var fetchTeamInfoCallCount = 0
     var fetchUserInfoCallCount = 0
     var fetchMonthlyInvoiceCallCount = 0
 
     // MARK: - Controllable Responses
 
-    var teamInfoToReturn: (id: Int, name: String)? = (123, "Mock Team")
+    var teamInfoToReturn: TeamInfo? = TeamInfo(id: 123, name: "Mock Team")
     var userInfoToReturn: UserInfo? = UserInfo(email: "mock@example.com", teamId: 12345)
-    var monthlyInvoiceToReturn: MonthlyInvoice? = MonthlyInvoice(items: [
+    var monthlyInvoiceToReturn: MonthlyInvoice? = MonthlyInvoice(
+        items: [
             InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
             InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
-        ], pricingDescription: nil)
+        ],
+        pricingDescription: nil
+    )
 
     // MARK: - Controllable Errors
 
-    var errorToThrow: Error?
     var teamInfoError: Error?
     var userInfoError: Error?
     var monthlyInvoiceError: Error?
 
-    // MARK: - Captured Arguments
+    // MARK: - Captured Parameters
 
-    var lastAuthTokenForTeamInfo: String?
-    var lastAuthTokenForUserInfo: String?
-    var lastAuthTokenForInvoice: String?
-    var lastMonthForInvoice: Int?
-    var lastYearForInvoice: Int?
+    var lastAuthTokenUsed: String?
+    var lastMonthRequested: Int?
+    var lastYearRequested: Int?
 
-    func fetchTeamInfo(authToken: String) async throws -> (id: Int, name: String) {
+    // MARK: - CursorAPIClientProtocol
+
+    func fetchTeamInfo(authToken: String) async throws -> TeamInfo {
         fetchTeamInfoCallCount += 1
-        lastAuthTokenForTeamInfo = authToken
-        if let error = teamInfoError ?? errorToThrow {
+        lastAuthTokenUsed = authToken
+
+        if let error = teamInfoError {
             throw error
         }
+
         guard let teamInfo = teamInfoToReturn else {
-            throw CursorAPIError.noTeamFound // Default error if not configured
+            throw CursorAPIError.noTeamFound
         }
+
         return teamInfo
     }
 
     func fetchUserInfo(authToken: String) async throws -> UserInfo {
         fetchUserInfoCallCount += 1
-        lastAuthTokenForUserInfo = authToken
-        if let error = userInfoError ?? errorToThrow {
+        lastAuthTokenUsed = authToken
+
+        if let error = userInfoError {
             throw error
         }
+
         guard let userInfo = userInfoToReturn else {
-            // Simulate a generic decoding or network error if specific user info is not set for success
-            throw CursorAPIError
-                .decodingError(ErrorDetails(message: "Mock UserInfo decoding error"))
+            throw CursorAPIError.networkError(message: "No user info to return", statusCode: nil)
         }
+
         return userInfo
     }
 
-    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> MonthlyInvoice
-    {
+    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> MonthlyInvoice {
         fetchMonthlyInvoiceCallCount += 1
-        lastAuthTokenForInvoice = authToken
-        lastMonthForInvoice = month
-        lastYearForInvoice = year
-        if let error = monthlyInvoiceError ?? errorToThrow {
+        lastAuthTokenUsed = authToken
+        lastMonthRequested = month
+        lastYearRequested = year
+
+        if let error = monthlyInvoiceError {
             throw error
         }
+
         guard let invoice = monthlyInvoiceToReturn else {
-            // Simulate a generic decoding or network error
-            throw CursorAPIError
-                .networkError(ErrorDetails(message: "Mock Invoice network error"))
+            throw CursorAPIError.networkError(message: "No invoice to return", statusCode: nil)
         }
+
         return invoice
     }
+
+    // MARK: - Reset
 
     func reset() {
         fetchTeamInfoCallCount = 0
         fetchUserInfoCallCount = 0
         fetchMonthlyInvoiceCallCount = 0
 
-        teamInfoToReturn = (123, "Mock Team")
+        teamInfoToReturn = TeamInfo(id: 123, name: "Mock Team")
         userInfoToReturn = UserInfo(email: "mock@example.com", teamId: 12345)
-        monthlyInvoiceToReturn = MonthlyInvoice(items: [
-            InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
-            InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
-        ], pricingDescription: nil)
+        monthlyInvoiceToReturn = MonthlyInvoice(
+            items: [
+                InvoiceItem(cents: 5000, description: "Mock Pro Usage"),
+                InvoiceItem(cents: 1000, description: "Mock Fast Prompts"),
+            ],
+            pricingDescription: nil
+        )
 
-        errorToThrow = nil
         teamInfoError = nil
         userInfoError = nil
         monthlyInvoiceError = nil
 
-        lastAuthTokenForTeamInfo = nil
-        lastAuthTokenForUserInfo = nil
-        lastAuthTokenForInvoice = nil
-        lastMonthForInvoice = nil
-        lastYearForInvoice = nil
+        lastAuthTokenUsed = nil
+        lastMonthRequested = nil
+        lastYearRequested = nil
     }
 }

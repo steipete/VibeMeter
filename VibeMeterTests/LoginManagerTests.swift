@@ -23,7 +23,8 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         MainActor.assumeIsolated {
             testUserDefaults = suite
             // Order of setup can be important if there are inter-dependencies in init, though not strictly here.
-            mockSettingsManager = SettingsManager(userDefaults: testUserDefaults)
+            let mockStartupManager = StartupManagerMock()
+            mockSettingsManager = SettingsManager(userDefaults: testUserDefaults, startupManager: mockStartupManager)
             SettingsManager
                 ._test_setSharedInstance(userDefaults: testUserDefaults) // If LoginManager internally uses .shared
 
@@ -118,11 +119,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         mockWebView.mockCookieStore.cookiesToReturn = [mockCookie]
 
         // 4. Mock API client responses for post-login calls
-        let teamInfoResponse = CursorAPIClient.TeamInfoResponse(teams: [CursorAPIClient.Team(
-            id: 789,
-            name: "Vibeville"
-        )])
-        mockApiClient.teamInfoToReturn = (789, "Vibeville")
+        mockApiClient.teamInfoToReturn = TeamInfo(id: 789, name: "Vibeville")
 
         // Configure mock for fetchUserInfo
         mockApiClient.userInfoToReturn = UserInfo(email: "user@vibeville.com", teamId: nil)
@@ -149,19 +146,17 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         // Assertions after login success
         XCTAssertTrue(loginManager.isLoggedIn(), "LoginManager should report isLoggedIn = true")
         XCTAssertEqual(mockKeychainService.getToken(), "valid-session-token", "Token should be saved to keychain.")
-        XCTAssertEqual(mockSettingsManager.teamId, 789, "Team ID should be saved.")
-        // XCTAssertEqual(mockSettingsManager.userEmail, "user@vibeville.com", "User email should be saved.") // Needs
-        // better multi-response mocking
+        // Team ID and user email are NOT saved by LoginManager - that's DataCoordinator's job
+        // LoginManager only saves the token and triggers the success callback
         XCTAssertTrue(mockWebView.mockCookieStore.getAllCookiesCallCount > 0, "getAllCookies should have been called.")
     }
 
     func testLoginFlowCookieNotFound() async {
-        let expectation = XCTestExpectation(description: "Login failure callback triggered for no cookie")
-        loginManager.onLoginFailure = { error in
-            XCTAssertEqual((error as NSError).code, 2, "Error code should indicate cookie not found.")
-            expectation.fulfill()
-        }
-        loginManager.onLoginSuccess = { XCTFail("Login should have failed.") }
+        // When no cookie is found, LoginManager doesn't call any callbacks - it just waits
+        // This test verifies that no login occurs when cookie is missing
+
+        loginManager.onLoginSuccess = { XCTFail("Login should not succeed without cookie.") }
+        loginManager.onLoginFailure = { _ in XCTFail("Login should not fail - it should just wait.") }
 
         loginManager.showLoginWindow()
         let callbackURL = URL(string: "https://www.cursor.com/api/auth/callback/somecode")!
@@ -171,7 +166,9 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         let dummyWKWebView = WKWebView()
         loginManager.webView(dummyWKWebView, didFinish: nil)
 
-        await fulfillment(of: [expectation], timeout: 2.0)
+        // Give it a moment to process
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
         XCTAssertFalse(loginManager.isLoggedIn(), "Should not be logged in.")
         XCTAssertNil(mockKeychainService.getToken(), "Token should not be saved.")
     }
@@ -196,7 +193,7 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         mockWebView.mockCookieStore.cookiesToReturn = [mockCookie]
 
         // API calls will be mocked to succeed to isolate keychain failure
-        mockApiClient.teamInfoToReturn = (1, "T")
+        mockApiClient.teamInfoToReturn = TeamInfo(id: 1, name: "T")
         mockApiClient.userInfoToReturn = UserInfo(email: "test@example.com", teamId: nil)
 
         let dummyWKWebView = WKWebView()
@@ -206,44 +203,8 @@ class LoginManagerTests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(loginManager.isLoggedIn(), "Should not be logged in.")
     }
 
-    func testLoginFlowApiFetchTeamInfoFails() async {
-        let expectation = XCTestExpectation(description: "Login failure callback for API fail")
-        loginManager.onLoginFailure = { error in
-            if let apiError = error as? CursorAPIError {
-                if case .networkError = apiError {
-                    expectation.fulfill()
-                } else {
-                    XCTFail("Expected networkError from API client but got \(apiError)")
-                }
-            } else {
-                XCTFail("Error was not an APIError: \(error)")
-            }
-        }
-
-        loginManager.showLoginWindow()
-        let callbackURL = URL(string: "https://www.cursor.com/api/auth/callback/somecode")!
-        mockWebView.url = callbackURL
-        let mockCookie = HTTPCookie(properties: [
-            .domain: ".cursor.com",
-            .path: "/",
-            .name: "WorkosCursorSessionToken",
-            .value: "goodtoken",
-        ])!
-        mockWebView.mockCookieStore.cookiesToReturn = [mockCookie]
-
-        // Mock API client to fail fetchTeamInfo
-        mockApiClient.teamInfoError = CursorAPIError.networkError(.init(message: "Server error", statusCode: 500))
-
-        let dummyWKWebView = WKWebView()
-        loginManager.webView(dummyWKWebView, didFinish: nil)
-
-        await fulfillment(of: [expectation], timeout: 2.0)
-        // Token IS saved to keychain even if API calls fail post-login, as per current
-        // LoginManager.handleSuccessfulLogin logic
-        XCTAssertTrue(loginManager.isLoggedIn(), "Token should still be saved even if subsequent API calls fail.")
-        XCTAssertEqual(mockKeychainService.getToken(), "goodtoken")
-        XCTAssertNil(mockSettingsManager.teamId, "TeamID should be nil as API call failed.")
-    }
+    // Removed testLoginFlowApiFetchTeamInfoFails - LoginManager doesn't make API calls
+    // That's DataCoordinator's responsibility
 
     func testWebViewDidFailNavigation() async {
         let expectation = XCTestExpectation(description: "Login failure from webView didFail")

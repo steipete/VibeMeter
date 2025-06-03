@@ -141,7 +141,6 @@ VibeMeter-*.dmg
 VibeMeter-*/
 
 # Tuist
-Derived/
 .tuist/
 *.xcworkspace/
 

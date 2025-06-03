@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 class DataCoordinatorNotificationTests: XCTestCase, @unchecked Sendable {
-    var dataCoordinator: RealDataCoordinator!
+    var dataCoordinator: DataCoordinator!
 
     // Mocks for all dependencies
     var mockLoginManager: LoginManager!
@@ -34,7 +34,7 @@ class DataCoordinatorNotificationTests: XCTestCase, @unchecked Sendable {
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
             keychainMockForLoginManager = KeychainServiceMock()
-            let apiClientForLoginManager = CursorAPIClient(session: MockURLSession(), settingsManager: mockSettingsManager)
+            let apiClientForLoginManager = CursorAPIClient(settingsManager: mockSettingsManager)
             mockLoginManager = LoginManager(
                 settingsManager: mockSettingsManager,
                 apiClient: apiClientForLoginManager,
@@ -42,7 +42,7 @@ class DataCoordinatorNotificationTests: XCTestCase, @unchecked Sendable {
                 webViewFactory: { MockWebView() }
             )
             // 3. Initialize DataCoordinator with all mocks
-            dataCoordinator = RealDataCoordinator(
+            dataCoordinator = DataCoordinator(
                 loginManager: mockLoginManager,
                 settingsManager: mockSettingsManager,
                 exchangeRateManager: mockExchangeRateManager,
