@@ -13,9 +13,9 @@ public class MockSettingsManager: SettingsManagerProtocol {
     public var upperLimitUSD: Double = 500
     public var refreshIntervalMinutes: Int = 5
     public var launchAtLoginEnabled: Bool = false
-    public var showCostInMenuBar: Bool = true
     public var showInDock: Bool = false
     public var enabledProviders: Set<ServiceProvider> = [.cursor]
+    public var menuBarDisplayMode: MenuBarDisplayMode = .both
 
     public init(
         selectedCurrencyCode: String = "USD",
@@ -23,7 +23,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
         upperLimitUSD: Double = 500,
         refreshIntervalMinutes: Int = 5,
         launchAtLoginEnabled: Bool = false,
-        showCostInMenuBar: Bool = true,
+        menuBarDisplayMode: MenuBarDisplayMode = .both,
         showInDock: Bool = false,
         enabledProviders: Set<ServiceProvider> = [.cursor]) {
         self.selectedCurrencyCode = selectedCurrencyCode
@@ -31,7 +31,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
         self.upperLimitUSD = upperLimitUSD
         self.refreshIntervalMinutes = refreshIntervalMinutes
         self.launchAtLoginEnabled = launchAtLoginEnabled
-        self.showCostInMenuBar = showCostInMenuBar
+        self.menuBarDisplayMode = menuBarDisplayMode
         self.showInDock = showInDock
         self.enabledProviders = enabledProviders
     }
