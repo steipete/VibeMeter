@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Settings view for managing service provider connections and authentication.
+///
+/// This view displays all supported service providers with their connection status,
+/// login/logout capabilities, and access to detailed provider information. Users can
+/// manage multiple provider connections from this centralized interface.
 struct ProvidersSettingsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData

@@ -2,6 +2,11 @@ import AppKit
 import os.log
 import SwiftUI
 
+/// Main content view for the menu bar dropdown interface.
+///
+/// This view serves as the root content for the menu bar popover, containing
+/// either the logged-in dashboard or logged-out login interface. It handles
+/// the primary user interaction flow within the menu bar dropdown.
 @MainActor
 struct MenuBarContentView: View {
     let settingsManager: any SettingsManagerProtocol

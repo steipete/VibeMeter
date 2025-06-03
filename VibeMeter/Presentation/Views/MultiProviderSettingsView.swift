@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Main settings view containing tabbed interface for application configuration.
+///
+/// This view provides a comprehensive settings interface with separate tabs for
+/// general preferences, provider management, and spending limits. It serves as
+/// the primary configuration hub for the VibeMeter application.
 struct MultiProviderSettingsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData
