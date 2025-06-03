@@ -26,7 +26,7 @@ struct ActionButtonsView: View {
     private var refreshButton: some View {
         Button(action: refreshData) {
             Image(systemName: "arrow.clockwise")
-                .font(.subheadline.weight(.medium))
+                .font(.title3.weight(.medium))
                 .rotationEffect(.degrees(isRefreshing ? 360 : 0))
                 .animation(
                     isRefreshing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default,
@@ -42,7 +42,7 @@ struct ActionButtonsView: View {
     private var settingsButton: some View {
         Button(action: openSettings) {
             Image(systemName: "gearshape")
-                .font(.subheadline.weight(.medium))
+                .font(.title3.weight(.medium))
         }
         .buttonStyle(IconButtonStyle())
         .help("Settings (⌘,)")
@@ -54,7 +54,7 @@ struct ActionButtonsView: View {
     private var quitButton: some View {
         Button(action: quit) {
             Image(systemName: "power")
-                .font(.subheadline.weight(.medium))
+                .font(.title3.weight(.medium))
         }
         .buttonStyle(IconButtonStyle(isDestructive: true))
         .help("Quit VibeMeter (⌘Q)")

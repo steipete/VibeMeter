@@ -43,19 +43,19 @@ struct CostTableView: View {
     private var totalSpendingSection: some View {
         HStack(alignment: .center) {
             Text("Total Spending")
-                .font(.caption.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
-                    .font(.title2.weight(.semibold).monospaced())
+                    .font(.title.weight(.semibold).monospaced())
                     .foregroundStyle(.primary)
                     .accessibilityLabel("Total spending: \(totalSpending)")
             } else {
                 Text("No data")
-                    .font(.subheadline)
+                    .font(.body)
                     .foregroundStyle(.tertiary)
                     .accessibilityLabel("No spending data available")
             }
@@ -89,27 +89,27 @@ struct CostTableView: View {
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
             Text("Limits")
-                .font(.caption.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.footnote.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.orange)
                 .accessibilityLabel(
                     "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
             Text("•")
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
                 .accessibilityHidden(true)
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.footnote.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.red)
                 .accessibilityLabel(
                     "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")

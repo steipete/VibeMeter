@@ -74,7 +74,7 @@ final class ProgressColorTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .gaugeDanger, "Progress 0.9 should return danger gauge color")
+        XCTAssertEqual(color, .progressDanger, "Progress 0.9 should return danger gauge color")
     }
 
     func testColor_AboveNinetyPercent_ReturnsDanger() {
@@ -86,7 +86,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeDanger, "Progress \(progress) should return danger gauge color")
+            XCTAssertEqual(color, .progressDanger, "Progress \(progress) should return danger gauge color")
         }
     }
 
@@ -100,7 +100,7 @@ final class ProgressColorTests: XCTestCase {
             (0.749999, Color.progressCaution),
             (0.75, Color.progressWarning),
             (0.899999, Color.progressWarning),
-            (0.9, Color.gaugeDanger),
+            (0.9, Color.progressDanger),
         ]
 
         for (progress, expectedColor) in testCases {
@@ -260,7 +260,7 @@ final class ProgressColorTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .gaugeDanger, "Large progress \(progress) should return red color")
+            XCTAssertEqual(color, .progressDanger, "Large progress \(progress) should return red color")
         }
     }
 
@@ -298,7 +298,7 @@ final class ProgressColorTests: XCTestCase {
         let nanProgress = Double.nan
 
         // When
-        let color = ProgressColorHelper.color(for: nanProgress)
+        let color = Color.progressColor(for: nanProgress)
 
         // Then
         // NaN should be handled gracefully (will likely fall through to default case)
@@ -352,7 +352,7 @@ final class ProgressColorTests: XCTestCase {
                 XCTAssertEqual(color, .progressWarning, "Color should be orange for progress \(progress)")
                 XCTAssertEqual(warningLevel, .medium, "Warning level should be medium for progress \(progress)")
             default:
-                XCTAssertEqual(color, .gaugeDanger, "Color should be red for progress \(progress)")
+                XCTAssertEqual(color, .progressDanger, "Color should be red for progress \(progress)")
                 XCTAssertEqual(warningLevel, .high, "Warning level should be high for progress \(progress)")
             }
         }
@@ -448,9 +448,9 @@ final class ProgressColorTests: XCTestCase {
             (0.5, "50% of budget", Color.progressCaution),
             (0.67, "67% of budget", Color.progressCaution),
             (0.8, "80% of budget", Color.progressWarning),
-            (0.95, "95% of budget", Color.gaugeDanger),
-            (1.05, "5% over budget", Color.gaugeDanger),
-            (1.2, "20% over budget", Color.gaugeDanger),
+            (0.95, "95% of budget", Color.progressDanger),
+            (1.05, "5% over budget", Color.progressDanger),
+            (1.2, "20% over budget", Color.progressDanger),
         ]
 
         for (progress, scenario, expectedColor) in scenarios {

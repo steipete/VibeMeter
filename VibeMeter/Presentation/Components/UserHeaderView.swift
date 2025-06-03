@@ -12,10 +12,10 @@ struct UserHeaderView: View {
         HStack(spacing: 10) {
             UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 6) {
                 if let email = userSessionData.mostRecentSession?.userEmail {
                     Text(email)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -24,7 +24,7 @@ struct UserHeaderView: View {
                 }
 
                 Text(providerCountText)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .accessibilityLabel(providerCountText)
             }

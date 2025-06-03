@@ -16,6 +16,8 @@ struct ProviderSpendingRowView: View {
     private var spendingData
     @Environment(CurrencyData.self)
     private var currencyData
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     init(
         provider: ServiceProvider,
@@ -55,7 +57,7 @@ struct ProviderSpendingRowView: View {
                         date: lastRefresh,
                         style: .withPrefix,
                         showFreshnessColor: false)
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.quaternary)
                 }
             }
@@ -65,7 +67,7 @@ struct ProviderSpendingRowView: View {
         .padding(.vertical, 2) // Reduce vertical padding
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(selectedProvider == provider ? Color.white.opacity(0.08) : Color.clear))
+                .fill(selectedProvider == provider ? Color.selectionBackground(for: colorScheme) : Color.clear))
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProvider = hovering ? provider : nil
@@ -89,7 +91,7 @@ struct ProviderSpendingRowView: View {
                     if provider.iconName.contains(".") {
                         // System symbol - use font sizing
                         Image(systemName: provider.iconName)
-                            .font(.subheadline)
+                            .font(.body)
                     } else {
                         // Custom asset - use resizable with explicit sizing
                         Image(provider.iconName)
@@ -112,7 +114,7 @@ struct ProviderSpendingRowView: View {
 
             // Provider name
             Text(provider.displayName)
-                .font(.caption.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.primary)
                 .accessibilityAddTraits(.isHeader)
 
@@ -132,13 +134,13 @@ struct ProviderSpendingRowView: View {
 
                     Text(
                         "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .font(.caption.weight(.semibold).monospaced())
+                        .font(.subheadline.weight(.semibold).monospaced())
                         .foregroundStyle(.primary)
                         .accessibilityLabel(
                             "Spending: \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
                 } else {
                     Text("--")
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundStyle(.tertiary)
                         .accessibilityLabel("No spending data")
                 }
@@ -151,14 +153,14 @@ struct ProviderSpendingRowView: View {
         let progressPercentage = Int((progress * 100).rounded())
         return HStack(spacing: 6) {
             Text("\(usage.currentRequests)/\(maxRequests)")
-                .font(.caption2.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
                 .accessibilityLabel("Usage: \(usage.currentRequests) of \(maxRequests) requests")
 
             ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: ProgressColorHelper.color(for: progress)))
+                .progressViewStyle(LinearProgressViewStyle(tint: Color.progressColor(for: progress, colorScheme: colorScheme)))
                 .frame(width: showTimestamp ? 60 : 80, height: 3) // Extended width, larger when no timestamp
-                .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
+                .background(Color.gaugeBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: 1.5))
                 .accessibilityLabel("Usage progress: \(progressPercentage) percent")
                 .accessibilityValue("\(usage.currentRequests) requests used out of \(maxRequests) allowed")
         }

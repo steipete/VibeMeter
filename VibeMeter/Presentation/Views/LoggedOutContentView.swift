@@ -39,7 +39,7 @@ struct LoggedOutContentView: View {
                 // Login button
                 Button(action: { loginManager.showLoginWindow(for: .cursor) }) {
                     Label("Login to Cursor", systemImage: "person.crop.circle.badge.plus")
-                        .font(.subheadline.weight(.medium))
+                        .font(.title3.weight(.medium))
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(ProminentGlassButtonStyle())
@@ -63,7 +63,7 @@ struct LoggedOutContentView: View {
             // Settings button
             Button(action: openSettings) {
                 Image(systemName: "gearshape")
-                    .font(.subheadline.weight(.medium))
+                    .font(.title3.weight(.medium))
             }
             .buttonStyle(IconButtonStyle())
             .help("Settings (⌘,)")
@@ -75,7 +75,7 @@ struct LoggedOutContentView: View {
             // Quit button
             Button(action: quit) {
                 Image(systemName: "power")
-                    .font(.subheadline.weight(.medium))
+                    .font(.title3.weight(.medium))
             }
             .buttonStyle(IconButtonStyle(isDestructive: true))
             .help("Quit VibeMeter (⌘Q)")

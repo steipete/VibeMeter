@@ -44,12 +44,9 @@ struct LoggedInContentView: View {
             // Last updated section at bottom
             if let lastUpdate = mostRecentRefresh {
                 VStack(spacing: 2) {
-                    Divider()
-                        .overlay(Color.white.opacity(0.06))
-
                     HStack {
                         Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
-                            .font(.caption2)
+                            .font(.footnote)
                             .foregroundStyle(.quaternary)
                             .accessibilityLabel(
                                 "Last updated \(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))")
