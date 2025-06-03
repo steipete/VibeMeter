@@ -52,11 +52,12 @@ class MenuBarStateManager: ObservableObject {
     private(set) var currentState: MenuBarState = .notLoggedIn
     @Published
     private(set) var animatedGaugeValue: Double = 0.0
+    @Published
+    private(set) var isTransitioning = false
 
     private var animationStartTime: TimeInterval = 0
     private var transitionStartValue: Double = 0
     private var transitionTargetValue: Double = 0
-    private var isTransitioning = false
 
     /// Duration for loading animation cycle (0→1→0)
     private let loadingCycleDuration: TimeInterval = 4.0

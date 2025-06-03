@@ -81,7 +81,7 @@ final class StatusBarController: NSObject {
                     to: "USD",
                     rates: currencyData.effectiveRates)
                 let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
-                
+
                 // Only set new data state if the value has changed significantly (more than 1%)
                 // or if we're currently in loading state (to trigger the loading->data transition)
                 if case .loading = stateManager.currentState {
@@ -98,9 +98,6 @@ final class StatusBarController: NSObject {
                 }
             }
         }
-
-        // Update animation
-        stateManager.updateAnimation()
 
         // Create and render the gauge icon based on state
         let gaugeView: some View = switch stateManager.currentState {
@@ -180,8 +177,9 @@ final class StatusBarController: NSObject {
                 self.stateManager.updateAnimation()
 
                 // Only update frequently if animating, transitioning, or value changed
-                if self.stateManager.currentState.isAnimated || 
-                   abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001 {
+                if self.stateManager.currentState.isAnimated ||
+                    self.stateManager.isTransitioning ||
+                    abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001 {
                     self.updateStatusItemDisplay()
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
                 }
