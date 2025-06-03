@@ -6,7 +6,7 @@ import SwiftUI
 /// Spending data for a specific service provider.
 ///
 /// This model contains all spending information for a single provider,
-/// including invoices, limits, and currency conversions.
+/// including invoices, limits, currency conversions, and connection status.
 public struct ProviderSpendingData: Codable, Sendable {
     public let provider: ServiceProvider
     public var currentSpendingUSD: Double?
@@ -16,6 +16,10 @@ public struct ProviderSpendingData: Codable, Sendable {
     public var latestInvoiceResponse: ProviderMonthlyInvoice?
     public var usageData: ProviderUsageData?
     public var lastUpdated: Date
+    public var connectionStatus: ProviderConnectionStatus = .disconnected
+    public var lastSuccessfulRefresh: Date?
+    public var lastError: String?
+    public var retryAfter: Date?
 
     public init(
         provider: ServiceProvider,
@@ -25,7 +29,11 @@ public struct ProviderSpendingData: Codable, Sendable {
         upperLimitConverted: Double? = nil,
         latestInvoiceResponse: ProviderMonthlyInvoice? = nil,
         usageData: ProviderUsageData? = nil,
-        lastUpdated: Date = Date()) {
+        lastUpdated: Date = Date(),
+        connectionStatus: ProviderConnectionStatus = .disconnected,
+        lastSuccessfulRefresh: Date? = nil,
+        lastError: String? = nil,
+        retryAfter: Date? = nil) {
         self.provider = provider
         self.currentSpendingUSD = currentSpendingUSD
         self.currentSpendingConverted = currentSpendingConverted
@@ -34,6 +42,10 @@ public struct ProviderSpendingData: Codable, Sendable {
         self.latestInvoiceResponse = latestInvoiceResponse
         self.usageData = usageData
         self.lastUpdated = lastUpdated
+        self.connectionStatus = connectionStatus
+        self.lastSuccessfulRefresh = lastSuccessfulRefresh
+        self.lastError = lastError
+        self.retryAfter = retryAfter
     }
 
     /// Returns the current spending in the preferred currency.
@@ -112,6 +124,26 @@ public struct ProviderSpendingData: Codable, Sendable {
         latestInvoiceResponse = nil
         usageData = nil
         lastUpdated = Date()
+        connectionStatus = .disconnected
+        lastSuccessfulRefresh = nil
+        lastError = nil
+        retryAfter = nil
+    }
+    
+    /// Updates the connection status.
+    public mutating func updateConnectionStatus(_ status: ProviderConnectionStatus) {
+        connectionStatus = status
+        if case .connected = status {
+            lastSuccessfulRefresh = Date()
+            lastError = nil
+            retryAfter = nil
+        }
+    }
+    
+    /// Checks if data is stale (older than specified interval).
+    public func isStale(olderThan interval: TimeInterval) -> Bool {
+        guard let lastRefresh = lastSuccessfulRefresh else { return true }
+        return Date().timeIntervalSince(lastRefresh) > interval
     }
 }
 
@@ -204,5 +236,52 @@ public final class MultiProviderSpendingData {
         providerSpending.values
             .sorted { $0.lastUpdated > $1.lastUpdated }
             .first?.provider
+    }
+    
+    // MARK: - Connection Status Methods
+    
+    /// Updates connection status for a provider.
+    public func updateConnectionStatus(for provider: ServiceProvider, status: ProviderConnectionStatus) {
+        var data = providerSpending[provider] ?? ProviderSpendingData(provider: provider)
+        data.updateConnectionStatus(status)
+        providerSpending[provider] = data
+    }
+    
+    /// Gets overall system status based on all providers.
+    public var overallConnectionStatus: ProviderConnectionStatus {
+        let statuses = providerSpending.values.map(\.connectionStatus)
+        
+        // Priority: Error > RateLimited > Stale > Syncing > Connecting > Connected > Disconnected
+        if statuses.contains(where: { if case .error = $0 { return true } else { return false } }) {
+            return .error(message: "One or more providers have errors")
+        }
+        if statuses.contains(where: { if case .rateLimited = $0 { return true } else { return false } }) {
+            return .rateLimited(until: nil)
+        }
+        if statuses.contains(where: { $0 == .stale }) {
+            return .stale
+        }
+        if statuses.contains(where: { $0 == .syncing }) {
+            return .syncing
+        }
+        if statuses.contains(where: { $0 == .connecting }) {
+            return .connecting
+        }
+        if statuses.contains(where: { $0 == .connected }) {
+            return .connected
+        }
+        return .disconnected
+    }
+    
+    /// Checks if any provider needs attention (error, rate limited, or stale).
+    public var hasProviderIssues: Bool {
+        providerSpending.values.contains { data in
+            switch data.connectionStatus {
+            case .error, .rateLimited, .stale:
+                return true
+            default:
+                return false
+            }
+        }
     }
 }

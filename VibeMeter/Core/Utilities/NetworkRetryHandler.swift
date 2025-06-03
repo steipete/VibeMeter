@@ -61,12 +61,12 @@ actor NetworkRetryHandler {
     /// - Throws: The last error if all retries are exhausted
     func execute<T>(
         operation: @escaping () async throws -> T,
-        shouldRetry: ((Error) -> Bool)? = nil) async throws -> T {
+        shouldRetry: ((Error) -> Bool)? = nil) async throws -> T where T: Sendable {
         var lastError: Error?
 
-        for attempt in 0 ... configuration.maxRetries {
+        for attempt in 0 ... self.configuration.maxRetries {
             do {
-                logger.debug("Attempting operation (attempt \(attempt + 1)/\(configuration.maxRetries + 1))")
+                logger.debug("Attempting operation (attempt \(attempt + 1)/\(self.configuration.maxRetries + 1))")
                 return try await operation()
             } catch {
                 lastError = error
@@ -74,7 +74,7 @@ actor NetworkRetryHandler {
                 // Check if we should retry
                 let isRetryable = shouldRetry?(error) ?? isDefaultRetryable(error)
 
-                guard isRetryable, attempt < configuration.maxRetries else {
+                guard isRetryable, attempt < self.configuration.maxRetries else {
                     logger.error("Operation failed after \(attempt + 1) attempts: \(error.localizedDescription)")
                     throw error
                 }
@@ -94,7 +94,7 @@ actor NetworkRetryHandler {
     /// Executes an async operation that returns an optional value with retry logic.
     func executeOptional<T>(
         operation: @escaping () async throws -> T?,
-        shouldRetry: ((Error) -> Bool)? = nil) async throws -> T? {
+        shouldRetry: ((Error) -> Bool)? = nil) async throws -> T? where T: Sendable {
         try await execute(operation: operation, shouldRetry: shouldRetry)
     }
 
@@ -104,15 +104,15 @@ actor NetworkRetryHandler {
         // Check for rate limit headers
         if case let .rateLimited(retryAfter) = error as? RetryableError,
            let retryAfter {
-            return min(retryAfter, configuration.maxDelay)
+            return min(retryAfter, self.configuration.maxDelay)
         }
 
         // Calculate exponential backoff
-        let exponentialDelay = configuration.initialDelay * pow(configuration.multiplier, Double(attempt))
-        let clampedDelay = min(exponentialDelay, configuration.maxDelay)
+        let exponentialDelay = self.configuration.initialDelay * pow(self.configuration.multiplier, Double(attempt))
+        let clampedDelay = min(exponentialDelay, self.configuration.maxDelay)
 
         // Add jitter to prevent thundering herd
-        let jitter = clampedDelay * configuration.jitterFactor
+        let jitter = clampedDelay * self.configuration.jitterFactor
         let jitterRange = -jitter ... jitter
         let randomJitter = Double.random(in: jitterRange)
 

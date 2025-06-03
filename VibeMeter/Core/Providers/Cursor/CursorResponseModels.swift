@@ -9,41 +9,41 @@ import Foundation
 /// conform to Decodable for automatic JSON parsing.
 
 /// Response model for the teams endpoint containing available team information.
-struct CursorTeamsResponse: Decodable {
+struct CursorTeamsResponse: Decodable, Sendable {
     let teams: [Team]
 
-    struct Team: Decodable {
+    struct Team: Decodable, Sendable {
         let id: Int
         let name: String
     }
 }
 
 /// Response model for user information endpoint.
-struct CursorUserResponse: Decodable {
+struct CursorUserResponse: Decodable, Sendable {
     let email: String
     let teamId: Int?
 }
 
 /// Response model for monthly invoice data containing billing items and pricing details.
-struct CursorInvoiceResponse: Decodable {
+struct CursorInvoiceResponse: Decodable, Sendable {
     let items: [CursorInvoiceItem]?
     let pricingDescription: CursorPricingDescription?
 }
 
 /// Individual line item within an invoice containing cost and description.
-struct CursorInvoiceItem: Decodable {
+struct CursorInvoiceItem: Decodable, Sendable {
     let cents: Int
     let description: String
 }
 
 /// Pricing plan description containing plan details and identifier.
-struct CursorPricingDescription: Decodable {
+struct CursorPricingDescription: Decodable, Sendable {
     let description: String
     let id: String
 }
 
 /// Response model for usage statistics across different AI models and request types.
-struct CursorUsageResponse: Decodable {
+struct CursorUsageResponse: Decodable, Sendable {
     let gpt35Turbo: ModelUsage
     let gpt4: ModelUsage
     let gpt432K: ModelUsage
@@ -58,7 +58,7 @@ struct CursorUsageResponse: Decodable {
 }
 
 /// Usage statistics for a specific AI model including request and token consumption.
-struct ModelUsage: Decodable {
+struct ModelUsage: Decodable, Sendable {
     let numRequests: Int
     let numRequestsTotal: Int
     let maxTokenUsage: Int?

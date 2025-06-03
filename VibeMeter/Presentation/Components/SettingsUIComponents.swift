@@ -20,8 +20,7 @@ struct SettingsSection<Content: View>: View {
             VStack(spacing: 1) {
                 content
             }
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .materialBackground(material: .regular, cornerRadius: 10)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color(NSColor.separatorColor).opacity(0.3), lineWidth: 0.5))
@@ -38,7 +37,7 @@ struct SettingsRow<Content: View>: View {
         HStack {
             content
         }
-        .padding(.horizontal, 16)
+        .standardPadding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.background.secondary)

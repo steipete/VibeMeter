@@ -49,7 +49,8 @@ struct VibeMeterApp: App {
             MultiProviderSettingsView(
                 settingsManager: settingsManager,
                 userSessionData: appDelegate.userSession,
-                loginManager: appDelegate.loginManager)
+                loginManager: appDelegate.loginManager,
+                orchestrator: appDelegate.multiProviderOrchestrator)
                 .environment(appDelegate.spendingData)
                 .environment(appDelegate.currencyData)
                 .environment(gravatarService)
@@ -71,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
 
     private(set) var sparkleUpdaterManager: SparkleUpdaterManager?
-    private var multiProviderOrchestrator: MultiProviderDataOrchestrator?
+    var multiProviderOrchestrator: MultiProviderDataOrchestrator?
     private var statusBarController: StatusBarController?
 
     // Observable models for SwiftUI

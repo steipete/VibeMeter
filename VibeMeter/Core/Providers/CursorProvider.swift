@@ -18,7 +18,6 @@ public actor CursorProvider: ProviderProtocol {
     private let urlSession: URLSessionProtocol
     private let settingsManager: any SettingsManagerProtocol
     private let logger = Logger(subsystem: "com.vibemeter", category: "CursorProvider")
-    private let retryHandler = NetworkRetryHandler.forProvider(.cursor)
 
     private let baseURL = URL(string: "https://www.cursor.com/api")!
     private let decoder: JSONDecoder = {
@@ -183,10 +182,13 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     private func performRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
-        // Use retry handler for network resilience
-        try await retryHandler.execute(
-            operation: { [self] in
-                logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
+        // Manual retry logic for non-Sendable types
+        var lastError: Error?
+        let maxRetries = 3
+        
+        for attempt in 0...maxRetries {
+            do {
+                logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil") (attempt \(attempt + 1)/\(maxRetries + 1))")
                 let (data, response) = try await urlSession.data(for: request)
 
                 guard let httpResponse = response as? HTTPURLResponse else {
@@ -261,26 +263,77 @@ public actor CursorProvider: ProviderProtocol {
                         message: message,
                         statusCode: httpResponse.statusCode)
                 }
-            },
-            shouldRetry: { [self] error in
-                // Don't retry authentication or team not found errors
-                switch error {
-                case ProviderError.unauthorized, ProviderError.noTeamFound:
-                    return false
-                case let providerError as ProviderError:
-                    // Don't retry client errors (4xx)
-                    if case .networkError(_, let statusCode) = providerError,
-                       let code = statusCode,
-                       code >= 400 && code < 500 {
-                        return false
-                    }
-                    return true
-                default:
-                    // Let the retry handler decide for other errors
-                    return true
+            } catch {
+                lastError = error
+                
+                // Check if we should retry
+                let shouldRetry = shouldRetryError(error)
+                
+                guard shouldRetry && attempt < maxRetries else {
+                    logger.error("Request failed after \(attempt + 1) attempts: \(error.localizedDescription)")
+                    throw error
                 }
+                
+                // Calculate delay with exponential backoff
+                let delay = calculateRetryDelay(for: attempt, error: error)
+                logger.warning("Request failed, retrying after \(delay)s: \(error.localizedDescription)")
+                
+                // Wait before retrying
+                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
             }
-        )
+        }
+        
+        throw lastError ?? URLError(.unknown)
+    }
+    
+    private func shouldRetryError(_ error: Error) -> Bool {
+        // Don't retry authentication or team not found errors
+        switch error {
+        case ProviderError.unauthorized, ProviderError.noTeamFound:
+            return false
+        case let providerError as ProviderError:
+            // Don't retry client errors (4xx)
+            if case .networkError(_, let statusCode) = providerError,
+               let code = statusCode,
+               code >= 400 && code < 500 {
+                return false
+            }
+            return true
+        case is NetworkRetryHandler.RetryableError:
+            return true
+        case let urlError as URLError:
+            switch urlError.code {
+            case .timedOut, .cannotFindHost, .cannotConnectToHost,
+                 .networkConnectionLost, .dnsLookupFailed,
+                 .notConnectedToInternet:
+                return true
+            default:
+                return false
+            }
+        default:
+            return false
+        }
+    }
+    
+    private func calculateRetryDelay(for attempt: Int, error: Error) -> TimeInterval {
+        // Check for rate limit headers
+        if case let .rateLimited(retryAfter) = error as? NetworkRetryHandler.RetryableError,
+           let retryAfter {
+            return min(retryAfter, 30.0)
+        }
+        
+        // Calculate exponential backoff
+        let initialDelay = 1.0
+        let multiplier = 2.0
+        let exponentialDelay = initialDelay * pow(multiplier, Double(attempt))
+        let clampedDelay = min(exponentialDelay, 30.0)
+        
+        // Add jitter to prevent thundering herd
+        let jitter = clampedDelay * 0.1
+        let jitterRange = -jitter ... jitter
+        let randomJitter = Double.random(in: jitterRange)
+        
+        return max(0, clampedDelay + randomJitter)
     }
 
     private func getTeamId() async -> Int? {

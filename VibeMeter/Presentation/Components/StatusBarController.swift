@@ -110,22 +110,30 @@ final class StatusBarController: NSObject {
         let colorScheme: ColorScheme = isDarkMode ? .dark : .light
 
         // Create and render the gauge icon based on state with proper environment
-        let gaugeView: some View = switch stateManager.currentState {
-        case .notLoggedIn:
-            // Grey icon with no gauge
-            GaugeIcon(value: 0, isLoading: false, isDisabled: true)
-                .frame(width: 18, height: 18)
-                .environment(\.colorScheme, colorScheme)
-        case .loading:
-            // Animated loading gauge
-            GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: true, isDisabled: false)
-                .frame(width: 18, height: 18)
-                .environment(\.colorScheme, colorScheme)
-        case .data:
-            // Static gauge at spending level
-            GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: false, isDisabled: false)
-                .frame(width: 18, height: 18)
-                .environment(\.colorScheme, colorScheme)
+        let gaugeView: some View = ZStack(alignment: .topTrailing) {
+            switch stateManager.currentState {
+            case .notLoggedIn:
+                // Grey icon with no gauge
+                GaugeIcon(value: 0, isLoading: false, isDisabled: true)
+                    .frame(width: 18, height: 18)
+                    .environment(\.colorScheme, colorScheme)
+            case .loading:
+                // Animated loading gauge
+                GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: true, isDisabled: false)
+                    .frame(width: 18, height: 18)
+                    .environment(\.colorScheme, colorScheme)
+            case .data:
+                // Static gauge at spending level
+                GaugeIcon(value: stateManager.animatedGaugeValue, isLoading: false, isDisabled: false)
+                    .frame(width: 18, height: 18)
+                    .environment(\.colorScheme, colorScheme)
+            }
+            
+            // Add status indicator if there are any provider issues
+            if spendingData.hasProviderIssues {
+                MenuBarStatusDot(status: spendingData.overallConnectionStatus)
+                    .offset(x: 2, y: -2)
+            }
         }
 
         let renderer = ImageRenderer(content: gaugeView)

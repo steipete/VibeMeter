@@ -242,14 +242,15 @@ public final class SettingsManager: SettingsManagerProtocol {
             self.enabledProviders = [.cursor] // Default to Cursor enabled
         }
 
-        // Load with defaults
+        // Load app settings with defaults
         selectedCurrencyCode = userDefaults.string(forKey: Keys.selectedCurrencyCode) ?? "USD"
         refreshIntervalMinutes = userDefaults.object(forKey: Keys.refreshIntervalMinutes) as? Int ?? 5
         warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
-        showCostInMenuBar = userDefaults.object(forKey: Keys.showCostInMenuBar) as? Bool ?? false
-        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false
+        showCostInMenuBar = userDefaults
+            .object(forKey: Keys.showCostInMenuBar) as? Bool ?? false // Default to false (icon-only)
+        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
     }
 
     // MARK: - Public Methods

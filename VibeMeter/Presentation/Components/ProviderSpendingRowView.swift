@@ -48,21 +48,33 @@ struct ProviderSpendingRowView: View {
 
     private var mainProviderRow: some View {
         HStack(spacing: 8) {
-            // Provider icon with consistent sizing
-            Group {
-                if provider.iconName.contains(".") {
-                    // System symbol - use font sizing
-                    Image(systemName: provider.iconName)
-                        .font(.system(size: 14))
-                } else {
-                    // Custom asset - use resizable with explicit sizing
-                    Image(provider.iconName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
+            // Provider icon with status badge overlay
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if provider.iconName.contains(".") {
+                        // System symbol - use font sizing
+                        Image(systemName: provider.iconName)
+                            .font(.system(size: 14))
+                    } else {
+                        // Custom asset - use resizable with explicit sizing
+                        Image(provider.iconName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }
+                }
+                .foregroundStyle(provider.accentColor)
+                .frame(width: 16, height: 16)
+                
+                // Status badge overlay
+                if let providerData = spendingData.getSpendingData(for: provider) {
+                    ProviderStatusBadge(
+                        status: providerData.connectionStatus,
+                        size: 10
+                    )
+                    .offset(x: 4, y: -4)
                 }
             }
-            .foregroundStyle(provider.accentColor)
-            .frame(width: 16, height: 16)
+            .frame(width: 20, height: 20) // Give space for badge
 
             // Provider name
             Text(provider.displayName)
@@ -104,21 +116,13 @@ struct ProviderSpendingRowView: View {
                 .foregroundStyle(.secondary)
 
             ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
+                .progressViewStyle(LinearProgressViewStyle(tint: ProgressColorHelper.color(for: progress)))
                 .frame(width: 40, height: 3)
                 .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 1.5))
         }
     }
 
-    private func progressColor(for progress: Double) -> Color {
-        if progress >= 0.9 {
-            .red
-        } else if progress >= 0.7 {
-            .orange
-        } else {
-            .green
-        }
-    }
+    // Progress color logic moved to ProgressColorHelper
 
     private func openProviderDashboard() {
         guard let loginManager,

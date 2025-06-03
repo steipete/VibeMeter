@@ -48,6 +48,42 @@ struct AboutView: View {
         }
         .padding(.top, 20)
     }
+    
+    private var systemStatusSection: some View {
+        if let orchestrator {
+            VStack(spacing: 8) {
+                Text("System Status")
+                    .font(.headline)
+                    .fontWeight(.medium)
+                
+                VStack(spacing: 6) {
+                    HStack {
+                        Text("Network:")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                        
+                        NetworkStatusIndicator(
+                            networkStatus: orchestrator.networkStatus,
+                            isConnected: orchestrator.isNetworkConnected,
+                            compact: true
+                        )
+                    }
+                    
+                    if !orchestrator.isNetworkConnected {
+                        Text("Some features may not work without internet")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.orange)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
 
     private var descriptionSection: some View {
         Text("Monitor your monthly Cursor AI spending")
@@ -163,6 +199,6 @@ extension View {
 // MARK: - Preview
 
 #Preview("About View") {
-    AboutView()
+    AboutView(orchestrator: nil)
         .frame(width: 620, height: 600)
 }

@@ -80,7 +80,8 @@ enum MultiProviderSettingsTab: CaseIterable {
         settingsManager: MockSettingsManager(),
         userSessionData: MultiProviderUserSessionData(),
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        orchestrator: nil)
         .frame(width: 620, height: 500)
 }
 
