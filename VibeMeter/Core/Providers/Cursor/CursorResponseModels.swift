@@ -2,6 +2,13 @@ import Foundation
 
 // MARK: - Cursor API Response Models
 
+/// Data models for parsing responses from the Cursor AI service API.
+///
+/// These structures define the JSON response formats from various Cursor API endpoints
+/// including teams, user information, billing data, and usage statistics. All models
+/// conform to Decodable for automatic JSON parsing.
+
+/// Response model for the teams endpoint containing available team information.
 struct CursorTeamsResponse: Decodable {
     let teams: [Team]
 
@@ -11,11 +18,13 @@ struct CursorTeamsResponse: Decodable {
     }
 }
 
+/// Response model for user information endpoint.
 struct CursorUserResponse: Decodable {
     let email: String
     let teamId: Int?
 }
 
+/// Response model for monthly invoice data containing billing items and pricing details.
 struct CursorInvoiceResponse: Decodable {
     let items: [CursorInvoiceItem]?
     let pricingDescription: CursorPricingDescription?
