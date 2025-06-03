@@ -5,8 +5,7 @@ import Combine
 @MainActor
 final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
-    private var eventMonitor: Any?
+    private var customMenuWindow: CustomMenuWindow?
     private var cancellables = Set<AnyCancellable>()
     private let stateManager = MenuBarStateManager()
     
@@ -29,7 +28,7 @@ final class StatusBarController: NSObject {
         super.init()
         
         setupStatusItem()
-        setupPopover()
+        setupCustomMenu()
         observeDataChanges()
     }
     
@@ -45,22 +44,19 @@ final class StatusBarController: NSObject {
         }
     }
     
-    private func setupPopover() {
-        popover = NSPopover()
-        popover?.contentSize = NSSize(width: 320, height: 400)
-        popover?.behavior = .transient
-        popover?.animates = true
+    private func setupCustomMenu() {
+        let contentView = CustomMenuContainer {
+            VibeMeterMainView(
+                settingsManager: settingsManager,
+                userSessionData: userSession,
+                loginManager: loginManager
+            )
+            .environment(spendingData)
+            .environment(currencyData)
+            .environment(GravatarService.shared)
+        }
         
-        let contentView = VibeMeterMainView(
-            settingsManager: settingsManager,
-            userSessionData: userSession,
-            loginManager: loginManager
-        )
-        .environment(spendingData)
-        .environment(currencyData)
-        .environment(GravatarService.shared)
-        
-        popover?.contentViewController = NSHostingController(rootView: contentView)
+        customMenuWindow = CustomMenuWindow(contentView: contentView)
     }
     
     func updateStatusItemDisplay() {
@@ -134,34 +130,17 @@ final class StatusBarController: NSObject {
     }
     
     @objc private func togglePopover() {
-        if let popover = popover {
-            if popover.isShown {
-                closePopover()
-            } else {
-                showPopover()
-            }
+        guard let button = statusItem?.button,
+              let window = customMenuWindow else { return }
+        
+        if window.isVisible {
+            window.hide()
+        } else {
+            window.show(relativeTo: button)
         }
     }
     
-    private func showPopover() {
-        guard let button = statusItem?.button else { return }
-        
-        popover?.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
-        
-        // Monitor for clicks outside the popover to close it
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            self?.closePopover()
-        }
-    }
-    
-    private func closePopover() {
-        popover?.performClose(nil)
-        
-        if let eventMonitor = eventMonitor {
-            NSEvent.removeMonitor(eventMonitor)
-            self.eventMonitor = nil
-        }
-    }
+    // Methods removed - handled by CustomMenuWindow
     
     private func observeDataChanges() {
         // Observe settings changes
@@ -197,6 +176,7 @@ final class StatusBarController: NSObject {
     private var lastRenderedValue: Double = 0
     
     deinit {
-        // Cleanup handled in closePopover method
+        // Can't call MainActor methods from deinit, so just set to nil
+        customMenuWindow = nil
     }
 }

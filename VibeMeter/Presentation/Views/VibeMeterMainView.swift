@@ -200,27 +200,55 @@ struct VibeMeterMainView: View {
     }
     
     private func providerRow(for provider: ServiceProvider) -> some View {
-        HStack {
-            Image(systemName: provider.iconName)
-                .font(.system(size: 14))
-                .foregroundStyle(provider.accentColor)
-                .frame(width: 20)
-            
-            Text(provider.displayName)
-                .font(.system(size: 12))
-                .foregroundStyle(.primary)
-            
-            Spacer()
-            
-            if let providerData = spendingData.getSpendingData(for: provider),
-               let spending = providerData.displaySpending {
-                Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.primary)
-            } else {
-                Text("--")
+        VStack(spacing: 6) {
+            HStack {
+                Image(systemName: provider.iconName)
+                    .font(.system(size: 14))
+                    .foregroundStyle(provider.accentColor)
+                    .frame(width: 20)
+                
+                Text(provider.displayName)
                     .font(.system(size: 12))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.primary)
+                
+                Spacer()
+                
+                if let providerData = spendingData.getSpendingData(for: provider),
+                   let spending = providerData.displaySpending {
+                    Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.primary)
+                } else {
+                    Text("--")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            
+            // Usage data row
+            if let providerData = spendingData.getSpendingData(for: provider),
+               let usage = providerData.usageData {
+                HStack {
+                    Label("\(usage.currentRequests) / \(usage.maxRequests ?? 0)", 
+                          systemImage: "number.circle")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("requests")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                    
+                    Spacer()
+                    
+                    // Usage bar
+                    if let maxRequests = usage.maxRequests, maxRequests > 0 {
+                        let progress = Double(usage.currentRequests) / Double(maxRequests)
+                        ProgressView(value: progress)
+                            .progressViewStyle(LinearProgressViewStyle(tint: progressColor(for: progress)))
+                            .frame(width: 60, height: 4)
+                    }
+                }
+                .padding(.leading, 20) // Align with provider name
             }
         }
         .padding(.horizontal, 12)
@@ -233,6 +261,16 @@ struct VibeMeterMainView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProvider = hovering ? provider : nil
             }
+        }
+    }
+    
+    private func progressColor(for progress: Double) -> Color {
+        if progress >= 0.9 {
+            return .red
+        } else if progress >= 0.7 {
+            return .orange
+        } else {
+            return .green
         }
     }
     
@@ -269,55 +307,42 @@ struct VibeMeterMainView: View {
     // MARK: - Logged Out Content
     
     private var loggedOutContent: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            // App icon and title
-            VStack(spacing: 12) {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .frame(width: 64, height: 64)
+        VStack(spacing: 0) {
+            // Top section with padding matching logged-in content
+            VStack(spacing: 20) {
+                Spacer(minLength: 20)
                 
-                Text("VibeMeter")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                Text("Multi-Provider Cost Tracking")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
-            
-            // Login button
-            Button(action: { loginManager.showLoginWindow(for: .cursor) }) {
-                Label("Login to Cursor", systemImage: "person.crop.circle.badge.plus")
-                    .font(.system(size: 14, weight: .medium))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(ProminentGlassButtonStyle())
-            .padding(.horizontal, 40)
-            
-            Spacer()
-            
-            // Bottom buttons
-            HStack(spacing: 16) {
-                Button(action: openSettings) {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 14, weight: .medium))
+                // App icon and title
+                VStack(spacing: 12) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 64, height: 64)
+                    
+                    Text("VibeMeter")
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Multi-Provider Cost Tracking")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(IconButtonStyle())
-                .help("Settings")
                 
-                Spacer()
-                
-                Button(action: quit) {
-                    Image(systemName: "power")
+                // Login button
+                Button(action: { loginManager.showLoginWindow(for: .cursor) }) {
+                    Label("Login to Cursor", systemImage: "person.crop.circle.badge.plus")
                         .font(.system(size: 14, weight: .medium))
+                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(IconButtonStyle(isDestructive: true))
-                .help("Quit VibeMeter")
+                .buttonStyle(ProminentGlassButtonStyle())
+                
+                Spacer(minLength: 20)
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 24)
+            
+            // Bottom buttons section matching logged-in layout
+            actionButtons
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
         }
     }
     
@@ -512,6 +537,17 @@ private extension ServiceProvider {
         ),
         rates: [:],
         targetCurrency: "USD"
+    )
+    
+    spendingData.updateUsage(
+        for: .cursor,
+        from: ProviderUsageData(
+            currentRequests: 1535,
+            totalRequests: 4387,
+            maxRequests: 500,
+            startOfMonth: Date(),
+            provider: .cursor
+        )
     )
     
     return VibeMeterMainView(
