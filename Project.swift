@@ -18,7 +18,6 @@ let project = Project(
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
             "CURRENT_PROJECT_VERSION": "1",
-            "CODE_SIGN_IDENTITY": "Apple Development",
             "CODE_SIGN_STYLE": "Automatic",
             "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,
@@ -43,9 +42,8 @@ let project = Project(
             .debug(
                 name: "Debug",
                 settings: [
-                    "CODE_SIGN_IDENTITY": "Apple Development",
+                    "CODE_SIGN_IDENTITY": "Sign to Run Locally",
                     "CODE_SIGN_STYLE": "Automatic",
-                    "DEVELOPMENT_TEAM": "Y5PE65HELJ",
                     "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["DEBUG"],
                     "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
                 ],
