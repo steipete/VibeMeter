@@ -33,7 +33,6 @@ struct GeneralSettingsView: View {
             Form {
                 applicationSection
                 currencySection
-                softwareUpdatesSection
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
@@ -53,10 +52,15 @@ struct GeneralSettingsView: View {
     private var applicationSection: some View {
         Section {
             // Launch at Login
-            Toggle("Launch at Login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    startupManager.setLaunchAtLogin(enabled: newValue)
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Launch at Login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        startupManager.setLaunchAtLogin(enabled: newValue)
+                    }
+                Text("Automatically start VibeMeter when you log into your Mac.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             
             // Show cost in menu bar
             VStack(alignment: .leading, spacing: 4) {
@@ -103,6 +107,25 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 8)
+            
+            // Check for Updates
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Check for Updates")
+                    Text("Check for new versions of VibeMeter")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button("Check Now") {
+                    checkForUpdates()
+                }
+                .buttonStyle(.bordered)
+                .disabled(isDebugBuild)
+            }
+            .padding(.top, 8)
         } header: {
             Text("Application")
                 .font(.headline)
@@ -131,29 +154,6 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private var softwareUpdatesSection: some View {
-        Section {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Check for Updates")
-                    Text("Check for new versions of VibeMeter")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Button("Check Now") {
-                    checkForUpdates()
-                }
-                .buttonStyle(.bordered)
-                .disabled(isDebugBuild)
-            }
-        } header: {
-            Text("Software Updates")
-                .font(.headline)
-        }
-    }
 
     private func validateRefreshInterval(_ newValue: Int) {
         if SettingsManager.refreshIntervalOptions.contains(newValue) {
