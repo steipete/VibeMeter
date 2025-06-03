@@ -34,7 +34,7 @@ struct VibeMeterMainView: View {
             // Enable keyboard navigation for the menu
             NSApp.keyWindow?.makeFirstResponder(nil)
         }
-        .onKeyPress(.escape) { _ in
+        .onKeyPress(.escape) {
             // Modern key handling for ESC to close menu
             if let customMenuWindow = NSApp.windows.first(where: { $0 is CustomMenuWindow }) as? CustomMenuWindow {
                 customMenuWindow.hide()

@@ -57,7 +57,7 @@ struct LoggedOutContentView: View {
                     .font(.system(size: 14, weight: .medium))
             }
             .buttonStyle(IconButtonStyle())
-            .help("Settings")
+            .help("Settings (⌘,)")
 
             Spacer()
 
@@ -67,7 +67,7 @@ struct LoggedOutContentView: View {
                     .font(.system(size: 14, weight: .medium))
             }
             .buttonStyle(IconButtonStyle(isDestructive: true))
-            .help("Quit VibeMeter")
+            .help("Quit VibeMeter (⌘Q)")
         }
     }
 

@@ -26,6 +26,7 @@ struct LoggedInContentView: View {
             VStack(spacing: 6) {
                 CostTableView(settingsManager: settingsManager, loginManager: loginManager)
             }
+            .frame(maxHeight: 200)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
 

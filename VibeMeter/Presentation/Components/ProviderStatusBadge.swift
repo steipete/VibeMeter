@@ -27,7 +27,7 @@ struct ProviderStatusBadge: View {
                     options: .repeating,
                     isActive: status.isActive)
         }
-        .help(status.description) // Tooltip on hover
+        .help(status.description + (status.isActive ? "" : " (⌘R to refresh)")) // Tooltip on hover
         .onAppear {
             isAnimating = status.isActive
         }

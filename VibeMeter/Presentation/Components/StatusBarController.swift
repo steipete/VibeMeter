@@ -244,10 +244,23 @@ final class StatusBarController: NSObject {
 
         if let lastRefresh = mostRecentRefresh {
             let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .withPrefix)
-            tooltip += "\n\(refreshText)"
+            let freshnessIndicator = RelativeTimeFormatter.isFresh(lastRefresh) ? "🟢" : "🟡"
+            tooltip += "\n\(freshnessIndicator) \(refreshText)"
+            
+            // Add data freshness context
+            if !RelativeTimeFormatter.isFresh(lastRefresh, withinMinutes: 15) {
+                tooltip += " (May be outdated)"
+            }
         } else {
-            tooltip += "\nNever updated"
+            tooltip += "\n🔴 Never updated"
         }
+        
+        // Add keyboard shortcuts info
+        tooltip += "\n\nKeyboard shortcuts:"
+        tooltip += "\n⌘R - Refresh data"
+        tooltip += "\n⌘, - Open Settings" 
+        tooltip += "\n⌘Q - Quit VibeMeter"
+        tooltip += "\nESC - Close menu"
 
         return tooltip
     }
@@ -295,7 +308,26 @@ final class StatusBarController: NSObject {
             "Over limit"
         }
 
-        return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used. Click to view details."
+        // Add refresh information for accessibility
+        let refreshProviders = spendingData.providersWithData
+        let mostRecentRefresh = refreshProviders
+            .compactMap { provider in
+                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
+            }
+            .max()
+        
+        var accessibilityText = "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used."
+        
+        if let lastRefresh = mostRecentRefresh {
+            let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .medium)
+            accessibilityText += " Data \(refreshText)."
+        } else {
+            accessibilityText += " Data never updated."
+        }
+        
+        accessibilityText += " Click to view details."
+        
+        return accessibilityText
     }
 
     private func observeDataChanges() {

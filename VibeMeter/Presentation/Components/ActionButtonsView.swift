@@ -33,7 +33,7 @@ struct ActionButtonsView: View {
                     value: isRefreshing)
         }
         .buttonStyle(IconButtonStyle())
-        .help("Refresh")
+        .help("Refresh (⌘R)")
         .accessibilityLabel("Refresh spending data")
         .accessibilityHint("Updates AI service spending information from all connected providers")
         .keyboardShortcut("r", modifiers: .command)
@@ -45,7 +45,7 @@ struct ActionButtonsView: View {
                 .font(.system(size: 14, weight: .medium))
         }
         .buttonStyle(IconButtonStyle())
-        .help("Settings")
+        .help("Settings (⌘,)")
         .accessibilityLabel("Open settings")
         .accessibilityHint("Opens VibeMeter preferences and configuration options")
         .keyboardShortcut(",", modifiers: .command)
@@ -57,7 +57,7 @@ struct ActionButtonsView: View {
                 .font(.system(size: 14, weight: .medium))
         }
         .buttonStyle(IconButtonStyle(isDestructive: true))
-        .help("Quit VibeMeter")
+        .help("Quit VibeMeter (⌘Q)")
         .accessibilityLabel("Quit application")
         .accessibilityHint("Closes VibeMeter completely")
         .keyboardShortcut("q", modifiers: .command)

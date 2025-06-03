@@ -38,7 +38,7 @@ struct NetworkStatusIndicator: View {
         .background(
             RoundedRectangle(cornerRadius: compact ? 4 : 6)
                 .fill(statusColor.opacity(0.1)))
-        .help(fullStatusDescription)
+        .help(fullStatusDescription + " (⌘R to refresh)")
     }
 
     private var statusIcon: String {
