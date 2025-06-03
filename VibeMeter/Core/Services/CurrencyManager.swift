@@ -16,7 +16,8 @@ final class CurrencyManager: Sendable {
                       let currencyName = locale.localizedString(forCurrencyCode: currencyCode) else {
                     return nil
                 }
-                return (currencyCode, "\(currencyName) (\(currencySymbol))")
+                let capitalizedCurrencyName = currencyName.prefix(1).uppercased() + currencyName.dropFirst()
+                return (currencyCode, "\(capitalizedCurrencyName) (\(currencySymbol))")
             }
 
         // Remove duplicates and sort with commonly used currencies first
