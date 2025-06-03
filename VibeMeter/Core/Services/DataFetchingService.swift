@@ -62,7 +62,8 @@ final class DataFetchingService {
         async let invoiceTask = providerClient.fetchMonthlyInvoice(
             authToken: authToken,
             month: month,
-            year: year)
+            year: year,
+            teamId: teamInfo.id)
         async let usageTask = providerClient.fetchUsageData(authToken: authToken)
 
         let invoice = try await invoiceTask

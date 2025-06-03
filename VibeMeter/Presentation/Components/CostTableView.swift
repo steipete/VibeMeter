@@ -7,6 +7,7 @@ import SwiftUI
 /// and spending threshold warnings with color-coded visual feedback.
 struct CostTableView: View {
     let settingsManager: any SettingsManagerProtocol
+    let loginManager: MultiProviderLoginManager?
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
@@ -54,18 +55,19 @@ struct CostTableView: View {
     }
 
     private var providerBreakdownSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 2) {
             VStack(spacing: 1) {
                 ForEach(spendingData.providersWithData, id: \.self) { provider in
                     ProviderSpendingRowView(
                         provider: provider,
+                        loginManager: loginManager,
                         selectedProvider: $selectedProvider)
                 }
             }
             .padding(.horizontal, 6)
             .padding(.bottom, 4)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.thickMaterial))

@@ -75,7 +75,7 @@ public final class MultiProviderDataOrchestrator {
         // Initialize user session state for providers with existing tokens
         // Also check for inconsistent states (stored session data but no token)
         validateSessionConsistency()
-        
+
         for provider in loginManager.loggedInProviders {
             logger.info("Initializing session state for logged-in provider: \(provider.displayName)")
             // Create a basic logged-in session state until we fetch full data
@@ -279,24 +279,27 @@ public final class MultiProviderDataOrchestrator {
 
     private func validateSessionConsistency() {
         logger.info("Validating session consistency at startup")
-        
+
         for provider in ServiceProvider.allCases {
             // Check if we have stored session data but no keychain token
             if let storedSession = settingsManager.getSession(for: provider),
                storedSession.isActive {
-                
                 let hasToken = loginManager.getAuthToken(for: provider) != nil
-                
+
                 if !hasToken {
-                    logger.warning("Inconsistent state detected for \(provider.displayName): stored session active but no keychain token")
+                    logger
+                        .warning(
+                            "Inconsistent state detected for \(provider.displayName): stored session active but no keychain token")
                     logger.warning("Clearing stale session data for \(provider.displayName)")
-                    
+
                     // Clear the inconsistent session data
                     settingsManager.clearUserSessionData(for: provider)
                     userSessionData.handleLogout(from: provider)
                     spendingData.clear(provider: provider)
                 } else {
-                    logger.info("Session consistency validated for \(provider.displayName): both session and token present")
+                    logger
+                        .info(
+                            "Session consistency validated for \(provider.displayName): both session and token present")
                 }
             }
         }

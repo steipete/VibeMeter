@@ -75,14 +75,20 @@ public actor CursorProvider: ProviderProtocol {
         return ProviderUserInfo(email: response.email, teamId: response.teamId, provider: .cursor)
     }
 
-    public func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> ProviderMonthlyInvoice {
-        // Get team ID from settings (provider-specific)
-        guard let teamId = await getTeamId() else {
-            logger.error("Cursor team ID not set")
+    public func fetchMonthlyInvoice(authToken: String, month: Int, year: Int,
+                                    teamId: Int?) async throws -> ProviderMonthlyInvoice {
+        // Use provided team ID, or fall back to stored team ID if not provided
+        let resolvedTeamId: Int
+        if let teamId {
+            resolvedTeamId = teamId
+        } else if let storedTeamId = await getTeamId() {
+            resolvedTeamId = storedTeamId
+        } else {
+            logger.error("Cursor team ID not set and not provided")
             throw ProviderError.teamIdNotSet
         }
 
-        logger.debug("Fetching Cursor invoice for \(month)/\(year) for team \(teamId)")
+        logger.debug("Fetching Cursor invoice for \(month)/\(year) for team \(resolvedTeamId)")
 
         let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
 
@@ -92,7 +98,7 @@ public actor CursorProvider: ProviderProtocol {
 
         let body = [
             "month": month,
-            "teamId": teamId,
+            "teamId": resolvedTeamId,
             "year": year,
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -210,17 +216,15 @@ public actor CursorProvider: ProviderProtocol {
             default:
                 let message = String(data: data, encoding: .utf8) ?? "Unknown error"
                 logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
-                
+
                 // Parse specific error types from response body
                 if let errorData = data.isEmpty ? nil : data,
                    let json = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
                    let error = json["error"] as? [String: Any],
                    let details = error["details"] as? [[String: Any]] {
-                    
                     for detail in details {
                         if let errorCode = detail["error"] as? String,
                            let errorDetails = detail["details"] as? [String: Any] {
-                            
                             // Check for unauthorized/team not found errors
                             if errorCode == "ERROR_UNAUTHORIZED" {
                                 if let errorDetail = errorDetails["detail"] as? String,
@@ -235,13 +239,13 @@ public actor CursorProvider: ProviderProtocol {
                         }
                     }
                 }
-                
+
                 // Handle status code specific errors
-                if httpResponse.statusCode == 500 && message.contains("Team not found") {
+                if httpResponse.statusCode == 500, message.contains("Team not found") {
                     logger.warning("Team not found error detected from 500 response")
                     throw ProviderError.noTeamFound
                 }
-                
+
                 throw ProviderError.networkError(
                     message: message,
                     statusCode: httpResponse.statusCode)

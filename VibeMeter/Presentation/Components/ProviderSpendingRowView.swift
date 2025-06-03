@@ -7,6 +7,7 @@ import SwiftUI
 /// usage information for request quotas and consumption tracking.
 struct ProviderSpendingRowView: View {
     let provider: ServiceProvider
+    let loginManager: MultiProviderLoginManager?
     @Binding
     var selectedProvider: ServiceProvider?
 
@@ -33,6 +34,9 @@ struct ProviderSpendingRowView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProvider = hovering ? provider : nil
             }
+        }
+        .onTapGesture {
+            openProviderDashboard()
         }
     }
 
@@ -114,6 +118,59 @@ struct ProviderSpendingRowView: View {
         } else {
             .green
         }
+    }
+
+    private func openProviderDashboard() {
+        guard let loginManager,
+              let authToken = loginManager.getAuthToken(for: provider) else {
+            // Fallback to opening without auth
+            openProviderURL(provider.dashboardURL)
+            return
+        }
+
+        // For providers that support authenticated browser sessions,
+        // we can create a URL with the session token
+        switch provider {
+        case .cursor:
+            openCursorDashboardWithAuth(authToken: authToken)
+        }
+    }
+
+    private func openCursorDashboardWithAuth(authToken: String) {
+        // Create a temporary HTML file that sets the cookie and redirects to dashboard
+        let htmlContent = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Redirecting to Cursor Dashboard...</title>
+            <script>
+                // Set the authentication cookie
+                document.cookie = "WorkosCursorSessionToken=\(authToken); domain=.cursor.com; path=/";
+                // Redirect to analytics
+                window.location.href = "https://www.cursor.com/analytics";
+            </script>
+        </head>
+        <body>
+            <p>Redirecting to Cursor Dashboard...</p>
+        </body>
+        </html>
+        """
+
+        // Write to temporary file and open
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFile = tempDir.appendingPathComponent("cursor_redirect.html")
+
+        do {
+            try htmlContent.write(to: tempFile, atomically: true, encoding: .utf8)
+            NSWorkspace.shared.open(tempFile)
+        } catch {
+            // Fallback to opening dashboard without auth
+            openProviderURL(provider.dashboardURL)
+        }
+    }
+
+    private func openProviderURL(_ url: URL) {
+        NSWorkspace.shared.open(url)
     }
 }
 

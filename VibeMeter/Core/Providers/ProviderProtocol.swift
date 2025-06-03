@@ -27,8 +27,10 @@ public protocol ProviderProtocol: Sendable {
     ///   - authToken: Authentication token for the provider
     ///   - month: Month (0-11, 0-based indexing)
     ///   - year: Full year (e.g., 2023)
+    ///   - teamId: Team ID for the request (optional, for providers that support teams)
     /// - Returns: Monthly invoice with itemized costs
-    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> ProviderMonthlyInvoice
+    func fetchMonthlyInvoice(authToken: String, month: Int, year: Int, teamId: Int?) async throws
+        -> ProviderMonthlyInvoice
 
     /// Fetches current usage statistics and quotas.
     /// - Parameter authToken: Authentication token for the provider
