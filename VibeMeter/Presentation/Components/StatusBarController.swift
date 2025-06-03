@@ -107,27 +107,25 @@ final class StatusBarController: NSObject {
         renderer.scale = 2.0 // Retina display
         
         if let nsImage = renderer.nsImage {
+            // Ensure the image has the correct size
+            nsImage.size = NSSize(width: 18, height: 18)
             button.image = nsImage
-            button.image?.isTemplate = true // Allow it to adapt to dark/light mode
+            // Don't use template mode for now to see the actual rendering
+            button.image?.isTemplate = false
         } else {
             // Fallback to a system image if rendering fails
+            print("GaugeIcon rendering failed, using fallback")
             button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
             button.image?.isTemplate = true
         }
         
         // Set the text title if enabled and we have data
         if settingsManager.showCostInMenuBar && stateManager.currentState.showsGauge && !spendingData.providersWithData.isEmpty {
-            let providers = spendingData.providersWithData
-            let spending: Double = if providers.count == 1,
-                                      let providerData = spendingData.getSpendingData(for: providers[0]),
-                                      let providerSpending = providerData.displaySpending {
-                providerSpending
-            } else {
-                spendingData.totalSpendingConverted(
-                    to: currencyData.selectedCode,
-                    rates: currencyData.currentExchangeRates
-                )
-            }
+            // Always use total spending for consistency with the popover
+            let spending = spendingData.totalSpendingConverted(
+                to: currencyData.selectedCode,
+                rates: currencyData.currentExchangeRates
+            )
             
             button.title = "\(currencyData.selectedSymbol)\(String(format: "%.2f", spending))"
         } else {

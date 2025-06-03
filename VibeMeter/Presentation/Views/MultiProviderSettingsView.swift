@@ -97,39 +97,20 @@ struct ProvidersSettingsView: View {
 
     var body: some View {
         Form {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Service Providers")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .padding(.top, 10)
-                    .padding(.horizontal, 10)
-                
-                Text("Manage your cost tracking service account.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 10)
-            }
-            
             Section {
-                VStack(spacing: 1) {
-                    ForEach(ServiceProvider.allCases) { provider in
-                        ProviderRowView(
-                            provider: provider,
-                            userSessionData: userSessionData,
-                            loginManager: loginManager,
-                            providerRegistry: providerRegistry,
-                            showDetail: {
-                                showingProviderDetail = provider
-                            })
-                            .background(Color(NSColor.controlBackgroundColor))
-                    }
+                ForEach(ServiceProvider.allCases) { provider in
+                    ProviderRowView(
+                        provider: provider,
+                        userSessionData: userSessionData,
+                        loginManager: loginManager,
+                        providerRegistry: providerRegistry,
+                        showDetail: {
+                            showingProviderDetail = provider
+                        })
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(NSColor.separatorColor).opacity(0.3), lineWidth: 0.5)
-                )
+            } header: {
+                Text("Service Providers")
+                    .font(.headline)
             }
         }
         .formStyle(.grouped)
@@ -296,9 +277,6 @@ struct ProviderRowView: View {
                 .controlSize(.small)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusColor: Color {
@@ -506,6 +484,9 @@ struct ProviderDetailView: View {
 struct SpendingLimitsView: View {
     let settingsManager: any SettingsManagerProtocol
     let userSessionData: MultiProviderUserSessionData
+    
+    @Environment(CurrencyData.self)
+    private var currencyData
 
     @State
     private var warningLimitUSD: Double
@@ -529,7 +510,7 @@ struct SpendingLimitsView: View {
                     .padding(.top, 10)
                     .padding(.horizontal, 10)
                 
-                Text("Set spending thresholds that apply to all connected providers. Limits are stored in USD.")
+                Text("Set spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 10)
@@ -538,9 +519,24 @@ struct SpendingLimitsView: View {
             
             Section {
                 LabeledContent("Amount") {
-                    TextField("", value: $warningLimitUSD, format: .currency(code: "USD"))
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 150)
+                    HStack(spacing: 8) {
+                        TextField("", value: $warningLimitUSD, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 100)
+                        Text("USD")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                if !currencyData.isUSD {
+                    HStack {
+                        Text("Approximately")
+                        Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", convertedWarningLimit))")
+                            .fontWeight(.medium)
+                        Text("in \(currencyData.selectedCode)")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
                 
                 Text("You'll receive a notification when spending exceeds this amount.")
@@ -553,9 +549,24 @@ struct SpendingLimitsView: View {
             
             Section {
                 LabeledContent("Amount") {
-                    TextField("", value: $upperLimitUSD, format: .currency(code: "USD"))
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 150)
+                    HStack(spacing: 8) {
+                        TextField("", value: $upperLimitUSD, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 100)
+                        Text("USD")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                if !currencyData.isUSD {
+                    HStack {
+                        Text("Approximately")
+                        Text("\(currencyData.selectedSymbol)\(String(format: "%.2f", convertedUpperLimit))")
+                            .fontWeight(.medium)
+                        Text("in \(currencyData.selectedCode)")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
                 
                 Text("You'll receive a critical notification when spending exceeds this amount.")
@@ -574,6 +585,14 @@ struct SpendingLimitsView: View {
         .onChange(of: upperLimitUSD) { _, newValue in
             settingsManager.upperLimitUSD = newValue
         }
+    }
+    
+    private var convertedWarningLimit: Double {
+        currencyData.convertAmount(warningLimitUSD, from: "USD", to: currencyData.selectedCode) ?? warningLimitUSD
+    }
+    
+    private var convertedUpperLimit: Double {
+        currencyData.convertAmount(upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? upperLimitUSD
     }
 }
 
