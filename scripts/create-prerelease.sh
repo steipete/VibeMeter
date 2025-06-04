@@ -65,6 +65,64 @@ case "$PRERELEASE_TYPE" in
         ;;
 esac
 
+# Clean build directory for fresh compile
+echo "🧹 Cleaning build directory for fresh compile..."
+rm -rf "$PROJECT_ROOT/build"
+
+# Check existing releases for build number conflicts
+echo "🔍 Checking for build number conflicts..."
+EXISTING_BUILDS=$(gh release list --limit 100 2>/dev/null | while read -r line; do
+    RELEASE_TAG=$(echo "$line" | awk '{print $3}')
+    if [[ -n "$RELEASE_TAG" ]]; then
+        # Try to download and check the DMG
+        DMG_URL="https://github.com/steipete/VibeMeter/releases/download/$RELEASE_TAG/VibeMeter-*.dmg"
+        # This is just for display - we'll check appcast for actual build numbers
+        echo "   Checking release: $RELEASE_TAG"
+    fi
+done)
+
+# Parse appcast files for existing build numbers
+USED_BUILD_NUMBERS=""
+if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
+    USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+fi
+if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
+    USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+fi
+
+# Check if current build number already exists
+if [[ -n "$USED_BUILD_NUMBERS" ]]; then
+    for EXISTING_BUILD in $USED_BUILD_NUMBERS; do
+        if [[ "$BUILD_NUMBER" == "$EXISTING_BUILD" ]]; then
+            echo "❌ Build number $BUILD_NUMBER already exists in releases!"
+            echo "   Used build numbers: $USED_BUILD_NUMBERS"
+            echo "   Please increment CURRENT_PROJECT_VERSION in Project.swift"
+            exit 1
+        fi
+        if [[ "$BUILD_NUMBER" -le "$EXISTING_BUILD" ]]; then
+            echo "⚠️  Warning: Build number $BUILD_NUMBER is not higher than existing build $EXISTING_BUILD"
+            echo "   Sparkle requires monotonically increasing build numbers"
+        fi
+    done
+fi
+
+# Find highest existing build number
+HIGHEST_BUILD=0
+for EXISTING_BUILD in $USED_BUILD_NUMBERS; do
+    if [[ "$EXISTING_BUILD" -gt "$HIGHEST_BUILD" ]]; then
+        HIGHEST_BUILD=$EXISTING_BUILD
+    fi
+done
+
+if [[ "$BUILD_NUMBER" -le "$HIGHEST_BUILD" ]]; then
+    echo "❌ Build number must be higher than $HIGHEST_BUILD"
+    echo "   Current build number: $BUILD_NUMBER"
+    echo "   Please update CURRENT_PROJECT_VERSION in Project.swift to at least $((HIGHEST_BUILD + 1))"
+    exit 1
+fi
+
+echo "✅ Build number $BUILD_NUMBER is valid (highest existing: $HIGHEST_BUILD)"
+
 # Build the app
 echo "🔨 Building application..."
 cd "$PROJECT_ROOT"

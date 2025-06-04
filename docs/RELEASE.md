@@ -4,33 +4,51 @@ This document describes the process for creating and publishing a new release of
 
 ## ⚠️ CRITICAL: Common Release Pitfalls
 
-### 1. Double Beta Suffix Problem
+### 1. Build Number Rules (MOST IMPORTANT)
+**Sparkle uses build numbers (CFBundleVersion) to determine updates, NOT version strings!**
+
+**Absolute Requirements**:
+- Build numbers MUST be unique across ALL releases (stable and pre-release)
+- Build numbers MUST always increase (e.g., 100 → 101 → 102)
+- Build numbers can NEVER be reused or go backwards
+- The scripts now validate this automatically and will refuse to build if violated
+
+**Example**:
+- beta.1: build 200 ✅
+- beta.2: build 201 ✅  
+- beta.3: build 199 ❌ (lower than beta.1)
+- v1.0.0: build 200 ❌ (duplicate of beta.1)
+
+### 2. Clean Build Directory
+**Issue**: Old build artifacts can be packaged instead of fresh builds
+
+**Solution**: 
+- Scripts now automatically clean the build directory before each release
+- This ensures a completely fresh compile every time
+- Manual clean: `rm -rf build/`
+
+### 3. Double Beta Suffix Problem
 **Issue**: Creating pre-releases when MARKETING_VERSION already contains a suffix (e.g., "1.0.0-beta.1") results in doubled suffixes like "1.0.0-beta.1-beta.1"
 
 **Solution**: 
 - Always reset MARKETING_VERSION to base version (e.g., "1.0.0") before creating pre-releases
 - The scripts now handle this automatically with warnings
 
-### 2. Build Number Confusion
-**Issue**: Sparkle uses CFBundleVersion (build number) to determine if an update is available, NOT the marketing version
+### 4. Build Verification
+**Issue**: Release scripts may package wrong builds if compilation fails
 
-**Critical Rules**:
-- Build numbers MUST always increment
-- Never reuse build numbers
-- If beta.1 has build 100, beta.2 must have 101 or higher
-- Check actual build numbers in compiled apps, not just Project.swift
+**Solution**: Scripts now:
+- Verify the built app has the expected build number
+- Check build number against all existing releases
+- Refuse to proceed if build number already exists
 
-### 3. Failed Builds Packaged as New Releases
-**Issue**: Release scripts may package old builds if compilation fails silently
-
-**Solution**: Scripts now verify build numbers match before packaging
-
-### 4. Appcast Build Number Verification
+### 5. Appcast Build Number Verification
 **Always manually verify** build numbers in appcast match the actual compiled app:
 ```bash
 # Check build number in DMG
 hdiutil attach VibeMeter-X.X.X.dmg
 defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleVersion
+defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleShortVersionString
 hdiutil detach "/Volumes/VibeMeter"
 ```
 
@@ -187,17 +205,22 @@ To build everything from scratch:
 
 1. **Prepare Pre-release:**
    ```bash
-   # FIRST: Check current version
+   # CRITICAL: Check current version and build number
    grep MARKETING_VERSION Project.swift
-   # If it shows a pre-release suffix, reset to base version:
+   grep CURRENT_PROJECT_VERSION Project.swift
+   
+   # If MARKETING_VERSION shows a pre-release suffix, reset to base version:
    # Edit Project.swift: "1.0.0-beta.1" -> "1.0.0"
    
-   # Increment build number
-   # Edit Project.swift: "CURRENT_PROJECT_VERSION": "101" -> "102"
+   # CRITICAL: Increment build number to be higher than ALL existing releases
+   # Check highest existing build:
+   grep -h 'sparkle:version=' appcast*.xml | grep -o '[0-9]*' | sort -n | tail -1
+   
+   # Edit Project.swift: "CURRENT_PROJECT_VERSION": "200" -> "201" (or higher)
    
    # Commit version changes
    git add Project.swift
-   git commit -m "Prepare for beta.2 release"
+   git commit -m "Prepare for beta.2 release (build 201)"
    ```
 
 2. **Create Pre-release:**

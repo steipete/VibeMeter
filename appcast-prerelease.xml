@@ -6,50 +6,10 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
-            <title>VibeMeter 1.0.0-beta.2</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.2/VibeMeter-1.0.0-beta.2.dmg</link>
-            <sparkle:version>102</sparkle:version>
-            <sparkle:shortVersionString>1.0.0-beta.2</sparkle:shortVersionString>
-            <description><![CDATA[
-                <h2>Beta Release 2 of VibeMeter 1.0.0</h2>
-                
-                <h3>🔧 Improvements</h3>
-                <ul>
-                    <li><strong>Release process refinement</strong> - Streamlined build and distribution workflow</li>
-                    <li><strong>Appcast optimization</strong> - Improved update feed generation and validation</li>
-                    <li><strong>Build number management</strong> - Enhanced version tracking for reliable updates</li>
-                </ul>
-                
-                <h3>🐛 Bug Fixes</h3>
-                <ul>
-                    <li>Fixed double beta suffix in release naming</li>
-                    <li>Corrected build number synchronization in appcast</li>
-                    <li>Resolved release script version handling</li>
-                </ul>
-                
-                <h3>📝 Documentation</h3>
-                <ul>
-                    <li>Updated release process documentation</li>
-                    <li>Added comprehensive release checklist</li>
-                    <li>Improved troubleshooting guides</li>
-                </ul>
-                
-                <p><strong>⚠️ This is a pre-release version.</strong> Please report any issues to: https://github.com/steipete/VibeMeter/issues</p>
-            ]]></description>
-            <pubDate>Wed, 05 Jun 2025 00:30:00 +0000</pubDate>
-            <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.2/VibeMeter-1.0.0-beta.2.dmg"
-                length="5614425"
-                type="application/octet-stream"
-                sparkle:edSignature="txm2QLgFSkFAEUXMCIrS0kuQ+z0Hl1/llb7z2JvWIqALLJ9NEc/Mgzc3atNIrJSGQG9cPHBnEIeNTcj3MMvTBg=="
-            />
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-        </item>
-        <item>
             <title>VibeMeter 1.0.0-beta.1</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.1/VibeMeter-1.0.0-beta.1.dmg</link>
-            <sparkle:version>101</sparkle:version>
-            <sparkle:shortVersionString>1.0.0-beta.1</sparkle:shortVersionString>
+            <sparkle:version>200</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.1-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
                 <h2>Beta Release 1 of VibeMeter 1.0.0</h2>
                 
