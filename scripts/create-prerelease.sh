@@ -6,6 +6,29 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Usage function
+usage() {
+    echo "Usage: $0 [TYPE] [NUMBER]"
+    echo ""
+    echo "Create VibeMeter pre-release versions"
+    echo ""
+    echo "ARGUMENTS:"
+    echo "  TYPE       Pre-release type (alpha, beta, rc)"
+    echo "  NUMBER     Pre-release number (1, 2, 3...)"
+    echo ""
+    echo "EXAMPLES:"
+    echo "  $0 beta 1         # Create 0.9.2-beta.1"
+    echo "  $0 alpha 2        # Create 0.9.2-alpha.2"
+    echo "  $0 rc 1           # Create 0.9.2-rc.1"
+    echo ""
+}
+
+# Check for help flag
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    usage
+    exit 0
+fi
+
 # Parse arguments
 PRERELEASE_TYPE="${1:-beta}"  # beta, alpha, rc
 PRERELEASE_NUMBER="${2:-1}"   # 1, 2, 3, etc.
