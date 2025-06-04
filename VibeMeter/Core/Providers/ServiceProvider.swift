@@ -73,7 +73,7 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     public var keychainService: String {
         switch self {
         case .cursor:
-            "com.vibemeter.cursor"
+            "com.steipete.vibemeter.cursor"
         }
     }
 
