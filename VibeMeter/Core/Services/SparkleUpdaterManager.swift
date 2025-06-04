@@ -1,5 +1,6 @@
 import os
 import Sparkle
+import UserNotifications
 
 /// Manages the Sparkle auto-update framework integration for VibeMeter.
 ///
@@ -14,7 +15,7 @@ import Sparkle
 /// update-related delegate callbacks and UI presentation.
 @MainActor
 @Observable
-public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
+public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate, UNUserNotificationCenterDelegate {
     // MARK: - Static Logger for nonisolated methods
 
     private nonisolated static let staticLogger = Logger(subsystem: "com.steipete.vibemeter", category: "updates")
@@ -32,6 +33,10 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         // Initialize the updater controller
         initializeUpdaterController()
+        
+        // Set up notification center for gentle reminders
+        setupNotificationCenter()
+        
         Self.staticLogger
             .info("SparkleUpdaterManager initialized. Updater controller initialization completed.")
 
@@ -68,6 +73,49 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
 
         updaterController = controller
+    }
+    
+    private func setupNotificationCenter() {
+        // Set up notification center for gentle reminders
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        
+        // Request notification permission
+        Task {
+            do {
+                let granted = try await center.requestAuthorization(options: [.alert, .sound])
+                if granted {
+                    Self.staticLogger.info("Notification permission granted for gentle reminders")
+                } else {
+                    Self.staticLogger.warning("Notification permission denied - gentle reminders will not work")
+                }
+            } catch {
+                Self.staticLogger.error("Failed to request notification permission: \(error)")
+            }
+        }
+        
+        // Set up notification categories and actions
+        let updateAction = UNNotificationAction(
+            identifier: "UPDATE_NOW",
+            title: "Update Now",
+            options: .foreground
+        )
+        
+        let laterAction = UNNotificationAction(
+            identifier: "LATER",
+            title: "Later",
+            options: []
+        )
+        
+        let updateCategory = UNNotificationCategory(
+            identifier: "UPDATE_AVAILABLE",
+            actions: [updateAction, laterAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        center.setNotificationCategories([updateCategory])
+        Self.staticLogger.info("Notification center configured for gentle reminders")
     }
 
     // MARK: Private
@@ -137,6 +185,104 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         Self.staticLogger.debug("Sparkle did show modal alert")
     }
 
-    // Add any other necessary SPUUpdaterDelegate or SPUStandardUserDriverDelegate methods here
-    // based on the app's requirements for customizing Sparkle's behavior.
+    // MARK: - Gentle Reminders Implementation
+    
+    /// Handles gentle reminders for background update notifications
+    /// This prevents the warning about background apps not implementing gentle reminders
+    public nonisolated func standardUserDriverShouldHandleShowingScheduledUpdate(
+        _ update: SUAppcastItem,
+        andInImmediateFocus immediateFocus: Bool
+    ) -> Bool {
+        Self.staticLogger.info("Handling scheduled update notification for version \(update.displayVersionString)")
+        
+        // For background apps (when not in immediate focus), we handle the gentle reminder ourselves
+        if !immediateFocus {
+            Self.staticLogger.info("App not in focus, scheduling gentle reminder for update")
+            
+            // Schedule a gentle reminder using the notification center
+            let updateVersion = update.displayVersionString
+            Task { @MainActor in
+                await self.showGentleUpdateReminder(updateVersion: updateVersion)
+            }
+            
+            // Return true to indicate we're handling this ourselves
+            return true
+        }
+        
+        // When app is in immediate focus, let Sparkle handle it normally
+        Self.staticLogger.info("App in focus, letting Sparkle handle update notification")
+        return false
+    }
+    
+    /// Shows a gentle reminder notification for available updates
+    @MainActor
+    private func showGentleUpdateReminder(updateVersion: String) async {
+        Self.staticLogger.info("Showing gentle reminder for update to version \(updateVersion)")
+        
+        // Import UserNotifications framework at the top if not already imported
+        let content = UNMutableNotificationContent()
+        content.title = "Update Available"
+        content.body = "Vibe Meter \(updateVersion) is available. Click to update."
+        content.sound = .default
+        content.categoryIdentifier = "UPDATE_AVAILABLE"
+        
+        // Add user info to handle the action
+        content.userInfo = ["updateVersion": updateVersion]
+        
+        let request = UNNotificationRequest(
+            identifier: "sparkle-update-\(updateVersion)",
+            content: content,
+            trigger: nil // Show immediately
+        )
+        
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+            Self.staticLogger.info("Gentle reminder notification scheduled successfully")
+        } catch {
+            Self.staticLogger.error("Failed to schedule gentle reminder notification: \(error)")
+            
+            // Fallback: let Sparkle handle it the normal way
+            updaterController.updater.checkForUpdates()
+        }
+    }
+    
+    // MARK: - UNUserNotificationCenterDelegate
+    
+    /// Handle notification when app is in foreground
+    public nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notification even when app is in foreground for gentle reminders
+        completionHandler([.banner, .sound])
+        Self.staticLogger.debug("Presenting update notification while app in foreground")
+    }
+    
+    /// Handle notification interaction (user tapped or used action)
+    public nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let actionIdentifier = response.actionIdentifier
+        
+        Task { @MainActor in
+            switch actionIdentifier {
+            case "UPDATE_NOW", UNNotificationDefaultActionIdentifier:
+                Self.staticLogger.info("User chose to update now from notification")
+                // Trigger the update UI
+                self.updaterController.updater.checkForUpdates()
+                
+            case "LATER":
+                Self.staticLogger.info("User chose to update later from notification")
+                // Do nothing - user will be reminded later
+                
+            default:
+                Self.staticLogger.debug("Unknown notification action: \(actionIdentifier)")
+            }
+            
+            completionHandler()
+        }
+    }
 }
