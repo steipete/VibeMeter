@@ -147,50 +147,14 @@ actor CursorAPIClient {
         return (data, httpResponse)
     }
 
-    private func handleResponse<T: Decodable & Sendable>(data: Data, response httpResponse: HTTPURLResponse, request: URLRequest) throws -> T {
+    private func handleResponse<T: Decodable & Sendable>(
+        data: Data,
+        response httpResponse: HTTPURLResponse,
+        request: URLRequest) throws -> T {
 
         switch httpResponse.statusCode {
         case 200 ... 299:
-            // Handle 204 No Content responses
-            if httpResponse.statusCode == 204 {
-                // 204 from auth endpoints means the session is invalid
-                if request.url?.path.contains("/auth/") == true {
-                    logger.warning("Received 204 from auth endpoint - session expired or invalid")
-                    throw ProviderError.unauthorized
-                }
-                // For 204 responses, check if we're expecting an optional type
-                if T.self == Any?.self {
-                    return Any?.none as! T
-                }
-                // If we're not expecting optional, throw an error
-                logger.error("Received 204 No Content but expecting data of type \(T.self)")
-                throw ProviderError.decodingError(
-                    message: "API returned 204 No Content but response data was expected",
-                    statusCode: 204)
-            }
-
-            // Handle empty or minimal data for successful responses
-            if data.isEmpty {
-                logger.error("Received empty data for successful response")
-                logger.debug("Request URL was: \(request.url?.absoluteString ?? "nil")")
-                throw ProviderError.decodingError(
-                    message: "Received empty response data",
-                    statusCode: httpResponse.statusCode)
-            }
-
-            // Log the response data for debugging
-            if let responseString = String(data: data, encoding: .utf8) {
-                logger.debug("Response data received: \(responseString)")
-            }
-
-            do {
-                return try decoder.decode(T.self, from: data)
-            } catch {
-                logger.error("Cursor API decoding error: \(error.localizedDescription)")
-                throw ProviderError.decodingError(
-                    message: error.localizedDescription,
-                    statusCode: httpResponse.statusCode)
-            }
+            return try handleSuccessResponse(data: data, statusCode: httpResponse.statusCode, request: request)
 
         case 401:
             logger.warning("Unauthorized Cursor request")
@@ -213,27 +177,77 @@ actor CursorAPIClient {
             throw ProviderError.serviceUnavailable
 
         default:
-            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
-            logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
-
-            // Check for specific error types
-            try checkForSpecificErrors(in: data)
-
-            // Handle status code specific errors
-            if httpResponse.statusCode == 500, message.contains("Team not found") {
-                logger.warning("Team not found error detected from 500 response")
-                throw ProviderError.noTeamFound
-            }
-
-            // Check if it's a server error that should be retried
-            if httpResponse.statusCode >= 500 {
-                throw NetworkRetryHandler.RetryableError.serverError(statusCode: httpResponse.statusCode)
-            }
-
-            throw ProviderError.networkError(
-                message: message,
-                statusCode: httpResponse.statusCode)
+            try handleErrorResponse(data: data, statusCode: httpResponse.statusCode)
         }
+    }
+
+    private func handleSuccessResponse<T: Decodable & Sendable>(
+        data: Data,
+        statusCode: Int,
+        request: URLRequest) throws -> T {
+        // Handle 204 No Content responses
+        if statusCode == 204 {
+            // 204 from auth endpoints means the session is invalid
+            if request.url?.path.contains("/auth/") == true {
+                logger.warning("Received 204 from auth endpoint - session expired or invalid")
+                throw ProviderError.unauthorized
+            }
+            // For 204 responses, check if we're expecting an optional type
+            if T.self == Any?.self {
+                return Any?.none as! T
+            }
+            // If we're not expecting optional, throw an error
+            logger.error("Received 204 No Content but expecting data of type \(T.self)")
+            throw ProviderError.decodingError(
+                message: "API returned 204 No Content but response data was expected",
+                statusCode: 204)
+        }
+
+        // Handle empty or minimal data for successful responses
+        if data.isEmpty {
+            logger.error("Received empty data for successful response")
+            logger.debug("Request URL was: \(request.url?.absoluteString ?? "nil")")
+            throw ProviderError.decodingError(
+                message: "Received empty response data",
+                statusCode: statusCode)
+        }
+
+        // Log the response data for debugging
+        if let responseString = String(data: data, encoding: .utf8) {
+            logger.debug("Response data received: \(responseString)")
+        }
+
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            logger.error("Cursor API decoding error: \(error.localizedDescription)")
+            throw ProviderError.decodingError(
+                message: error.localizedDescription,
+                statusCode: statusCode)
+        }
+    }
+
+    private func handleErrorResponse(data: Data, statusCode: Int) throws {
+        let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+        logger.error("Cursor API error \(statusCode): \(message)")
+
+        // Check for specific error types
+        try checkForSpecificErrors(in: data)
+
+        // Handle status code specific errors
+        if statusCode == 500, message.contains("Team not found") {
+            logger.warning("Team not found error detected from 500 response")
+            throw ProviderError.noTeamFound
+        }
+
+        // Check if it's a server error that should be retried
+        if statusCode >= 500 {
+            throw NetworkRetryHandler.RetryableError.serverError(statusCode: statusCode)
+        }
+
+        throw ProviderError.networkError(
+            message: message,
+            statusCode: statusCode)
     }
 
     private func checkForSpecificErrors(in data: Data) throws {

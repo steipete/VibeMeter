@@ -130,8 +130,8 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
     func testFromProviderError_AuthenticationErrors() {
         // Given
         let authErrors: [ProviderError] = [
-            .authenticationFailed(message: "Invalid token"),
-            .authenticationFailed(message: "Session expired"),
+            .authenticationFailed(reason: "Invalid token"),
+            .authenticationFailed(reason: "Session expired"),
         ]
 
         // When/Then
@@ -196,8 +196,8 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         // Given
         let otherErrors: [ProviderError] = [
             .decodingError(message: "Invalid JSON", statusCode: 200),
-            .invalidResponse(statusCode: 500),
-            .cacheExpired,
+            .unauthorized,
+            .tokenExpired,
         ]
 
         // When/Then
