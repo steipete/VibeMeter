@@ -22,6 +22,7 @@ struct VibeMeterApp: App {
     @State
     private var settingsManager = SettingsManager.shared
 
+    @MainActor
     private var menuBarDisplayText: String {
         // Only show cost if setting is enabled and we have data
         guard settingsManager.menuBarDisplayMode.showsMoney else {

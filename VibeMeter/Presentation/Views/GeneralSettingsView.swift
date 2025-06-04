@@ -7,7 +7,7 @@ import SwiftUI
 /// menu bar display options, and dock visibility. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    let settingsManager: SettingsManager
+    @Bindable var settingsManager: SettingsManager
 
     @State
     private var isCheckingForUpdates = false

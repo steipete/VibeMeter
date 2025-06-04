@@ -8,6 +8,7 @@ extension CostTableView {
         case loaded(providers: [ServiceProvider])
         case error(String)
 
+        @MainActor
         init(from spendingData: MultiProviderSpendingData) {
             let providers = spendingData.providersWithData
 
