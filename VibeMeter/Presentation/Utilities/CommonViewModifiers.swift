@@ -109,6 +109,7 @@ public extension View {
             horizontalPadding: horizontalPadding,
             verticalPadding: verticalPadding))
     }
+
 }
 
 // MARK: - Previews
