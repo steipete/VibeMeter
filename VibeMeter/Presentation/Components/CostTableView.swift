@@ -96,41 +96,58 @@ struct CostTableView: View {
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
             Spacer()
-
-            Text("Limits")
-                .font(.body.weight(.medium))
-                .foregroundStyle(.primary.opacity(0.8))
-
+            limitsLabel
             Spacer(minLength: 20)
-
-            HStack(spacing: 12) {
-                Text(formattedWarningLimit)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.orange)
-                    .accessibilityLabel("Warning limit: \(formattedWarningLimit)")
-
-                Text("•")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-
-                Text(formattedUpperLimit)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.red)
-                    .accessibilityLabel("Upper limit: \(formattedUpperLimit)")
-            }
-
+            limitsValues
             Spacer()
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.primary.opacity(0.03)))
+        .background(limitsBackground)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Spending limits")
         .accessibilityValue("Warning at \(formattedWarningLimit), upper limit at \(formattedUpperLimit)")
         .accessibilityHint("Configure these limits in settings")
+    }
+    
+    private var limitsLabel: some View {
+        Text("Limits")
+            .font(.body.weight(.medium))
+            .foregroundStyle(.primary.opacity(0.8))
+    }
+    
+    private var limitsValues: some View {
+        HStack(spacing: 12) {
+            warningLimitText
+            limitsSeparator
+            upperLimitText
+        }
+    }
+    
+    private var warningLimitText: some View {
+        Text(formattedWarningLimit)
+            .font(.body.weight(.medium))
+            .foregroundStyle(.orange)
+            .accessibilityLabel("Warning limit: \(formattedWarningLimit)")
+    }
+    
+    private var limitsSeparator: some View {
+        Text("•")
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
+    }
+    
+    private var upperLimitText: some View {
+        Text(formattedUpperLimit)
+            .font(.body.weight(.medium))
+            .foregroundStyle(.red)
+            .accessibilityLabel("Upper limit: \(formattedUpperLimit)")
+    }
+    
+    private var limitsBackground: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color.primary.opacity(0.03))
     }
 
     // MARK: - Helper Properties
