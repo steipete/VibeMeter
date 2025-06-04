@@ -258,23 +258,43 @@ The `sparkle:version` field in the appcast MUST match the actual `CFBundleVersio
 
 The `generate-appcast.sh` script tries to automatically assign build numbers based on version strings (e.g., beta.1 = 100, beta.2 = 101). However, this often doesn't match the actual build numbers in your compiled apps. **Always manually verify and update the sparkle:version fields after running the script.**
 
-### Step 7: Create GitHub Release
-```bash
-# Commit appcast
-git add appcast.xml CHANGELOG.md
-git commit -m "Release version X.X.X"
+### Step 7: Create GitHub Release and Update Appcast
 
-# Create and push tag
+**IMPORTANT: Each release requires the FULL process:**
+1. Build and sign the app
+2. Create the GitHub release with DMG
+3. Update the appcast with the GitHub download URL
+4. Commit and push the appcast
+
+**DO NOT:**
+- Build multiple versions then update appcast later
+- Update appcast before the GitHub release exists
+- Skip the appcast update for any release
+
+```bash
+# Create and push tag FIRST
 git tag -a "vX.X.X" -m "Release X.X.X"
-git push origin main
 git push origin "vX.X.X"
 
-# Create release
+# Create GitHub release with the DMG
 gh release create "vX.X.X" \
     --title "VibeMeter X.X.X" \
     --notes "Release notes here" \
     build/VibeMeter-X.X.X.dmg
+
+# NOW update appcast with the GitHub download URL
+# Run generate-appcast.sh or manually update
+./scripts/generate-appcast.sh
+
+# Verify and fix build numbers in appcast
+# Commit the updated appcast
+git add appcast.xml appcast-prerelease.xml
+git commit -m "Update appcast for version X.X.X"
+git push origin main
 ```
+
+**Release Order is Critical:**
+1. Tag → 2. GitHub Release → 3. Appcast Update → 4. Push Appcast
 
 ## Troubleshooting
 
@@ -472,11 +492,14 @@ generate_keys -p
 - [ ] Update appcast with correct signature from sign_update
 - [ ] Ensure appcast has proper download URLs pointing to GitHub releases
 
-### Release
-- [ ] Commit all changes including appcast
-- [ ] Create GitHub release: `./scripts/release.sh --stable`
-- [ ] Verify DMG is attached to release
+### Release (MUST be done in order)
+- [ ] Create and push git tag: `git tag -a "v1.0.0" -m "Release 1.0.0" && git push origin v1.0.0`
+- [ ] Create GitHub release: `./scripts/release.sh --stable` OR manually with `gh release create`
+- [ ] Verify DMG is attached to release on GitHub
+- [ ] Generate/update appcast: `./scripts/generate-appcast.sh`
+- [ ] Manually verify build numbers in appcast match the built app
 - [ ] Test download URL from appcast works
+- [ ] Commit and push appcast: `git add appcast*.xml && git commit -m "Update appcast for v1.0.0" && git push`
 
 ### Post-Release Testing
 - [ ] Install previous version (if exists)
@@ -604,9 +627,31 @@ VibeMeter now runs with full app sandboxing enabled for enhanced security and po
 </plist>
 ```
 
+#### Understanding Sparkle's XPC Services
+
+Sparkle 2.x uses two XPC (inter-process communication) services for security and reliability:
+
+1. **Downloader.xpc** (`com.steipete.vibemeter-spks`)
+   - Downloads update files from the internet
+   - Runs in a separate sandboxed process for security
+   - Requires `com.apple.security.network.client` to access GitHub
+
+2. **Installer.xpc** (`com.steipete.vibemeter-spkd`)
+   - Installs the downloaded update
+   - Handles file operations and app replacement
+   - Runs with elevated privileges when needed
+   - Requires file system access entitlements
+
+**Why XPC Services?**
+- **Security**: Update operations run in isolated processes
+- **Reliability**: If the main app crashes, updates can still complete
+- **Sandboxing**: XPC services are ALWAYS sandboxed by macOS, even if the main app isn't
+
+**The mach-lookup exceptions** (`-spks` and `-spkd`) allow the main app to communicate with these XPC services. Without these exceptions, Sparkle cannot initiate downloads or installations.
+
 ##### Critical: Sparkle XPC Service Entitlements
 
-**IMPORTANT**: Sparkle's XPC services (Downloader.xpc and Installer.xpc) are ALWAYS sandboxed by macOS, regardless of the main app's sandbox status. These services require specific entitlements to function properly:
+**IMPORTANT**: Sparkle's XPC services are ALWAYS sandboxed by macOS, regardless of the main app's sandbox status. These services require specific entitlements to function properly:
 
 ##### XPC Service Entitlements (Applied by notarize-app.sh)
 
