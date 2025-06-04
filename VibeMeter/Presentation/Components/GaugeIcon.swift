@@ -23,8 +23,8 @@ struct GaugeIcon: View {
     private var shimmerPhase: Double = 0
 
     private let lineRatio = 0.18 // stroke thickness vs. frame
-    private let startAngle = 330.0 // ° (right-down, like car speedometer)
-    private let sweepAngle = 240.0 // counter-clockwise span
+    private let startAngle = 210.0 // ° (left-down, like car speedometer)
+    private let sweepAngle = 120.0 // clockwise span to right-down
 
     var body: some View {
         Canvas { ctx, size in
@@ -38,14 +38,14 @@ struct GaugeIcon: View {
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * animationProgress),
-                         clockwise: false)
+                         clockwise: true)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
-                         clockwise: false)
+                         clockwise: true)
             }
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast
@@ -65,7 +65,6 @@ struct GaugeIcon: View {
                 
                 // Calculate shimmer position along the arc
                 let shimmerStartAngle = startAngle + (sweepAngle * shimmerPhase * 1.2) - (sweepAngle * 0.1)
-                let shimmerEndAngle = shimmerStartAngle + (sweepAngle * 0.2)
                 
                 ctx.stroke(trackPath,
                            with: .conicGradient(
@@ -132,6 +131,25 @@ struct GaugeIcon: View {
                 withAnimation(.easeOut(duration: 0.6)) {
                     animationProgress = 1.0
                 }
+            }
+            
+            // Start shimmer animation if loading
+            if isLoading {
+                withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                    shimmerPhase = 1.0
+                }
+            }
+        }
+        .onChange(of: isLoading) { _, newValue in
+            if newValue {
+                // Start shimmer when loading begins
+                shimmerPhase = 0.0
+                withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                    shimmerPhase = 1.0
+                }
+            } else {
+                // Stop shimmer when loading ends
+                shimmerPhase = 0.0
             }
         }
     }
