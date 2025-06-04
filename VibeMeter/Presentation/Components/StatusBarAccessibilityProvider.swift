@@ -69,8 +69,8 @@ final class StatusBarAccessibilityProvider {
 
         let statusText = determineStatusText(for: percentage)
 
-        let percentageText = "\(Int(percentage)) percent used"
-        return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(percentageText)."
+        return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. " +
+            "\(Int(percentage)) percent used."
     }
 
     private func determineStatusText(for percentage: Double) -> String {
