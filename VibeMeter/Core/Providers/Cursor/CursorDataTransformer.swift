@@ -19,7 +19,7 @@ enum CursorDataTransformer {
             logger.info("Creating fallback team info due to empty teams response")
             return ProviderTeamInfo(id: 0, name: "Individual", provider: .cursor)
         }
-        
+
         let firstTeam = teams.first!
         logger.info("Successfully transformed Cursor team: \(firstTeam.name, privacy: .public)")
         return ProviderTeamInfo(id: firstTeam.id, name: firstTeam.name, provider: .cursor)
@@ -34,7 +34,7 @@ enum CursorDataTransformer {
                                  year: Int) -> ProviderMonthlyInvoice {
         logger.info("Transforming invoice response for \(month)/\(year)")
         logger.debug("Invoice response items count: \(response.items?.count ?? 0)")
-        
+
         let genericItems: [ProviderInvoiceItem] = response.items?.map { item in
             logger.debug("Processing invoice item: \(item.description) - \(item.cents) cents")
             return ProviderInvoiceItem(
@@ -52,7 +52,9 @@ enum CursorDataTransformer {
 
         let totalCents = genericItems.reduce(0) { $0 + $1.cents }
         let totalUSD = Double(totalCents) / 100.0
-        logger.info("Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents ($\(totalUSD))")
+        logger
+            .info(
+                "Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents ($\(totalUSD))")
 
         return ProviderMonthlyInvoice(
             items: genericItems,

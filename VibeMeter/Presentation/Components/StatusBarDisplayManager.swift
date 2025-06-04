@@ -9,10 +9,10 @@ import SwiftUI
 @MainActor
 final class StatusBarDisplayManager {
     // MARK: - Constants
-    
+
     /// Threshold for detecting currency changes based on animated value difference (in currency units)
     private static let currencyChangeThreshold: Double = 0.5
-    
+
     // MARK: - Display State
 
     struct DisplayState: Equatable {
@@ -159,7 +159,7 @@ final class StatusBarDisplayManager {
             lastState?.currencySymbol != currentState.currencySymbol ||
             lastState?.hasData != currentState.hasData ||
             abs((lastState?.totalSpending ?? 0) - currentState.totalSpending) > 0.01
-        
+
         return shouldUpdate
     }
 
@@ -238,14 +238,15 @@ final class StatusBarDisplayManager {
             // 1. Direct currency code comparison with last state
             let lastCurrencyCode = lastDisplayState?.currencyCode
             let currencyCodeChanged = lastCurrencyCode != nil && lastCurrencyCode != state.currencyCode
-            
+
             // 2. Check if animated value significantly differs from target (indicates currency change)
             let currentAnimated = stateManager.animatedCostValue
             let targetSpending = state.totalSpending
-            let animatedValueMismatch = abs(currentAnimated - targetSpending) > Self.currencyChangeThreshold // More than 50 cent difference
-            
+            let animatedValueMismatch = abs(currentAnimated - targetSpending) > Self
+                .currencyChangeThreshold // More than 50 cent difference
+
             let currencyChanged = currencyCodeChanged || animatedValueMismatch
-            
+
             if currencyChanged {
                 // Currency changed - reset cost value immediately without animation
                 stateManager.setCostValueImmediately(state.totalSpending)
@@ -253,10 +254,10 @@ final class StatusBarDisplayManager {
                 // Normal operation - use animated transition
                 stateManager.setCostValue(state.totalSpending)
             }
-            
+
             // Force the animation manager to update immediately to sync with current data
             stateManager.updateAnimation()
-            
+
             // Use new logic: icon is shown when there's no data OR user setting shows icon
             let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
             let spacingPrefix = shouldShowIcon ? "  " : ""

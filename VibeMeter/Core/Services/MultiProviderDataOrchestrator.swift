@@ -231,9 +231,12 @@ public final class MultiProviderDataOrchestrator {
             }
 
             logger.info("Successfully refreshed data for \(provider.displayName)")
+            let spendingData = self.spendingData.getSpendingData(for: provider)
+            let usdSpending = spendingData?.currentSpendingUSD ?? 0
+            let displaySpending = spendingData?.displaySpending ?? 0
             logger
                 .info(
-                    "Current spending for \(provider.displayName): USD=\(self.spendingData.getSpendingData(for: provider)?.currentSpendingUSD ?? 0), display=\(self.spendingData.getSpendingData(for: provider)?.displaySpending ?? 0)")
+                    "Current spending for \(provider.displayName): USD=\(usdSpending), display=\(displaySpending)")
 
             // Update connection status to connected on success
             spendingData.updateConnectionStatus(for: provider, status: .connected)
@@ -247,7 +250,7 @@ public final class MultiProviderDataOrchestrator {
                 logger.warning("Clearing session data due to authentication failure")
                 // Update connection status
                 spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
-                
+
                 // Handle authentication error via session manager
                 sessionStateManager.handleAuthenticationError(
                     for: provider,
@@ -258,7 +261,9 @@ public final class MultiProviderDataOrchestrator {
                 // For team not found, just set a warning but keep user logged in
                 logger.info("Team data unavailable but user remains authenticated")
                 spendingData.updateConnectionStatus(for: provider, status: .connected)
-                userSessionData.setTeamFetchError(for: provider, message: "Team data unavailable, but you remain logged in.")
+                userSessionData.setTeamFetchError(
+                    for: provider,
+                    message: "Team data unavailable, but you remain logged in.")
             }
 
         } catch let error as ProviderError where error == .rateLimitExceeded {
@@ -351,7 +356,7 @@ public final class MultiProviderDataOrchestrator {
         }
 
         // Currency orchestrator callbacks
-        currencyOrchestrator.onCurrencyChanged = { [weak self] currencyCode in
+        currencyOrchestrator.onCurrencyChanged = { [weak self] _ in
             guard let self else { return }
             // Re-convert all existing spending data to the new currency
             await self.currencyOrchestrator.updateCurrencyConversions(spendingData: self.spendingData)

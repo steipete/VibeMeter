@@ -85,9 +85,9 @@ final class KeychainHelper: KeychainServicing, @unchecked Sendable {
     /// - Parameter service: Service identifier for keychain storage
     init(service: String) {
         #if DEBUG
-        // In debug builds, we use in-memory storage to avoid keychain prompts
-        // Include service name in token key to ensure proper isolation
-        self.tokenKey = "\(service).authToken"
+            // In debug builds, we use in-memory storage to avoid keychain prompts
+            // Include service name in token key to ensure proper isolation
+            self.tokenKey = "\(service).authToken"
         #else
             // Production builds use stricter security
             self.keychain = Keychain(service: service)

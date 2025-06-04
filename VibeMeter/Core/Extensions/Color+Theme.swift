@@ -46,16 +46,16 @@ extension Color {
 
     /// Gauge stroke colors for template images
     /// Uses black with low opacity that macOS will automatically invert
-    static func gaugeStroke(for colorScheme: ColorScheme) -> Color {
+    static func gaugeStroke(for _: ColorScheme) -> Color {
         // For template images, always use black - macOS handles the inversion
-        return .black.opacity(0.2)
+        .black.opacity(0.2)
     }
-    
+
     /// Gauge disabled/disconnected colors for template images
     /// Uses black with low opacity that macOS will automatically invert
-    static func gaugeDisabled(for colorScheme: ColorScheme) -> Color {
+    static func gaugeDisabled(for _: ColorScheme) -> Color {
         // For template images, always use black - macOS handles the inversion
-        return .black.opacity(0.4)
+        .black.opacity(0.4)
     }
 
     /// Gauge background colors
@@ -79,9 +79,9 @@ extension Color {
 
     /// Menu bar colors for template images
     /// Uses black that macOS will automatically invert based on menu bar appearance
-    static func menuBarContent(for colorScheme: ColorScheme) -> Color {
+    static func menuBarContent(for _: ColorScheme) -> Color {
         // For template images, always use black - macOS handles the inversion
-        return .black
+        .black
     }
 
     /// Hover state colors

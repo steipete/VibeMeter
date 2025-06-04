@@ -55,10 +55,10 @@ struct GaugeIcon: View {
 
             if isLoading {
                 // Add shimmer effect to track during loading - brighter for dark mode
-                let shimmerOpacity: (Double, Double, Double) = colorScheme == .dark 
+                let shimmerOpacity: (Double, Double, Double) = colorScheme == .dark
                     ? (0.7, 1.0, 0.9) // Bright shimmer for dark mode
                     : (0.3, 0.8, 0.6) // Subtle shimmer for light mode
-                
+
                 let shimmerGradient = Gradient(colors: [
                     trackColor.opacity(shimmerOpacity.0),
                     trackColor.opacity(shimmerOpacity.1),

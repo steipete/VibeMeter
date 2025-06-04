@@ -18,7 +18,7 @@ final class CustomMenuWindow: NSPanel {
         // Store the content view to prevent deallocation in Release builds
         let wrappedView = AnyView(contentView)
         self.retainedContentView = wrappedView
-        
+
         // Create content view controller with the wrapped view
         hostingController = NSHostingController(rootView: wrappedView)
 
@@ -44,7 +44,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Set content view controller
         contentViewController = hostingController
-        
+
         // IMPORTANT: Force the view to load immediately
         // This prevents issues in Release builds where the view might not be created
         _ = hostingController.view
@@ -99,10 +99,10 @@ final class CustomMenuWindow: NSPanel {
         _ = hostingController.view
         hostingController.view.needsLayout = true
         hostingController.view.layoutSubtreeIfNeeded()
-        
+
         // Make sure panel is activated properly
         NSApp.activate(ignoringOtherApps: false)
-        
+
         // Use modern animation APIs with better timing
         alphaValue = 0
         makeKeyAndOrderFront(nil)
@@ -120,7 +120,6 @@ final class CustomMenuWindow: NSPanel {
         setupEventMonitoring()
     }
 
-    
     /// Animates the window to a new size without flipping
     func animateToSize(_ newSize: NSSize, relativeTo statusItemButton: NSStatusBarButton) {
         guard let statusWindow = statusItemButton.window else { return }
@@ -179,17 +178,16 @@ final class CustomMenuWindow: NSPanel {
         teardownEventMonitoring()
     }
 
-
     private func setupEventMonitoring() {
         // Ensure we don't have duplicate monitors
         teardownEventMonitoring()
-        
+
         // Ensure window is actually visible before setting up monitoring
         guard isVisible else { return }
 
         // Monitor clicks outside the window with stronger reference management
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            guard let self = self, self.isVisible else { return }
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let self, self.isVisible else { return }
 
             // Get the mouse location in screen coordinates
             let mouseLocation = NSEvent.mouseLocation
@@ -199,7 +197,7 @@ final class CustomMenuWindow: NSPanel {
                 self.hide()
             }
         }
-        
+
         isEventMonitoringActive = true
     }
 
@@ -224,7 +222,7 @@ final class CustomMenuWindow: NSPanel {
     override var canBecomeMain: Bool {
         false
     }
-    
+
     deinit {
         // Ensure proper cleanup of event monitoring
         // Since this class is @MainActor and deinit is called when deallocating,

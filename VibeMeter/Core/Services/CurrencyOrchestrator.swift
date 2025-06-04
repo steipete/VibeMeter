@@ -46,14 +46,14 @@ public final class CurrencyOrchestrator {
     /// Updates currency for all providers and triggers conversion updates
     public func updateCurrency(to currencyCode: String) {
         logger.info("Updating currency from \(self.currencyData.selectedCode) to \(currencyCode)")
-        
+
         Task {
             // Update exchange rates first
             await updateCurrencyConversions()
-            
+
             // Trigger the callback to re-convert spending data BEFORE updating CurrencyData
             await onCurrencyChanged?(currencyCode)
-            
+
             // Update CurrencyData LAST (this will trigger UI updates including status bar)
             currencyData.updateSelectedCurrency(currencyCode)
         }

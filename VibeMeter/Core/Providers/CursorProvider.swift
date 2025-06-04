@@ -89,7 +89,7 @@ public actor CursorProvider: ProviderProtocol {
         if let token = callbackData["cursor_auth_token"] as? String {
             return token
         }
-        
+
         // Extract from cookies if available
         if let cookies = callbackData["cookies"] as? [HTTPCookie] {
             for cookie in cookies {
@@ -98,7 +98,7 @@ public actor CursorProvider: ProviderProtocol {
                 }
             }
         }
-        
+
         return nil
     }
 

@@ -11,13 +11,13 @@ import Foundation
 /// Response model for the teams endpoint containing available team information.
 struct CursorTeamsResponse: Decodable, Sendable {
     let teams: [Team]?
-    
+
     // Handle case where API returns empty object {}
     init(from decoder: Decoder) throws {
         let container = try? decoder.container(keyedBy: CodingKeys.self)
         self.teams = try container?.decodeIfPresent([Team].self, forKey: .teams)
     }
-    
+
     private enum CodingKeys: String, CodingKey {
         case teams
     }

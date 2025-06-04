@@ -33,13 +33,15 @@ actor BackgroundDataProcessor {
 
         // Fetch user info first - this is required for authentication validation
         let userInfo = try await providerClient.fetchUserInfo(authToken: authToken)
-        
+
         // Try to fetch team info, but don't fail if it's unavailable
         let teamInfo: ProviderTeamInfo
         do {
             teamInfo = try await providerClient.fetchTeamInfo(authToken: authToken)
         } catch {
-            logger.warning("Team info fetch failed for \(provider.displayName), using fallback: \(error.localizedDescription)")
+            logger
+                .warning(
+                    "Team info fetch failed for \(provider.displayName), using fallback: \(error.localizedDescription)")
             // Create fallback team info - user is authenticated but team data unavailable
             teamInfo = ProviderTeamInfo(id: 0, name: "Default Team", provider: provider)
         }
@@ -51,7 +53,9 @@ actor BackgroundDataProcessor {
         let month = calendarMonth - 1 // Convert to 0-based for API (0-11)
         let year = calendar.component(.year, from: currentDate)
 
-        logger.info("Requesting invoice data for current month \(month)/\(year) (Calendar month \(calendarMonth) -> API month \(month))")
+        logger
+            .info(
+                "Requesting invoice data for current month \(month)/\(year) (Calendar month \(calendarMonth) -> API month \(month))")
 
         // Fetch invoice and usage data concurrently
         // Use team ID from team info (or 0 for fallback)

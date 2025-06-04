@@ -74,7 +74,7 @@ struct GeneralSettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Check for Updates")
-                    Text("Check for new versions of VibeMeter")
+                    Text("Check for new versions of Vibe Meter")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -137,7 +137,7 @@ struct GeneralSettingsView: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Text("How often VibeMeter checks for updated spending data.")
+                Text("How often Vibe Meter checks for updated spending data.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -156,7 +156,7 @@ struct GeneralSettingsView: View {
                     Spacer()
                     Picker("", selection: .init(
                         get: { settingsManager.selectedCurrencyCode },
-                        set: { newValue in 
+                        set: { newValue in
                             settingsManager.selectedCurrencyCode = newValue
                             // Mark that the user has made a manual currency preference
                             UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
@@ -202,7 +202,9 @@ struct GeneralSettingsView: View {
             // Show alert if Sparkle is not available
             let alert = NSAlert()
             alert.messageText = "Unable to Check for Updates"
-            alert.informativeText = "The update system is not available. This may be because you're running a debug build or Sparkle failed to initialize."
+            alert
+                .informativeText =
+                "The update system is not available. This may be because you're running a debug build or Sparkle failed to initialize."
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
             alert.runModal()
@@ -215,17 +217,18 @@ struct GeneralSettingsView: View {
 
         // Only auto-detect system currency on first launch (when user hasn't made a manual choice)
         // Check if user has ever made a currency selection by looking for a saved preference
-        let hasUserCurrencyPreference = UserDefaults.standard.bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
-        
-        if !hasUserCurrencyPreference && settingsManager.selectedCurrencyCode == "USD" {
+        let hasUserCurrencyPreference = UserDefaults.standard
+            .bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
+
+        if !hasUserCurrencyPreference, settingsManager.selectedCurrencyCode == "USD" {
             // First launch - auto-detect system currency
             if let systemCurrencyCode = currencyManager.systemCurrencyCode,
                currencyManager.isValidCurrencyCode(systemCurrencyCode) {
                 settingsManager.selectedCurrencyCode = systemCurrencyCode
-                
+
                 // Mark that we've set the initial currency (but not that user made a manual choice)
                 // This prevents auto-detection on subsequent launches while still allowing manual changes
-                
+
                 // Trigger UserDefaults notification to ensure CurrencyOrchestrator detects the change
                 UserDefaults.standard.synchronize()
                 NotificationCenter.default.post(name: UserDefaults.didChangeNotification, object: nil)

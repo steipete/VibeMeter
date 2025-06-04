@@ -51,7 +51,8 @@ actor CursorAPIClient {
         return try await performRequest(request)
     }
 
-    func fetchInvoice(authToken: String, month: Int, year: Int, teamId: Int? = nil) async throws -> CursorInvoiceResponse {
+    func fetchInvoice(authToken: String, month: Int, year: Int,
+                      teamId _: Int? = nil) async throws -> CursorInvoiceResponse {
         logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
         let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
@@ -63,7 +64,7 @@ actor CursorAPIClient {
         let body = [
             "month": month,
             "year": year,
-            "includeUsageEvents": false
+            "includeUsageEvents": false,
         ] as [String: Any]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -74,26 +75,25 @@ actor CursorAPIClient {
         logger.debug("Fetching Cursor usage data")
 
         // Extract user ID from the session token (format: user_id::jwt_token)
-        let userId: String
-        if let colonIndex = authToken.firstIndex(of: ":") {
-            userId = String(authToken[..<colonIndex])
+        let userId: String = if let colonIndex = authToken.firstIndex(of: ":") {
+            String(authToken[..<colonIndex])
         } else {
             // Fallback: if token format is different, use the whole token as user ID
-            userId = authToken
+            authToken
         }
-        
+
         logger.debug("Extracted user ID: \(userId)")
 
         // Create URL with user query parameter
         var urlComponents = URLComponents(url: baseURL.appendingPathComponent("usage"), resolvingAgainstBaseURL: false)!
         urlComponents.queryItems = [URLQueryItem(name: "user", value: userId)]
-        
+
         guard let endpoint = urlComponents.url else {
             throw ProviderError.networkError(message: "Failed to construct usage URL", statusCode: nil)
         }
-        
+
         logger.debug("Usage endpoint URL with user parameter: \(endpoint.absoluteString)")
-        
+
         let request = createRequest(for: endpoint, authToken: authToken)
 
         return try await performRequest(request)

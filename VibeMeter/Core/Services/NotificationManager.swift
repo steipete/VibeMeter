@@ -80,8 +80,10 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let spendingFormatted =
+            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted =
+            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -106,8 +108,10 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let spendingFormatted =
+            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted =
+            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"
@@ -154,7 +158,9 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
     public func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
         content.title = "Vibe Meter Already Running"
-        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 
@@ -188,7 +194,11 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
             intentIdentifiers: [],
             options: [])
 
-        UNUserNotificationCenter.current().setNotificationCategories([warningCategory, criticalCategory, instanceCategory])
+        UNUserNotificationCenter.current().setNotificationCategories([
+            warningCategory,
+            criticalCategory,
+            instanceCategory,
+        ])
     }
 
     private func scheduleNotification(request: sending UNNotificationRequest) async {

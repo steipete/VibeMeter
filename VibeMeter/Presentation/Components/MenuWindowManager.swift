@@ -10,7 +10,7 @@ final class MenuWindowManager {
     // MARK: - Private Properties
 
     private var customMenuWindow: CustomMenuWindow?
-    
+
     // Strong references to prevent deallocation in Release builds
     private var settingsManager: (any SettingsManagerProtocol)?
     private var userSession: MultiProviderUserSessionData?
@@ -35,7 +35,6 @@ final class MenuWindowManager {
         spendingData: MultiProviderSpendingData,
         currencyData: CurrencyData,
         orchestrator: MultiProviderDataOrchestrator) {
-        
         // Store strong references to prevent deallocation in Release builds
         self.settingsManager = settingsManager
         self.userSession = userSession
@@ -43,7 +42,7 @@ final class MenuWindowManager {
         self.spendingData = spendingData
         self.currencyData = currencyData
         self.orchestrator = orchestrator
-        
+
         let contentView = CustomMenuContainer {
             VibeMeterMainView(
                 settingsManager: settingsManager,
@@ -61,7 +60,7 @@ final class MenuWindowManager {
         // Create and store the window
         let window = CustomMenuWindow(contentView: contentView)
         self.customMenuWindow = window
-        
+
         // Force the window to load its view hierarchy immediately
         // This is crucial for Release builds where lazy loading might fail
         _ = window.contentView
@@ -92,7 +91,7 @@ final class MenuWindowManager {
     /// Hides the popover menu if it's currently visible
     func hidePopover() {
         guard let window = customMenuWindow else { return }
-        
+
         if window.isVisible {
             window.hide()
         }
@@ -107,5 +106,4 @@ final class MenuWindowManager {
     var menuWindow: CustomMenuWindow? {
         customMenuWindow
     }
-
 }

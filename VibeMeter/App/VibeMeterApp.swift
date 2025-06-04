@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private(set) var sparkleUpdaterManager: SparkleUpdaterManager?
     var multiProviderOrchestrator: MultiProviderDataOrchestrator?
-    
+
     // Strong reference to prevent StatusBarController deallocation
     // This must be retained for the entire app lifecycle
     private var statusBarController: StatusBarController?
@@ -111,7 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
         // process early. Skip this entirely when running tests or in debug mode.
-        if !isRunningInPreview && !isRunningInTests && !isRunningInDebug {
+        if !isRunningInPreview, !isRunningInTests, !isRunningInDebug {
             let runningApps = NSRunningApplication
                 .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             if runningApps.count > 1 {
@@ -119,12 +119,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 Task {
                     await notificationManager.showInstanceAlreadyRunningNotification()
                 }
-                
+
                 DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
                 NSApp.terminate(nil)
                 return
             }
-            
+
             // Register to listen for the settings-window request from any subsequent launches.
             DistributedNotificationCenter.default().addObserver(
                 self,
@@ -192,7 +192,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Check if app should be moved to Applications (skip in tests and previews)
-        if !isRunningInTests && !isRunningInPreview {
+        if !isRunningInTests, !isRunningInPreview {
             let applicationMover = ApplicationMover()
             applicationMover.checkAndOfferToMoveToApplications()
         }
@@ -212,9 +212,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSClassFromString("XCTestCase") != nil
         let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         let isRunningInDebug = _isDebugAssertConfiguration()
-        
-        if !isRunningInPreview && !isRunningInTests && !isRunningInDebug {
-            DistributedNotificationCenter.default().removeObserver(self, name: Self.showSettingsNotification, object: nil)
+
+        if !isRunningInPreview, !isRunningInTests, !isRunningInDebug {
+            DistributedNotificationCenter.default().removeObserver(
+                self,
+                name: Self.showSettingsNotification,
+                object: nil)
         }
 
         logger.info("VibeMeter terminated")
