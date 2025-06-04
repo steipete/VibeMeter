@@ -20,12 +20,12 @@
                     <li>Bug fixes and stability improvements</li>
                 </ul>
             ]]></description>
-            <pubDate>Wed, 04 Jun 2025 05:55:24 +0100</pubDate>
+            <pubDate>Wed, 04 Jun 2025 05:59:04 +0100</pubDate>
             <enclosure 
                 url="https://github.com/steipete/VibeMeter/releases/download/v0.9.0/VibeMeter-0.9.0.dmg"
-                length="5465178"
+                length="5465919"
                 type="application/octet-stream"
-                sparkle:edSignature="JwEoojKolvXUjf4xJE3Ujdn49ylBd/qHYVvA+OSOgjsnwtO362HPfFZqAX/nKrujn4+UXHpuuONtPKQ8xopeDQ=="
+                sparkle:edSignature="QdDc2Cw+ILGbTBoz3FOCer043ezmdwjo0BwKrF1ufVif1I2kqYuCJdVsUQj0BjEXwhbHx163boM9EukseJowCA=="
             />
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
         </item>
