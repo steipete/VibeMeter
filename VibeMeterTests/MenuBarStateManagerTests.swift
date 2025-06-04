@@ -15,7 +15,6 @@ final class MenuBarStateManagerTests: XCTestCase {
         await MainActor.run { super.tearDown() }
     }
 
-
     // MARK: - StateManager Initialization Tests
 
     func testStateManager_InitialState() {
@@ -70,7 +69,6 @@ final class MenuBarStateManagerTests: XCTestCase {
         XCTAssertTrue(sut.isTransitioning, "Should be transitioning")
     }
 
-
     // MARK: - Cost Animation Tests
 
     func testSetCostValue_FirstTime_SetsImmediately() {
@@ -124,7 +122,6 @@ final class MenuBarStateManagerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(sut.animatedCostValue, 100.0, "Cost should be >= start value")
         XCTAssertLessThanOrEqual(sut.animatedCostValue, 200.0, "Cost should be <= target value")
     }
-
 
     // MARK: - Integration Tests
 
@@ -247,7 +244,6 @@ final class MenuBarStateManagerTests: XCTestCase {
         XCTAssertTrue(sut.isCostTransitioning, "Should handle very large cost values")
     }
 
-
     func testStateTransitions_Performance() {
         // Given
         let states: [MenuBarState] = [.notLoggedIn, .loading, .data(value: 0.5)]
@@ -267,7 +263,5 @@ final class MenuBarStateManagerTests: XCTestCase {
 
     // MARK: - Animation Timing Tests
 
-
     // MARK: - State-Specific Behavior Tests
-
 }

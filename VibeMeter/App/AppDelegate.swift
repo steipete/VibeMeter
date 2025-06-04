@@ -172,7 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func checkApplicationLocation(processInfo: ProcessInfo) {
         logger.info("Checking application location...")
-        
+
         if processInfo.isRunningInTests {
             logger.info("Skipping ApplicationMover check - running in tests")
         } else if processInfo.isRunningInPreview {

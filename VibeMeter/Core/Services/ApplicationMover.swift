@@ -70,7 +70,7 @@ final class ApplicationMover {
     func checkAndOfferToMoveToApplications() {
         logger.info("ApplicationMover: Starting check...")
         logger.info("ApplicationMover: Bundle path: \(Bundle.main.bundlePath)")
-        
+
         guard shouldOfferToMove() else {
             logger.info("ApplicationMover: App is already in Applications or move not needed")
             return
@@ -124,7 +124,7 @@ final class ApplicationMover {
     /// Uses the proven approach from PFMoveApplication/LetsMove
     private func isRunningFromDMG(_ path: String) -> Bool {
         logger.info("ApplicationMover: Checking if running from DMG for path: \(path)")
-        
+
         guard let diskImageDevice = containingDiskImageDevice(for: path) else {
             logger.info("ApplicationMover: No disk image device found")
             return false
@@ -138,7 +138,7 @@ final class ApplicationMover {
     /// Based on the proven PFMoveApplication implementation
     private func containingDiskImageDevice(for path: String) -> String? {
         logger.info("ApplicationMover: Checking disk image device for path: \(path)")
-        
+
         var fs = statfs()
         let result = statfs(path, &fs)
 
@@ -147,7 +147,7 @@ final class ApplicationMover {
             logger.info("ApplicationMover: statfs failed with result: \(result)")
             return nil
         }
-        
+
         guard (fs.f_flags & UInt32(MNT_ROOTFS)) == 0 else {
             logger.info("ApplicationMover: Path is on root filesystem")
             return nil
@@ -173,7 +173,7 @@ final class ApplicationMover {
     /// The app will still work via path-based detection as a fallback.
     private func checkDeviceIsDiskImage(_ deviceName: String) -> String? {
         logger.info("ApplicationMover: Checking if device is disk image: \(deviceName)")
-        
+
         let task = Process()
         task.launchPath = "/usr/bin/hdiutil"
         task.arguments = ["info", "-plist"]

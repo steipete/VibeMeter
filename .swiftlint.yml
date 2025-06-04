@@ -35,6 +35,6 @@ function_body_length:
   error: 100
 
 type_body_length:
-  warning: 250
+  warning: 300
   error: 400
 

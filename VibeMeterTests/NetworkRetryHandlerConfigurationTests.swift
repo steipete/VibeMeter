@@ -3,27 +3,27 @@ import XCTest
 
 final class NetworkRetryHandlerConfigurationTests: XCTestCase {
     var sut: NetworkRetryHandler!
-    
+
     override func setUp() async throws {
         try await super.setUp()
         sut = NetworkRetryHandler()
     }
-    
+
     override func tearDown() async throws {
         sut = nil
         try await super.tearDown()
     }
-    
+
     // MARK: - Configuration Tests
-    
+
     func testDefaultConfiguration() async {
         // Given
         let defaultHandler = NetworkRetryHandler()
-        
+
         // Then - verify through behavior
         let startTime = Date()
         var attemptCount = 0
-        
+
         do {
             _ = try await defaultHandler.execute {
                 attemptCount += 1
@@ -33,19 +33,19 @@ final class NetworkRetryHandlerConfigurationTests: XCTestCase {
         } catch {
             // Default config has maxRetries = 3, so 4 attempts total
             XCTAssertEqual(attemptCount, 4)
-            
+
             // With exponential backoff, should take at least 1 + 2 + 4 = 7 seconds
             // But with jitter, could be slightly less
             let elapsed = Date().timeIntervalSince(startTime)
             XCTAssertGreaterThan(elapsed, 5.0, "Should have delays between retries")
         }
     }
-    
+
     func testAggressiveConfiguration() async {
         // Given
         let aggressiveHandler = NetworkRetryHandler(configuration: .aggressive)
         var attemptCount = 0
-        
+
         // When
         do {
             _ = try await aggressiveHandler.execute {
@@ -58,7 +58,7 @@ final class NetworkRetryHandlerConfigurationTests: XCTestCase {
             XCTAssertEqual(attemptCount, 6)
         }
     }
-    
+
     func testCustomConfiguration() async {
         // Given
         let customConfig = NetworkRetryHandler.Configuration(
@@ -71,7 +71,7 @@ final class NetworkRetryHandlerConfigurationTests: XCTestCase {
         let customHandler = NetworkRetryHandler(configuration: customConfig)
         var attemptCount = 0
         var attemptTimes: [Date] = []
-        
+
         // When
         do {
             _ = try await customHandler.execute {
@@ -83,7 +83,7 @@ final class NetworkRetryHandlerConfigurationTests: XCTestCase {
         } catch {
             // Should have 3 attempts (initial + 2 retries)
             XCTAssertEqual(attemptCount, 3)
-            
+
             // Verify delays: 0.1s, 0.3s
             if attemptTimes.count >= 2 {
                 let firstDelay = attemptTimes[1].timeIntervalSince(attemptTimes[0])
@@ -95,14 +95,14 @@ final class NetworkRetryHandlerConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Provider-Specific Tests
-    
+
     func testProviderSpecificRetryHandler() async {
         // Given
         let cursorHandler = NetworkRetryHandler.forProvider(.cursor)
         var attemptCount = 0
-        
+
         // When
         do {
             _ = try await cursorHandler.execute {

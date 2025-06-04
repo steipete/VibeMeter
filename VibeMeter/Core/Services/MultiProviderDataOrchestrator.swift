@@ -236,10 +236,8 @@ public final class MultiProviderDataOrchestrator {
             result: result,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            lastRefreshDates: &lastRefreshDates
-        )
+            lastRefreshDates: &lastRefreshDates)
     }
-
 
     private func handleRefreshError(for provider: ServiceProvider, error: Error) {
         errorHandler.handleRefreshError(
@@ -247,8 +245,7 @@ public final class MultiProviderDataOrchestrator {
             error: error,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            refreshErrors: &refreshErrors
-        )
+            refreshErrors: &refreshErrors)
     }
 
     private func finishRefresh(for provider: ServiceProvider) {

@@ -26,7 +26,13 @@ TMP_ENTITLEMENTS="/tmp/VibeMeter_entitlements.plist"
 
 if [ -f "$ENTITLEMENTS_FILE" ]; then
     log "Using entitlements from $ENTITLEMENTS_FILE"
-    cp "$ENTITLEMENTS_FILE" "$TMP_ENTITLEMENTS"
+    
+    # Get the bundle identifier from the Info.plist
+    BUNDLE_ID=$(defaults read "$APP_BUNDLE/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "com.steipete.vibemeter")
+    log "Bundle identifier: $BUNDLE_ID"
+    
+    # Copy entitlements and replace variables
+    sed -e "s/\$(PRODUCT_BUNDLE_IDENTIFIER)/$BUNDLE_ID/g" "$ENTITLEMENTS_FILE" > "$TMP_ENTITLEMENTS"
     
     # Ensure hardened runtime is enabled
     if ! grep -q "com.apple.security.hardened-runtime" "$TMP_ENTITLEMENTS"; then
@@ -35,7 +41,11 @@ if [ -f "$ENTITLEMENTS_FILE" ]; then
     fi
 else
     log "Creating entitlements file with hardened runtime..."
-    cat > "$TMP_ENTITLEMENTS" << 'EOF'
+    # Get the bundle identifier
+    BUNDLE_ID=$(defaults read "$APP_BUNDLE/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "com.steipete.vibemeter")
+    log "Bundle identifier: $BUNDLE_ID"
+    
+    cat > "$TMP_ENTITLEMENTS" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -48,6 +58,16 @@ else
     <true/>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    <!-- Sparkle XPC Service temporary exceptions -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>${BUNDLE_ID}-spks</string>
+        <string>${BUNDLE_ID}-spkd</string>
+    </array>
 </dict>
 </plist>
 EOF

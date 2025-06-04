@@ -68,7 +68,7 @@ final class StatusBarDisplayManager {
     private let userSession: MultiProviderUserSessionData
     private let spendingData: MultiProviderSpendingData
     private let currencyData: CurrencyData
-    
+
     private let tooltipProvider: StatusBarTooltipProvider
     private let accessibilityProvider: StatusBarAccessibilityProvider
 
@@ -89,19 +89,17 @@ final class StatusBarDisplayManager {
         self.userSession = userSession
         self.spendingData = spendingData
         self.currencyData = currencyData
-        
+
         self.tooltipProvider = StatusBarTooltipProvider(
             userSession: userSession,
             spendingData: spendingData,
             currencyData: currencyData,
-            settingsManager: settingsManager
-        )
+            settingsManager: settingsManager)
         self.accessibilityProvider = StatusBarAccessibilityProvider(
             userSession: userSession,
             spendingData: spendingData,
             currencyData: currencyData,
-            settingsManager: settingsManager
-        )
+            settingsManager: settingsManager)
     }
 
     // MARK: - Public Methods
@@ -317,5 +315,4 @@ final class StatusBarDisplayManager {
             lastAccessibilityDescription = accessibility
         }
     }
-
 }

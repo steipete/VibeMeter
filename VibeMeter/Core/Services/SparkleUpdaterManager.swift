@@ -176,8 +176,9 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     // Handle when no update is found or when there's an error checking for updates
     public nonisolated func updater(_: SPUUpdater, didFinishUpdateCycleFor _: SPUUpdateCheck, error: Error?) {
         if let error = error as NSError? {
-            Self.staticLogger.error("Update cycle finished with error - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)")
-            
+            let errorDetails = "Update cycle finished with error - Domain: \(error.domain), Code: \(error.code), Description: \(error.localizedDescription)"
+            Self.staticLogger.error(errorDetails)
+
             // Check if it's a "no update found" error - this is normal and shouldn't be logged as an error
             if error.domain == "SUSparkleErrorDomain", error.code == 1001 {
                 Self.staticLogger.debug("No updates available")
@@ -203,25 +204,25 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         Self.staticLogger.debug("Update check completed successfully")
     }
-    
+
     // Called when an update is found
-    public nonisolated func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+    public nonisolated func updater(_: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         Self.staticLogger.info("Found valid update: \(item.displayVersionString) (build \(item.versionString))")
         Self.staticLogger.info("Update URL: \(item.fileURL?.absoluteString ?? "none")")
     }
-    
+
     // Called when about to extract update
-    public nonisolated func updater(_ updater: SPUUpdater, willExtractUpdate item: SUAppcastItem) {
+    public nonisolated func updater(_: SPUUpdater, willExtractUpdate item: SUAppcastItem) {
         Self.staticLogger.info("About to extract update: \(item.displayVersionString)")
     }
-    
+
     // Called when about to install update
-    public nonisolated func updater(_ updater: SPUUpdater, willInstallUpdate item: SUAppcastItem) {
+    public nonisolated func updater(_: SPUUpdater, willInstallUpdate item: SUAppcastItem) {
         Self.staticLogger.info("About to install update: \(item.displayVersionString)")
     }
-    
+
     // Called if update installation fails
-    public nonisolated func updater(_ updater: SPUUpdater, failedToInstallUpdateWithError error: Error) {
+    public nonisolated func updater(_: SPUUpdater, failedToInstallUpdateWithError error: Error) {
         Self.staticLogger.error("Failed to install update: \(error.localizedDescription)")
     }
 

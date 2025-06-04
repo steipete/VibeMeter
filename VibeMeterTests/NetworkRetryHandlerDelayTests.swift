@@ -2,9 +2,8 @@
 import XCTest
 
 final class NetworkRetryHandlerDelayTests: XCTestCase {
-    
     // MARK: - Delay Calculation Tests
-    
+
     func testExponentialBackoffDelays() async {
         // Given
         let config = NetworkRetryHandler.Configuration(
@@ -17,7 +16,7 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
         let handler = NetworkRetryHandler(configuration: config)
         var delays: [TimeInterval] = []
         let startTimes: [Date] = []
-        
+
         // When
         do {
             _ = try await handler.execute {
@@ -30,12 +29,12 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
         } catch {
             // Expected to fail
         }
-        
+
         // Then - Verify exponential backoff
         // Delays should be approximately: 0.1, 0.2, 0.4
         // Can't test exact values due to async timing
     }
-    
+
     func testMaxDelayRespected() async {
         // Given
         let config = NetworkRetryHandler.Configuration(
@@ -47,7 +46,7 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
         let handler = NetworkRetryHandler(configuration: config)
         var attemptCount = 0
         let startTime = Date()
-        
+
         // When
         do {
             _ = try await handler.execute {
@@ -61,30 +60,30 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
             XCTAssertLessThan(totalTime, 12.0) // Allow some margin
         }
     }
-    
+
     // MARK: - Error Conversion Tests
-    
+
     func testAsRetryableErrorConversion() {
         // Test timeout error
         let timeoutError = URLError(.timedOut)
         XCTAssertEqual(timeoutError.asRetryableError, .networkTimeout)
-        
+
         // Test connection errors
         let connectionError = URLError(.cannotConnectToHost)
         XCTAssertEqual(connectionError.asRetryableError, .connectionError)
-        
+
         // Test non-retryable error
         let badURLError = URLError(.badURL)
         XCTAssertNil(badURLError.asRetryableError)
     }
-    
+
     // MARK: - Concurrent Operation Tests
-    
+
     func testConcurrentRetryOperations() async {
         // Given
         let handler = NetworkRetryHandler()
         let operationCount = 5
-        
+
         // When
         await withTaskGroup(of: Int?.self) { group in
             for i in 0 ..< operationCount {
@@ -103,7 +102,7 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
                     }
                 }
             }
-            
+
             // Collect results
             var results: [Int] = []
             for await result in group {
@@ -111,7 +110,7 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
                     results.append(value)
                 }
             }
-            
+
             // Then
             XCTAssertEqual(results.count, operationCount)
         }
