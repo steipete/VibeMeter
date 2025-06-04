@@ -55,16 +55,17 @@ struct GaugeIcon: View {
 
             if isLoading {
                 // Add shimmer effect to track during loading - brighter for dark mode
-                let shimmerOpacity: (Double, Double, Double) = colorScheme == .dark
-                    ? (0.7, 1.0, 0.9) // Bright shimmer for dark mode
-                    : (0.3, 0.8, 0.6) // Subtle shimmer for light mode
+                let shimmerOpacityRange = colorScheme == .dark
+                    ? (min: 0.7, max: 1.0) // Bright shimmer for dark mode
+                    : (min: 0.3, max: 0.8) // Subtle shimmer for light mode
+                let shimmerOpacityMid = colorScheme == .dark ? 0.9 : 0.6
 
                 let shimmerGradient = Gradient(colors: [
-                    trackColor.opacity(shimmerOpacity.0),
-                    trackColor.opacity(shimmerOpacity.1),
-                    Color.menuBarContent(for: colorScheme).opacity(shimmerOpacity.2),
-                    trackColor.opacity(shimmerOpacity.1),
-                    trackColor.opacity(shimmerOpacity.0),
+                    trackColor.opacity(shimmerOpacityRange.min),
+                    trackColor.opacity(shimmerOpacityRange.max),
+                    Color.menuBarContent(for: colorScheme).opacity(shimmerOpacityMid),
+                    trackColor.opacity(shimmerOpacityRange.max),
+                    trackColor.opacity(shimmerOpacityRange.min),
                 ])
 
                 // Calculate shimmer position along the arc for upper half-circle

@@ -62,16 +62,18 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then
-        XCTAssertEqual(result.userInfo.id, "test-user-id")
         XCTAssertEqual(result.userInfo.email, "test@example.com")
-        XCTAssertEqual(result.userInfo.name, "Test User")
+        XCTAssertEqual(result.userInfo.teamId, 12345)
+        XCTAssertEqual(result.userInfo.provider, .cursor)
 
         XCTAssertEqual(result.teamInfo.id, 12345)
         XCTAssertEqual(result.teamInfo.name, "Test Team")
 
-        XCTAssertEqual(result.invoice.amountDue, 2000)
-        XCTAssertEqual(result.invoice.currency, "USD")
-        XCTAssertEqual(result.invoice.status, .paid)
+        XCTAssertEqual(result.invoice.totalSpendingCents, 2000)
+        XCTAssertEqual(result.invoice.provider, .cursor)
+        XCTAssertEqual(result.invoice.items.count, 1)
+        XCTAssertEqual(result.invoice.items.first?.cents, 2000)
+        XCTAssertEqual(result.invoice.items.first?.description, "Test Item")
 
         XCTAssertEqual(result.usage.currentRequests, 500)
         XCTAssertEqual(result.usage.totalRequests, 1000)
@@ -162,8 +164,8 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then - Both should succeed independently
         XCTAssertEqual(results.count, 2)
-        XCTAssertEqual(results[0].userInfo.id, "test-user-id")
-        XCTAssertEqual(results[1].userInfo.id, "test-user-id")
+        XCTAssertEqual(results[0].userInfo.email, "test@example.com")
+        XCTAssertEqual(results[1].userInfo.email, "test@example.com")
         XCTAssertEqual(provider1.fetchUserInfoCallCount, 1)
         XCTAssertEqual(provider2.fetchUserInfoCallCount, 1)
     }

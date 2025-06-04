@@ -89,7 +89,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
 
         // Then
         XCTAssertEqual(result.teamInfo.id, 0) // Fallback team ID
-        XCTAssertEqual(result.teamInfo.name, "Personal") // Fallback team name
+        XCTAssertEqual(result.teamInfo.name, "Individual Account") // Fallback team name
         XCTAssertNil(mockProvider.lastTeamId) // Should pass nil for fallback team
         
         // All methods should be called
@@ -158,12 +158,12 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
 
         // Then - Should succeed with both fallbacks
         XCTAssertEqual(result.teamInfo.id, 0) // Fallback team
-        XCTAssertEqual(result.teamInfo.name, "Personal")
+        XCTAssertEqual(result.teamInfo.name, "Individual Account")
         XCTAssertEqual(result.usage.currentRequests, 0) // Fallback usage
         XCTAssertEqual(result.usage.totalRequests, 0)
         
         // Invoice should still have real data
-        XCTAssertEqual(result.invoice.amountDue, 2000)
+        XCTAssertEqual(result.invoice.totalSpendingCents, 2000)
         
         // All methods should be called
         XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)

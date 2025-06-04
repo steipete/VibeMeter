@@ -145,26 +145,39 @@ public extension PreviewData {
     ///   - currencyCode: Display currency (default: "USD")
     /// - Returns: Tuple containing (userSession, spendingData, currencyData)
     @MainActor
+    /// Preview data bundle containing all required data models
+    struct PreviewDataBundle {
+        let userSession: MultiProviderUserSessionData
+        let spendingData: MultiProviderSpendingData
+        let currencyData: CurrencyData
+    }
+
     static func loggedInWithSpending(
         email: String = "user@example.com",
         cents: Int = 2497,
-        currencyCode: String = "USD") -> (MultiProviderUserSessionData, MultiProviderSpendingData, CurrencyData) {
+        currencyCode: String = "USD") -> PreviewDataBundle {
         let userSession = mockUserSession(email: email)
         let spendingData = mockSpendingData(cents: cents)
         let currencyData = mockCurrencyData(code: currencyCode)
 
-        return (userSession, spendingData, currencyData)
+        return PreviewDataBundle(
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData)
     }
 
     /// Complete preview setup for logged-out state.
     ///
-    /// - Returns: Tuple containing (userSession, spendingData, currencyData)
+    /// - Returns: PreviewDataBundle containing all required data
     @MainActor
-    static func loggedOut() -> (MultiProviderUserSessionData, MultiProviderSpendingData, CurrencyData) {
+    static func loggedOut() -> PreviewDataBundle {
         let userSession = emptyUserSession()
         let spendingData = emptySpendingData()
         let currencyData = mockCurrencyData()
 
-        return (userSession, spendingData, currencyData)
+        return PreviewDataBundle(
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData)
     }
 }
