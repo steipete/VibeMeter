@@ -95,6 +95,7 @@
 		AFB622CE07606F24B1D5A5E5 /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF6772D33491484463E6488A /* ServiceProvider.swift */; };
 		B00249981600F4D79C42A838 /* SpendingLimitsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E2B9D70E29CC6088F42096 /* SpendingLimitsManager.swift */; };
 		B06CDDDED00014965F5AC18F /* CursorDataTransformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2359E6345428D45EED63FDE2 /* CursorDataTransformer.swift */; };
+		B280D69CA273D221ACD132B6 /* ProcessInfo+Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */; };
 		B2FAE3FC875BB4EE43DCF40C /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F54B8BED18F86069CAAC706 /* KeychainHelperTests.swift */; };
 		B438864424DC6E739B52047B /* ProviderStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */; };
 		B5E609DC40007F61B0F57308 /* ExchangeRateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9595CD1AD619E6C481437036 /* ExchangeRateManager.swift */; };
@@ -176,6 +177,7 @@
 		015331CD42B541280D9A9665 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
 		02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSpendingRowView.swift; sourceTree = "<group>"; };
 		04951C33557BBDEB521C4094 /* UserHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHeaderView.swift; sourceTree = "<group>"; };
+		059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Environment.swift"; sourceTree = "<group>"; };
 		07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMover.swift; sourceTree = "<group>"; };
 		0B4110710538C58D14CEDB57 /* MultiProviderLoginManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLoginManagerTests.swift; sourceTree = "<group>"; };
@@ -451,6 +453,7 @@
 				6381307F45705F22ABD8293D /* KeychainHelper.swift */,
 				ED0B5A578E2D63827397C55E /* NetworkRetryHandler.swift */,
 				F37BF61BE7808EBCADC56C50 /* NSApplication+openSettings.swift */,
+				059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */,
 				C150557B8157403E9A54FF79 /* RelativeTimeFormatter.swift */,
 				986ECB90B7DB0B478BBB0FCE /* StringExtensions.swift */,
 				7CC6DFACE5C28C71583906C9 /* StringExtensions+MenuBar.swift */,
@@ -848,6 +851,7 @@
 				ED619157F710B8BF7ED271D2 /* KeychainHelper.swift in Sources */,
 				69B9BF817033BB94E94B8E05 /* NSApplication+openSettings.swift in Sources */,
 				19797FCD3E18D7D35C982ACD /* NetworkRetryHandler.swift in Sources */,
+				B280D69CA273D221ACD132B6 /* ProcessInfo+Environment.swift in Sources */,
 				431CBB59100A77D27DEAD638 /* RelativeTimeFormatter.swift in Sources */,
 				10D62FD23D400ED09437FAF3 /* StringExtensions+MenuBar.swift in Sources */,
 				8B7BBA0B84FA4422F19E235D /* StringExtensions.swift in Sources */,
@@ -988,7 +992,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -1011,7 +1015,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 				WARNING_CFLAGS = (
