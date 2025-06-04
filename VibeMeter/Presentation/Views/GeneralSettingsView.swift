@@ -8,10 +8,13 @@ import SwiftUI
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
     let settingsManager: SettingsManager
-    
-    @State private var isCheckingForUpdates = false
-    @State private var hasUserMadeCurrencyChoice = UserDefaults.standard.bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
-    
+
+    @State
+    private var isCheckingForUpdates = false
+    @State
+    private var hasUserMadeCurrencyChoice = UserDefaults.standard
+        .bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
+
     private let startupManager = StartupManager()
     private let currencyManager = CurrencyManager.shared
 
@@ -29,9 +32,9 @@ struct GeneralSettingsView: View {
         .task {
             // Sync launch at login status
             settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
-            
+
             // Auto-detect system currency on first launch
-            if !hasUserMadeCurrencyChoice && settingsManager.selectedCurrencyCode == "USD" {
+            if !hasUserMadeCurrencyChoice, settingsManager.selectedCurrencyCode == "USD" {
                 if let systemCurrencyCode = currencyManager.systemCurrencyCode,
                    currencyManager.isValidCurrencyCode(systemCurrencyCode) {
                     settingsManager.selectedCurrencyCode = systemCurrencyCode
@@ -151,27 +154,25 @@ struct GeneralSettingsView: View {
     }
 
     // MARK: - Bindings
-    
+
     private var launchAtLoginBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.launchAtLoginEnabled },
             set: { newValue in
                 settingsManager.launchAtLoginEnabled = newValue
                 startupManager.setLaunchAtLogin(enabled: newValue)
-            }
-        )
+            })
     }
-    
+
     private var showInDockBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.showInDock },
             set: { newValue in
                 settingsManager.showInDock = newValue
                 NSApp.setActivationPolicy(newValue ? .regular : .accessory)
-            }
-        )
+            })
     }
-    
+
     private var currencyBinding: Binding<String> {
         Binding(
             get: { settingsManager.selectedCurrencyCode },
@@ -179,24 +180,23 @@ struct GeneralSettingsView: View {
                 settingsManager.selectedCurrencyCode = newValue
                 hasUserMadeCurrencyChoice = true
                 UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
-            }
-        )
+            })
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func formatInterval(_ minutes: Int) -> String {
         switch minutes {
-        case 1: return "1 minute"
-        case 60: return "1 hour"
-        default: return "\(minutes) minutes"
+        case 1: "1 minute"
+        case 60: "1 hour"
+        default: "\(minutes) minutes"
         }
     }
-    
+
     private func checkForUpdates() {
         isCheckingForUpdates = true
         NotificationCenter.default.post(name: Notification.Name("checkForUpdates"), object: nil)
-        
+
         // Reset after a delay
         Task {
             try? await Task.sleep(for: .seconds(2))
