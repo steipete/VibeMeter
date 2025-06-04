@@ -156,7 +156,11 @@ struct GeneralSettingsView: View {
                     Spacer()
                     Picker("", selection: .init(
                         get: { settingsManager.selectedCurrencyCode },
-                        set: { newValue in settingsManager.selectedCurrencyCode = newValue }
+                        set: { newValue in 
+                            settingsManager.selectedCurrencyCode = newValue
+                            // Mark that the user has made a manual currency preference
+                            UserDefaults.standard.set(true, forKey: "hasUserCurrencyPreference")
+                        }
                     )) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
                             Text(name).tag(code)
@@ -209,11 +213,22 @@ struct GeneralSettingsView: View {
         // Sync with actual launch at login status
         settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
 
-        // Detect system currency if current selection is USD (default)
-        if settingsManager.selectedCurrencyCode == "USD" {
+        // Only auto-detect system currency on first launch (when user hasn't made a manual choice)
+        // Check if user has ever made a currency selection by looking for a saved preference
+        let hasUserCurrencyPreference = UserDefaults.standard.object(forKey: "hasUserCurrencyPreference") as? Bool ?? false
+        
+        if !hasUserCurrencyPreference && settingsManager.selectedCurrencyCode == "USD" {
+            // First launch - auto-detect system currency
             if let systemCurrencyCode = currencyManager.systemCurrencyCode,
                currencyManager.isValidCurrencyCode(systemCurrencyCode) {
                 settingsManager.selectedCurrencyCode = systemCurrencyCode
+                
+                // Mark that we've set the initial currency (but not that user made a manual choice)
+                // This prevents auto-detection on subsequent launches while still allowing manual changes
+                
+                // Trigger UserDefaults notification to ensure CurrencyOrchestrator detects the change
+                UserDefaults.standard.synchronize()
+                NotificationCenter.default.post(name: UserDefaults.didChangeNotification, object: nil)
             }
         }
     }
