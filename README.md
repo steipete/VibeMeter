@@ -2,7 +2,6 @@
 
 A beautiful, native macOS menu bar application that helps you track your monthly AI spending with real-time monitoring and smart notifications.
 
-
 ## ✨ Features
 
 - **📊 Real-time Spending Tracking** - Monitor your AI service costs directly from your menu bar

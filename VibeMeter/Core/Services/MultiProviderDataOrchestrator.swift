@@ -141,6 +141,7 @@ public final class MultiProviderDataOrchestrator {
     // MARK: - Public Methods
 
     /// Refreshes data for all enabled providers.
+    @MainActor
     public func refreshAllProviders(showSyncedMessage: Bool = false) async {
         let enabledProviders = ProviderRegistry.shared.activeProviders
 
@@ -163,6 +164,7 @@ public final class MultiProviderDataOrchestrator {
     }
 
     /// Refreshes data for a specific provider.
+    @MainActor
     public func refreshData(for provider: ServiceProvider, showSyncedMessage _: Bool = false) async {
         logger.info("refreshData called for \(provider.displayName)")
 
@@ -174,6 +176,7 @@ public final class MultiProviderDataOrchestrator {
 
     // MARK: - Private Refresh Helpers
 
+    @MainActor
     private func validateRefreshPreconditions(for provider: ServiceProvider) -> Bool {
         guard ProviderRegistry.shared.isEnabled(provider) else {
             logger.debug("Provider \(provider.displayName) is disabled, skipping refresh")
@@ -189,6 +192,7 @@ public final class MultiProviderDataOrchestrator {
         return true
     }
 
+    @MainActor
     private func getAuthTokenOrHandleLogout(for provider: ServiceProvider) -> String? {
         guard let authToken = loginManager.getAuthToken(for: provider) else {
             logger.info("No auth token for \(provider.displayName), marking as logged out")
@@ -200,6 +204,7 @@ public final class MultiProviderDataOrchestrator {
         return authToken
     }
 
+    @MainActor
     private func performRefreshOperation(for provider: ServiceProvider, authToken: String) async {
         startRefresh(for: provider)
 
@@ -213,6 +218,7 @@ public final class MultiProviderDataOrchestrator {
         finishRefresh(for: provider)
     }
 
+    @MainActor
     private func startRefresh(for provider: ServiceProvider) {
         isRefreshing[provider] = true
         refreshErrors.removeValue(forKey: provider)
@@ -230,6 +236,7 @@ public final class MultiProviderDataOrchestrator {
             providerClient: providerClient)
     }
 
+    @MainActor
     private func processSuccessfulRefresh(for provider: ServiceProvider, result: ProviderDataResult) async {
         lastRefreshDates = await dataProcessor.processSuccessfulRefresh(
             for: provider,
@@ -239,6 +246,7 @@ public final class MultiProviderDataOrchestrator {
             lastRefreshDates: lastRefreshDates)
     }
 
+    @MainActor
     private func handleRefreshError(for provider: ServiceProvider, error: Error) {
         refreshErrors = errorHandler.handleRefreshError(
             for: provider,
@@ -248,6 +256,7 @@ public final class MultiProviderDataOrchestrator {
             refreshErrors: refreshErrors)
     }
 
+    @MainActor
     private func finishRefresh(for provider: ServiceProvider) {
         isRefreshing[provider] = false
         logger.info("Set isRefreshing=false for \(provider.displayName)")

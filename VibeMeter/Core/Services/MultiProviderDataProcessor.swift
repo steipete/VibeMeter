@@ -29,6 +29,7 @@ final class MultiProviderDataProcessor: Sendable {
     // MARK: - Public Methods
 
     /// Processes a successful data fetch result from a provider.
+    @MainActor
     func processSuccessfulRefresh(
         for provider: ServiceProvider,
         result: ProviderDataResult,
@@ -104,6 +105,7 @@ final class MultiProviderDataProcessor: Sendable {
         context.lastRefreshDates[provider] = Date()
     }
 
+    @MainActor
     private func updateCurrencyAndSpending(
         for provider: ServiceProvider,
         invoice: ProviderMonthlyInvoice,
