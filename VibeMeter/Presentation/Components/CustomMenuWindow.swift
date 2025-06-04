@@ -100,13 +100,16 @@ final class CustomMenuWindow: NSPanel {
         hostingController.view.needsLayout = true
         hostingController.view.layoutSubtreeIfNeeded()
 
-        // Make sure panel is activated properly
-        NSApp.activate(ignoringOtherApps: false)
-
-        // Use modern animation APIs with better timing
+        // Use safer window ordering to avoid hangs
         alphaValue = 0
-        makeKeyAndOrderFront(nil)
-        orderFrontRegardless()
+        
+        // Try orderBack first to avoid key window conflicts
+        orderBack(nil)
+        
+        // Then safely bring to front
+        DispatchQueue.main.async { [weak self] in
+            self?.orderFront(nil)
+        }
 
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in

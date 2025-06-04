@@ -231,9 +231,9 @@ public final class MultiProviderDataOrchestrator {
             }
 
             logger.info("Successfully refreshed data for \(provider.displayName)")
-            let spendingData = self.spendingData.getSpendingData(for: provider)
-            let usdSpending = spendingData?.currentSpendingUSD ?? 0
-            let displaySpending = spendingData?.displaySpending ?? 0
+            let providerSpending = self.spendingData.getSpendingData(for: provider)
+            let usdSpending = providerSpending?.currentSpendingUSD ?? 0
+            let displaySpending = providerSpending?.displaySpending ?? 0
             logger
                 .info(
                     "Current spending for \(provider.displayName): USD=\(usdSpending), display=\(displaySpending)")
