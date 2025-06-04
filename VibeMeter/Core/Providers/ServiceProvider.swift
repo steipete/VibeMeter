@@ -12,7 +12,6 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     // Future providers can be added here:
     // case openai = "openai"
     // case anthropic = "anthropic"
-    // case github = "github"
 
     /// Human-readable display name for the provider.
     public var displayName: String {
