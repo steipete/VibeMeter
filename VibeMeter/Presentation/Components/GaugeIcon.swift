@@ -54,13 +54,17 @@ struct GaugeIcon: View {
                 : Color.gaugeStroke(for: colorScheme)
 
             if isLoading {
-                // Add shimmer effect to track during loading
+                // Add shimmer effect to track during loading - brighter for dark mode
+                let shimmerOpacity: (Double, Double, Double) = colorScheme == .dark 
+                    ? (0.7, 1.0, 0.9) // Bright shimmer for dark mode
+                    : (0.3, 0.8, 0.6) // Subtle shimmer for light mode
+                
                 let shimmerGradient = Gradient(colors: [
-                    trackColor.opacity(0.3),
-                    trackColor.opacity(0.8),
-                    Color.menuBarContent(for: colorScheme).opacity(0.6),
-                    trackColor.opacity(0.8),
-                    trackColor.opacity(0.3),
+                    trackColor.opacity(shimmerOpacity.0),
+                    trackColor.opacity(shimmerOpacity.1),
+                    Color.menuBarContent(for: colorScheme).opacity(shimmerOpacity.2),
+                    trackColor.opacity(shimmerOpacity.1),
+                    trackColor.opacity(shimmerOpacity.0),
                 ])
 
                 // Calculate shimmer position along the arc for upper half-circle
@@ -87,13 +91,14 @@ struct GaugeIcon: View {
                            with: .color(fillColor),
                            style: StrokeStyle(lineWidth: line, lineCap: .round))
 
-                // Add shimmer effect for loading state
+                // Add shimmer effect for loading state - brighter for dark mode
                 if isLoading {
                     let shimmerPath = progPath
+                    let progressShimmerOpacity = colorScheme == .dark ? 0.8 : 0.3
                     ctx.stroke(shimmerPath,
                                with: .linearGradient(
                                    Gradient(colors: [
-                                       Color.menuBarContent(for: colorScheme).opacity(0.3),
+                                       Color.menuBarContent(for: colorScheme).opacity(progressShimmerOpacity),
                                        Color.menuBarContent(for: colorScheme).opacity(0),
                                    ]),
                                    startPoint: .zero,
@@ -208,11 +213,11 @@ struct GaugeIcon: View {
     private func loadingColor(for v: Double) -> Color {
         let palette: [Color] = colorScheme == .dark
             ? [
-                Color.cyan.opacity(0.6), // Brighter blues for dark mode
-                Color.cyan.opacity(0.8),
-                Color.blue.opacity(0.9),
-                Color.cyan.opacity(0.8),
-                Color.cyan.opacity(0.6),
+                Color.cyan.opacity(0.9), // Much brighter for dark mode visibility
+                Color.cyan.opacity(1.0),
+                Color.blue.opacity(1.0),
+                Color.cyan.opacity(1.0),
+                Color.cyan.opacity(0.9),
             ]
             : [
                 Color.blue.opacity(0.4), // Subtle blues for light mode
