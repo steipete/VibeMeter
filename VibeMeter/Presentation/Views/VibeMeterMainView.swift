@@ -32,6 +32,7 @@ struct VibeMeterMainView: View {
                     .id("logged-out")
             }
         }
+        .drawingGroup()
         .animation(.easeInOut(duration: 0.4), value: userSessionData.isLoggedInToAnyProvider)
         .frame(width: 300)
         .fixedSize(horizontal: false, vertical: true)
