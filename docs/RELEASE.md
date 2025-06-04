@@ -491,6 +491,55 @@ See `scripts/notarize-app.sh` for the complete signing order and entitlements.
 
 ### App Sandboxing Status: DISABLED
 
+#### Critical: Sparkle XPC Service Entitlements
+
+**IMPORTANT**: Even though the main VibeMeter app has sandboxing disabled, Sparkle's XPC services (Downloader.xpc and Installer.xpc) are ALWAYS sandboxed by macOS. These services require specific entitlements to function properly:
+
+##### Required XPC Service Entitlements for Non-Sandboxed Apps
+
+When signing Sparkle XPC services in the notarize-app.sh script, ensure these entitlements are included:
+
+```xml
+<!-- XPC services are always sandboxed -->
+<key>com.apple.security.app-sandbox</key>
+<true/>
+
+<!-- Required for downloading updates -->
+<key>com.apple.security.network.client</key>
+<true/>
+
+<!-- Required for file operations during update -->
+<key>com.apple.security.files.user-selected.read-write</key>
+<true/>
+```
+
+##### Common Errors Without Proper Entitlements
+
+1. **DNS/Network Errors**: If `com.apple.security.network.client` is missing:
+   ```
+   Error Domain=NSURLErrorDomain Code=-1003 "A server with the specified hostname could not be found."
+   ```
+
+2. **XPC Service Bootstrap Failures**: 
+   ```
+   [0x11d60f4e0] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+   ```
+
+##### Verifying XPC Service Entitlements
+
+After building, always verify the XPC services have correct entitlements:
+```bash
+# Check Downloader.xpc entitlements
+codesign -d --entitlements :- /path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc 2>/dev/null | plutil -p -
+
+# Should show:
+# "com.apple.security.app-sandbox" => 1
+# "com.apple.security.network.client" => 1
+# "com.apple.security.files.user-selected.read-write" => 1
+```
+
+### App Sandboxing Status: DISABLED
+
 **IMPORTANT**: VibeMeter currently runs with app sandboxing **disabled** (`com.apple.security.app-sandbox = false`) due to Sparkle framework compatibility requirements.
 
 ### Experiment History

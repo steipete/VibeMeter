@@ -79,6 +79,11 @@ EOF
     <true/>
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.steipete.vibemeter-spks</string>
+        <string>com.steipete.vibemeter-spkd</string>
+    </array>
 EOF
     fi
 
