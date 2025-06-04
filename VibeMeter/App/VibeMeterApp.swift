@@ -180,6 +180,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             logger.info("Running in test environment - skipping StatusBarController initialization")
         }
 
+        // Check if app should be moved to Applications (skip in tests and previews)
+        if !isRunningInTests && !isRunningInPreview {
+            let applicationMover = ApplicationMover()
+            applicationMover.checkAndOfferToMoveToApplications()
+        }
+
         logger.info("VibeMeter launched successfully")
     }
 
