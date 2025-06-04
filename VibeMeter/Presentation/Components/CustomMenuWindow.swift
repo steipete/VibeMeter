@@ -15,12 +15,11 @@ final class CustomMenuWindow: NSPanel {
     private var isEventMonitoringActive = false
 
     init(contentView: some View) {
-        // Store the content view to prevent deallocation in Release builds
-        let wrappedView = AnyView(contentView)
-        self.retainedContentView = wrappedView
-
-        // Create content view controller with the wrapped view
-        hostingController = NSHostingController(rootView: wrappedView)
+        // Create content view controller directly without extra wrapping
+        hostingController = NSHostingController(rootView: AnyView(contentView))
+        
+        // Store reference to prevent deallocation
+        self.retainedContentView = hostingController.rootView
 
         // Initialize window with appropriate style
         // Start with a minimal size – the real size will be determined from
@@ -34,35 +33,32 @@ final class CustomMenuWindow: NSPanel {
         // Configure window appearance
         isOpaque = false
         backgroundColor = .clear
-        level = .popUpMenu // Use popUpMenu level for menu bar dropdowns
-        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        level = .popUpMenu
+        // Simplified collection behavior to avoid conflicts
+        collectionBehavior = [.fullScreenAuxiliary, .transient]
         isMovableByWindowBackground = false
-        hidesOnDeactivate = false // Important for menu bar apps
-        isReleasedWhenClosed = false // Keep window in memory
-
-        // Window properties are configured by overriding computed properties
+        hidesOnDeactivate = false
+        isReleasedWhenClosed = false
 
         // Set content view controller
         contentViewController = hostingController
 
-        // IMPORTANT: Force the view to load immediately
-        // This prevents issues in Release builds where the view might not be created
-        _ = hostingController.view
-
-        // Add visual effect background with rounded corners
-        if let contentView = contentViewController?.view {
-            contentView.wantsLayer = true
-            contentView.layer?.cornerRadius = 12
-            contentView.layer?.masksToBounds = true
-
+        // Ensure the view is loaded and configured
+        let contentView = hostingController.view
+        contentView.wantsLayer = true
+        
+        // Apply styling to the content view
+        if let layer = contentView.layer {
+            layer.cornerRadius = 12
+            layer.masksToBounds = true
+            
             // Add subtle shadow
-            contentView.shadow = NSShadow()
-            contentView.shadow?.shadowOffset = NSSize(width: 0, height: -2)
-            contentView.shadow?.shadowBlurRadius = 8
-            contentView.shadow?.shadowColor = NSColor.black.withAlphaComponent(0.2)
+            let shadow = NSShadow()
+            shadow.shadowOffset = NSSize(width: 0, height: -2)
+            shadow.shadowBlurRadius = 8
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+            contentView.shadow = shadow
         }
-
-        // Event monitoring is set up after showing the window
     }
 
     func show(relativeTo statusItemButton: NSStatusBarButton) {
@@ -74,38 +70,34 @@ final class CustomMenuWindow: NSPanel {
         let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
         let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
 
-        // First, make sure the SwiftUI hierarchy has laid itself out so the
-        // hosting view reports an accurate fitting size.
-        hostingController.view.layoutSubtreeIfNeeded()
+        // Ensure the hosting controller's view is properly loaded before any layout operations
+        let view = hostingController.view
+        view.layoutSubtreeIfNeeded()
 
         // Determine the preferred size based on the content's intrinsic size
-        let fittingSize = hostingController.view.fittingSize
+        let fittingSize = view.fittingSize
         let preferredSize = NSSize(width: fittingSize.width, height: fittingSize.height)
 
-        // Update the panel's content size so auto-layout inside the window gets
-        // the right dimensions.
+        // Update the panel's content size
         setContentSize(preferredSize)
 
-        // Calculate optimal position with screen boundary awareness using the
-        // freshly computed preferred size.
+        // Calculate optimal position with screen boundary awareness
         let targetFrame = calculateOptimalFrame(
             relativeTo: buttonFrameInScreen,
             preferredSize: preferredSize)
 
+        // Set frame without display to avoid flicker
         setFrame(targetFrame, display: false)
 
-        // Ensure the hosting controller's view is loaded
-        // This is critical for Release builds
-        _ = hostingController.view
-        hostingController.view.needsLayout = true
-
-        // Make the window visible and active
-        // The orderFront nil pattern is more reliable than makeKeyAndOrderFront
-        // for utility windows, ensuring the window shows even if the app isn't active
-        orderFront(nil)
-
-        // After showing, setup event monitoring for dismissal
+        // Setup event monitoring before showing to avoid race conditions
         setupEventMonitoring()
+
+        // Make the window visible using a more direct approach
+        // This avoids potential hangs with orderFront
+        makeKeyAndOrderFront(nil)
+        
+        // Ensure the window is at the correct level
+        level = .popUpMenu
     }
 
     func hide() {
@@ -143,20 +135,23 @@ final class CustomMenuWindow: NSPanel {
         // Prevent duplicate monitors with explicit check
         guard !isEventMonitoringActive else { return }
 
-        // Ensure window is actually visible before setting up monitoring
-        guard isVisible else { return }
+        // Use local event monitor instead of global to avoid accessibility permission issues
+        // This monitors events in the application's event stream only
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self else { return event }
 
-        // Monitor clicks outside the window with stronger reference management
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            guard let self, self.isVisible else { return }
-
-            // Get the mouse location in screen coordinates
-            let mouseLocation = NSEvent.mouseLocation
-
-            // Check if click is outside our window frame
-            if !self.frame.contains(mouseLocation) {
+            // Check if click is outside our window
+            let clickLocation = event.locationInWindow
+            let windowFrame = self.frame
+            let screenLocation = event.window?.convertPointToScreen(clickLocation) ?? clickLocation
+            
+            if !windowFrame.contains(screenLocation) {
+                // Click is outside our window, hide it
                 self.hide()
             }
+
+            // Always return the event to allow normal processing
+            return event
         }
 
         isEventMonitoringActive = true
