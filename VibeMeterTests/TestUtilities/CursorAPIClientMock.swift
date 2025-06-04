@@ -47,6 +47,7 @@ final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked
     var lastAuthTokenUsed: String?
     var lastMonthRequested: Int?
     var lastYearRequested: Int?
+    var lastTeamIdRequested: Int?
 
     // MARK: - ProviderProtocol
 
@@ -81,11 +82,12 @@ final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked
     }
 
     func fetchMonthlyInvoice(authToken: String, month: Int, year: Int,
-                             teamId _: Int?) async throws -> ProviderMonthlyInvoice {
+                             teamId: Int?) async throws -> ProviderMonthlyInvoice {
         fetchMonthlyInvoiceCallCount += 1
         lastAuthTokenUsed = authToken
         lastMonthRequested = month
         lastYearRequested = year
+        lastTeamIdRequested = teamId
 
         if let error = monthlyInvoiceError {
             throw error
@@ -143,6 +145,7 @@ final class CursorAPIClientMock: ProviderProtocol, MockResetProtocol, @unchecked
         lastAuthTokenUsed = nil
         lastMonthRequested = nil
         lastYearRequested = nil
+        lastTeamIdRequested = nil
     }
 
     func resetReturnValues() {
