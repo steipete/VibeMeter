@@ -13,6 +13,8 @@ struct LoggedInContentView: View {
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +29,7 @@ struct LoggedInContentView: View {
                 .accessibilityHint("Shows current user and connected providers")
 
             Divider()
-                .overlay(Color.white.opacity(0.08))
+                .overlay(Color.dividerOverlay(for: colorScheme))
 
             // Content section - improved spacing
             VStack(spacing: 6) {
@@ -46,8 +48,8 @@ struct LoggedInContentView: View {
                 VStack(spacing: 2) {
                     HStack {
                         Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
-                            .font(.footnote)
-                            .foregroundStyle(.quaternary)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
                             .accessibilityLabel(
                                 "Last updated \(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))")
 
@@ -61,7 +63,7 @@ struct LoggedInContentView: View {
             // Action buttons footer - more compact
             VStack(spacing: 0) {
                 Divider()
-                    .overlay(Color.white.opacity(0.1))
+                    .overlay(Color.secondaryDivider(for: colorScheme))
 
                 ActionButtonsView(onRefresh: onRefresh)
                     .padding(.horizontal, 14)
