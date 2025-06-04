@@ -46,7 +46,7 @@ struct GeneralSettingsView: View {
                         startupManager.setLaunchAtLogin(enabled: newValue)
                     }
                 ))
-                Text("Automatically start VibeMeter when you log into your Mac.")
+                Text("Automatically start Vibe Meter when you log into your Mac.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -64,7 +64,7 @@ struct GeneralSettingsView: View {
                         }
                     }
                 ))
-                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                Text("Display Vibe Meter in the Dock. When disabled, Vibe Meter runs as a menu bar app only.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -159,7 +159,7 @@ struct GeneralSettingsView: View {
                         set: { newValue in 
                             settingsManager.selectedCurrencyCode = newValue
                             // Mark that the user has made a manual currency preference
-                            UserDefaults.standard.set(true, forKey: "hasUserCurrencyPreference")
+                            UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
                         }
                     )) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
@@ -215,7 +215,7 @@ struct GeneralSettingsView: View {
 
         // Only auto-detect system currency on first launch (when user hasn't made a manual choice)
         // Check if user has ever made a currency selection by looking for a saved preference
-        let hasUserCurrencyPreference = UserDefaults.standard.object(forKey: "hasUserCurrencyPreference") as? Bool ?? false
+        let hasUserCurrencyPreference = UserDefaults.standard.bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
         
         if !hasUserCurrencyPreference && settingsManager.selectedCurrencyCode == "USD" {
             // First launch - auto-detect system currency

@@ -197,6 +197,7 @@ public final class SettingsManager: SettingsManagerProtocol {
         public static let selectedCurrencyCode = "selectedCurrencyCode"
         public static let refreshIntervalMinutes = "refreshIntervalMinutes"
         public static let menuBarDisplayMode = "menuBarDisplayMode"
+        public static let hasUserCurrencyPreference = "hasUserCurrencyPreference"
 
         // Spending limits keys
         public static let warningLimitUSD = "warningLimitUSD"
