@@ -38,7 +38,7 @@ Carthage/Build/
 Packages/
 Package.pins
 Package.resolved
-*.xcodeproj/
+# *.xcodeproj/  # Allow Xcode project files to be checked in
 
 # CocoaPods
 Pods/
@@ -97,7 +97,7 @@ VibeMeter-*/
 
 # Tuist
 .tuist/
-*.xcworkspace/
+# *.xcworkspace/  # Allow Xcode workspace files to be checked in
 
 # Temporary test artifacts
 build-test
