@@ -92,19 +92,17 @@ struct SpendingLimitsView: View {
                         Text("Upper Limit")
                             .font(.headline)
                     }
+                    
+                    Section {
+                        Text(
+                            "Spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
                 }
                 .formStyle(.grouped)
                 .scrollContentBackground(.hidden)
-                
-                // Bottom explanatory text, outside the form
-                Text(
-                    "Spending thresholds that apply to all connected providers. Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .frame(maxWidth: .infinity)
             }
             .navigationTitle("Spending Limits")
         }
