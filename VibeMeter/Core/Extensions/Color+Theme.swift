@@ -35,7 +35,6 @@ extension Color {
     static let gaugeModerate = Color.yellow
     static let gaugeWarning = Color.orange
     static let gaugeDanger = Color.red
-    static let gaugeDisabled = Color.gray
 
     /// Standard gauge color progression from healthy to danger
     static let gaugeColorProgression: [Color] = [
