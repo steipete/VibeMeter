@@ -78,7 +78,7 @@ public final class AppBehaviorSettingsManager {
         // Load app behavior settings with defaults
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
         showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
-        
+
         // Load update channel with auto-detection based on current app version
         let currentVersion = Bundle.main
             .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
@@ -118,7 +118,7 @@ public final class AppBehaviorSettingsManager {
         }
         logger.debug("Dock visibility applied: \(self.showInDock)")
     }
-    
+
     /// Updates the update channel setting
     public func updateUpdateChannel(_ channel: UpdateChannel) {
         updateChannel = channel

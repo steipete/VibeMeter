@@ -11,7 +11,7 @@ struct SpendingLimitsView: View {
 
     @Environment(CurrencyData.self)
     private var currencyData
-    
+
     @State private var warningLimitText: String = ""
     @State private var upperLimitText: String = ""
     @State private var showingResetAlert = false
@@ -84,7 +84,7 @@ struct SpendingLimitsView: View {
                     return $warningLimitText
                 }
             }()
-            
+
             LabeledContent("Amount") {
                 HStack(spacing: 8) {
                     Text("$")
@@ -107,11 +107,11 @@ struct SpendingLimitsView: View {
                                     hasDecimal = true
                                 }
                             }
-                            
+
                             if filtered != newValue {
                                 textBinding.wrappedValue = filtered
                             }
-                            
+
                             // Update the actual limit value
                             if let value = Double(filtered), value >= 0 {
                                 if description.contains("critical") {

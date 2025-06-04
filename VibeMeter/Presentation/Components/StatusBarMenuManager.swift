@@ -16,7 +16,7 @@ final class StatusBarMenuManager {
     private var spendingData: MultiProviderSpendingData?
     private var currencyData: CurrencyData?
     private var orchestrator: MultiProviderDataOrchestrator?
-    
+
     // Custom window management
     private var customWindow: CustomMenuWindow?
 
@@ -62,10 +62,10 @@ final class StatusBarMenuManager {
               let spendingData = spendingData,
               let currencyData = currencyData,
               let orchestrator = orchestrator else { return }
-        
+
         // Hide any existing context menu first
         // Note: Context menu hiding is handled by the StatusBarController
-        
+
         // Create the main view with all dependencies
         let mainView = VibeMeterMainView(
             settingsManager: settingsManager,
@@ -79,17 +79,17 @@ final class StatusBarMenuManager {
         )
         .environment(spendingData)
         .environment(currencyData)
-        
+
         // Wrap in custom container for proper styling
         let containerView = CustomMenuContainer {
             mainView
         }
-        
+
         // Create custom window if needed
         if customWindow == nil {
             customWindow = CustomMenuWindow(contentView: containerView)
         }
-        
+
         // Show the custom window
         customWindow?.show(relativeTo: button)
     }
@@ -121,7 +121,7 @@ final class StatusBarMenuManager {
     func showContextMenu(for button: NSStatusBarButton, statusItem: NSStatusItem) {
         // Hide custom window first if it's visible
         hideCustomWindow()
-        
+
         let menu = NSMenu()
 
         // Add menu items based on current state

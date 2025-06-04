@@ -64,7 +64,7 @@ public actor CursorProvider: ProviderProtocol {
         } else {
             effectiveTeamId = await getTeamId()
         }
-        
+
         // Cursor API requires a team ID for invoice requests
         guard let finalTeamId = effectiveTeamId else {
             throw ProviderError.teamIdNotSet

@@ -7,7 +7,7 @@ import Foundation
 public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     case stable = "stable"
     case prerelease = "prerelease"
-    
+
     /// Human-readable display name for the update channel
     public var displayName: String {
         switch self {
@@ -17,7 +17,7 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
             return "Include Pre-releases"
         }
     }
-    
+
     /// Detailed description of what each channel includes
     public var description: String {
         switch self {
@@ -27,7 +27,7 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
             return "Receive both stable releases and beta/pre-release versions"
         }
     }
-    
+
     /// The Sparkle appcast URL for this update channel
     public var appcastURL: String {
         switch self {
@@ -37,7 +37,7 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
             return "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml"
         }
     }
-    
+
     /// Whether this channel includes pre-release versions
     public var includesPreReleases: Bool {
         switch self {
@@ -47,7 +47,7 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
             return true
         }
     }
-    
+
     /// Determines if the current app version suggests this channel should be default
     public static func defaultChannel(for appVersion: String) -> UpdateChannel {
         // If the current version contains beta, alpha, or rc, default to prerelease

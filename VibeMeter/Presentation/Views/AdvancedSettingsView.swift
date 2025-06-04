@@ -7,10 +7,10 @@ import SwiftUI
 /// advanced options that most users won't need to change frequently.
 struct AdvancedSettingsView: View {
     @Bindable var settingsManager: SettingsManager
-    
+
     @State
     private var isCheckingForUpdates = false
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -22,7 +22,7 @@ struct AdvancedSettingsView: View {
             .navigationTitle("Advanced Settings")
         }
     }
-    
+
     private var updateSection: some View {
         Section {
             // Update Channel
@@ -42,7 +42,7 @@ struct AdvancedSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Check for Updates
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -51,9 +51,9 @@ struct AdvancedSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button("Check Now") {
                     checkForUpdates()
                 }
@@ -66,7 +66,7 @@ struct AdvancedSettingsView: View {
                 .font(.headline)
         }
     }
-    
+
     private var appearanceSection: some View {
         Section {
             // Show in Dock
@@ -81,9 +81,9 @@ struct AdvancedSettingsView: View {
                 .font(.headline)
         }
     }
-    
+
     // MARK: - Bindings
-    
+
     private var showInDockBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.showInDock },
@@ -92,13 +92,13 @@ struct AdvancedSettingsView: View {
                 NSApp.setActivationPolicy(newValue ? .regular : .accessory)
             })
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func checkForUpdates() {
         isCheckingForUpdates = true
         NotificationCenter.default.post(name: Notification.Name("checkForUpdates"), object: nil)
-        
+
         // Reset after a delay
         Task {
             try? await Task.sleep(for: .seconds(2))
