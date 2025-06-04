@@ -2,36 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
-    <key>com.apple.security.network.client</key>
-    <true/>
-    <key>com.apple.security.files.user-selected.read-only</key>
-    <true/>
-    <key>com.apple.security.files.downloads.read-write</key>
-    <true/>
-    <key>com.apple.security.automation.apple-events</key>
-    <true/>
-    <!-- Allow process execution for ApplicationMover (hdiutil) and other system commands -->
-    <key>com.apple.security.temporary-exception.shared-preference.read-write</key>
-    <array>
-        <string>com.steipete.vibemeter</string>
-    </array>
-    <!-- Allow outgoing network connections for Sparkle updates -->
-    <key>com.apple.security.network.server</key>
-    <false/>
-    <!-- Sparkle XPC Service temporary exceptions for sandboxed updates -->
-    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
-    <array>
-        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
-        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
-    </array>
-    <!-- Temporarily disabled keychain access groups for development -->
-    <!--
-    <key>keychain-access-groups</key>
-    <array>
-        <string>$(AppIdentifierPrefix)com.steipete.vibemeter</string>
-    </array>
-    -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
 </dict>
 </plist>
