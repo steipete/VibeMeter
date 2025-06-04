@@ -534,8 +534,10 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let spendingFormatted =
+            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted =
+            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -558,8 +560,10 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let spendingFormatted =
+            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted =
+            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"
@@ -599,6 +603,25 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
+    }
+
+    func showInstanceAlreadyRunningNotification() async {
+        let content = UNMutableNotificationContent()
+        content.title = "Vibe Meter Already Running"
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content.sound = .default
+        content.categoryIdentifier = "APP_INSTANCE"
+
+        let request = UNNotificationRequest(
+            identifier: "instance_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+
+        try? await Task { @MainActor in
+            try await notificationCenter.add(request)
+        }.value
     }
 }
 

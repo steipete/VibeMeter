@@ -98,17 +98,17 @@ public struct ProviderSessionState: Codable, Sendable {
         if let nsError = error as NSError?, nsError.code == 401 {
             return true
         }
-        
+
         // Check for ProviderError.unauthorized
         if let providerError = error as? ProviderError,
            case .unauthorized = providerError {
             return true
         }
-        
+
         // Check for unauthorized in description
         return error.localizedDescription.lowercased().contains("unauthorized")
     }
-    
+
     /// Formats error messages for user display.
     private func formatErrorMessage(_ error: Error) -> String {
         if let providerError = error as? ProviderError {

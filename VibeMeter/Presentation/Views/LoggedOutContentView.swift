@@ -35,9 +35,9 @@ struct LoggedOutContentView: View {
                         .resizable()
                         .frame(width: 64, height: 64)
                         .transition(.scale(scale: 0.8).combined(with: .opacity))
-                        .accessibilityLabel("VibeMeter application icon")
+                        .accessibilityLabel("Vibe Meter application icon")
 
-                    Text("VibeMeter")
+                    Text("Vibe Meter")
                         .font(.title2.weight(.medium))
                         .foregroundStyle(.primary)
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -120,7 +120,7 @@ struct LoggedOutContentView: View {
             .buttonStyle(IconButtonStyle())
             .help("Settings (⌘,)")
             .accessibilityLabel("Open settings")
-            .accessibilityHint("Opens VibeMeter preferences and configuration options")
+            .accessibilityHint("Opens Vibe Meter preferences and configuration options")
 
             Spacer()
 
@@ -130,9 +130,9 @@ struct LoggedOutContentView: View {
                     .font(.title3.weight(.medium))
             }
             .buttonStyle(IconButtonStyle(isDestructive: true))
-            .help("Quit VibeMeter (⌘Q)")
+            .help("Quit Vibe Meter (⌘Q)")
             .accessibilityLabel("Quit application")
-            .accessibilityHint("Closes VibeMeter completely")
+            .accessibilityHint("Closes Vibe Meter completely")
         }
     }
 

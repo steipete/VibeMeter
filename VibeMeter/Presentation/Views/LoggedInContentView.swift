@@ -16,6 +16,15 @@ struct LoggedInContentView: View {
     @Environment(\.colorScheme)
     private var colorScheme
 
+    // Computed property for most recent refresh
+    private var mostRecentRefresh: Date? {
+        spendingData.providersWithData
+            .compactMap { provider in
+                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
+            }
+            .max()
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header section - better spacing
@@ -41,7 +50,7 @@ struct LoggedInContentView: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Spending dashboard")
             .accessibilityHint("Shows total spending, provider breakdown, and spending limits")
-            .id("logged-in-content-\(spendingData.providersWithData.count)")
+            .animation(.easeInOut(duration: 0.2), value: spendingData.providersWithData.count)
 
             // Last updated section at bottom
             if let lastUpdate = mostRecentRefresh {
@@ -73,15 +82,6 @@ struct LoggedInContentView: View {
                     .accessibilityHint("Contains refresh, settings, and quit buttons")
             }
         }
-    }
-
-    /// Gets the most recent refresh timestamp across all providers
-    private var mostRecentRefresh: Date? {
-        spendingData.providersWithData
-            .compactMap { provider in
-                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
-            }
-            .max()
     }
 }
 

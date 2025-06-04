@@ -123,6 +123,13 @@ class MenuBarStateManager {
         costAnimationStartTime = Date().timeIntervalSinceReferenceDate
     }
 
+    /// Immediately set the cost value without animation (for currency changes)
+    func setCostValueImmediately(_ newValue: Double) {
+        animatedCostValue = newValue
+        costTransitionTargetValue = newValue
+        isCostTransitioning = false
+    }
+
     /// Calculate the current gauge value based on state and time
     func updateAnimation() {
         let currentTime = Date().timeIntervalSinceReferenceDate

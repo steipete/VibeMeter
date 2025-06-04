@@ -39,9 +39,12 @@ struct VibeMeterMainView: View {
             "Shows login options for AI service providers")
         .onKeyPress(.escape) {
             // Modern key handling for ESC to close menu
-            if let customMenuWindow = NSApp.windows.first(where: { $0 is CustomMenuWindow }) as? CustomMenuWindow {
-                customMenuWindow.hide()
-                return .handled
+            // Look for any borderless window that might be our menu
+            for window in NSApp.windows {
+                if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
+                    window.orderOut(nil)
+                    return .handled
+                }
             }
             return .ignored
         }
@@ -98,4 +101,18 @@ struct VibeMeterMainView: View {
         onRefresh: {})
         .environment(spendingData)
         .environment(CurrencyData())
+}
+
+// MARK: - Helper Methods
+
+private extension VibeMeterMainView {
+    func handleEscapeKey() -> KeyPress.Result {
+        for window in NSApp.windows {
+            if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
+                window.orderOut(nil)
+                return .handled
+            }
+        }
+        return .ignored
+    }
 }

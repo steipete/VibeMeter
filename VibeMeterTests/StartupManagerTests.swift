@@ -114,7 +114,7 @@ final class StartupManagerTests: XCTestCase, @unchecked Sendable {
         let mockStartup = MockStartupManager()
         let testDefaults = UserDefaults(suiteName: "test.startup")!
         testDefaults.removeObject(forKey: "launchAtLoginEnabled") // Ensure clean state
-        
+
         let settings = SettingsManager(
             userDefaults: testDefaults,
             startupManager: mockStartup)

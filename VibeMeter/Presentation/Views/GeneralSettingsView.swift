@@ -7,14 +7,16 @@ import SwiftUI
 /// menu bar display options, and dock visibility. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    let settingsManager: SettingsManager
+    @Bindable var settingsManager: SettingsManager
+
+    @State
+    private var isCheckingForUpdates = false
+    @State
+    private var hasUserMadeCurrencyChoice = UserDefaults.standard
+        .bool(forKey: SettingsManager.Keys.hasUserCurrencyPreference)
 
     private let startupManager = StartupManager()
     private let currencyManager = CurrencyManager.shared
-
-    init(settingsManager: SettingsManager) {
-        self.settingsManager = settingsManager
-    }
 
     var body: some View {
         NavigationStack {
@@ -27,11 +29,19 @@ struct GeneralSettingsView: View {
             .scrollContentBackground(.hidden)
             .navigationTitle("General Settings")
         }
-        .onChange(of: settingsManager.refreshIntervalMinutes) { _, newValue in
-            validateRefreshInterval(newValue)
-        }
-        .onAppear {
-            setupInitialState()
+        .task {
+            // Sync launch at login status
+            settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
+
+            // Auto-detect system currency on first launch
+            if !hasUserMadeCurrencyChoice, settingsManager.selectedCurrencyCode == "USD" {
+                if let systemCurrencyCode = currencyManager.systemCurrencyCode,
+                   currencyManager.isValidCurrencyCode(systemCurrencyCode) {
+                    settingsManager.selectedCurrencyCode = systemCurrencyCode
+                    hasUserMadeCurrencyChoice = true
+                    UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
+                }
+            }
         }
     }
 
@@ -39,32 +49,16 @@ struct GeneralSettingsView: View {
         Section {
             // Launch at Login
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Launch at Login", isOn: .init(
-                    get: { settingsManager.launchAtLoginEnabled },
-                    set: { newValue in
-                        settingsManager.launchAtLoginEnabled = newValue
-                        startupManager.setLaunchAtLogin(enabled: newValue)
-                    }
-                ))
-                Text("Automatically start VibeMeter when you log into your Mac.")
+                Toggle("Launch at Login", isOn: launchAtLoginBinding)
+                Text("Automatically start Vibe Meter when you log into your Mac.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Show in Dock", isOn: .init(
-                    get: { settingsManager.showInDock },
-                    set: { newValue in
-                        settingsManager.showInDock = newValue
-                        if newValue {
-                            NSApp.setActivationPolicy(.regular)
-                        } else {
-                            NSApp.setActivationPolicy(.accessory)
-                        }
-                    }
-                ))
-                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                Toggle("Show in Dock", isOn: showInDockBinding)
+                Text("Display Vibe Meter in the Dock. When disabled, Vibe Meter runs as a menu bar app only.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -74,7 +68,7 @@ struct GeneralSettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Check for Updates")
-                    Text("Check for new versions of VibeMeter")
+                    Text("Check for new versions of Vibe Meter")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -85,6 +79,7 @@ struct GeneralSettingsView: View {
                     checkForUpdates()
                 }
                 .buttonStyle(.bordered)
+                .disabled(isCheckingForUpdates)
             }
             .padding(.top, 8)
         } header: {
@@ -100,13 +95,9 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Menu Bar Display")
                     Spacer()
-                    Picker("", selection: .init(
-                        get: { settingsManager.menuBarDisplayMode },
-                        set: { newValue in settingsManager.menuBarDisplayMode = newValue }
-                    )) {
+                    Picker("", selection: $settingsManager.menuBarDisplayMode) {
                         ForEach(MenuBarDisplayMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)
-                                .id("\(mode.rawValue)-\(settingsManager.menuBarDisplayMode.rawValue)")
                         }
                     }
                     .pickerStyle(.menu)
@@ -122,22 +113,15 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Refresh Interval")
                     Spacer()
-                    Picker("", selection: .init(
-                        get: { settingsManager.refreshIntervalMinutes },
-                        set: { newValue in settingsManager.refreshIntervalMinutes = newValue }
-                    )) {
-                        Text("1 minute").tag(1)
-                        Text("2 minutes").tag(2)
-                        Text("5 minutes").tag(5)
-                        Text("10 minutes").tag(10)
-                        Text("15 minutes").tag(15)
-                        Text("30 minutes").tag(30)
-                        Text("1 hour").tag(60)
+                    Picker("", selection: $settingsManager.refreshIntervalMinutes) {
+                        ForEach(SettingsManager.refreshIntervalOptions, id: \.self) { minutes in
+                            Text(formatInterval(minutes)).tag(minutes)
+                        }
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Text("How often VibeMeter checks for updated spending data.")
+                Text("How often Vibe Meter checks for updated spending data.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -154,13 +138,9 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Currency")
                     Spacer()
-                    Picker("", selection: .init(
-                        get: { settingsManager.selectedCurrencyCode },
-                        set: { newValue in settingsManager.selectedCurrencyCode = newValue }
-                    )) {
+                    Picker("", selection: currencyBinding) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
                             Text(name).tag(code)
-                                .id("\(code)-\(settingsManager.selectedCurrencyCode)")
                         }
                     }
                     .pickerStyle(.menu)
@@ -173,48 +153,54 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private func validateRefreshInterval(_ newValue: Int) {
-        if SettingsManager.refreshIntervalOptions.contains(newValue) {
-            // Valid interval, it's already saved via SettingsManager
-        } else {
-            // Invalid interval, reset to default
-            settingsManager.refreshIntervalMinutes = 5
-        }
+    // MARK: - Bindings
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { settingsManager.launchAtLoginEnabled },
+            set: { newValue in
+                settingsManager.launchAtLoginEnabled = newValue
+                startupManager.setLaunchAtLogin(enabled: newValue)
+            })
     }
 
-    private var isDebugBuild: Bool {
-        #if DEBUG
-            return true
-        #else
-            return false
-        #endif
+    private var showInDockBinding: Binding<Bool> {
+        Binding(
+            get: { settingsManager.showInDock },
+            set: { newValue in
+                settingsManager.showInDock = newValue
+                NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+            })
+    }
+
+    private var currencyBinding: Binding<String> {
+        Binding(
+            get: { settingsManager.selectedCurrencyCode },
+            set: { newValue in
+                settingsManager.selectedCurrencyCode = newValue
+                hasUserMadeCurrencyChoice = true
+                UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
+            })
+    }
+
+    // MARK: - Helper Methods
+
+    private func formatInterval(_ minutes: Int) -> String {
+        switch minutes {
+        case 1: "1 minute"
+        case 60: "1 hour"
+        default: "\(minutes) minutes"
+        }
     }
 
     private func checkForUpdates() {
-        if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
-           let sparkleManager = appDelegate.sparkleUpdaterManager {
-            sparkleManager.updaterController.updater.checkForUpdates()
-        } else {
-            // Show alert if Sparkle is not available
-            let alert = NSAlert()
-            alert.messageText = "Unable to Check for Updates"
-            alert.informativeText = "The update system is not available. This may be because you're running a debug build or Sparkle failed to initialize."
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: "OK")
-            alert.runModal()
-        }
-    }
+        isCheckingForUpdates = true
+        NotificationCenter.default.post(name: Notification.Name("checkForUpdates"), object: nil)
 
-    private func setupInitialState() {
-        // Sync with actual launch at login status
-        settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
-
-        // Detect system currency if current selection is USD (default)
-        if settingsManager.selectedCurrencyCode == "USD" {
-            if let systemCurrencyCode = currencyManager.systemCurrencyCode,
-               currencyManager.isValidCurrencyCode(systemCurrencyCode) {
-                settingsManager.selectedCurrencyCode = systemCurrencyCode
-            }
+        // Reset after a delay
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            isCheckingForUpdates = false
         }
     }
 }

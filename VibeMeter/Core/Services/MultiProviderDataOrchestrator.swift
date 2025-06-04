@@ -161,125 +161,205 @@ public final class MultiProviderDataOrchestrator {
     public func refreshData(for provider: ServiceProvider, showSyncedMessage _: Bool = false) async {
         logger.info("refreshData called for \(provider.displayName)")
 
+        guard validateRefreshPreconditions(for: provider) else { return }
+        guard let authToken = getAuthTokenOrHandleLogout(for: provider) else { return }
+
+        await performRefreshOperation(for: provider, authToken: authToken)
+    }
+
+    // MARK: - Private Refresh Helpers
+
+    private func validateRefreshPreconditions(for provider: ServiceProvider) -> Bool {
         guard ProviderRegistry.shared.isEnabled(provider) else {
             logger.debug("Provider \(provider.displayName) is disabled, skipping refresh")
-            return
+            return false
         }
 
+        guard networkStateManager.isNetworkConnected else {
+            logger.warning("No network connectivity for \(provider.displayName), skipping refresh")
+            spendingData.updateConnectionStatus(for: provider, status: .error(message: "No internet connection"))
+            return false
+        }
+
+        return true
+    }
+
+    private func getAuthTokenOrHandleLogout(for provider: ServiceProvider) -> String? {
         guard let authToken = loginManager.getAuthToken(for: provider) else {
             logger.info("No auth token for \(provider.displayName), marking as logged out")
             userSessionData.handleLogout(from: provider)
-            return
+            return nil
         }
 
         logger.info("Found auth token for \(provider.displayName), proceeding with data fetch")
+        return authToken
+    }
 
-        // Check network connectivity before attempting refresh
-        if !networkStateManager.isNetworkConnected {
-            logger.warning("No network connectivity for \(provider.displayName), skipping refresh")
-            spendingData.updateConnectionStatus(for: provider, status: .error(message: "No internet connection"))
-            return
-        }
-
-        isRefreshing[provider] = true
-        refreshErrors.removeValue(forKey: provider)
-        logger.info("Set isRefreshing=true for \(provider.displayName)")
-
-        // Update connection status to syncing
-        spendingData.updateConnectionStatus(for: provider, status: .syncing)
+    private func performRefreshOperation(for provider: ServiceProvider, authToken: String) async {
+        startRefresh(for: provider)
 
         do {
-            let providerClient = providerFactory.createProvider(for: provider)
+            let result = try await fetchProviderData(for: provider, authToken: authToken)
+            await processSuccessfulRefresh(for: provider, result: result)
+        } catch {
+            handleRefreshError(for: provider, error: error)
+        }
 
-            // Process data on background actor for better concurrency
-            let (userInfo, teamInfo, invoice, usage) = try await backgroundProcessor.processProviderData(
-                provider: provider,
-                authToken: authToken,
-                providerClient: providerClient)
+        finishRefresh(for: provider)
+    }
 
-            logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
-            logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
-            logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
-            logger
-                .info(
-                    "Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
+    private func startRefresh(for provider: ServiceProvider) {
+        isRefreshing[provider] = true
+        refreshErrors.removeValue(forKey: provider)
+        spendingData.updateConnectionStatus(for: provider, status: .syncing)
+        logger.info("Set isRefreshing=true for \(provider.displayName)")
+    }
 
-            // Update session data via session manager
-            sessionStateManager.updateSessionAfterDataFetch(
-                for: provider,
-                userInfo: userInfo.email,
-                teamInfo: (name: teamInfo.name, id: teamInfo.id),
-                userSessionData: userSessionData)
-            logger.info("Updated session data for \(provider.displayName)")
+    private func fetchProviderData(for provider: ServiceProvider,
+                                   authToken: String) async throws -> ProviderDataResult {
+        let providerClient = providerFactory.createProvider(for: provider)
 
-            // Update spending data via currency orchestrator
-            await currencyOrchestrator.updateProviderSpending(
-                for: provider,
-                from: invoice,
-                spendingData: spendingData)
-            logger.info("Updated spending data for \(provider.displayName)")
+        return try await backgroundProcessor.processProviderData(
+            provider: provider,
+            authToken: authToken,
+            providerClient: providerClient)
+    }
 
-            spendingData.updateUsage(for: provider, from: usage)
-            logger.info("Updated usage data for \(provider.displayName)")
+    private func processSuccessfulRefresh(for provider: ServiceProvider, result: ProviderDataResult) async {
+        let userInfo = result.userInfo
+        let teamInfo = result.teamInfo
+        let invoice = result.invoice
+        let usage = result.usage
 
-            lastRefreshDates[provider] = Date()
+        logFetchedData(for: provider, userInfo: userInfo, teamInfo: teamInfo, invoice: invoice, usage: usage)
+        updateDataStores(for: provider, userInfo: userInfo, teamInfo: teamInfo, invoice: invoice, usage: usage)
+        await updateCurrencyAndSpending(for: provider, invoice: invoice)
+        updateGravatarIfNeeded(for: provider, userEmail: userInfo.email)
+        logSuccessAndSpending(for: provider)
 
-            // Update Gravatar if this is the most recent user
-            if let mostRecentSession = userSessionData.mostRecentSession,
-               mostRecentSession.provider == provider {
-                gravatarService.updateAvatar(for: userInfo.email)
-            }
+        spendingData.updateConnectionStatus(for: provider, status: .connected)
+    }
 
-            logger.info("Successfully refreshed data for \(provider.displayName)")
-            logger
-                .info(
-                    "Current spending for \(provider.displayName): USD=\(self.spendingData.getSpendingData(for: provider)?.currentSpendingUSD ?? 0), display=\(self.spendingData.getSpendingData(for: provider)?.displaySpending ?? 0)")
+    private func logFetchedData(
+        for provider: ServiceProvider,
+        userInfo: ProviderUserInfo,
+        teamInfo: ProviderTeamInfo,
+        invoice: ProviderMonthlyInvoice,
+        usage: ProviderUsageData) {
+        logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
+        logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
+        logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
+        logger
+            .info(
+                "Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
+    }
 
-            // Update connection status to connected on success
-            spendingData.updateConnectionStatus(for: provider, status: .connected)
+    private func updateDataStores(
+        for provider: ServiceProvider,
+        userInfo: ProviderUserInfo,
+        teamInfo: ProviderTeamInfo,
+        invoice _: ProviderMonthlyInvoice,
+        usage: ProviderUsageData) {
+        sessionStateManager.updateSessionAfterDataFetch(
+            for: provider,
+            userInfo: userInfo.email,
+            teamInfo: (name: teamInfo.name, id: teamInfo.id),
+            userSessionData: userSessionData)
+        logger.info("Updated session data for \(provider.displayName)")
 
-        } catch let error as ProviderError where error == .unauthorized || error == .noTeamFound {
-            let errorMessage = error == .unauthorized ? "Authentication failed" : "Team not found"
-            logger.warning("\(errorMessage) for \(provider.displayName), clearing session data")
+        spendingData.updateUsage(for: provider, from: usage)
+        logger.info("Updated usage data for \(provider.displayName)")
 
-            // Update connection status
+        lastRefreshDates[provider] = Date()
+    }
+
+    private func updateCurrencyAndSpending(for provider: ServiceProvider, invoice: ProviderMonthlyInvoice) async {
+        await currencyOrchestrator.updateProviderSpending(
+            for: provider,
+            from: invoice,
+            spendingData: spendingData)
+        logger.info("Updated spending data for \(provider.displayName)")
+    }
+
+    private func updateGravatarIfNeeded(for provider: ServiceProvider, userEmail: String) {
+        if let mostRecentSession = userSessionData.mostRecentSession,
+           mostRecentSession.provider == provider {
+            gravatarService.updateAvatar(for: userEmail)
+        }
+    }
+
+    private func logSuccessAndSpending(for provider: ServiceProvider) {
+        logger.info("Successfully refreshed data for \(provider.displayName)")
+        let providerSpending = self.spendingData.getSpendingData(for: provider)
+        let usdSpending = providerSpending?.currentSpendingUSD ?? 0
+        let displaySpending = providerSpending?.displaySpending ?? 0
+        logger.info("Current spending for \(provider.displayName): USD=\(usdSpending), display=\(displaySpending)")
+    }
+
+    private func handleRefreshError(for provider: ServiceProvider, error: Error) {
+        switch error {
+        case let providerError as ProviderError where providerError == .unauthorized || providerError == .noTeamFound:
+            handleProviderSpecificError(for: provider, error: providerError)
+        case let providerError as ProviderError where providerError == .rateLimitExceeded:
+            handleRateLimitError(for: provider)
+        case let retryableError as NetworkRetryHandler.RetryableError:
+            handleNetworkError(for: provider, error: retryableError)
+        default:
+            handleGenericError(for: provider, error: error)
+        }
+    }
+
+    private func handleProviderSpecificError(for provider: ServiceProvider, error: ProviderError) {
+        let errorMessage = error == .unauthorized ? "Authentication failed" : "Team data unavailable"
+        logger.warning("\(errorMessage) for \(provider.displayName)")
+
+        if error == .unauthorized {
+            logger.warning("Clearing session data due to authentication failure")
             spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
-
-            // Handle authentication error via session manager
             sessionStateManager.handleAuthenticationError(
                 for: provider,
                 error: error,
                 userSessionData: userSessionData,
                 spendingData: spendingData)
-
-        } catch let error as ProviderError where error == .rateLimitExceeded {
-            logger.warning("Rate limit exceeded for \(provider.displayName)")
-            spendingData.updateConnectionStatus(for: provider, status: .rateLimited(until: nil))
-            refreshErrors[provider] = "Rate limit exceeded"
-
-        } catch let error as NetworkRetryHandler.RetryableError {
-            logger.error("Network error for \(provider.displayName): \(error)")
-            if let status = ProviderConnectionStatus.from(error) {
-                spendingData.updateConnectionStatus(for: provider, status: status)
-            } else {
-                spendingData.updateConnectionStatus(for: provider, status: .error(message: "Network error"))
-            }
-            refreshErrors[provider] = error.localizedDescription
-
-        } catch {
-            logger.error("Failed to refresh data for \(provider.displayName): \(error)")
-            let errorMessage = "Error fetching data: \(error.localizedDescription)".prefix(50)
-            refreshErrors[provider] = String(errorMessage)
-            userSessionData.setErrorMessage(for: provider, message: String(errorMessage))
-
-            // Update connection status for generic errors
-            if let providerError = error as? ProviderError {
-                spendingData.updateConnectionStatus(for: provider, status: .from(providerError))
-            } else {
-                spendingData.updateConnectionStatus(for: provider, status: .error(message: String(errorMessage)))
-            }
+        } else {
+            logger.info("Team data unavailable but user remains authenticated")
+            spendingData.updateConnectionStatus(for: provider, status: .connected)
+            userSessionData.setTeamFetchError(
+                for: provider,
+                message: "Team data unavailable, but you remain logged in.")
         }
+    }
 
+    private func handleRateLimitError(for provider: ServiceProvider) {
+        logger.warning("Rate limit exceeded for \(provider.displayName)")
+        spendingData.updateConnectionStatus(for: provider, status: .rateLimited(until: nil))
+        refreshErrors[provider] = "Rate limit exceeded"
+    }
+
+    private func handleNetworkError(for provider: ServiceProvider, error: NetworkRetryHandler.RetryableError) {
+        logger.error("Network error for \(provider.displayName): \(error)")
+        if let status = ProviderConnectionStatus.from(error) {
+            spendingData.updateConnectionStatus(for: provider, status: status)
+        } else {
+            spendingData.updateConnectionStatus(for: provider, status: .error(message: "Network error"))
+        }
+        refreshErrors[provider] = error.localizedDescription
+    }
+
+    private func handleGenericError(for provider: ServiceProvider, error: Error) {
+        logger.error("Failed to refresh data for \(provider.displayName): \(error)")
+        let errorMessage = "Error fetching data: \(error.localizedDescription)".prefix(50)
+        refreshErrors[provider] = String(errorMessage)
+        userSessionData.setErrorMessage(for: provider, message: String(errorMessage))
+
+        if let providerError = error as? ProviderError {
+            spendingData.updateConnectionStatus(for: provider, status: .from(providerError))
+        } else {
+            spendingData.updateConnectionStatus(for: provider, status: .error(message: String(errorMessage)))
+        }
+    }
+
+    private func finishRefresh(for provider: ServiceProvider) {
         isRefreshing[provider] = false
         logger.info("Set isRefreshing=false for \(provider.displayName)")
     }
@@ -344,6 +424,7 @@ public final class MultiProviderDataOrchestrator {
         // Currency orchestrator callbacks
         currencyOrchestrator.onCurrencyChanged = { [weak self] _ in
             guard let self else { return }
+            // Re-convert all existing spending data to the new currency
             await self.currencyOrchestrator.updateCurrencyConversions(spendingData: self.spendingData)
         }
     }

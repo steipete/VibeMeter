@@ -403,11 +403,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
             usage: ProviderUsageData)] = []
 
         // When - Make multiple concurrent calls to the actor
-        await withTaskGroup(of: (
-            userInfo: ProviderUserInfo,
-            teamInfo: ProviderTeamInfo,
-            invoice: ProviderMonthlyInvoice,
-            usage: ProviderUsageData)?.self) { group in
+        await withTaskGroup(of: ProviderDataResult?.self) { group in
                 for i in 0 ..< callCount {
                     group.addTask { [sut = self.sut] in
                         let provider = MockBackgroundProvider(provider: .cursor)
@@ -429,7 +425,12 @@ final class BackgroundDataProcessorTests: XCTestCase {
 
                 for await result in group {
                     if let result {
-                        results.append(result)
+                        results.append((
+                            userInfo: result.userInfo,
+                            teamInfo: result.teamInfo,
+                            invoice: result.invoice,
+                            usage: result.usage
+                        ))
                     }
                 }
             }

@@ -17,7 +17,7 @@ final class StatusBarController: NSObject {
     // MARK: - Component Managers
 
     private let displayManager: StatusBarDisplayManager
-    private let menuWindowManager: MenuWindowManager
+    private let menuManager: StatusBarMenuManager
     private let animationController: StatusBarAnimationController
     private let observer: StatusBarObserver
 
@@ -51,7 +51,7 @@ final class StatusBarController: NSObject {
             spendingData: spendingData,
             currencyData: currencyData)
 
-        self.menuWindowManager = MenuWindowManager()
+        self.menuManager = StatusBarMenuManager()
 
         self.animationController = StatusBarAnimationController(stateManager: stateManager)
 
@@ -64,7 +64,7 @@ final class StatusBarController: NSObject {
         super.init()
 
         setupStatusItem()
-        setupCustomMenu()
+        setupMenuManager()
         setupCallbacks()
         startComponents()
     }
@@ -74,7 +74,7 @@ final class StatusBarController: NSObject {
 
         if let button = statusItem?.button {
             button.imagePosition = .imageLeading
-            button.action = #selector(togglePopover)
+            button.action = #selector(handleClick(_:))
             button.target = self
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
@@ -87,8 +87,8 @@ final class StatusBarController: NSObject {
         }
     }
 
-    private func setupCustomMenu() {
-        menuWindowManager.setupCustomMenu(
+    private func setupMenuManager() {
+        menuManager.setup(
             settingsManager: settingsManager,
             userSession: userSession,
             loginManager: loginManager,
@@ -160,15 +160,44 @@ final class StatusBarController: NSObject {
     }
 
     @objc
+    private func handleClick(_: NSStatusBarButton) {
+        guard let currentEvent = NSApp.currentEvent else {
+            // Fallback to left click behavior if we can't determine the event
+            togglePopover()
+            return
+        }
+
+        switch currentEvent.type {
+        case .leftMouseUp:
+            openSettings() // For now, left-click opens settings
+        case .rightMouseUp:
+            showCustomMenu()
+        default:
+            openSettings() // For now, fallback to settings
+        }
+    }
+
+    @objc
     private func togglePopover() {
         guard let button = statusItem?.button else { return }
-        menuWindowManager.togglePopover(relativeTo: button)
+        menuManager.togglePopover(relativeTo: button)
+    }
+
+    @objc
+    private func showCustomMenu() {
+        guard let button = statusItem?.button, let statusItem else { return }
+        menuManager.showContextMenu(for: button, statusItem: statusItem)
+    }
+
+    @objc
+    private func openSettings() {
+        NSApp.openSettings()
     }
 
     /// Shows the popover menu (used for initial display when not logged in)
     func showPopover() {
         guard let button = statusItem?.button else { return }
-        menuWindowManager.showPopover(relativeTo: button)
+        menuManager.showPopover(relativeTo: button)
     }
 
     deinit {

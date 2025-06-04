@@ -8,6 +8,10 @@
     <true/>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
     <!-- Sparkle XPC Service temporary exceptions -->
     <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
     <array>

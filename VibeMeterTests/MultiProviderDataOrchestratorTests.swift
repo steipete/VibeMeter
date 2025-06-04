@@ -5,7 +5,7 @@ extension Date {
     var month: Int {
         Calendar.current.component(.month, from: self)
     }
-    
+
     var year: Int {
         Calendar.current.component(.year, from: self)
     }
@@ -31,7 +31,6 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
 
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.MultiProviderDataOrchestratorTests"
-
 
     override func setUp() {
         super.setUp()
@@ -116,7 +115,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         // This test verifies that the orchestrator doesn't automatically
         // refresh data on initialization when a user is logged in.
         // The actual refresh should be triggered by the app explicitly.
-        
+
         // Simulate existing login state by setting up user session data
         userSessionData.handleLoginSuccess(
             for: .cursor,
@@ -144,20 +143,20 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
     // MARK: - Login Flow Tests
 
     func testLoginSuccess_RefreshesData_UpdatesState() async {
-        // This test is simplified - in a real implementation, we would need to 
+        // This test is simplified - in a real implementation, we would need to
         // properly mock the network responses or use dependency injection
         // to inject mock providers. For now, we'll test the basic flow.
-        
+
         // Setup initial state: logged out
         XCTAssertFalse(userSessionData.isLoggedInToAnyProvider)
-        
+
         // Simulate login success by setting user session data
         userSessionData.handleLoginSuccess(
             for: .cursor,
             email: "success@example.com",
             teamName: "LoginSuccessTeam",
             teamId: 789)
-        
+
         // Simulate spending data update
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 12345, description: "usage", provider: .cursor)],
@@ -170,7 +169,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             from: invoice,
             rates: mockExchangeRateManager.ratesToReturn ?? ["USD": 1.0],
             targetCurrency: "EUR")
-        
+
         // Set exchange rates
         mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.9]
         currencyData.updateExchangeRates(mockExchangeRateManager.ratesToReturn ?? ["USD": 1.0])
@@ -195,7 +194,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             email: "test@example.com",
             teamName: "Test Team",
             teamId: 1)
-        
+
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 1000, description: "usage", provider: .cursor)],
             pricingDescription: nil,
@@ -257,7 +256,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         // Setup exchange rates
         mockExchangeRateManager.ratesToReturn = ["USD": 1.0, "EUR": 0.85]
         currencyData.updateExchangeRates(mockExchangeRateManager.ratesToReturn ?? ["USD": 1.0])
-        
+
         // Add spending data in USD
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 10000, description: "usage", provider: .cursor)],

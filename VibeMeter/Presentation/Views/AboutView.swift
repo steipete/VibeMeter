@@ -10,7 +10,7 @@ struct AboutView: View {
     let orchestrator: MultiProviderDataOrchestrator?
     var appName: String {
         Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
-            Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "VibeMeter"
+            Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "Vibe Meter"
     }
 
     var appVersion: String {

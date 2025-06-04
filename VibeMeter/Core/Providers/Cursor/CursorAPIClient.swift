@@ -14,7 +14,7 @@ actor CursorAPIClient {
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.keyDecodingStrategy = .useDefaultKeys
         return decoder
     }()
 
@@ -51,19 +51,21 @@ actor CursorAPIClient {
         return try await performRequest(request)
     }
 
-    func fetchInvoice(authToken: String, month: Int, year: Int, teamId: Int) async throws -> CursorInvoiceResponse {
-        logger.debug("Fetching Cursor invoice for \(month)/\(year) for team \(teamId)")
+    func fetchInvoice(authToken: String, month: Int, year: Int,
+                      teamId _: Int? = nil) async throws -> CursorInvoiceResponse {
+        logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
         let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
         var request = createRequest(for: endpoint, authToken: authToken)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // Use the new API format that matches what the browser sends
         let body = [
-            "teamId": teamId,
             "month": month,
             "year": year,
-        ]
+            "includeUsageEvents": false,
+        ] as [String: Any]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         return try await performRequest(request)
@@ -72,7 +74,26 @@ actor CursorAPIClient {
     func fetchUsage(authToken: String) async throws -> CursorUsageResponse {
         logger.debug("Fetching Cursor usage data")
 
-        let endpoint = baseURL.appendingPathComponent("usage")
+        // Extract user ID from the session token (format: user_id::jwt_token)
+        let userId: String = if let colonIndex = authToken.firstIndex(of: ":") {
+            String(authToken[..<colonIndex])
+        } else {
+            // Fallback: if token format is different, use the whole token as user ID
+            authToken
+        }
+
+        logger.debug("Extracted user ID: \(userId)")
+
+        // Create URL with user query parameter
+        var urlComponents = URLComponents(url: baseURL.appendingPathComponent("usage"), resolvingAgainstBaseURL: false)!
+        urlComponents.queryItems = [URLQueryItem(name: "user", value: userId)]
+
+        guard let endpoint = urlComponents.url else {
+            throw ProviderError.networkError(message: "Failed to construct usage URL", statusCode: nil)
+        }
+
+        logger.debug("Usage endpoint URL with user parameter: \(endpoint.absoluteString)")
+
         let request = createRequest(for: endpoint, authToken: authToken)
 
         return try await performRequest(request)
@@ -96,6 +117,8 @@ actor CursorAPIClient {
         request.setValue("WorkosCursorSessionToken=\(authToken)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("VibeMeter/1.0", forHTTPHeaderField: "User-Agent")
+        // Add referer header as some APIs require it
+        request.setValue("https://www.cursor.com", forHTTPHeaderField: "Referer")
         request.timeoutInterval = 30.0
         return request
     }
@@ -135,7 +158,7 @@ actor CursorAPIClient {
                     statusCode: 204)
             }
 
-            // Handle empty data for successful responses
+            // Handle empty or minimal data for successful responses
             if data.isEmpty {
                 logger.error("Received empty data for successful response")
                 throw ProviderError.decodingError(
@@ -155,6 +178,14 @@ actor CursorAPIClient {
         case 401:
             logger.warning("Unauthorized Cursor request")
             throw ProviderError.unauthorized
+
+        case 404:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            logger.error("404 Not Found - API endpoint may have changed. URL: \(request.url?.absoluteString ?? "nil")")
+            logger.error("404 Response body: \(message)")
+            throw ProviderError.networkError(
+                message: "API endpoint not found - the endpoint may have been moved or deprecated",
+                statusCode: 404)
 
         case 429:
             logger.warning("Cursor rate limit exceeded")

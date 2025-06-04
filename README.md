@@ -1,8 +1,7 @@
-# VibeMeter
+# Vibe Meter
 
 A beautiful, native macOS menu bar application that helps you track your monthly AI spending with real-time monitoring and smart notifications.
 
-![VibeMeter Menu Bar](assets/menubar-icon.png)
 
 ## ✨ Features
 
@@ -13,13 +12,15 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 - **🎨 Animated Gauge Display** - Beautiful visual indicator showing spending progress
 - **🔐 Secure Authentication** - Safe login via provider's official web authentication
 - **⚡ Lightweight & Native** - Built with Swift 6, optimized for performance and battery life
-- **🔄 Auto-Updates** - Secure automatic updates with cryptographic verification
+- **🔄 Auto-Updates** - Secure automatic updates with EdDSA signature verification
 - **🌓 Dark Mode Support** - Seamlessly adapts to your system appearance
+- **🖱️ Right-Click Menu** - Quick access to settings and actions via context menu
+- **📊 Enhanced UI** - Professional cost table with centered icons and full-width progress bars
 
 ## 🚀 Quick Start
 
-1. **Download VibeMeter** from the [latest release](https://github.com/steipete/VibeMeter/releases)
-2. **Install** by dragging VibeMeter.app to your Applications folder
+1. **Download Vibe Meter** from the [latest release](https://github.com/steipete/VibeMeter/releases)
+2. **Install** by dragging Vibe Meter.app to your Applications folder
 3. **Launch** and click the menu bar icon to get started
 4. **Login** to your Cursor AI account when prompted
 5. **Configure** spending limits and currency preferences in Settings
@@ -32,7 +33,7 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 
 ## 🎯 How It Works
 
-VibeMeter connects securely to your Cursor AI account and monitors your monthly usage:
+Vibe Meter connects securely to your Cursor AI account and monitors your monthly usage:
 
 - **Automatic Sync** - Updates spending data every 5 minutes
 - **Visual Indicators** - Gauge fills up as you approach your spending limits
@@ -52,7 +53,7 @@ VibeMeter connects securely to your Cursor AI account and monitors your monthly 
 
 ## 🛠️ Development
 
-Want to contribute? VibeMeter is built with modern Swift technologies:
+Want to contribute? Vibe Meter is built with modern Swift technologies:
 
 ### Tech Stack
 - **Swift 6** with strict concurrency
@@ -93,7 +94,7 @@ Want to contribute? VibeMeter is built with modern Swift technologies:
 ./scripts/lint.sh
 
 # Run tests
-xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter test
+xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Debug test
 
 # Build release
 ./scripts/build.sh
@@ -101,7 +102,7 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter test
 
 ## 🏗️ Architecture
 
-VibeMeter follows clean architecture principles:
+Vibe Meter follows clean architecture principles:
 
 - **Multi-Provider System** - Extensible design for supporting multiple AI services
 - **Reactive State Management** - Combine-based data flow with `@Observable` models  
@@ -112,17 +113,17 @@ VibeMeter follows clean architecture principles:
 
 - **Local Authentication** - Login credentials never stored, uses secure web authentication
 - **Encrypted Storage** - Sensitive data protected using macOS Keychain
-- **No Tracking** - VibeMeter doesn't collect any analytics or usage data
+- **No Tracking** - Vibe Meter doesn't collect any analytics or usage data
 - **Secure Updates** - All updates cryptographically signed and verified
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for details on:
+We welcome contributions! When contributing to Vibe Meter:
 
-- Code style and formatting
-- Testing requirements  
-- Pull request process
-- Architecture decisions
+- Follow Swift 6 best practices with strict concurrency
+- Use the provided formatting script: `./scripts/format.sh`
+- Ensure all tests pass before submitting
+- Update documentation for significant changes
 
 ## 📖 Documentation
 
@@ -140,6 +141,13 @@ Found a bug or have a feature request?
 3. For urgent issues, mention [@steipete](https://twitter.com/steipete) on Twitter
 
 ## 🎉 Roadmap
+
+**Current Status (v0.9.x):** Feature-complete beta with Cursor AI support, preparing for v1.0 release
+
+**Version 1.0:**
+- Production-ready release with full Cursor AI integration
+- Comprehensive testing and stability improvements
+- Enhanced error handling and user feedback
 
 **Version 1.x:**
 - Additional AI service providers (OpenAI, Anthropic, etc.)

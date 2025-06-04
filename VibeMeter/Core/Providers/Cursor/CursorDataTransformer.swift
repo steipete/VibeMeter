@@ -11,11 +11,16 @@ enum CursorDataTransformer {
     // MARK: - Transformation Methods
 
     static func transformTeamInfo(from response: CursorTeamsResponse) throws -> ProviderTeamInfo {
-        guard let firstTeam = response.teams.first else {
-            logger.error("No teams found in Cursor response")
-            throw ProviderError.noTeamFound
+        // Handle new API format that may return empty object or no teams array
+        guard let teams = response.teams, !teams.isEmpty else {
+            logger.warning("Cursor API returned empty teams response - this may indicate API changes")
+            // Create a fallback team info since the user is authenticated but no team data is available
+            // This allows the app to continue functioning even with the changed API
+            logger.info("Creating fallback team info due to empty teams response")
+            return ProviderTeamInfo(id: 0, name: "Individual", provider: .cursor)
         }
 
+        let firstTeam = teams.first!
         logger.info("Successfully transformed Cursor team: \(firstTeam.name, privacy: .public)")
         return ProviderTeamInfo(id: firstTeam.id, name: firstTeam.name, provider: .cursor)
     }
@@ -27,12 +32,16 @@ enum CursorDataTransformer {
 
     static func transformInvoice(from response: CursorInvoiceResponse, month: Int,
                                  year: Int) -> ProviderMonthlyInvoice {
-        let genericItems = (response.items ?? []).map { item in
-            ProviderInvoiceItem(
+        logger.info("Transforming invoice response for \(month)/\(year)")
+        logger.debug("Invoice response items count: \(response.items?.count ?? 0)")
+
+        let genericItems: [ProviderInvoiceItem] = response.items?.map { item in
+            logger.debug("Processing invoice item: \(item.description) - \(item.cents) cents")
+            return ProviderInvoiceItem(
                 cents: item.cents,
                 description: item.description,
                 provider: .cursor)
-        }
+        } ?? []
 
         let genericPricing = response.pricingDescription.map { pricing in
             ProviderPricingDescription(
@@ -42,7 +51,10 @@ enum CursorDataTransformer {
         }
 
         let totalCents = genericItems.reduce(0) { $0 + $1.cents }
-        logger.info("Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents")
+        let totalUSD = Double(totalCents) / 100.0
+        logger
+            .info(
+                "Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents ($\(totalUSD))")
 
         return ProviderMonthlyInvoice(
             items: genericItems,

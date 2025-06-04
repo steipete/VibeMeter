@@ -17,91 +17,85 @@ struct SpendingLimitsView: View {
         self.userSessionData = userSessionData
     }
 
+    // MARK: - Helper Views
+
+    private var warningLimitSection: some View {
+        Section {
+            limitContent(
+                amountUSD: settingsManager.warningLimitUSD,
+                convertedAmount: convertedWarningLimit,
+                description: "You'll receive a notification when spending exceeds this amount.")
+        } header: {
+            Text("Warning Limit").font(.headline)
+        }
+    }
+
+    private var upperLimitSection: some View {
+        Section {
+            limitContent(
+                amountUSD: settingsManager.upperLimitUSD,
+                convertedAmount: convertedUpperLimit,
+                description: "You'll receive a critical notification when spending exceeds this amount.")
+        } header: {
+            Text("Upper Limit").font(.headline)
+        } footer: {
+            footerContent
+        }
+    }
+
+    private func limitContent(amountUSD: Double, convertedAmount: Double, description: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            LabeledContent("Amount") {
+                HStack(spacing: 8) {
+                    Text("$\(amountUSD.formatted(.number.precision(.fractionLength(0))))")
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.primary)
+                    Text("USD")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                if !currencyData.isUSD {
+                    currencyApproximation(convertedAmount: convertedAmount)
+                }
+
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func currencyApproximation(convertedAmount: Double) -> some View {
+        HStack {
+            Text("Approximately")
+            Text("\(currencyData.selectedSymbol)\(convertedAmount.formatted(.number.precision(.fractionLength(2))))")
+                .fontWeight(.medium)
+            Text("in \(currencyData.selectedCode)")
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    private var footerContent: some View {
+        HStack {
+            Spacer()
+            Text(
+                "Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Form {
-                    Section {
-                        VStack(alignment: .leading, spacing: 12) {
-                            LabeledContent("Amount") {
-                                HStack(spacing: 8) {
-                                    Text(
-                                        "$\(settingsManager.warningLimitUSD.formatted(.number.precision(.fractionLength(0))))")
-                                        .font(.system(.body, design: .monospaced))
-                                        .foregroundStyle(.primary)
-                                    Text("USD")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                if !currencyData.isUSD {
-                                    HStack {
-                                        Text("Approximately")
-                                        Text(
-                                            "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(2))))")
-                                            .fontWeight(.medium)
-                                        Text("in \(currencyData.selectedCode)")
-                                    }
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                }
-
-                                Text("You'll receive a notification when spending exceeds this amount.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } header: {
-                        Text("Warning Limit")
-                            .font(.headline)
-                    }
-
-                    Section {
-                        VStack(alignment: .leading, spacing: 12) {
-                            LabeledContent("Amount") {
-                                HStack(spacing: 8) {
-                                    Text(
-                                        "$\(settingsManager.upperLimitUSD.formatted(.number.precision(.fractionLength(0))))")
-                                        .font(.system(.body, design: .monospaced))
-                                        .foregroundStyle(.primary)
-                                    Text("USD")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                if !currencyData.isUSD {
-                                    HStack {
-                                        Text("Approximately")
-                                        Text(
-                                            "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(2))))")
-                                            .fontWeight(.medium)
-                                        Text("in \(currencyData.selectedCode)")
-                                    }
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                }
-
-                                Text("You'll receive a critical notification when spending exceeds this amount.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } header: {
-                        Text("Upper Limit")
-                            .font(.headline)
-                    } footer: {
-                        HStack {
-                            Spacer()
-                            Text(
-                                "Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                            Spacer()
-                        }
-                    }
+                    warningLimitSection
+                    upperLimitSection
                 }
                 .formStyle(.grouped)
                 .scrollContentBackground(.hidden)

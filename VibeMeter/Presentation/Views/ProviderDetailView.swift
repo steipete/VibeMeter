@@ -27,8 +27,6 @@ struct ProviderDetailView: View {
         self.settingsManager = settingsManager
         self.userSessionData = userSessionData
         self.loginManager = loginManager
-
-        _customSettings = State(initialValue: ProviderRegistry.shared.configuration(for: provider).customSettings)
     }
 
     var body: some View {
@@ -94,6 +92,14 @@ struct ProviderDetailView: View {
         }
         .padding(24)
         .frame(width: 500, height: 520)
+        .task {
+            // Load custom settings when view appears
+            customSettings = providerRegistry.configuration(for: provider).customSettings
+        }
+        .onChange(of: provider) { _, newProvider in
+            // Update settings if provider changes
+            customSettings = providerRegistry.configuration(for: newProvider).customSettings
+        }
     }
 
     private func connectionStatusSection(session: ProviderSessionState) -> some View {

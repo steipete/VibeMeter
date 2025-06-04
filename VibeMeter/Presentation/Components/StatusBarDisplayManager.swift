@@ -8,6 +8,11 @@ import SwiftUI
 /// based on the current application state.
 @MainActor
 final class StatusBarDisplayManager {
+    // MARK: - Constants
+
+    /// Threshold for detecting currency changes based on animated value difference (in currency units)
+    private static let currencyChangeThreshold: Double = 0.5
+
     // MARK: - Display State
 
     struct DisplayState: Equatable {
@@ -25,18 +30,34 @@ final class StatusBarDisplayManager {
         let animatedCostValue: Double
 
         static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
-            lhs.isLoggedIn == rhs.isLoggedIn &&
-                lhs.hasData == rhs.hasData &&
-                abs(lhs.gaugeValue - rhs.gaugeValue) < 0.001 &&
-                abs(lhs.totalSpending - rhs.totalSpending) < 0.01 &&
-                lhs.currencyCode == rhs.currencyCode &&
-                lhs.currencySymbol == rhs.currencySymbol &&
-                lhs.displayMode == rhs.displayMode &&
-                lhs.isDarkMode == rhs.isDarkMode &&
-                lhs.hasProviderIssues == rhs.hasProviderIssues &&
-                lhs.connectionStatus == rhs.connectionStatus &&
-                abs(lhs.animatedGaugeValue - rhs.animatedGaugeValue) < 0.001 &&
-                abs(lhs.animatedCostValue - rhs.animatedCostValue) < 0.01
+            lhs.basicPropertiesEqual(to: rhs) &&
+                lhs.currencyPropertiesEqual(to: rhs) &&
+                lhs.valuesEqual(to: rhs) &&
+                lhs.animatedValuesEqual(to: rhs)
+        }
+
+        private func basicPropertiesEqual(to other: DisplayState) -> Bool {
+            isLoggedIn == other.isLoggedIn &&
+                hasData == other.hasData &&
+                displayMode == other.displayMode &&
+                isDarkMode == other.isDarkMode &&
+                hasProviderIssues == other.hasProviderIssues &&
+                connectionStatus == other.connectionStatus
+        }
+
+        private func currencyPropertiesEqual(to other: DisplayState) -> Bool {
+            currencyCode == other.currencyCode &&
+                currencySymbol == other.currencySymbol
+        }
+
+        private func valuesEqual(to other: DisplayState) -> Bool {
+            abs(gaugeValue - other.gaugeValue) < 0.001 &&
+                abs(totalSpending - other.totalSpending) < 0.01
+        }
+
+        private func animatedValuesEqual(to other: DisplayState) -> Bool {
+            abs(animatedGaugeValue - other.animatedGaugeValue) < 0.001 &&
+                abs(animatedCostValue - other.animatedCostValue) < 0.01
         }
     }
 
@@ -149,11 +170,13 @@ final class StatusBarDisplayManager {
         let lastShouldShowIcon = lastState.map { !$0.hasData || $0.displayMode.showsIcon } ?? true
         let currentShouldShowIcon = !currentState.hasData || currentState.displayMode.showsIcon
 
-        return lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
+        let shouldUpdate = lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
             lastShouldShowIcon != currentShouldShowIcon ||
             lastState?.currencySymbol != currentState.currencySymbol ||
             lastState?.hasData != currentState.hasData ||
-            abs((lastState?.animatedCostValue ?? 0) - currentState.animatedCostValue) > 0.01
+            abs((lastState?.totalSpending ?? 0) - currentState.totalSpending) > 0.01
+
+        return shouldUpdate
     }
 
     private func shouldUpdateTooltipAndAccessibility(from lastState: DisplayState?,
@@ -217,7 +240,7 @@ final class StatusBarDisplayManager {
                 button.image?.isTemplate = true
             } else {
                 print("GaugeIcon rendering failed, using fallback")
-                button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
+                button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "Vibe Meter")
                 button.image?.isTemplate = true
             }
         } else {
@@ -227,13 +250,37 @@ final class StatusBarDisplayManager {
 
     private func updateTitle(button: NSStatusBarButton, state: DisplayState) {
         if state.displayMode.showsMoney, stateManager.currentState.showsGauge, state.hasData {
-            stateManager.setCostValue(state.totalSpending)
+            // Check if currency changed in two ways:
+            // 1. Direct currency code comparison with last state
+            let lastCurrencyCode = lastDisplayState?.currencyCode
+            let currencyCodeChanged = lastCurrencyCode != nil && lastCurrencyCode != state.currencyCode
+
+            // 2. Check if animated value significantly differs from target (indicates currency change)
+            let currentAnimated = stateManager.animatedCostValue
+            let targetSpending = state.totalSpending
+            let animatedValueMismatch = abs(currentAnimated - targetSpending) > Self
+                .currencyChangeThreshold // More than 50 cent difference
+
+            let currencyChanged = currencyCodeChanged || animatedValueMismatch
+
+            if currencyChanged {
+                // Currency changed - reset cost value immediately without animation
+                stateManager.setCostValueImmediately(state.totalSpending)
+            } else {
+                // Normal operation - use animated transition
+                stateManager.setCostValue(state.totalSpending)
+            }
+
+            // Force the animation manager to update immediately to sync with current data
+            stateManager.updateAnimation()
+
             // Use new logic: icon is shown when there's no data OR user setting shows icon
             let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
             let spacingPrefix = shouldShowIcon ? "  " : ""
-            button
-                .title =
-                "\(spacingPrefix)\(state.currencySymbol)\(state.animatedCostValue.formatted(.number.precision(.fractionLength(2))))"
+            let displayValue = stateManager.animatedCostValue.formatted(.number.precision(.fractionLength(2)))
+
+            let titleText = "\(spacingPrefix)\(state.currencySymbol)\(displayValue)"
+            button.title = titleText
         } else {
             button.title = ""
         }
