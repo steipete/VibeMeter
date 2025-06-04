@@ -10,7 +10,7 @@ import SwiftUI
 @MainActor
 final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?
-    private var hostingController: NSViewController
+    private let hostingController: NSViewController
 
     init(contentView: some View) {
         // Create content view controller
@@ -85,9 +85,6 @@ final class CustomMenuWindow: NSPanel {
         // Use modern animation APIs with better timing
         alphaValue = 0
         orderFront(nil)
-
-        // Make the window key for text input when login is visible
-        makeKeyAndOrderFront(nil)
 
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in
@@ -201,6 +198,15 @@ final class CustomMenuWindow: NSPanel {
 
     override var canBecomeMain: Bool {
         false
+    }
+    
+    deinit {
+        // Ensure proper cleanup of event monitoring
+        // Since this class is @MainActor and deinit is called when deallocating,
+        // we can assume we're on the main actor
+        MainActor.assumeIsolated {
+            teardownEventMonitoring()
+        }
     }
 }
 
