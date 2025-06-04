@@ -49,18 +49,11 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     public private(set) var updaterController: SPUStandardUpdaterController!
 
     private func initializeUpdaterController() {
-        // In debug mode, we create the controller but don't start the updater
-        #if DEBUG
-            let controller = SPUStandardUpdaterController(
-                startingUpdater: false,
-                updaterDelegate: self,
-                userDriverDelegate: self)
-        #else
-            let controller = SPUStandardUpdaterController(
-                startingUpdater: true,
-                updaterDelegate: self,
-                userDriverDelegate: self)
-        #endif
+        // Always start the updater to allow manual checks
+        let controller = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: self,
+            userDriverDelegate: self)
 
         // Enable automatic update checks only in release builds
         #if DEBUG
