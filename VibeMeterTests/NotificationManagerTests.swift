@@ -534,8 +534,8 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2))))"
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -558,8 +558,8 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2))))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2))))"
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"
