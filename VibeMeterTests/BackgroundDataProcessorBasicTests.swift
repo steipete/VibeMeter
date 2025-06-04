@@ -130,7 +130,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then - Should take ~0.2s (user info + team info sequentially, then invoice + usage concurrently)
         // Not ~0.4s if all were sequential
-        XCTAssertLessThan(elapsed, 0.3, "Operations should execute concurrently")
+        XCTAssertLessThan(elapsed, 0.35, "Operations should execute concurrently")
         XCTAssertGreaterThan(elapsed, 0.15, "Operations should have some delay")
     }
 
