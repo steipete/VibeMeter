@@ -59,7 +59,7 @@ Want to contribute? Vibe Meter is built with modern Swift technologies:
 - **Swift 6** with strict concurrency
 - **SwiftUI** for settings and UI components
 - **AppKit** for menu bar integration
-- **Combine** for reactive data flow
+- **@Observable** for reactive data flow
 - **Tuist** for project generation
 
 ### Getting Started
@@ -105,7 +105,7 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 Vibe Meter follows clean architecture principles:
 
 - **Multi-Provider System** - Extensible design for supporting multiple AI services
-- **Reactive State Management** - Combine-based data flow with `@Observable` models  
+- **Reactive State Management** - Modern `@Observable` data flow with SwiftUI integration
 - **Service Layer** - Modular services for API clients, authentication, and notifications
 - **Protocol-Oriented Design** - Extensive use of protocols for testability and flexibility
 
