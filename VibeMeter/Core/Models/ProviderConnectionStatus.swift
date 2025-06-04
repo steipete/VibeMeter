@@ -181,7 +181,7 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
             "Connection failed"
         } else if message.lowercased().contains("unauthorized") || message.lowercased().contains("auth") {
             "Authentication failed"
-        } else if message.lowercased().contains("timeout") {
+        } else if message.lowercased().contains("timeout") || message.lowercased().contains("timed out") {
             "Request timed out"
         } else if message.lowercased().contains("team not found") {
             "Team not found"
