@@ -151,7 +151,6 @@ actor CursorAPIClient {
         data: Data,
         response httpResponse: HTTPURLResponse,
         request: URLRequest) throws -> T {
-
         switch httpResponse.statusCode {
         case 200 ... 299:
             return try handleSuccessResponse(data: data, statusCode: httpResponse.statusCode, request: request)
@@ -178,6 +177,11 @@ actor CursorAPIClient {
 
         default:
             try handleErrorResponse(data: data, statusCode: httpResponse.statusCode)
+            // handleErrorResponse always throws, so this is unreachable
+            // but Swift can't prove that, so we need to satisfy the return type
+            throw ProviderError.networkError(
+                message: "Unexpected error",
+                statusCode: httpResponse.statusCode)
         }
     }
 
