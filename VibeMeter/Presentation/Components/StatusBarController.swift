@@ -173,7 +173,7 @@ final class StatusBarController: NSObject {
         case .rightMouseUp:
             showCustomMenu()
         default:
-            togglePopover() // Fallback to popover
+            togglePopover()
         }
     }
 

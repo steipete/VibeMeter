@@ -392,8 +392,12 @@ public final class MultiProviderDataOrchestrator {
         // Session state manager callbacks
         sessionStateManager.onLoginSuccess = { [weak self] provider in
             Task { @MainActor in
-                self?.logger.info("Starting data refresh after login for \(provider.displayName)")
-                await self?.refreshData(for: provider, showSyncedMessage: true)
+                guard let self else { return }
+                self.logger.info("Starting data refresh after login for \(provider.displayName)")
+                // Clear any existing data to ensure we don't show stale data from previous account
+                self.spendingData.clear(provider: provider)
+                self.logger.info("Cleared previous spending data for \(provider.displayName)")
+                await self.refreshData(for: provider, showSyncedMessage: true)
             }
         }
 

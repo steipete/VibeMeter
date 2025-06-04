@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Mock implementation of SettingsManagerProtocol for SwiftUI previews.

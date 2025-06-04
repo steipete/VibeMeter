@@ -237,6 +237,7 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(bodyJSON?["month"] as? Int, 11)
         XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
         XCTAssertEqual(bodyJSON?["teamId"] as? Int, 789)
+        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
     }
 
     func testFetchMonthlyInvoice_WithStoredTeamId() async throws {
@@ -279,7 +280,10 @@ final class CursorProviderTests: XCTestCase {
         // Verify stored team ID was used
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+        XCTAssertEqual(bodyJSON?["month"] as? Int, 5)
+        XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
         XCTAssertEqual(bodyJSON?["teamId"] as? Int, 999)
+        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
     }
 
     func testFetchMonthlyInvoice_NoTeamIdAvailable() async {
@@ -341,10 +345,15 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextResponse = mockResponse
 
         // When
-        let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
+        let usageData = try await cursorProvider.fetchUsageData(authToken: "user123::jwt-token")
 
         // Then
         XCTAssertEqual(usageData.currentRequests, 25) // Uses GPT-4 as primary
+        
+        // Verify the user parameter was extracted and used
+        XCTAssertNotNil(mockURLSession.lastRequest?.url)
+        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
+        XCTAssertEqual(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value, "user123")
         XCTAssertEqual(usageData.totalRequests, 50)
         XCTAssertEqual(usageData.maxRequests, 100)
         XCTAssertEqual(usageData.provider, .cursor)
@@ -393,11 +402,16 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextResponse = mockResponse
 
         // When
-        let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
+        let usageData = try await cursorProvider.fetchUsageData(authToken: "user456::jwt-token")
 
         // Then - should use current date as fallback
         let timeDifference = abs(usageData.startOfMonth.timeIntervalSinceNow)
         XCTAssertLessThan(timeDifference, 60) // Within 1 minute of now
+        
+        // Verify the user parameter was extracted and used
+        XCTAssertNotNil(mockURLSession.lastRequest?.url)
+        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
+        XCTAssertEqual(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value, "user456")
     }
 
     // MARK: - Token Validation Tests

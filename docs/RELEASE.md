@@ -26,35 +26,138 @@ export APP_STORE_CONNECT_API_KEY_P8="-----BEGIN PRIVATE KEY-----..."
 
 ## Release Types
 
-### 1. Quick Release (Using Existing Build)
+VibeMeter supports both stable and pre-release versions through separate update channels.
+
+### Release Channels
+
+- **🟢 Stable Channel** (`appcast.xml`) - Production-ready releases for all users
+- **🟡 Pre-release Channel** (`appcast-prerelease.xml`) - Beta, alpha, and RC versions for testing
+
+### Version Management
+
+Use the version management script to prepare releases:
+
+```bash
+# Show current version
+./scripts/version.sh --current
+
+# Bump version for stable releases
+./scripts/version.sh --patch        # 0.9.1 -> 0.9.2
+./scripts/version.sh --minor        # 0.9.1 -> 0.10.0  
+./scripts/version.sh --major        # 0.9.1 -> 1.0.0
+
+# Create pre-release versions
+./scripts/version.sh --prerelease beta    # 0.9.2 -> 0.9.2-beta.1
+./scripts/version.sh --prerelease alpha   # 0.9.2 -> 0.9.2-alpha.1
+./scripts/version.sh --prerelease rc      # 0.9.2 -> 0.9.2-rc.1
+
+# Set specific version
+./scripts/version.sh --set 1.0.0
+```
+
+### Creating Releases
+
+#### 1. Universal Release Script (Recommended)
+
+```bash
+# Create stable release
+./scripts/release.sh --stable
+
+# Create pre-releases  
+./scripts/release.sh --prerelease beta 1     # Creates 0.9.2-beta.1
+./scripts/release.sh --prerelease alpha 2    # Creates 0.9.2-alpha.2
+./scripts/release.sh --prerelease rc 1       # Creates 0.9.2-rc.1
+```
+
+#### 2. Individual Release Scripts
+
+```bash
+# Stable releases only
+./scripts/create-github-release.sh
+
+# Pre-releases only
+./scripts/create-prerelease.sh beta 1        # Creates beta.1
+./scripts/create-prerelease.sh alpha 2       # Creates alpha.2
+./scripts/create-prerelease.sh rc 1          # Creates rc.1
+```
+
+#### 3. Quick Release (Using Existing Build)
 If you already have a built, signed, and notarized app:
 
 ```bash
 ./scripts/release-from-existing.sh
 ```
 
-This script will:
-- Create DMG from existing app
-- Sign the DMG with Sparkle EdDSA signature
-- Update `appcast.xml` with release info
-- Commit and push changes
-- Create GitHub release with DMG
-
-### 2. Full Release (Build from Source)
+#### 4. Full Release (Build from Source)
 To build everything from scratch:
 
 ```bash
 ./scripts/release-local.sh
 ```
 
-This script will:
-- Generate Xcode project with Tuist
-- Build Release configuration
-- Code sign with Developer ID
-- Notarize with Apple (if flag is set)
-- Create DMG
-- Sign with Sparkle
-- Update appcast and create release
+### Complete Release Workflow
+
+#### Stable Release Workflow
+
+1. **Prepare Release:**
+   ```bash
+   # Bump version (choose appropriate type)
+   ./scripts/version.sh --patch
+   
+   # Review changes
+   git diff Project.swift
+   
+   # Commit version bump
+   git add Project.swift
+   git commit -m "Bump version to 0.9.2"
+   ```
+
+2. **Create Release:**
+   ```bash
+   ./scripts/release.sh --stable
+   ```
+
+3. **Post-Release:**
+   ```bash
+   # Commit updated appcast files (both stable and pre-release)
+   git add appcast*.xml
+   git commit -m "Update appcast for v0.9.2"
+   git push origin main
+   ```
+
+#### Pre-release Workflow
+
+1. **Prepare Pre-release:**
+   ```bash
+   # Create pre-release version
+   ./scripts/version.sh --prerelease beta
+   
+   # Commit version bump
+   git add Project.swift
+   git commit -m "Bump version to 0.9.2-beta.1"
+   ```
+
+2. **Create Pre-release:**
+   ```bash
+   ./scripts/release.sh --prerelease beta 1
+   ```
+
+3. **Post-Release:**
+   ```bash
+   # Commit updated pre-release appcast
+   git add appcast-prerelease.xml
+   git commit -m "Update pre-release appcast for v0.9.2-beta.1"
+   git push origin main
+   ```
+
+### Update Channel System
+
+VibeMeter users can choose their update channel in **Settings → General → Update Channel**:
+
+- **Stable Only**: Receives updates from `appcast.xml` (stable releases only)
+- **Include Pre-releases**: Receives updates from `appcast-prerelease.xml` (both stable and pre-release versions)
+
+The `SparkleUpdaterManager` dynamically provides the appropriate feed URL based on user preference using the `feedURLString(for:)` delegate method.
 
 ## Manual Release Process
 
@@ -308,9 +411,13 @@ cp /Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/s
 - `notarize-app.sh` - Deep notarization with Sparkle support
 
 ### Release Scripts
+- `version.sh` - Version management and bumping
+- `release.sh` - Universal release script (stable and pre-release)
+- `create-github-release.sh` - Stable release automation
+- `create-prerelease.sh` - Pre-release creation
+- `update-appcast.sh` - Update stable appcast.xml
+- `update-prerelease-appcast.sh` - Update pre-release appcast
 - `setup-sparkle-release.sh` - Initial Sparkle setup
-- `create-github-release.sh` - Full release automation
-- `update-appcast.sh` - Update appcast.xml
 - `release-local.sh` - Local release for testing
 - `changelog-to-html.sh` - Convert markdown to HTML
 

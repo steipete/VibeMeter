@@ -4,11 +4,10 @@ import SwiftUI
 /// General settings view for application-wide preferences and behavior.
 ///
 /// This view contains settings for launch behavior, currency selection, refresh intervals,
-/// menu bar display options, and dock visibility. It provides the core configuration
+/// and menu bar display options. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    @Bindable
-    var settingsManager: SettingsManager
+    @Bindable var settingsManager: SettingsManager
 
     @State
     private var hasUserMadeCurrencyChoice = UserDefaults.standard
@@ -53,6 +52,28 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+<<<<<<< HEAD
+
+||||||| 01269fe
+
+            // Show in Dock
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Show in Dock", isOn: .init(
+                    get: { settingsManager.showInDock },
+                    set: { newValue in
+                        settingsManager.showInDock = newValue
+                        if newValue {
+                            NSApp.setActivationPolicy(.regular)
+                        } else {
+                            NSApp.setActivationPolicy(.accessory)
+                        }
+                    }
+                ))
+                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 8)
 
         } header: {
             Text("Application")

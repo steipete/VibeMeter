@@ -403,6 +403,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
             usage: ProviderUsageData)] = []
 
         // When - Make multiple concurrent calls to the actor
+<<<<<<< HEAD
         await withTaskGroup(of: ProviderDataResult?.self) { group in
             for i in 0 ..< callCount {
                 group.addTask { [sut = self.sut] in
@@ -411,7 +412,31 @@ final class BackgroundDataProcessorTests: XCTestCase {
                         email: "user\(i)@test.com",
                         teamId: i,
                         provider: .cursor)
+||||||| 01269fe
+        await withTaskGroup(of: (
+            userInfo: ProviderUserInfo,
+            teamInfo: ProviderTeamInfo,
+            invoice: ProviderMonthlyInvoice,
+            usage: ProviderUsageData)?.self) { group in
+                for i in 0 ..< callCount {
+                    group.addTask { [sut = self.sut] in
+                        let provider = MockBackgroundProvider(provider: .cursor)
+                        provider.userInfoToReturn = ProviderUserInfo(
+                            email: "user\(i)@test.com",
+                            teamId: i,
+                            provider: .cursor)
+=======
+        await withTaskGroup(of: ProviderDataResult?.self) { group in
+                for i in 0 ..< callCount {
+                    group.addTask { [sut = self.sut] in
+                        let provider = MockBackgroundProvider(provider: .cursor)
+                        provider.userInfoToReturn = ProviderUserInfo(
+                            email: "user\(i)@test.com",
+                            teamId: i,
+                            provider: .cursor)
+>>>>>>> no-team
 
+<<<<<<< HEAD
                     do {
                         return try await sut!.processProviderData(
                             provider: .cursor,
@@ -419,6 +444,42 @@ final class BackgroundDataProcessorTests: XCTestCase {
                             providerClient: provider)
                     } catch {
                         return nil
+||||||| 01269fe
+                        do {
+                            return try await sut!.processProviderData(
+                                provider: .cursor,
+                                authToken: "token-\(i)",
+                                providerClient: provider)
+                        } catch {
+                            return nil
+                        }
+                    }
+                }
+
+                for await result in group {
+                    if let result {
+                        results.append(result)
+=======
+                        do {
+                            return try await sut!.processProviderData(
+                                provider: .cursor,
+                                authToken: "token-\(i)",
+                                providerClient: provider)
+                        } catch {
+                            return nil
+                        }
+                    }
+                }
+
+                for await result in group {
+                    if let result {
+                        results.append((
+                            userInfo: result.userInfo,
+                            teamInfo: result.teamInfo,
+                            invoice: result.invoice,
+                            usage: result.usage
+                        ))
+>>>>>>> no-team
                     }
                 }
             }
@@ -459,11 +520,18 @@ final class BackgroundDataProcessorTests: XCTestCase {
         }
     }
 
+<<<<<<< HEAD
     func testProcessProviderData_TeamInfoFails_UsesFallback() async {
+||||||| 01269fe
+    func testProcessProviderData_TeamInfoFails_ThrowsError() async {
+=======
+    func testProcessProviderData_TeamInfoFails_UsesFallbackTeam() async throws {
+>>>>>>> no-team
         // Given
         mockProvider.shouldThrowOnTeamInfo = true
         mockProvider.errorToThrow = TestError.networkFailure
 
+<<<<<<< HEAD
         // When
         do {
             let result = try await sut.processProviderData(
@@ -478,6 +546,36 @@ final class BackgroundDataProcessorTests: XCTestCase {
         } catch {
             XCTFail("Should not throw error when team info fails, got: \(error)")
         }
+||||||| 01269fe
+        // When/Then
+        do {
+            _ = try await sut.processProviderData(
+                provider: .cursor,
+                authToken: "test-token",
+                providerClient: mockProvider)
+            XCTFail("Should have thrown network failure")
+        } catch let error as TestError {
+            XCTAssertEqual(error, .networkFailure)
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
+        }
+=======
+        // When
+        let result = try await sut.processProviderData(
+            provider: .cursor,
+            authToken: "test-token",
+            providerClient: mockProvider)
+
+        // Then - Should use fallback team instead of throwing
+        XCTAssertEqual(result.teamInfo.id, 0)
+        XCTAssertEqual(result.teamInfo.name, "Individual Account")
+        XCTAssertEqual(result.teamInfo.provider, .cursor)
+        
+        // Other data should still be fetched successfully
+        XCTAssertEqual(result.userInfo.email, "test@example.com")
+        XCTAssertEqual(result.invoice.totalSpendingCents, 1000)
+        XCTAssertEqual(result.usage.currentRequests, 100)
+>>>>>>> no-team
     }
 
     func testProcessProviderData_InvoiceFails_ThrowsError() async {

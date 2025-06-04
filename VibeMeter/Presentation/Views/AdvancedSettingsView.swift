@@ -1,27 +1,28 @@
+import AppKit
 import SwiftUI
 
-/// Advanced settings view for power users and update preferences.
+/// Advanced settings view for power users and technical configurations.
 ///
-/// This view contains advanced configuration options that most users won't need
-/// to modify, including update channel selection and system-level preferences.
+/// This view contains settings for update channels, dock visibility, and other
+/// advanced options that most users won't need to change frequently.
 struct AdvancedSettingsView: View {
-    @Bindable
-    var settingsManager: SettingsManager
+    @Bindable var settingsManager: SettingsManager
+    
     @State
     private var isCheckingForUpdates = false
-
+    
     var body: some View {
         NavigationStack {
             Form {
                 updateSection
-                systemSection
+                appearanceSection
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
             .navigationTitle("Advanced Settings")
         }
     }
-
+    
     private var updateSection: some View {
         Section {
             // Update Channel
@@ -29,7 +30,7 @@ struct AdvancedSettingsView: View {
                 HStack {
                     Text("Update Channel")
                     Spacer()
-                    Picker("", selection: updateChannelBinding) {
+                    Picker("", selection: $settingsManager.updateChannel) {
                         ForEach(UpdateChannel.allCases) { channel in
                             Text(channel.displayName).tag(channel)
                         }
@@ -41,18 +42,18 @@ struct AdvancedSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
+            
             // Check for Updates
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Check for Updates")
-                    Text("Manually check for new versions")
+                    Text("Check for new versions of Vibe Meter")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-
+                
                 Spacer()
-
+                
                 Button("Check Now") {
                     checkForUpdates()
                 }
@@ -63,69 +64,52 @@ struct AdvancedSettingsView: View {
         } header: {
             Text("Updates")
                 .font(.headline)
-        } footer: {
-            Text(
-                "Pre-release channel provides early access to beta versions and new features. Choose Stable for production use.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
-
-    private var systemSection: some View {
+    
+    private var appearanceSection: some View {
         Section {
             // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Show in Dock", isOn: showInDockBinding)
-                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
+                Text("Display Vibe Meter in the Dock. When disabled, Vibe Meter runs as a menu bar app only.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("System Integration")
+            Text("Appearance")
                 .font(.headline)
         }
     }
-
+    
     // MARK: - Bindings
-
-    private var updateChannelBinding: Binding<UpdateChannel> {
-        Binding(
-            get: { settingsManager.updateChannel },
-            set: { newValue in
-                settingsManager.updateChannel = newValue
-                // The update channel change notification is automatically sent by the SettingsManager
-            })
-    }
-
+    
     private var showInDockBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.showInDock },
-            set: { settingsManager.showInDock = $0 })
+            set: { newValue in
+                settingsManager.showInDock = newValue
+                NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+            })
     }
-
-    // MARK: - Actions
-
+    
+    // MARK: - Helper Methods
+    
     private func checkForUpdates() {
         isCheckingForUpdates = true
-
-        // Get the Sparkle updater from AppDelegate
-        guard let appDelegate = NSApp.delegate as? AppDelegate,
-              let updaterManager = appDelegate.sparkleUpdaterManager else {
-            isCheckingForUpdates = false
-            return
-        }
-
-        // Trigger update check
-        updaterManager.updaterController.updater.checkForUpdates()
-
-        // Reset the checking state after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+        NotificationCenter.default.post(name: Notification.Name("checkForUpdates"), object: nil)
+        
+        // Reset after a delay
+        Task {
+            try? await Task.sleep(for: .seconds(2))
             isCheckingForUpdates = false
         }
     }
 }
 
-#Preview {
+// MARK: - Preview
+
+#Preview("Advanced Settings") {
     AdvancedSettingsView(settingsManager: SettingsManager.shared)
-        .frame(width: 600, height: 400)
+        .frame(width: 620, height: 400)
 }

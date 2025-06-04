@@ -59,7 +59,7 @@ Want to contribute? Vibe Meter is built with modern Swift technologies:
 - **Swift 6** with strict concurrency
 - **SwiftUI** for settings and UI components
 - **AppKit** for menu bar integration
-- **Combine** for reactive data flow
+- **@Observable** for reactive data flow
 - **Tuist** for project generation
 
 ### Getting Started
@@ -100,12 +100,130 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 ./scripts/build.sh
 ```
 
+## 🚀 Release Management
+
+VibeMeter uses a sophisticated release system supporting both stable and pre-release versions with automatic updates.
+
+### Release Types
+
+- **🟢 Stable Releases** - Production-ready versions for all users
+- **🟡 Pre-releases** - Beta, alpha, and release candidate versions for early testing
+- **⚙️ Update Channels** - Users can choose between stable-only or include pre-releases
+
+### Creating Releases
+
+#### Version Management
+
+Use the version management script to bump versions:
+
+```bash
+# Show current version
+./scripts/version.sh --current
+
+# Bump version types
+./scripts/version.sh --patch        # 0.9.1 -> 0.9.2
+./scripts/version.sh --minor        # 0.9.1 -> 0.10.0  
+./scripts/version.sh --major        # 0.9.1 -> 1.0.0
+
+# Create pre-release versions
+./scripts/version.sh --prerelease beta    # 0.9.2 -> 0.9.2-beta.1
+./scripts/version.sh --prerelease alpha   # 0.9.2 -> 0.9.2-alpha.1
+./scripts/version.sh --prerelease rc      # 0.9.2 -> 0.9.2-rc.1
+
+# Set specific version
+./scripts/version.sh --set 1.0.0
+
+# Bump build number only
+./scripts/version.sh --build
+```
+
+#### Creating Releases
+
+Use the universal release script:
+
+```bash
+# Create stable release
+./scripts/release.sh --stable
+
+# Create pre-releases  
+./scripts/release.sh --prerelease beta 1     # Creates 0.9.2-beta.1
+./scripts/release.sh --prerelease alpha 2    # Creates 0.9.2-alpha.2
+./scripts/release.sh --prerelease rc 1       # Creates 0.9.2-rc.1
+```
+
+#### Complete Release Workflow
+
+1. **Prepare Release:**
+   ```bash
+   # Bump version (choose appropriate type)
+   ./scripts/version.sh --patch
+   
+   # Review changes
+   git diff Project.swift
+   
+   # Commit version bump
+   git add Project.swift
+   git commit -m "Bump version to 0.9.2"
+   ```
+
+2. **Create Release:**
+   ```bash
+   # For stable release
+   ./scripts/release.sh --stable
+   
+   # For pre-release
+   ./scripts/release.sh --prerelease beta 1
+   ```
+
+3. **Post-Release:**
+   ```bash
+   # Commit updated appcast files
+   git add appcast*.xml
+   git commit -m "Update appcast for v0.9.2"
+   git push origin main
+   ```
+
+### Update Channels
+
+VibeMeter supports two update channels via Sparkle:
+
+- **Stable Only**: Users receive only production-ready releases
+- **Include Pre-releases**: Users receive both stable and pre-release versions
+
+Users can switch channels in **Settings → General → Update Channel**.
+
+### Pre-release Testing
+
+Pre-releases are perfect for:
+
+- **🧪 Beta Testing** - Get early access to new features
+- **🐛 Bug Reporting** - Help identify issues before stable release  
+- **📝 Feedback** - Provide input on new functionality
+- **⚡ Early Adoption** - Stay on the cutting edge
+
+To participate:
+1. Download VibeMeter
+2. Go to Settings → General → Update Channel
+3. Select "Include Pre-releases"
+4. Check for updates to get the latest pre-release
+
+### Release Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `version.sh` | Version management | `./scripts/version.sh --patch` |
+| `release.sh` | Universal release creation | `./scripts/release.sh --stable` |
+| `create-github-release.sh` | Stable releases only | `./scripts/create-github-release.sh` |
+| `create-prerelease.sh` | Pre-releases only | `./scripts/create-prerelease.sh beta 1` |
+| `update-appcast.sh` | Update stable appcast | `./scripts/update-appcast.sh 0.9.2 3 dmg-path` |
+| `update-prerelease-appcast.sh` | Update pre-release appcast | `./scripts/update-prerelease-appcast.sh 0.9.2-beta.1 3 dmg-path` |
+
 ## 🏗️ Architecture
 
 Vibe Meter follows clean architecture principles:
 
 - **Multi-Provider System** - Extensible design for supporting multiple AI services
-- **Reactive State Management** - Combine-based data flow with `@Observable` models  
+- **Reactive State Management** - Modern `@Observable` data flow with SwiftUI integration
 - **Service Layer** - Modular services for API clients, authentication, and notifications
 - **Protocol-Oriented Design** - Extensive use of protocols for testability and flexibility
 

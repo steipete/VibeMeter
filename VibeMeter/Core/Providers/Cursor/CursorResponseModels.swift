@@ -38,6 +38,11 @@ struct CursorUserResponse: Decodable, Sendable {
 struct CursorInvoiceResponse: Decodable, Sendable {
     let items: [CursorInvoiceItem]?
     let pricingDescription: CursorPricingDescription?
+
+    private enum CodingKeys: String, CodingKey {
+        case items
+        case pricingDescription = "pricing_description"
+    }
 }
 
 /// Individual line item within an invoice containing cost and description.
