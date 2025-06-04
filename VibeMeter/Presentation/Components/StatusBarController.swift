@@ -160,33 +160,49 @@ final class StatusBarController: NSObject {
     }
 
     @objc
-    private func handleClick(_: NSStatusBarButton) {
+    private func handleClick(_ sender: NSStatusBarButton) {
         guard let currentEvent = NSApp.currentEvent else {
             // Fallback to left click behavior if we can't determine the event
-            togglePopover()
+            handleLeftClick(sender)
             return
         }
 
         switch currentEvent.type {
         case .leftMouseUp:
-            togglePopover()
+            handleLeftClick(sender)
         case .rightMouseUp:
-            showCustomMenu()
+            handleRightClick(sender)
         default:
-            togglePopover()
+            handleLeftClick(sender)
         }
     }
 
+    private func handleLeftClick(_ button: NSStatusBarButton) {
+        if menuManager.isCustomWindowVisible {
+            // If custom window is visible, hide it
+            menuManager.hideCustomWindow()
+        } else {
+            // If custom window is not visible, show it (this will hide context menu if it's showing)
+            menuManager.showCustomWindow(relativeTo: button)
+        }
+    }
+
+    private func handleRightClick(_ button: NSStatusBarButton) {
+        guard let statusItem else { return }
+        // This will hide the custom window if it's visible and show the context menu
+        menuManager.showContextMenu(for: button, statusItem: statusItem)
+    }
+
     @objc
-    private func togglePopover() {
+    private func toggleCustomWindow() {
         guard let button = statusItem?.button else { return }
-        menuManager.togglePopover(relativeTo: button)
+        handleLeftClick(button)
     }
 
     @objc
     private func showCustomMenu() {
-        guard let button = statusItem?.button, let statusItem else { return }
-        menuManager.showContextMenu(for: button, statusItem: statusItem)
+        guard let button = statusItem?.button else { return }
+        handleRightClick(button)
     }
 
     @objc
@@ -194,10 +210,10 @@ final class StatusBarController: NSObject {
         NSApp.openSettings()
     }
 
-    /// Shows the popover menu (used for initial display when not logged in)
-    func showPopover() {
+    /// Shows the custom window menu (used for initial display when not logged in)
+    func showCustomWindow() {
         guard let button = statusItem?.button else { return }
-        menuManager.showPopover(relativeTo: button)
+        menuManager.showCustomWindow(relativeTo: button)
     }
 
     deinit {

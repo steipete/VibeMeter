@@ -146,9 +146,9 @@ final class ProviderConnectionStatusTests: XCTestCase {
 
     func testCodable_UnknownType_DefaultsToDisconnected() throws {
         // Given - Manually create JSON with unknown type
-        let json = """
+        let json = Data("""
         {"type": "unknownType"}
-        """.data(using: .utf8)!
+        """.utf8)
 
         // When
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: json)
@@ -159,9 +159,9 @@ final class ProviderConnectionStatusTests: XCTestCase {
 
     func testCodable_MalformedError_ThrowsError() {
         // Given - Error case without message
-        let json = """
+        let json = Data("""
         {"type": "error"}
-        """.data(using: .utf8)!
+        """.utf8)
 
         // When/Then
         XCTAssertThrowsError(try JSONDecoder().decode(ProviderConnectionStatus.self, from: json))

@@ -52,29 +52,6 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-<<<<<<< HEAD
-
-||||||| 01269fe
-
-            // Show in Dock
-            VStack(alignment: .leading, spacing: 4) {
-                Toggle("Show in Dock", isOn: .init(
-                    get: { settingsManager.showInDock },
-                    set: { newValue in
-                        settingsManager.showInDock = newValue
-                        if newValue {
-                            NSApp.setActivationPolicy(.regular)
-                        } else {
-                            NSApp.setActivationPolicy(.accessory)
-                        }
-                    }
-                ))
-                Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 8)
-
         } header: {
             Text("Application")
                 .font(.headline)

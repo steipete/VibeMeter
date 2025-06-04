@@ -142,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 try? await Task.sleep(for: .milliseconds(500))
 
                 if !userSession.isLoggedInToAnyProvider {
-                    statusBarController?.showPopover()
+                    statusBarController?.showCustomWindow()
                 }
             }
         } else {

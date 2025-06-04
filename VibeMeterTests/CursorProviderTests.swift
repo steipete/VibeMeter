@@ -27,7 +27,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchTeamInfo_Success() async throws {
         // Given
-        let mockTeamsData = """
+        let mockTeamsData = Data("""
         {
             "teams": [
                 {
@@ -36,7 +36,7 @@ final class CursorProviderTests: XCTestCase {
                 }
             ]
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
@@ -65,11 +65,11 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchTeamInfo_NoTeamsFound_UsesFallback() async {
         // Given
-        let mockEmptyTeamsData = """
+        let mockEmptyTeamsData = Data("""
         {
             "teams": []
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
@@ -119,12 +119,12 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchUserInfo_Success() async throws {
         // Given
-        let mockUserData = """
+        let mockUserData = Data("""
         {
             "email": "test@example.com",
             "teamId": 456
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -153,11 +153,11 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchUserInfo_WithoutTeamId() async throws {
         // Given
-        let mockUserData = """
+        let mockUserData = Data("""
         {
             "email": "test@example.com"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -181,7 +181,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchMonthlyInvoice_WithProvidedTeamId() async throws {
         // Given
-        let mockInvoiceData = """
+        let mockInvoiceData = Data("""
         {
             "items": [
                 {
@@ -198,7 +198,7 @@ final class CursorProviderTests: XCTestCase {
                 "id": "pro-plan-123"
             }
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
@@ -249,12 +249,12 @@ final class CursorProviderTests: XCTestCase {
             userEmail: "test@example.com",
             isActive: true))
 
-        let mockInvoiceData = """
+        let mockInvoiceData = Data("""
         {
             "items": [],
             "pricing_description": null
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
@@ -308,7 +308,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchUsageData_Success() async throws {
         // Given
-        let mockUsageData = """
+        let mockUsageData = Data("""
         {
             "gpt-3.5-turbo": {
                 "num_requests": 50,
@@ -333,7 +333,7 @@ final class CursorProviderTests: XCTestCase {
             },
             "start_of_month": "2023-12-01T00:00:00Z"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/usage?user=test-token")!,
@@ -365,7 +365,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testFetchUsageData_InvalidDateFormat() async throws {
         // Given
-        let mockUsageData = """
+        let mockUsageData = Data("""
         {
             "gpt-3.5-turbo": {
                 "num_requests": 50,
@@ -390,7 +390,7 @@ final class CursorProviderTests: XCTestCase {
             },
             "start_of_month": "invalid-date"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/usage?user=test-token")!,
@@ -418,12 +418,12 @@ final class CursorProviderTests: XCTestCase {
 
     func testValidateToken_ValidToken() async {
         // Given
-        let mockUserData = """
+        let mockUserData = Data("""
         {
             "email": "test@example.com",
             "teamId": 456
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -581,7 +581,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testNetworkError_DecodingError() async {
         // Given - invalid JSON
-        let invalidJSON = "{ invalid json }".data(using: .utf8)!
+        let invalidJSON = Data("{ invalid json }".utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -609,7 +609,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testNetworkError_SpecificErrorResponse() async {
         // Given
-        let errorResponse = """
+        let errorResponse = Data("""
         {
             "error": {
                 "details": [
@@ -622,7 +622,7 @@ final class CursorProviderTests: XCTestCase {
                 ]
             }
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
@@ -646,7 +646,7 @@ final class CursorProviderTests: XCTestCase {
 
     func testNetworkError_500WithTeamNotFound() async {
         // Given
-        let errorMessage = "Team not found in database".data(using: .utf8)!
+        let errorMessage = Data("Team not found in database".utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
@@ -695,11 +695,11 @@ final class CursorProviderTests: XCTestCase {
 
     func testRequestConfiguration() async throws {
         // Given
-        let mockUserData = """
+        let mockUserData = Data("""
         {
             "email": "test@example.com"
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,

@@ -41,11 +41,11 @@ struct SpendingLimitsView: View {
     // MARK: - Computed Properties
 
     private var convertedWarningLimit: Double {
-        currencyData.convertFromUSD(settingsManager.warningLimitUSD, to: currencyData.selectedCode)
+        currencyData.convertAmount(settingsManager.warningLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager.warningLimitUSD
     }
 
     private var convertedUpperLimit: Double {
-        currencyData.convertFromUSD(settingsManager.upperLimitUSD, to: currencyData.selectedCode)
+        currencyData.convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
     }
 
     // MARK: - Helper Views
@@ -165,8 +165,8 @@ struct SpendingLimitsView: View {
 #Preview {
     SpendingLimitsView(
         settingsManager: MockSettingsManager(),
-        userSessionData: PreviewData.mockMultiProviderUserSessionData
+        userSessionData: PreviewData.mockUserSession()
     )
-    .environment(PreviewData.mockCurrencyData)
+    .environment(PreviewData.mockCurrencyData())
     .frame(width: 600, height: 400)
 }

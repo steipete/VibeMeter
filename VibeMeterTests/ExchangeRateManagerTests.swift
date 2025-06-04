@@ -22,7 +22,7 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testGetExchangeRates_Success() async {
         // Given
-        let mockRatesData = """
+        let mockRatesData = Data("""
         {
             "base": "USD",
             "date": "2023-12-01",
@@ -32,7 +32,7 @@ final class ExchangeRateManagerTests: XCTestCase {
                 "JPY": 149.50
             }
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,
@@ -85,7 +85,7 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testGetExchangeRates_InvalidJSON_ReturnsFallbackRates() async {
         // Given
-        let invalidJSON = "invalid json".data(using: .utf8)!
+        let invalidJSON = Data("invalid json".utf8)
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,
             statusCode: 200,
@@ -104,7 +104,7 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testGetExchangeRates_CachingBehavior() async {
         // Given - First successful request
-        let mockRatesData = """
+        let mockRatesData = Data("""
         {
             "base": "USD",
             "date": "2023-12-01",
@@ -113,7 +113,7 @@ final class ExchangeRateManagerTests: XCTestCase {
                 "GBP": 0.82
             }
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,
@@ -273,13 +273,13 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testAPIRequest_CorrectURL() async {
         // Given
-        let mockRatesData = """
+        let mockRatesData = Data("""
         {
             "base": "USD",
             "date": "2023-12-01",
             "rates": {"EUR": 0.92}
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,
@@ -316,13 +316,13 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testAPIRequest_CachePolicy() async {
         // Given
-        let mockRatesData = """
+        let mockRatesData = Data("""
         {
             "base": "USD",
             "date": "2023-12-01",
             "rates": {"EUR": 0.92}
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,
@@ -346,13 +346,13 @@ final class ExchangeRateManagerTests: XCTestCase {
 
     func testGetExchangeRates_EmptyRatesResponse() async {
         // Given
-        let mockRatesData = """
+        let mockRatesData = Data("""
         {
             "base": "USD",
             "date": "2023-12-01",
             "rates": {}
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.frankfurter.app/latest")!,

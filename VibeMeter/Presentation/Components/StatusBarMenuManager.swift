@@ -17,8 +17,8 @@ final class StatusBarMenuManager {
     private var currencyData: CurrencyData?
     private var orchestrator: MultiProviderDataOrchestrator?
     
-    // Popover management
-    private var popover: NSPopover?
+    // Custom window management
+    private var customWindow: CustomMenuWindow?
 
     // MARK: - Initialization
 
@@ -45,17 +45,17 @@ final class StatusBarMenuManager {
         self.orchestrator = orchestrator
     }
 
-    // MARK: - Left-Click Popover Management
+    // MARK: - Left-Click Custom Window Management
 
-    func togglePopover(relativeTo button: NSStatusBarButton) {
-        if let popover = popover, popover.isShown {
-            hidePopover()
+    func toggleCustomWindow(relativeTo button: NSStatusBarButton) {
+        if let window = customWindow, window.isVisible {
+            hideCustomWindow()
         } else {
-            showPopover(relativeTo: button)
+            showCustomWindow(relativeTo: button)
         }
     }
 
-    func showPopover(relativeTo button: NSStatusBarButton) {
+    func showCustomWindow(relativeTo button: NSStatusBarButton) {
         guard let settingsManager = settingsManager,
               let userSession = userSession,
               let loginManager = loginManager,
@@ -63,13 +63,8 @@ final class StatusBarMenuManager {
               let currencyData = currencyData,
               let orchestrator = orchestrator else { return }
         
-        // Create popover if needed
-        if popover == nil {
-            popover = NSPopover()
-            popover?.contentSize = NSSize(width: 320, height: 400)
-            popover?.behavior = .transient
-            popover?.animates = true
-        }
+        // Hide any existing context menu first
+        // Note: Context menu hiding is handled by the StatusBarController
         
         // Create the main view with all dependencies
         let mainView = VibeMeterMainView(
@@ -85,27 +80,48 @@ final class StatusBarMenuManager {
         .environment(spendingData)
         .environment(currencyData)
         
-        // Set up the hosting view
-        let hostingView = NSHostingView(rootView: mainView)
-        popover?.contentViewController = NSViewController()
-        popover?.contentViewController?.view = hostingView
+        // Wrap in custom container for proper styling
+        let containerView = CustomMenuContainer {
+            mainView
+        }
         
-        // Show the popover
-        popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        // Create custom window if needed
+        if customWindow == nil {
+            customWindow = CustomMenuWindow(contentView: containerView)
+        }
+        
+        // Show the custom window
+        customWindow?.show(relativeTo: button)
     }
 
-    func hidePopover() {
-        popover?.performClose(nil)
+    func hideCustomWindow() {
+        customWindow?.hide()
     }
 
-    var isPopoverVisible: Bool {
-        popover?.isShown ?? false
+    var isCustomWindowVisible: Bool {
+        customWindow?.isVisible ?? false
+    }
+
+    // MARK: - Menu State Management
+
+    /// Hides all menu types (custom window and context menu)
+    func hideAllMenus() {
+        hideCustomWindow()
+        // Context menu is automatically hidden when statusItem.menu is set to nil
+    }
+
+    /// Checks if any menu is currently visible
+    var isAnyMenuVisible: Bool {
+        isCustomWindowVisible
     }
 
     // MARK: - Right-Click Context Menu
 
     /// Shows the context menu for right-click
     func showContextMenu(for button: NSStatusBarButton, statusItem: NSStatusItem) {
+        // Hide custom window first if it's visible
+        hideCustomWindow()
+        
         let menu = NSMenu()
 
         // Add menu items based on current state
