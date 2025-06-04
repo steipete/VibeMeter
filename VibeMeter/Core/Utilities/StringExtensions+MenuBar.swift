@@ -13,6 +13,10 @@ extension String {
     /// - Returns: Truncated string with ellipsis if needed, or original string if shorter
     func truncated(to length: Int) -> String {
         if count > length {
+            if length <= 3 {
+                // If target length is 3 or less, just return ellipsis or truncate without ellipsis
+                return length > 0 ? String(repeating: ".", count: min(length, 3)) : ""
+            }
             return String(prefix(length - 3)) + "..."
         }
         return self
