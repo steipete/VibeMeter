@@ -23,8 +23,8 @@ struct GaugeIcon: View {
     private var shimmerPhase: Double = 0
 
     private let lineRatio = 0.18 // stroke thickness vs. frame
-    private let startAngle = 210.0 // ° (left-down, like car speedometer)
-    private let sweepAngle = 120.0 // clockwise span to right-down
+    private let startAngle = 180.0 // ° (straight left, like car speedometer)
+    private let sweepAngle = -180.0 // counter-clockwise span to straight right (upper half circle)
 
     var body: some View {
         Canvas { ctx, size in
@@ -38,14 +38,14 @@ struct GaugeIcon: View {
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast

@@ -57,10 +57,11 @@ struct LoggedOutContentView: View {
                     }) {
                         HStack(spacing: 8) {
                             if isAuthenticating {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .scaleEffect(0.8)
-                                    .frame(width: 16, height: 16)
+                                // Use a simple rotating icon for loading state
+                                Image(systemName: "arrow.2.circlepath")
+                                    .font(.title3)
+                                    .rotationEffect(.degrees(isAuthenticating ? 360 : 0))
+                                    .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isAuthenticating)
                             } else {
                                 Image(systemName: "person.crop.circle.badge.plus")
                                     .font(.title3)
