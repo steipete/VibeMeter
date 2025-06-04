@@ -18,13 +18,13 @@ struct GaugeIcon: View {
 
     @State
     private var animationProgress: Double = 1.0
-    
+
     @State
     private var shimmerPhase: Double = 0
 
     private let lineRatio = 0.18 // stroke thickness vs. frame
-    private let startAngle = 180.0 // ° (straight left, like car speedometer)
-    private let sweepAngle = -180.0 // counter-clockwise span to straight right (upper half circle)
+    private let startAngle = 180.0 // ° (middle left/9 o'clock)
+    private let sweepAngle = 180.0 // clockwise span to middle right/3 o'clock (upper semicircle)
 
     var body: some View {
         Canvas { ctx, size in
@@ -38,21 +38,21 @@ struct GaugeIcon: View {
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * animationProgress),
-                         clockwise: false)
+                         clockwise: true)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
-                         clockwise: false)
+                         clockwise: true)
             }
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast
             let trackColor = isDisabled
                 ? Color.gaugeStroke(for: colorScheme).opacity(1.5)
                 : Color.gaugeStroke(for: colorScheme)
-            
+
             if isLoading {
                 // Add shimmer effect to track during loading
                 let shimmerGradient = Gradient(colors: [
@@ -60,18 +60,18 @@ struct GaugeIcon: View {
                     trackColor.opacity(0.8),
                     Color.menuBarContent(for: colorScheme).opacity(0.6),
                     trackColor.opacity(0.8),
-                    trackColor.opacity(0.3)
+                    trackColor.opacity(0.3),
                 ])
-                
-                // Calculate shimmer position along the arc
-                let shimmerStartAngle = startAngle + (sweepAngle * shimmerPhase * 1.2) - (sweepAngle * 0.1)
-                
+
+                // Calculate shimmer position along the arc for upper half-circle
+                // shimmerPhase goes from 0.0 to 1.0, we want shimmer to go from left (180°) to right (0°/360°)
+                let shimmerStartAngle = startAngle + (sweepAngle * shimmerPhase * 0.8)
+
                 ctx.stroke(trackPath,
                            with: .conicGradient(
                                shimmerGradient,
                                center: center,
-                               angle: Angle(degrees: shimmerStartAngle)
-                           ),
+                               angle: Angle(degrees: shimmerStartAngle)),
                            style: StrokeStyle(lineWidth: line, lineCap: .round))
             } else {
                 ctx.stroke(trackPath,
@@ -132,7 +132,7 @@ struct GaugeIcon: View {
                     animationProgress = 1.0
                 }
             }
-            
+
             // Start shimmer animation if loading
             if isLoading {
                 withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
