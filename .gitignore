@@ -102,3 +102,5 @@ VibeMeter-*/
 # Temporary test artifacts
 build-test
 build_output.txt
+/temp_releases
+/temp
