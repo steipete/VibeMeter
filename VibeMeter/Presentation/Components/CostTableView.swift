@@ -47,39 +47,32 @@ struct CostTableView: View {
         VStack(spacing: 4) {
             ForEach(spendingData.providersWithData, id: \.self) { provider in
                 VStack(spacing: 8) {
-                    // Provider icon centered above
-                    HStack {
-                        Spacer()
+                    // Top row: Icon, provider name, and amount
+                    HStack(spacing: 12) {
+                        // Provider icon on the left
                         ProviderIconView(provider: provider, spendingData: spendingData)
-                            .scaleEffect(1.2)
-                        Spacer()
-                    }
+                            .frame(width: 20, height: 20)
 
-                    // Provider name and amount
-                    HStack {
-                        Spacer()
-
+                        // Provider name
                         Text(provider.displayName)
                             .font(.body.weight(.medium))
                             .foregroundStyle(.primary)
 
-                        Spacer(minLength: 20)
+                        Spacer()
 
-                        // Amount aligned to the right
+                        // Amount on the right
                         ProviderSpendingAmountView(
                             provider: provider,
                             spendingData: spendingData,
                             currencyData: currencyData)
                             .font(.body.weight(.medium))
-
-                        Spacer()
                     }
 
-                    // Usage bar below, full width
+                    // Usage bar with text on the same line
                     if let providerData = spendingData.getSpendingData(for: provider),
                        let usageData = providerData.usageData,
                        let maxRequests = usageData.maxRequests {
-                        VStack(spacing: 4) {
+                        HStack(spacing: 8) {
                             // Progress bar
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
@@ -97,15 +90,13 @@ struct CostTableView: View {
                             }
                             .frame(height: 6)
 
-                            // Usage text
-                            HStack {
-                                Text("\(usageData.currentRequests)/\(maxRequests)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                            }
+                            // Usage text on the same line
+                            Text("\(usageData.currentRequests)/\(maxRequests)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize()
                         }
-                        .padding(.horizontal, 4)
+                        .padding(.leading, 32) // Align with text above (icon width + spacing)
                     }
                 }
                 .padding(.vertical, 12)
