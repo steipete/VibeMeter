@@ -45,6 +45,12 @@ get_known_signature() {
     local filename=$1
     
     case "$filename" in
+        "VibeMeter-1.0.0-beta.2.dmg")
+            echo "hEex/hbK8nM5R25DZkVknEDvQAiHR8BjRUYDA3qcdOSX6NUfzuyZQJ9RLF2nEJSuk/EJieMDDRL8zQEr95Z8Dg=="
+            ;;
+        "VibeMeter-1.0.0-beta.1.dmg")
+            echo "E8y7QOGqkalV7cbkvdhp7sY6XTf5fQBgdSQ4DfHlarSNSJH96u13RG8E7udH84EJFfcuNKkyhCaIn7CuPtd1CA=="
+            ;;
         "VibeMeter-1.0-beta.2.dmg")
             echo "9ix0MxG6Phd0Se4/WpWlvxX9lp952oGT9/U/4QTHyZbdNfbQjR/6PNV/BMXruTa8Wrzm6RBE1uvftMi40zYcCA=="
             ;;
@@ -75,24 +81,37 @@ generate_signature() {
         return 0
     fi
     
-    if [ ! -f "$SPARKLE_PRIVATE_KEY_PATH" ]; then
-        print_warning "Sparkle private key not found at $SPARKLE_PRIVATE_KEY_PATH"
-        return 1
-    fi
-    
-    # Generate signature using Sparkle's sign_update tool
+    # Try to use sign_update from Keychain first (preferred method)
     if command -v sign_update >/dev/null 2>&1; then
-        sign_update "$file_path" -f "$SPARKLE_PRIVATE_KEY_PATH" 2>/dev/null | tail -1
-    else
-        # Try using the bundled tool from Sparkle framework
-        local sign_tool="/Applications/Sparkle Test App.app/Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sign_update"
-        if [ -f "$sign_tool" ]; then
-            "$sign_tool" "$file_path" -f "$SPARKLE_PRIVATE_KEY_PATH" 2>/dev/null | tail -1
-        else
-            print_warning "sign_update tool not found, using empty signature"
-            echo ""
+        # First try without -f flag to use Keychain
+        local signature=$(sign_update "$file_path" -p 2>/dev/null)
+        if [ -n "$signature" ] && [ "$signature" != "-----END PRIVATE KEY-----" ]; then
+            echo "$signature"
+            return 0
+        fi
+        
+        # If Keychain didn't work and we have a private key file, try that
+        if [ -f "$SPARKLE_PRIVATE_KEY_PATH" ]; then
+            signature=$(sign_update "$file_path" -f "$SPARKLE_PRIVATE_KEY_PATH" -p 2>/dev/null)
+            if [ -n "$signature" ] && [ "$signature" != "-----END PRIVATE KEY-----" ]; then
+                echo "$signature"
+                return 0
+            fi
         fi
     fi
+    
+    # Try using the bundled tool from Sparkle framework
+    local sign_tool="/Applications/Sparkle Test App.app/Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sign_update"
+    if [ -f "$sign_tool" ]; then
+        local signature=$("$sign_tool" "$file_path" -p 2>/dev/null)
+        if [ -n "$signature" ] && [ "$signature" != "-----END PRIVATE KEY-----" ]; then
+            echo "$signature"
+            return 0
+        fi
+    fi
+    
+    print_warning "Could not generate signature for $filename"
+    echo ""
 }
 
 # Function to format date for appcast
