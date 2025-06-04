@@ -20,6 +20,7 @@ public final class AppBehaviorSettingsManager {
     private enum Keys {
         static let launchAtLoginEnabled = "launchAtLoginEnabled"
         static let showInDock = "showInDock"
+        static let updateChannel = "updateChannel"
     }
 
     // MARK: - App Behavior Settings
@@ -53,6 +54,15 @@ public final class AppBehaviorSettingsManager {
         }
     }
 
+    /// Update channel for receiving app updates
+    public var updateChannel: UpdateChannel {
+        didSet {
+            guard updateChannel != oldValue else { return }
+            userDefaults.set(updateChannel.rawValue, forKey: Keys.updateChannel)
+            logger.debug("Update channel: \(self.updateChannel.rawValue)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard, startupManager: StartupControlling = StartupManager()) {
@@ -62,10 +72,16 @@ public final class AppBehaviorSettingsManager {
         // Load app behavior settings with defaults
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
         showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
+        
+        // Load update channel with auto-detection based on current app version
+        let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let defaultChannel = UpdateChannel.defaultChannel(for: currentVersion)
+        let savedChannelRaw = userDefaults.string(forKey: Keys.updateChannel) ?? defaultChannel.rawValue
+        updateChannel = UpdateChannel(rawValue: savedChannelRaw) ?? defaultChannel
 
         logger
             .info(
-                "AppBehaviorSettingsManager initialized - launch at login: \(self.launchAtLoginEnabled), show in dock: \(self.showInDock)")
+                "AppBehaviorSettingsManager initialized - launch at login: \(self.launchAtLoginEnabled), show in dock: \(self.showInDock), update channel: \(self.updateChannel.rawValue)")
     }
 
     // MARK: - Public Methods

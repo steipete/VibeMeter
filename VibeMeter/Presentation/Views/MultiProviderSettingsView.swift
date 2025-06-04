@@ -45,6 +45,12 @@ struct MultiProviderSettingsView: View {
                 }
                 .tag(MultiProviderSettingsTab.limits)
 
+            AdvancedSettingsView(settingsManager: settingsManager as! SettingsManager)
+                .tabItem {
+                    Label("Advanced", systemImage: "slider.horizontal.3")
+                }
+                .tag(MultiProviderSettingsTab.advanced)
+
             AboutView(orchestrator: orchestrator)
                 .tabItem {
                     Label("About", systemImage: "info.circle")
@@ -70,13 +76,14 @@ struct MultiProviderSettingsView: View {
 // MARK: - Settings Tabs
 
 enum MultiProviderSettingsTab: CaseIterable {
-    case general, providers, limits, about
+    case general, providers, limits, advanced, about
 
     var title: String {
         switch self {
         case .general: "General"
         case .providers: "Providers"
         case .limits: "Limits"
+        case .advanced: "Advanced"
         case .about: "About"
         }
     }

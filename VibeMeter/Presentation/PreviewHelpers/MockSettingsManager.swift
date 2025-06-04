@@ -16,6 +16,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
     public var showInDock: Bool = false
     public var enabledProviders: Set<ServiceProvider> = [.cursor]
     public var menuBarDisplayMode: MenuBarDisplayMode = .both
+    public var updateChannel: UpdateChannel = .stable
 
     public init(
         selectedCurrencyCode: String = "USD",
@@ -25,7 +26,8 @@ public class MockSettingsManager: SettingsManagerProtocol {
         launchAtLoginEnabled: Bool = false,
         menuBarDisplayMode: MenuBarDisplayMode = .both,
         showInDock: Bool = false,
-        enabledProviders: Set<ServiceProvider> = [.cursor]) {
+        enabledProviders: Set<ServiceProvider> = [.cursor],
+        updateChannel: UpdateChannel = .stable) {
         self.selectedCurrencyCode = selectedCurrencyCode
         self.warningLimitUSD = warningLimitUSD
         self.upperLimitUSD = upperLimitUSD
@@ -34,6 +36,7 @@ public class MockSettingsManager: SettingsManagerProtocol {
         self.menuBarDisplayMode = menuBarDisplayMode
         self.showInDock = showInDock
         self.enabledProviders = enabledProviders
+        self.updateChannel = updateChannel
     }
 
     public func clearUserSessionData() {
