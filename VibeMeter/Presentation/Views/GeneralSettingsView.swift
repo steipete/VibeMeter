@@ -143,6 +143,9 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 8)
+        } header: {
+            Text("Display & Updates")
+                .font(.headline)
         }
     }
 
