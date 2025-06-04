@@ -7,30 +7,44 @@
         <language>en</language>
         
         <item>
-            <title>VibeMeter 0.9.1</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v0.9.1/VibeMeter-0.9.1.dmg</link>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>0.9.1</sparkle:shortVersionString>
+            <title>VibeMeter 0.9.0</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v0.9.0/VibeMeter-0.9.0.dmg</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.9.0</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 0.9.1</h2>
-<h3>🔄 Updates</h3>
+                <h2>VibeMeter 0.9.0</h2>
+<h3>🎨 User Interface</h3>
 <ul>
-<li><strong>Test release for Sparkle auto-update</strong> - Verifying that automatic updates work correctly</li>
-<li><strong>Fixed notarization script</strong> - Resolved API key format issues for proper notarization</li>
+<li><strong>Redesigned cost table layout</strong> - Provider icons and spending amounts are now centered with improved visual hierarchy</li>
+<li><strong>Enhanced provider display</strong> - Moved provider breakdown to the top with full-width usage progress bars</li>
+<li><strong>Professional styling</strong> - Cleaner, less chaotic layout with better spacing and alignment</li>
 </ul>
-<h3>🔧 Technical Improvements  </h3>
+<h3>🐛 Bug Fixes</h3>
 <ul>
-<li><strong>Improved build scripts</strong> - Fixed shell script errors in notarization process</li>
-<li><strong>Updated changelog rendering</strong> - Ensured proper HTML formatting for Sparkle update window</li>
+<li><strong>Fixed authentication loop</strong> - Resolved issue where login would fail despite correct credentials</li>
+<li><strong>Fixed progressive disclosure animations</strong> - Smooth transitions when expanding/collapsing cost details</li>
+<li><strong>Improved error messages</strong> - More user-friendly authentication error descriptions</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#091-20250604">View full changelog</a></p>
+<h3>🏗️ Architecture</h3>
+<ul>
+<li><strong>Removed circuit breaker pattern</strong> - Simplified error handling by removing unnecessary retry complexity</li>
+<li><strong>Enhanced authentication state management</strong> - Replaced boolean flags with proper state enum</li>
+<li><strong>Improved loading states</strong> - Better visual feedback during login and data fetching</li>
+</ul>
+<h3>🔧 Technical Improvements</h3>
+<ul>
+<li><strong>Swift 6 compliance</strong> - Fixed all concurrency warnings and actor isolation issues</li>
+<li><strong>Code organization</strong> - Created dedicated component files for provider icons and usage badges</li>
+<li><strong>Build system</strong> - Resolved duplicate file issues and improved project structure</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#090-20250604">View full changelog</a></p>
             ]]></description>
-            <pubDate>Wed, 04 Jun 2025 04:17:55 +0100</pubDate>
+            <pubDate>Wed, 04 Jun 2025 04:24:07 +0100</pubDate>
             <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v0.9.1/VibeMeter-0.9.1.dmg"
-                length="5425713"
+                url="https://github.com/steipete/VibeMeter/releases/download/v0.9.0/VibeMeter-0.9.0.dmg"
+                length="5422880"
                 type="application/octet-stream"
-                sparkle:edSignature="hoxoGjAq9A7x63w85xpfKTtMAkfSBh1I+QJIbTOn+lB+j7cfClOr95YCQmk5SaHKkwecoy3x31CZ5CrQYOoYCQ=="
+                sparkle:edSignature="AQelCfT9NVVelcU3r/TQm45ARlDV9FFS6sFIDHZoQRxeaVjQSpCVlVFON3gMeNDHO5LL810CQfXYu9NM5T0ODA=="
             />
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
         </item>
