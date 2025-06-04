@@ -192,10 +192,15 @@ public final class MultiProviderDataOrchestrator {
             let providerClient = providerFactory.createProvider(for: provider)
 
             // Process data on background actor for better concurrency
-            let (userInfo, teamInfo, invoice, usage) = try await backgroundProcessor.processProviderData(
+            let result = try await backgroundProcessor.processProviderData(
                 provider: provider,
                 authToken: authToken,
                 providerClient: providerClient)
+            
+            let userInfo = result.userInfo
+            let teamInfo = result.teamInfo
+            let invoice = result.invoice
+            let usage = result.usage
 
             logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
             logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")

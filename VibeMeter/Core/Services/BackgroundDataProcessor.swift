@@ -1,6 +1,16 @@
 import Foundation
 import os.log
 
+// MARK: - Provider Data Result
+
+/// Container for provider data processing results
+struct ProviderDataResult {
+    let userInfo: ProviderUserInfo
+    let teamInfo: ProviderTeamInfo
+    let invoice: ProviderMonthlyInvoice
+    let usage: ProviderUsageData
+}
+
 // MARK: - Background Data Processor
 
 /// Actor for performing concurrent data processing operations off the main thread.
@@ -21,14 +31,12 @@ actor BackgroundDataProcessor {
     ///   - provider: The service provider to fetch data for
     ///   - authToken: Authentication token for API access
     ///   - providerClient: Provider-specific API client
-    /// - Returns: Tuple containing all fetched data
+    /// - Returns: Provider data result containing all fetched data
     /// - Throws: Provider-specific errors or network errors
     func processProviderData(
         provider: ServiceProvider,
         authToken: String,
-        providerClient: any ProviderProtocol) async throws
-        -> (userInfo: ProviderUserInfo, teamInfo: ProviderTeamInfo, invoice: ProviderMonthlyInvoice,
-            usage: ProviderUsageData) {
+        providerClient: any ProviderProtocol) async throws -> ProviderDataResult {
         logger.info("Processing data for \(provider.displayName) on background actor")
 
         // Fetch user info first - this is required for authentication validation
@@ -70,6 +78,10 @@ actor BackgroundDataProcessor {
         let usage = try await usageTask
 
         logger.info("Completed background processing for \(provider.displayName)")
-        return (userInfo, teamInfo, invoice, usage)
+        return ProviderDataResult(
+            userInfo: userInfo,
+            teamInfo: teamInfo,
+            invoice: invoice,
+            usage: usage)
     }
 }

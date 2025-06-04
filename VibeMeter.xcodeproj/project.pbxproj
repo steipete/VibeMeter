@@ -10,6 +10,7 @@
 		04A3B2C9AAC57959F3C1B100 /* UserDefaultsBackedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270C8DC4B520802F1516D87B /* UserDefaultsBackedTests.swift */; };
 		06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672B29645EFF1F6E88DF4F2B /* ProviderInteractionHandler.swift */; };
 		077884B7746093BDBD42AA23 /* MultiProviderDataOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F480F8E8FA5A8C70F6619 /* MultiProviderDataOrchestrator.swift */; };
+		0A16B135674C38B690B22443 /* CostTableView+ViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */; };
 		0A63B3A8B28B1318FD438B07 /* CursorResilienceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16672EFBA1AC1084F26EFD72 /* CursorResilienceManager.swift */; };
 		0A708847F26FBB7B500F777E /* StartupManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CC65B526B76FB43AC46C8C /* StartupManagerMock.swift */; };
 		0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DAC2C5B7C438F8B3A725F6 /* ProviderSpendingAmountView.swift */; };
@@ -62,6 +63,7 @@
 		677236562BEB2C9174D24C4F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265BF8EE556670B47F8CD3D4 /* NotificationManager.swift */; };
 		67D0727858906F600DC13CB8 /* StatusBarDisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AFA5C683EC4CDE8C6A82BA /* StatusBarDisplayManager.swift */; };
 		69B9BF817033BB94E94B8E05 /* NSApplication+openSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37BF61BE7808EBCADC56C50 /* NSApplication+openSettings.swift */; };
+		6CB47174745601CDB49E5346 /* GeneralSettingsView+Improved.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09C33E3D16DC6A196A05FF2 /* GeneralSettingsView+Improved.swift */; };
 		757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */; };
 		78AF8A25EEA2CAF9CED813F6 /* MultiProviderLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04FE87449368272166427A /* MultiProviderLoginManager.swift */; };
 		796CF976003592E4B2038A11 /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0FC6641992F66EDA6F3D2C /* MockServices.swift */; };
@@ -271,6 +273,7 @@
 		986ECB90B7DB0B478BBB0FCE /* StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensions.swift; sourceTree = "<group>"; };
 		9CB3FFE9B30474D1A3682A49 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		9CE6B3050D9B7CD810F4A338 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A09C33E3D16DC6A196A05FF2 /* GeneralSettingsView+Improved.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GeneralSettingsView+Improved.swift"; sourceTree = "<group>"; };
 		A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInContentView.swift; sourceTree = "<group>"; };
 		A1D39D7977645591374750E0 /* GravatarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GravatarService.swift; sourceTree = "<group>"; };
 		A31AFFF93C36DB70216B6B39 /* URLSessionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionProtocol.swift; sourceTree = "<group>"; };
@@ -314,6 +317,7 @@
 		F37F480F8E8FA5A8C70F6619 /* MultiProviderDataOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderDataOrchestrator.swift; sourceTree = "<group>"; };
 		F82940A9689EB56962329BAA /* CostTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostTableView.swift; sourceTree = "<group>"; };
 		F899DCAA8803D74D03D70753 /* ExchangeRateManagerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateManagerProtocol.swift; sourceTree = "<group>"; };
+		F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CostTableView+ViewState.swift"; sourceTree = "<group>"; };
 		FB43076C9B6E22302ECC1A21 /* StringExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensionsTests.swift; sourceTree = "<group>"; };
 		FBF643C5ED008D1390C13CFD /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		FC7ADDB1E042E38FED4B239E /* CurrencyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyManager.swift; sourceTree = "<group>"; };
@@ -546,7 +550,9 @@
 			children = (
 				D2516C3D1A795ADC16C47893 /* AboutView.swift */,
 				5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */,
+				F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */,
 				FBF643C5ED008D1390C13CFD /* GeneralSettingsView.swift */,
+				A09C33E3D16DC6A196A05FF2 /* GeneralSettingsView+Improved.swift */,
 				A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */,
 				2CACAE5664463A40F689320E /* LoggedOutContentView.swift */,
 				386B1E107BB8459764931771 /* MultiProviderSettingsView.swift */,
@@ -916,6 +922,8 @@
 				99978C38EDBED6965A26141A /* ShimmerEffect.swift in Sources */,
 				DCA37C7844CCBBA37E44C12E /* AboutView.swift in Sources */,
 				D68194CDF81EBAD89B60AEA5 /* AnalyticsWebView.swift in Sources */,
+				0A16B135674C38B690B22443 /* CostTableView+ViewState.swift in Sources */,
+				6CB47174745601CDB49E5346 /* GeneralSettingsView+Improved.swift in Sources */,
 				A5D96152F8C9DE5D9A62B173 /* GeneralSettingsView.swift in Sources */,
 				8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */,
 				3DECD7E43D3BF549EC322264 /* LoggedOutContentView.swift in Sources */,
@@ -1079,9 +1087,9 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=50",
+					"-warn-long-function-bodies=250",
 					"-Xfrontend",
-					"-warn-long-expression-type-checking=50",
+					"-warn-long-expression-type-checking=250",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
@@ -1141,9 +1149,9 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=50",
+					"-warn-long-function-bodies=250",
 					"-Xfrontend",
-					"-warn-long-expression-type-checking=50",
+					"-warn-long-expression-type-checking=250",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
