@@ -47,7 +47,7 @@ final class MultiProviderDataProcessor: Sendable {
             userSessionData: userSessionData,
             spendingData: spendingData,
             lastRefreshDates: lastRefreshDates)
-        await updateDataStores(
+        updateDataStores(
             for: provider,
             userInfo: userInfo,
             teamInfo: teamInfo,
@@ -55,10 +55,10 @@ final class MultiProviderDataProcessor: Sendable {
             context: &context)
 
         await updateCurrencyAndSpending(for: provider, invoice: invoice, spendingData: spendingData)
-        await updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
-        await logSuccessAndSpending(for: provider, spendingData: spendingData)
+        updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
+        logSuccessAndSpending(for: provider, spendingData: spendingData)
 
-        await spendingData.updateConnectionStatus(for: provider, status: .connected)
+        spendingData.updateConnectionStatus(for: provider, status: .connected)
         
         return context.lastRefreshDates
     }

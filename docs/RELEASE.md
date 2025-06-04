@@ -486,3 +486,129 @@ VibeMeter uses comprehensive signing for Sparkle components:
 5. **Main App**: Signed last with hardened runtime
 
 See `scripts/notarize-app.sh` for the complete signing order and entitlements.
+
+## Sandboxing Experiments and Findings
+
+### App Sandboxing Status: DISABLED
+
+**IMPORTANT**: VibeMeter currently runs with app sandboxing **disabled** (`com.apple.security.app-sandbox = false`) due to Sparkle framework compatibility requirements.
+
+### Experiment History
+
+During development of v1.0-beta.1 and v1.0-beta.2, we conducted extensive experiments with sandboxing:
+
+#### Initial Sandboxing Attempt
+- **Goal**: Enable app sandboxing for better security
+- **Problem**: Sparkle framework failed to function with basic sandboxing
+- **Symptoms**: 
+  - Console errors: "gentle reminders not supported for background apps"
+  - Update downloads failed
+  - XPC service communication failures
+
+#### Entitlements Experimentation
+We tried various combinations of entitlements to make Sparkle work with sandboxing:
+
+```xml
+<!-- Attempted entitlements that did NOT work with sandboxing -->
+<key>com.apple.security.app-sandbox</key>
+<true/>
+<key>com.apple.security.network.client</key>
+<true/>
+<key>com.apple.security.files.downloads.read-write</key>
+<true/>
+<key>com.apple.security.automation.apple-events</key>
+<true/>
+<key>com.apple.security.cs.allow-jit</key>
+<true/>
+<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+<true/>
+<key>com.apple.security.cs.disable-library-validation</key>
+<true/>
+```
+
+#### Final Working Solution
+**Current entitlements configuration** (VibeMeter/VibeMeter.entitlements):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Sandboxing DISABLED for Sparkle compatibility -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    
+    <!-- Required entitlements for Sparkle functionality -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
+```
+
+#### Key Findings
+1. **Sparkle 2.7.0 compatibility**: Requires sandboxing to be disabled for full functionality
+2. **XPC Services**: Sparkle's XPC services (Downloader, Installer) work properly only without sandboxing
+3. **Network access**: Required for appcast downloads and update file downloads
+4. **File system access**: Required for update installation and temporary file handling
+5. **Memory execution**: Required for Sparkle framework runtime operations
+6. **Library validation**: Must be disabled for proper framework loading
+
+#### Comparison with Working Project (CodeLooper)
+We analyzed the ../CodeLooper project configuration and found:
+- **Sandboxing**: Also disabled (`com.apple.security.app-sandbox = false`)
+- **Entitlements**: Similar comprehensive entitlements for network and file access
+- **Sparkle version**: Also using 2.7.0 with same requirements
+
+#### Future Sandboxing Considerations
+For future attempts to enable sandboxing:
+
+1. **Monitor Sparkle updates**: Check if newer versions support sandboxing better
+2. **Alternative update mechanisms**: Consider App Store distribution for automatic updates
+3. **Reduced permissions**: Try minimal entitlements if Sparkle improves sandbox compatibility
+4. **Test environment**: Always test with sandboxing in isolated environment first
+
+### Testing Procedure for Sandboxing
+If attempting to re-enable sandboxing:
+
+1. **Change entitlements**:
+   ```xml
+   <key>com.apple.security.app-sandbox</key>
+   <true/>
+   ```
+
+2. **Test update mechanism**:
+   ```bash
+   # Build and install app
+   ./scripts/build.sh --configuration Debug
+   open build/Build/Products/Debug/VibeMeter.app
+   
+   # Check console for errors
+   log stream --predicate 'process == "VibeMeter"' --level debug
+   ```
+
+3. **Verify XPC services**:
+   ```bash
+   # Check if Sparkle services start
+   ps aux | grep -E "(Downloader|Installer)" | grep -v grep
+   ```
+
+4. **Test update download**:
+   - Trigger manual update check
+   - Monitor download progress
+   - Verify update installation
+
+### Console Error Fixes Applied
+Fixed specific console errors encountered during development:
+
+1. **UNErrorDomain Code=1**: Added notification authorization request in AppDelegate
+2. **Sparkle gentle reminders**: Added `supportsGentleScheduledUpdateReminders` property
+3. **Icon services**: Added proper entitlements for system service access
+4. **Swift 6 concurrency**: Fixed async/await usage in MultiProviderDataProcessor
+
+These fixes are **independent of sandboxing** and work with the current disabled-sandbox configuration.
