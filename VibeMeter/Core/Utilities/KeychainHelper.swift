@@ -86,14 +86,15 @@ final class KeychainHelper: KeychainServicing, @unchecked Sendable {
     init(service: String) {
         #if DEBUG
         // In debug builds, we use in-memory storage to avoid keychain prompts
+        // Include service name in token key to ensure proper isolation
+        self.tokenKey = "\(service).authToken"
         #else
             // Production builds use stricter security
             self.keychain = Keychain(service: service)
                 .accessibility(.whenUnlockedThisDeviceOnly)
                 .synchronizable(false)
+            self.tokenKey = "authToken" // Generic token key
         #endif
-
-        self.tokenKey = "authToken" // Generic token key
     }
 
     /// Legacy shared instance for backward compatibility during transition.
