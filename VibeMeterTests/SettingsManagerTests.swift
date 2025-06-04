@@ -279,7 +279,7 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         existingUserDefaults.set(750.0, forKey: SettingsManager.Keys.upperLimitUSD)
         existingUserDefaults.set(15, forKey: SettingsManager.Keys.refreshIntervalMinutes)
         existingUserDefaults.set(true, forKey: SettingsManager.Keys.launchAtLoginEnabled)
-        existingUserDefaults.set("icon", forKey: "menuBarDisplayMode")
+        existingUserDefaults.set("icon", forKey: SettingsManager.Keys.menuBarDisplayMode)
         existingUserDefaults.set(true, forKey: SettingsManager.Keys.showInDock)
 
         // Initialize SettingsManager with these pre-populated UserDefaults
