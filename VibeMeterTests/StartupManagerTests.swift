@@ -112,9 +112,15 @@ final class StartupManagerTests: XCTestCase, @unchecked Sendable {
     func testIntegrationWithSettingsManager() {
         // Given
         let mockStartup = MockStartupManager()
+        let testDefaults = UserDefaults(suiteName: "test.startup")!
+        testDefaults.removeObject(forKey: "launchAtLoginEnabled") // Ensure clean state
+        
         let settings = SettingsManager(
-            userDefaults: UserDefaults(suiteName: "test.startup")!,
+            userDefaults: testDefaults,
             startupManager: mockStartup)
+
+        // Verify initial state
+        XCTAssertFalse(settings.launchAtLoginEnabled)
 
         // When
         settings.launchAtLoginEnabled = true
