@@ -43,7 +43,7 @@ actor BackgroundDataProcessor {
                 .warning(
                     "Team info fetch failed for \(provider.displayName), using fallback: \(error.localizedDescription)")
             // Create fallback team info - user is authenticated but team data unavailable
-            teamInfo = ProviderTeamInfo(id: 0, name: "Default Team", provider: provider)
+            teamInfo = ProviderTeamInfo(id: 0, name: "Individual Account", provider: provider)
         }
 
         // Calculate current month for up-to-date spending data
