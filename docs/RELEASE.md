@@ -16,10 +16,13 @@ This document describes the process for creating and publishing a new release of
 - Proper build number management
 
 **Critical Reminders:**
-1. **Build numbers MUST increment** - Sparkle uses build numbers, not version strings
-2. **Verify entitlements after building** - Both main app and XPC services
-3. **Test updates from previous version** - Install beta and verify update to 1.0.0 works
-4. **Appcast build numbers must match** - Manual verification required after generation
+1. **Git must be clean** - No uncommitted changes before starting release
+2. **Use scripts only** - No manual workarounds, scripts handle all complexity
+3. **Build numbers MUST increment** - Sparkle uses build numbers, not version strings
+4. **Sequential process** - Tag → Release → Appcast → Push (cannot batch)
+5. **Verify entitlements after building** - Both main app and XPC services
+6. **Test updates from previous version** - Install beta and verify update to 1.0.0 works
+7. **Appcast build numbers must match** - Manual verification required after generation
 
 ## Prerequisites
 
@@ -454,13 +457,26 @@ generate_keys -p
 
 ## Complete Release Checklist for v1.0.0
 
+**IMPORTANT: Always use the provided scripts for releases. Do not use manual workarounds or shortcuts. The scripts ensure consistency and handle all the complex signing, notarization, and packaging steps correctly.**
+
 ### Pre-Release
+- [ ] **CRITICAL**: Ensure git working directory is clean
+  ```bash
+  git status  # Should show "nothing to commit, working tree clean"
+  ```
 - [ ] **CRITICAL**: Increment `CURRENT_PROJECT_VERSION` in Project.swift
   - Current: "100" for v1.0.0
   - Must be higher than any previous release
 - [ ] Verify `MARKETING_VERSION` is set to "1.0.0"
 - [ ] Update CHANGELOG.md with v1.0.0 release notes
 - [ ] Verify sandboxing is enabled in VibeMeter.entitlements
+- [ ] Commit all changes:
+  ```bash
+  git add -A
+  git commit -m "Prepare for v1.0.0 release"
+  git push origin main
+  ```
+- [ ] Verify git is clean again: `git status`
 - [ ] Test build and functionality locally
 - [ ] Run tests: `xcodebuild test`
 - [ ] Run linter: `./scripts/lint.sh`
