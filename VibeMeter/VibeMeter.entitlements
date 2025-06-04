@@ -12,11 +12,19 @@
     <true/>
     <key>com.apple.security.automation.apple-events</key>
     <true/>
-    <!-- Sparkle XPC Service temporary exceptions -->
+    <!-- Allow process execution for ApplicationMover (hdiutil) and other system commands -->
+    <key>com.apple.security.temporary-exception.shared-preference.read-write</key>
+    <array>
+        <string>com.steipete.vibemeter</string>
+    </array>
+    <!-- Allow outgoing network connections for Sparkle updates -->
+    <key>com.apple.security.network.server</key>
+    <false/>
+    <!-- Sparkle XPC Service temporary exceptions for sandboxed updates -->
     <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
     <array>
         <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
-        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spkd</string>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
     </array>
     <!-- Temporarily disabled keychain access groups for development -->
     <!--
