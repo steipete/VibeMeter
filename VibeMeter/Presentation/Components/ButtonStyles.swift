@@ -14,6 +14,7 @@ import SwiftUI
 /// style used throughout the application for secondary actions.
 struct GlassButtonStyle: ButtonStyle {
     let isDestructive: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
     init(isDestructive: Bool = false) {
         self.isDestructive = isDestructive
@@ -26,8 +27,8 @@ struct GlassButtonStyle: ButtonStyle {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(configuration.isPressed ?
-                        Color.white.opacity(0.2) :
-                        Color.white.opacity(0.1)))
+                        Color.selectionBackground(for: colorScheme) :
+                        Color.hoverBackground(for: colorScheme)))
             .foregroundStyle(isDestructive ? .red : .primary)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
@@ -41,6 +42,8 @@ struct GlassButtonStyle: ButtonStyle {
 /// hover effects, used for primary actions that need to stand out in the UI.
 /// Features enhanced hover states and more prominent visual feedback.
 struct ProminentGlassButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.horizontal, 24)
@@ -49,12 +52,12 @@ struct ProminentGlassButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(LinearGradient(
                         colors: [
-                            Color.blue.opacity(configuration.isPressed ? 0.6 : 0.8),
-                            Color.purple.opacity(configuration.isPressed ? 0.6 : 0.8),
+                            Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.6 : 0.8),
+                            Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.4 : 0.6),
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing)))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.menuBarContent(for: colorScheme))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
@@ -68,8 +71,8 @@ struct ProminentGlassButtonStyle: ButtonStyle {
 /// and press states for clear interaction feedback without overwhelming the UI.
 struct IconButtonStyle: ButtonStyle {
     let isDestructive: Bool
-    @State
-    private var isHovering = false
+    @State private var isHovering = false
+    @Environment(\.colorScheme) private var colorScheme
 
     init(isDestructive: Bool = false) {
         self.isDestructive = isDestructive
@@ -81,7 +84,7 @@ struct IconButtonStyle: ButtonStyle {
             .background(
                 Circle()
                     .fill((isHovering || configuration.isPressed) ?
-                        Color.white.opacity(0.15) :
+                        Color.hoverBackground(for: colorScheme) :
                         Color.clear))
             .foregroundStyle(isDestructive ?
                 (isHovering ? .red : .red.opacity(0.8)) :

@@ -47,8 +47,8 @@ struct GaugeIcon: View {
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast
             let trackColor = isDisabled
-                ? (colorScheme == .dark ? Color.white.opacity(0.2) : Color.gray.opacity(0.4))
-                : (colorScheme == .dark ? Color.white.opacity(0.15) : Color.gray.opacity(0.3))
+                ? Color.gaugeStroke(for: colorScheme).opacity(1.5)
+                : Color.gaugeStroke(for: colorScheme)
             ctx.stroke(trackPath,
                        with: .color(trackColor),
                        style: StrokeStyle(lineWidth: line, lineCap: .round))
@@ -67,8 +67,8 @@ struct GaugeIcon: View {
                     ctx.stroke(shimmerPath,
                                with: .linearGradient(
                                    Gradient(colors: [
-                                       Color.white.opacity(0.3),
-                                       Color.white.opacity(0),
+                                       Color.menuBarContent(for: colorScheme).opacity(0.3),
+                                       Color.menuBarContent(for: colorScheme).opacity(0),
                                    ]),
                                    startPoint: .zero,
                                    endPoint: CGPoint(x: size.width, y: 0)),
@@ -85,9 +85,9 @@ struct GaugeIcon: View {
                 needle.move(to: center)
                 needle.addLine(to: tip)
                 // Needle color should work for both light and dark mode
-                let needleColor = colorScheme == .dark
-                    ? (isLoading ? Color.white.opacity(0.8) : Color.white)
-                    : (isLoading ? Color.black.opacity(0.6) : Color.black)
+                let needleColor = isLoading
+                    ? Color.menuBarContent(for: colorScheme).opacity(0.7)
+                    : Color.menuBarContent(for: colorScheme)
                 ctx.stroke(needle,
                            with: .color(needleColor),
                            style: StrokeStyle(lineWidth: line * 0.5, lineCap: .round))
