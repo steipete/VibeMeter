@@ -83,7 +83,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Use modern animation APIs with better timing
         alphaValue = 0
-        makeKeyAndOrderFront(nil)
+        orderFront(nil)
 
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in
