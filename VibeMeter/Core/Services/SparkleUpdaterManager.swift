@@ -37,6 +37,9 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         // Set up notification center for gentle reminders
         setupNotificationCenter()
+        
+        // Listen for update channel changes
+        setupUpdateChannelListener()
 
         Self.staticLogger
             .info("SparkleUpdaterManager initialized. Updater controller initialization completed.")
@@ -115,6 +118,45 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         center.setNotificationCategories([updateCategory])
         Self.staticLogger.info("Notification center configured for gentle reminders")
     }
+    
+    private func setupUpdateChannelListener() {
+        // Listen for update channel changes
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name("UpdateChannelChanged"),
+            object: nil,
+            queue: .main) { [weak self] notification in
+                guard let self = self,
+                      let userInfo = notification.userInfo,
+                      let channel = userInfo["channel"] as? UpdateChannel else { return }
+                
+                // Update feed URL for the new channel
+                Task { @MainActor in
+                    await self.updateFeedURL(for: channel)
+                }
+            }
+        
+        // Configure initial feed URL based on current settings
+        Task { @MainActor in
+            let currentChannel = SettingsManager.shared.updateChannel
+            await self.updateFeedURL(for: currentChannel)
+        }
+    }
+    
+    // Store the current channel for the delegate method
+    private var currentChannel: UpdateChannel = .stable
+    
+    @MainActor
+    private func updateFeedURL(for channel: UpdateChannel) async {
+        currentChannel = channel
+        Self.staticLogger.info("Updated update channel to: \(channel.displayName)")
+        
+        // Optionally check for updates after changing the channel
+        // This ensures users get immediate feedback when switching to pre-release
+        if channel == .prerelease {
+            Self.staticLogger.info("Checking for updates after switching to pre-release channel")
+            updaterController.updater.checkForUpdatesInBackground()
+        }
+    }
 
     // MARK: Private
 
@@ -169,6 +211,15 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     public nonisolated func updaterDidNotFindUpdate(_: SPUUpdater, error: Error) {
         let error = error as NSError
         Self.staticLogger.info("No update found: \(error.localizedDescription)")
+    }
+    
+    // Provide dynamic feed URL based on current update channel
+    public nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
+        let channel = MainActor.assumeIsolated {
+            self.currentChannel
+        }
+        Self.staticLogger.info("Providing feed URL for channel: \(channel.displayName)")
+        return channel.appcastURL
     }
 
     // MARK: - SPUStandardUserDriverDelegate

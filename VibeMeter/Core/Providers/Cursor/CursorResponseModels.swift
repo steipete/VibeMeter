@@ -38,7 +38,7 @@ struct CursorUserResponse: Decodable, Sendable {
 struct CursorInvoiceResponse: Decodable, Sendable {
     let items: [CursorInvoiceItem]?
     let pricingDescription: CursorPricingDescription?
-    
+
     private enum CodingKeys: String, CodingKey {
         case items
         case pricingDescription = "pricing_description"
@@ -71,14 +71,14 @@ struct CursorUsageResponse: Decodable, Sendable {
         case startOfMonth
         case start_of_month // snake_case fallback
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
+
         self.gpt35Turbo = try container.decode(ModelUsage.self, forKey: .gpt35Turbo)
         self.gpt4 = try container.decode(ModelUsage.self, forKey: .gpt4)
         self.gpt432K = try container.decode(ModelUsage.self, forKey: .gpt432K)
-        
+
         // Try camelCase first, then snake_case as fallback
         self.startOfMonth = try container.decodeIfPresent(String.self, forKey: .startOfMonth)
             ?? container.decode(String.self, forKey: .start_of_month)
@@ -92,7 +92,7 @@ struct ModelUsage: Decodable, Sendable {
     let maxTokenUsage: Int?
     let numTokens: Int
     let maxRequestUsage: Int?
-    
+
     // Custom decoder to handle both camelCase and snake_case from API
     private enum CodingKeys: String, CodingKey {
         case numRequests
@@ -106,23 +106,23 @@ struct ModelUsage: Decodable, Sendable {
         case maxRequestUsage
         case max_request_usage // snake_case fallback
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
+
         // Try camelCase first, then snake_case as fallback
-        self.numRequests = try container.decodeIfPresent(Int.self, forKey: .numRequests) 
+        self.numRequests = try container.decodeIfPresent(Int.self, forKey: .numRequests)
             ?? container.decode(Int.self, forKey: .num_requests)
-        
+
         self.numRequestsTotal = try container.decodeIfPresent(Int.self, forKey: .numRequestsTotal)
             ?? container.decode(Int.self, forKey: .num_requests_total)
-        
+
         self.numTokens = try container.decodeIfPresent(Int.self, forKey: .numTokens)
             ?? container.decode(Int.self, forKey: .num_tokens)
-        
+
         self.maxTokenUsage = try container.decodeIfPresent(Int?.self, forKey: .maxTokenUsage)
             ?? container.decodeIfPresent(Int?.self, forKey: .max_token_usage) ?? nil
-        
+
         self.maxRequestUsage = try container.decodeIfPresent(Int?.self, forKey: .maxRequestUsage)
             ?? container.decodeIfPresent(Int?.self, forKey: .max_request_usage) ?? nil
     }

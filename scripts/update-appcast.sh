@@ -96,3 +96,7 @@ cat > "$PROJECT_ROOT/appcast.xml" << APPCAST_EOF
 APPCAST_EOF
 
 echo "✅ Appcast.xml updated with signature: $SPARKLE_SIG"
+
+# Also update the pre-release appcast to include this stable release
+echo "📡 Also updating appcast-prerelease.xml with stable release..."
+./scripts/update-prerelease-appcast.sh "$VERSION" "$BUILD_NUMBER" "$DMG_PATH"

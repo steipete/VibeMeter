@@ -22,6 +22,7 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     var launchAtLoginEnabled: Bool { get set }
     var menuBarDisplayMode: MenuBarDisplayMode { get set }
     var showInDock: Bool { get set }
+    var updateChannel: UpdateChannel { get set }
 
     // Provider management
     var enabledProviders: Set<ServiceProvider> { get set }
@@ -111,6 +112,11 @@ public final class SettingsManager: SettingsManagerProtocol {
     public var showInDock: Bool {
         get { behaviorManager.showInDock }
         set { behaviorManager.showInDock = newValue }
+    }
+
+    public var updateChannel: UpdateChannel {
+        get { behaviorManager.updateChannel }
+        set { behaviorManager.updateChannel = newValue }
     }
 
     // MARK: - Singleton

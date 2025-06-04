@@ -47,6 +47,16 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 # Build release version
 ./scripts/build.sh --configuration Release
 
+# Create releases (stable or pre-release)
+./scripts/release.sh --stable                    # Create stable release
+./scripts/release.sh --prerelease beta 1         # Create pre-release (beta.1)
+./scripts/release.sh --prerelease alpha 2        # Create pre-release (alpha.2)
+./scripts/release.sh --prerelease rc 1           # Create release candidate
+
+# Individual release scripts (advanced usage)
+./scripts/create-github-release.sh               # Stable release only
+./scripts/create-prerelease.sh beta 1            # Pre-release only
+
 # Code sign and notarize (requires Apple Developer credentials)
 ./scripts/sign-and-notarize.sh --sign-and-notarize
 
@@ -69,6 +79,15 @@ Required environment variables for notarization:
 - `APP_STORE_CONNECT_API_KEY_P8` - App Store Connect API key content
 - `APP_STORE_CONNECT_KEY_ID` - API Key ID  
 - `APP_STORE_CONNECT_ISSUER_ID` - API Key Issuer ID
+
+### Update Channels
+
+VibeMeter supports two update channels via Sparkle:
+
+- **Stable Only**: Users receive only production-ready releases (`appcast.xml`)
+- **Include Pre-releases**: Users receive both stable and pre-release versions (`appcast-prerelease.xml`)
+
+Update channel selection is available in General Settings. The SparkleUpdaterManager dynamically provides the appropriate feed URL based on user preference.
 
 ## Architecture
 

@@ -52,7 +52,7 @@ final class StatusBarMenuManager {
               let loginManager = loginManager,
               let spendingData = spendingData,
               let currencyData = currencyData,
-              let orchestrator = orchestrator else { return }
+              let _ = orchestrator else { return }
 
         let contentView = CustomMenuContainer {
             VibeMeterMainView(
