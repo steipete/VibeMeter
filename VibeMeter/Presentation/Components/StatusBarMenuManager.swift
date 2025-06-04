@@ -70,10 +70,6 @@ final class StatusBarMenuManager {
         // Create and store the window
         let window = CustomMenuWindow(contentView: contentView)
         self.customMenuWindow = window
-
-        // Force the window to load its view hierarchy immediately
-        // This is crucial for Release builds where lazy loading might fail
-        _ = window.contentView
     }
 
     // MARK: - Left-Click Popover Management

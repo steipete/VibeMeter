@@ -33,12 +33,15 @@ final class CustomMenuWindow: NSPanel {
         // Configure window appearance
         isOpaque = false
         backgroundColor = .clear
-        level = .popUpMenu
+        level = .floating // Use floating level instead of popUpMenu to avoid conflicts
         // Simplified collection behavior to avoid conflicts
-        collectionBehavior = [.fullScreenAuxiliary, .transient]
+        collectionBehavior = [.transient, .ignoresCycle, .fullScreenAuxiliary]
         isMovableByWindowBackground = false
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
+        
+        // Disable animations which can cause hangs
+        animationBehavior = .none
 
         // Set content view controller
         contentViewController = hostingController
@@ -89,15 +92,21 @@ final class CustomMenuWindow: NSPanel {
         // Set frame without display to avoid flicker
         setFrame(targetFrame, display: false)
 
-        // Setup event monitoring before showing to avoid race conditions
-        setupEventMonitoring()
-
-        // Make the window visible using a more direct approach
-        // This avoids potential hangs with orderFront
-        makeKeyAndOrderFront(nil)
-        
-        // Ensure the window is at the correct level
-        level = .popUpMenu
+        // Defer window display to next run loop to avoid hangs
+        // This ensures all window properties are properly set before display
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            
+            // Make the window visible without making it key
+            // For menu bar apps, we don't want to steal key status from other apps
+            self.orderFrontRegardless()
+            
+            // Make it main to receive events
+            self.makeMain()
+            
+            // Setup event monitoring after showing the window
+            self.setupEventMonitoring()
+        }
     }
 
     func hide() {
@@ -143,7 +152,7 @@ final class CustomMenuWindow: NSPanel {
             // Check if click is outside our window
             let clickLocation = event.locationInWindow
             let windowFrame = self.frame
-            let screenLocation = event.window?.convertPointToScreen(clickLocation) ?? clickLocation
+            let screenLocation = event.window?.convertPoint(toScreen: clickLocation) ?? clickLocation
             
             if !windowFrame.contains(screenLocation) {
                 // Click is outside our window, hide it
@@ -161,22 +170,31 @@ final class CustomMenuWindow: NSPanel {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
-            isEventMonitoringActive = false
         }
+        isEventMonitoringActive = false
     }
 
     override func resignKey() {
         super.resignKey()
         hide()
     }
+    
+    // Override resignMain to handle when window loses main status
+    override func resignMain() {
+        super.resignMain()
+        // Hide when we lose main status (clicked outside)
+        hide()
+    }
 
     // Override computed properties for window behavior
     override var canBecomeKey: Bool {
-        true
+        // Don't become key window to avoid stealing focus
+        false
     }
 
     override var canBecomeMain: Bool {
-        false
+        // Allow becoming main for proper event handling
+        true
     }
 
     deinit {
@@ -238,3 +256,4 @@ struct CustomMenuContainer<Content: View>: View {
     .padding()
     .background(Color(NSColor.windowBackgroundColor))
 }
+
