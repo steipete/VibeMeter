@@ -281,8 +281,9 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             default:
                 Self.staticLogger.debug("Unknown notification action: \(actionIdentifier)")
             }
-            
-            completionHandler()
         }
+        
+        // Call completion handler immediately to avoid race conditions
+        completionHandler()
     }
 }
