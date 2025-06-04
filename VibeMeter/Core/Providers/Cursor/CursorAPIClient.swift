@@ -76,8 +76,8 @@ actor CursorAPIClient {
         logger.debug("Fetching Cursor usage data")
 
         // Extract user ID from the session token (format: user_id::jwt_token)
-        let userId: String = if let colonIndex = authToken.firstIndex(of: ":") {
-            String(authToken[..<colonIndex])
+        let userId: String = if let doubleColonRange = authToken.range(of: "::") {
+            String(authToken[..<doubleColonRange.lowerBound])
         } else {
             // Fallback: if token format is different, use the whole token as user ID
             authToken
@@ -162,9 +162,15 @@ actor CursorAPIClient {
             // Handle empty or minimal data for successful responses
             if data.isEmpty {
                 logger.error("Received empty data for successful response")
+                logger.debug("Request URL was: \(request.url?.absoluteString ?? "nil")")
                 throw ProviderError.decodingError(
                     message: "Received empty response data",
                     statusCode: httpResponse.statusCode)
+            }
+
+            // Log the response data for debugging
+            if let responseString = String(data: data, encoding: .utf8) {
+                logger.debug("Response data received: \(responseString)")
             }
 
             do {
