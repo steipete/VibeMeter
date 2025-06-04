@@ -53,7 +53,7 @@ struct NetworkStatusIndicator: View {
     }
 
     private var statusColor: Color {
-        isConnected ? .green : .red
+        isConnected ? .statusConnected : .statusError
     }
 
     private var fullStatusDescription: String {

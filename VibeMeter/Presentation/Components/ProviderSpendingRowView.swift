@@ -57,7 +57,7 @@ struct ProviderSpendingRowView: View {
                         date: lastRefresh,
                         style: .withPrefix,
                         showFreshnessColor: false)
-                        .font(.footnote)
+                        .font(.caption)
                         .foregroundStyle(.quaternary)
                 }
             }
@@ -114,7 +114,7 @@ struct ProviderSpendingRowView: View {
 
             // Provider name
             Text(provider.displayName)
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.primary)
                 .accessibilityAddTraits(.isHeader)
 
@@ -134,13 +134,15 @@ struct ProviderSpendingRowView: View {
 
                     Text(
                         "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .font(.subheadline.weight(.semibold).monospaced())
+                        .font(.body.weight(.semibold).monospaced())
                         .foregroundStyle(.primary)
                         .accessibilityLabel(
                             "Spending: \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        .animation(.easeOut(duration: 0.3), value: spendingUSD)
                 } else {
                     Text("--")
-                        .font(.subheadline)
+                        .font(.body)
                         .foregroundStyle(.tertiary)
                         .accessibilityLabel("No spending data")
                 }
@@ -153,16 +155,21 @@ struct ProviderSpendingRowView: View {
         let progressPercentage = Int((progress * 100).rounded())
         return HStack(spacing: 6) {
             Text("\(usage.currentRequests)/\(maxRequests)")
-                .font(.footnote.weight(.medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .accessibilityLabel("Usage: \(usage.currentRequests) of \(maxRequests) requests")
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                .animation(.easeOut(duration: 0.3), value: usage.currentRequests)
 
-            ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: Color.progressColor(for: progress, colorScheme: colorScheme)))
+            CustomProgressBar(
+                progress: progress,
+                progressColor: Color.progressColor(for: progress, colorScheme: colorScheme),
+                backgroundColor: Color.gaugeBackground(for: colorScheme))
                 .frame(width: showTimestamp ? 60 : 80, height: 3) // Extended width, larger when no timestamp
-                .background(Color.gaugeBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: 1.5))
                 .accessibilityLabel("Usage progress: \(progressPercentage) percent")
                 .accessibilityValue("\(usage.currentRequests) requests used out of \(maxRequests) allowed")
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                .animation(.easeOut(duration: 0.3), value: progress)
         }
         .accessibilityElement(children: .combine)
     }
@@ -221,6 +228,46 @@ struct ProviderSpendingRowView: View {
         }
 
         return components.joined(separator: ", ")
+    }
+}
+
+/// Custom progress bar that works with drawingGroup() by using Canvas instead of NSProgressIndicator
+private struct CustomProgressBar: View {
+    let progress: Double
+    let progressColor: Color
+    let backgroundColor: Color
+    
+    @State private var animatedProgress: Double = 0
+    
+    var body: some View {
+        Canvas { context, size in
+            let cornerRadius: CGFloat = 1.5
+            let backgroundRect = CGRect(origin: .zero, size: size)
+            let progressWidth = size.width * animatedProgress
+            let progressRect = CGRect(x: 0, y: 0, width: progressWidth, height: size.height)
+            
+            // Draw background
+            context.fill(
+                Path(roundedRect: backgroundRect, cornerRadius: cornerRadius),
+                with: .color(backgroundColor))
+            
+            // Draw progress fill
+            if animatedProgress > 0 {
+                context.fill(
+                    Path(roundedRect: progressRect, cornerRadius: cornerRadius),
+                    with: .color(progressColor))
+            }
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.4)) {
+                animatedProgress = progress
+            }
+        }
+        .onChange(of: progress) { _, newValue in
+            withAnimation(.easeOut(duration: 0.3)) {
+                animatedProgress = newValue
+            }
+        }
     }
 }
 

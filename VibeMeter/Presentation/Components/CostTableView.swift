@@ -43,14 +43,14 @@ struct CostTableView: View {
     private var totalSpendingSection: some View {
         HStack(alignment: .center) {
             Text("Total Spending")
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
-                    .font(.title.weight(.semibold).monospaced())
+                    .font(.title2.weight(.semibold).monospaced())
                     .foregroundStyle(.primary)
                     .accessibilityLabel("Total spending: \(totalSpending)")
             } else {
@@ -61,7 +61,7 @@ struct CostTableView: View {
             }
         }
         .standardPadding(horizontal: 12, vertical: 8)
-        .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Total spending section")
         .accessibilityValue(currentSpendingDisplay ?? "No data available")
@@ -80,7 +80,7 @@ struct CostTableView: View {
             }
         }
         .standardPadding(horizontal: 3, vertical: 3)
-        .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Provider spending breakdown")
         .accessibilityHint("Lists spending for each connected AI service provider")
@@ -89,33 +89,33 @@ struct CostTableView: View {
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
             Text("Limits")
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.orange)
                 .accessibilityLabel(
                     "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
 
             Text("•")
-                .font(.footnote)
+                .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
                 .accessibilityHidden(true)
 
             Text(
                 "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.red)
                 .accessibilityLabel(
                     "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
         }
         .standardPadding(horizontal: 12, vertical: 8)
-        .materialBackground(cornerRadius: 10, material: .thickMaterial)
+        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Spending limits")
         .accessibilityValue(
