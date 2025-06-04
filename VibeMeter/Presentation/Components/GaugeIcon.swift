@@ -38,14 +38,14 @@ struct GaugeIcon: View {
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast

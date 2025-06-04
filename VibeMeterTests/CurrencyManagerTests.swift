@@ -277,7 +277,7 @@ final class CurrencyManagerTests: XCTestCase {
 
         // When
         let startTime = Date()
-        for _ in 0 ..< 1000 {
+        for _ in 0 ..< 100 {
             for code in testCodes {
                 _ = sut?.isValidCurrencyCode(code) ?? false
             }

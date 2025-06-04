@@ -134,24 +134,6 @@ struct InteractiveAppIcon: View {
                 .animation(.easeInOut(duration: 0.2), value: isHovering)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
 
-            // Hover arrow indicator
-            if isHovering {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(.black.opacity(0.6), in: Circle())
-                            .transition(.scale.combined(with: .opacity))
-                    }
-                }
-                .frame(width: 128, height: 128)
-                .allowsHitTesting(false)
-            }
-
             // Invisible button overlay for click handling
             Button(action: openWebsite) {
                 Rectangle()
