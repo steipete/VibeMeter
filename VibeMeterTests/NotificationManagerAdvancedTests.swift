@@ -507,7 +507,7 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
         lastAddedRequest = request
 
         switch addResult {
-        case .success():
+        case .success:
             addedRequests.append(request)
         case let .failure(error):
             throw error

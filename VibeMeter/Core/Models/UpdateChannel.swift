@@ -5,8 +5,8 @@ import Foundation
 /// This enum defines the different update channels that users can choose from,
 /// allowing them to receive either stable releases only or include pre-release versions.
 public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
-    case stable = "stable"
-    case prerelease = "prerelease"
+    case stable
+    case prerelease
 
     /// Human-readable display name for the update channel
     public var displayName: String {
@@ -54,10 +54,8 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
         let prereleaseKeywords = ["beta", "alpha", "rc", "pre", "dev"]
         let lowercaseVersion = appVersion.lowercased()
 
-        for keyword in prereleaseKeywords {
-            if lowercaseVersion.contains(keyword) {
-                return .prerelease
-            }
+        for keyword in prereleaseKeywords where lowercaseVersion.contains(keyword) {
+            return .prerelease
         }
 
         return .stable

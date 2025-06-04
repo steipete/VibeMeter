@@ -88,7 +88,12 @@ public final class AppBehaviorSettingsManager {
 
         logger
             .info(
-                "AppBehaviorSettingsManager initialized - launch at login: \(self.launchAtLoginEnabled), show in dock: \(self.showInDock), update channel: \(self.updateChannel.rawValue)")
+                """
+                AppBehaviorSettingsManager initialized - \
+                launch at login: \(self.launchAtLoginEnabled), \
+                show in dock: \(self.showInDock), \
+                update channel: \(self.updateChannel.rawValue)
+                """)
     }
 
     // MARK: - Public Methods

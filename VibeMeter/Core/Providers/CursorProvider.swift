@@ -105,10 +105,8 @@ public actor CursorProvider: ProviderProtocol {
 
         // Extract from cookies if available
         if let cookies = callbackData["cookies"] as? [HTTPCookie] {
-            for cookie in cookies {
-                if cookie.name == "WorkosCursorSessionToken" {
-                    return cookie.value
-                }
+            for cookie in cookies where cookie.name == "WorkosCursorSessionToken" {
+                return cookie.value
             }
         }
 

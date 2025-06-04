@@ -55,7 +55,7 @@ struct LoggedOutContentView: View {
                     Button(action: {
                         userSessionData.setAuthenticating(for: .cursor)
                         onLoginTrigger()
-                    }) {
+                    }, label: {
                         HStack(spacing: 8) {
                             if isAuthenticating {
                                 // Use a simple rotating icon for loading state
@@ -74,7 +74,7 @@ struct LoggedOutContentView: View {
                                 .font(.title3.weight(.medium))
                         }
                         .frame(maxWidth: .infinity)
-                    }
+                    })
                     .buttonStyle(ProminentGlassButtonStyle())
                     .disabled(isAuthenticating)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))

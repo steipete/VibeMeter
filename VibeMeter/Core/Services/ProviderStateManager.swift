@@ -82,12 +82,10 @@ final class ProviderStateManager {
 
     /// Logs out from all providers.
     func logOutFromAll() {
-        for provider in ServiceProvider.allCases {
-            if isLoggedIn(to: provider) {
-                setLoginState(false, for: provider)
-                clearError(for: provider)
-                _ = tokenManager.deleteToken(for: provider)
-            }
+        for provider in ServiceProvider.allCases where isLoggedIn(to: provider) {
+            setLoginState(false, for: provider)
+            clearError(for: provider)
+            _ = tokenManager.deleteToken(for: provider)
         }
         logger.info("User logged out from all providers")
     }

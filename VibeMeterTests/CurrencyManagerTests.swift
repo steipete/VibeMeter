@@ -239,7 +239,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testAvailableCurrencies_UseSystemLocales() {
         // When
-        let _ = sut?.availableCurrencies ?? []
+        _ = sut?.availableCurrencies ?? []
         let availableLocales = Locale.availableIdentifiers
 
         // Then
@@ -365,7 +365,7 @@ final class CurrencyManagerTests: XCTestCase {
             for _ in 0 ..< taskCount {
                 group.addTask { [sut] in
                     let currencies = sut?.availableCurrencies ?? []
-                    let _ = sut?.systemCurrencyCode ?? "USD"
+                    _ = sut?.systemCurrencyCode ?? "USD"
                     let isValidUSD = sut?.isValidCurrencyCode("USD") ?? false
 
                     return !currencies.isEmpty && isValidUSD

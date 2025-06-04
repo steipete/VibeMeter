@@ -1,14 +1,5 @@
 import SwiftUI
 
-/// Custom shimmer effect compatible with drawingGroup() for loading states.
-///
-/// This shimmer implementation uses Canvas-based rendering to ensure compatibility
-/// with SwiftUI's drawingGroup() optimization. It provides smooth, performant
-/// shimmer animations for placeholder content during data loading.
-///
-/// The shimmer automatically adapts to light and dark color schemes and can be
-/// applied to any SwiftUI view using the `.shimmer()` modifier.
-
 // MARK: - Shimmer Effect Modifier
 
 /// Applies a shimmer effect compatible with drawingGroup() for loading states.

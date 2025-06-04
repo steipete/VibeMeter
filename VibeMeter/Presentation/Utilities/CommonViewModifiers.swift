@@ -1,10 +1,5 @@
 import SwiftUI
 
-/// Common view modifiers to eliminate UI styling duplication across the app.
-///
-/// These modifiers provide consistent styling patterns for material backgrounds,
-/// standard padding, and other frequently used UI configurations.
-
 // MARK: - Material Background Modifier
 
 /// Applies a rounded rectangle background with material fill.

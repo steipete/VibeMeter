@@ -63,7 +63,10 @@ actor BackgroundDataProcessor {
 
         logger
             .info(
-                "Requesting invoice data for current month \(month)/\(year) (Calendar month \(calendarMonth) -> API month \(month))")
+                """
+                Requesting invoice data for current month \(month)/\(year) \
+                (Calendar month \(calendarMonth) -> API month \(month))
+                """)
 
         // Fetch invoice and usage data concurrently
         // Use team ID from team info (or 0 for fallback)

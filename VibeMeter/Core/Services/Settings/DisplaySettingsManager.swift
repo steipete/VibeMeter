@@ -75,7 +75,12 @@ public final class DisplaySettingsManager {
 
         logger
             .info(
-                "DisplaySettingsManager initialized - currency: \(self.selectedCurrencyCode), refresh: \(self.refreshIntervalMinutes)min, display: \(self.menuBarDisplayMode.displayName)")
+                """
+                DisplaySettingsManager initialized - \
+                currency: \(self.selectedCurrencyCode), \
+                refresh: \(self.refreshIntervalMinutes)min, \
+                display: \(self.menuBarDisplayMode.displayName)
+                """)
     }
 
     // MARK: - Public Methods
