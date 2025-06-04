@@ -17,7 +17,7 @@ let project = Project(
         base: [
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
-            "CURRENT_PROJECT_VERSION": "2",
+            "CURRENT_PROJECT_VERSION": "1",
             "CODE_SIGN_STYLE": "Automatic",
             "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,
@@ -30,7 +30,7 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "15.0",
-            "MARKETING_VERSION": "0.9.1",
+            "MARKETING_VERSION": "0.9.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",
@@ -67,7 +67,7 @@ let project = Project(
             deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": "1.0.0",
-                "CFBundleVersion": "2",
+                "CFBundleVersion": "1",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
                 "NSSupportsAutomaticTermination": false,
