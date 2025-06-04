@@ -105,6 +105,7 @@ final class MultiProviderDataProcessor {
         context.lastRefreshDates[provider] = Date()
     }
 
+    @MainActor
     private func updateCurrencyAndSpending(
         for provider: ServiceProvider,
         invoice: ProviderMonthlyInvoice,
