@@ -1,12 +1,21 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Authentication State
+
+/// Represents the authentication state for a provider.
+public enum AuthenticationState: Codable, Sendable {
+    case loggedOut
+    case authenticating
+    case loggedIn
+}
+
 // MARK: - Provider Session State
 
 /// Represents the session state for a specific provider.
 public struct ProviderSessionState: Codable, Sendable {
     public let provider: ServiceProvider
-    public var isLoggedIn: Bool
+    public var authState: AuthenticationState
     public var userEmail: String?
     public var teamName: String?
     public var teamId: Int?
@@ -16,7 +25,7 @@ public struct ProviderSessionState: Codable, Sendable {
 
     public init(
         provider: ServiceProvider,
-        isLoggedIn: Bool = false,
+        authState: AuthenticationState = .loggedOut,
         userEmail: String? = nil,
         teamName: String? = nil,
         teamId: Int? = nil,
@@ -24,7 +33,7 @@ public struct ProviderSessionState: Codable, Sendable {
         teamIdFetchFailed: Bool = false,
         lastUpdated: Date = Date()) {
         self.provider = provider
-        self.isLoggedIn = isLoggedIn
+        self.authState = authState
         self.userEmail = userEmail
         self.teamName = teamName
         self.teamId = teamId
@@ -32,10 +41,20 @@ public struct ProviderSessionState: Codable, Sendable {
         self.teamIdFetchFailed = teamIdFetchFailed
         self.lastUpdated = lastUpdated
     }
+    
+    /// Computed property for backward compatibility
+    public var isLoggedIn: Bool {
+        authState == .loggedIn
+    }
+    
+    /// Computed property to check if authenticating
+    public var isAuthenticating: Bool {
+        authState == .authenticating
+    }
 
     /// Updates session with successful login data.
     public mutating func handleLoginSuccess(email: String, teamName: String?, teamId: Int? = nil) {
-        isLoggedIn = true
+        authState = .loggedIn
         userEmail = email
         self.teamName = teamName
         self.teamId = teamId
@@ -43,20 +62,76 @@ public struct ProviderSessionState: Codable, Sendable {
         teamIdFetchFailed = false
         lastUpdated = Date()
     }
+    
+    /// Sets state to authenticating.
+    public mutating func setAuthenticating() {
+        authState = .authenticating
+        lastErrorMessage = nil
+        lastUpdated = Date()
+    }
 
     /// Handles login failure with error message.
     public mutating func handleLoginFailure(error: Error) {
+        authState = .loggedOut
         if error.localizedDescription.contains("logged out") {
             lastErrorMessage = nil
+        } else if error.localizedDescription.contains("cancelled") {
+            lastErrorMessage = nil
         } else {
-            lastErrorMessage = "Login failed or cancelled."
+            // Create user-friendly error messages
+            lastErrorMessage = formatErrorMessage(error)
         }
-        handleLogout()
+        // Don't clear user data on failure, just update state
+        lastUpdated = Date()
+    }
+    
+    /// Formats error messages for user display.
+    private func formatErrorMessage(_ error: Error) -> String {
+        if let providerError = error as? ProviderError {
+            switch providerError {
+            case .unauthorized:
+                return "Authentication failed. Please try logging in again."
+            case .networkError(let message, _):
+                if message.contains("timed out") {
+                    return "Connection timed out. Please check your internet connection."
+                }
+                return "Network error. Please try again."
+            case .tokenExpired:
+                return "Session expired. Please log in again."
+            case .rateLimitExceeded:
+                return "Too many requests. Please try again later."
+            case .serviceUnavailable:
+                return "Service temporarily unavailable."
+            default:
+                return "Login failed. Please try again."
+            }
+        }
+        
+        // Check for network errors
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet:
+                return "No internet connection."
+            case .timedOut:
+                return "Request timed out. Please try again."
+            case .cannotFindHost, .cannotConnectToHost:
+                return "Cannot connect to server."
+            default:
+                return "Connection error. Please try again."
+            }
+        }
+        
+        // Generic error
+        let message = error.localizedDescription
+        if message.count > 60 {
+            return "Login failed. Please try again."
+        }
+        return message
     }
 
     /// Handles logout and clears session data.
     public mutating func handleLogout() {
-        isLoggedIn = false
+        authState = .loggedOut
         userEmail = nil
         teamName = nil
         teamId = nil
@@ -129,6 +204,13 @@ public final class MultiProviderUserSessionData {
     public func handleLogout(from provider: ServiceProvider) {
         var session = providerSessions[provider] ?? ProviderSessionState(provider: provider)
         session.handleLogout()
+        providerSessions[provider] = session
+    }
+    
+    /// Sets authenticating state for a specific provider.
+    public func setAuthenticating(for provider: ServiceProvider) {
+        var session = providerSessions[provider] ?? ProviderSessionState(provider: provider)
+        session.setAuthenticating()
         providerSessions[provider] = session
     }
 

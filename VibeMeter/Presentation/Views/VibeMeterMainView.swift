@@ -25,7 +25,7 @@ struct VibeMeterMainView: View {
                         removal: .move(edge: .leading).combined(with: .opacity)))
                     .id("logged-in")
             } else {
-                LoggedOutContentView(loginManager: loginManager)
+                LoggedOutContentView(loginManager: loginManager, userSessionData: userSessionData)
                     .transition(.asymmetric(
                         insertion: .move(edge: .leading).combined(with: .opacity),
                         removal: .move(edge: .trailing).combined(with: .opacity)))

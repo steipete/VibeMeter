@@ -8,6 +8,19 @@ import SwiftUI
 /// and brief descriptions of the service integration.
 struct LoggedOutContentView: View {
     let loginManager: MultiProviderLoginManager
+    let userSessionData: MultiProviderUserSessionData
+    
+    private var cursorSession: ProviderSessionState? {
+        userSessionData.getSession(for: .cursor)
+    }
+    
+    private var isAuthenticating: Bool {
+        cursorSession?.isAuthenticating ?? false
+    }
+    
+    private var errorMessage: String? {
+        cursorSession?.lastErrorMessage
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -36,16 +49,51 @@ struct LoggedOutContentView: View {
                         .accessibilityLabel("Application subtitle: Multi-Provider Cost Tracking")
                 }
 
-                // Login button
-                Button(action: { loginManager.showLoginWindow(for: .cursor) }) {
-                    Label("Login to Cursor", systemImage: "person.crop.circle.badge.plus")
-                        .font(.title3.weight(.medium))
+                // Login button with loading state
+                VStack(spacing: 12) {
+                    Button(action: { 
+                        userSessionData.setAuthenticating(for: .cursor)
+                        loginManager.showLoginWindow(for: .cursor) 
+                    }) {
+                        HStack(spacing: 8) {
+                            if isAuthenticating {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(0.8)
+                                    .frame(width: 16, height: 16)
+                            } else {
+                                Image(systemName: "person.crop.circle.badge.plus")
+                                    .font(.title3)
+                            }
+                            
+                            Text(isAuthenticating ? "Logging in..." : "Login to Cursor")
+                                .font(.title3.weight(.medium))
+                        }
                         .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(ProminentGlassButtonStyle())
+                    .disabled(isAuthenticating)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .accessibilityLabel(isAuthenticating ? "Logging in to Cursor AI" : "Login to Cursor AI")
+                    .accessibilityHint("Opens browser window to authenticate with Cursor service")
+                    
+                    // Error message
+                    if let errorMessage = errorMessage {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                            
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.horizontal, 16)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
-                .buttonStyle(ProminentGlassButtonStyle())
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-                .accessibilityLabel("Login to Cursor AI")
-                .accessibilityHint("Opens browser window to authenticate with Cursor service")
 
                 Spacer(minLength: 20)
             }
@@ -98,7 +146,32 @@ struct LoggedOutContentView: View {
 #Preview("Logged Out Content") {
     LoggedOutContentView(
         loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        userSessionData: MultiProviderUserSessionData())
+        .frame(width: 300, height: 350)
+        .background(.thickMaterial)
+}
+
+#Preview("Logged Out Content - Authenticating") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.setAuthenticating(for: .cursor)
+    
+    return LoggedOutContentView(
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        userSessionData: userSessionData)
+        .frame(width: 300, height: 350)
+        .background(.thickMaterial)
+}
+
+#Preview("Logged Out Content - With Error") {
+    let userSessionData = MultiProviderUserSessionData()
+    userSessionData.setErrorMessage(for: .cursor, message: "Authentication failed. Please try again.")
+    
+    return LoggedOutContentView(
+        loginManager: MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
+        userSessionData: userSessionData)
         .frame(width: 300, height: 350)
         .background(.thickMaterial)
 }

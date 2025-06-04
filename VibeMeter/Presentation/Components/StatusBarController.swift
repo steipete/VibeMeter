@@ -127,11 +127,17 @@ final class StatusBarController: NSObject {
 
     private func updateStatusItemState() {
         let isLoggedIn = userSession.isLoggedInToAnyProvider
+        let isAuthenticating = userSession.providersWithSessions.contains { provider in
+            userSession.getSession(for: provider)?.isAuthenticating ?? false
+        }
         let providers = spendingData.providersWithData
         let hasData = !providers.isEmpty
 
         // Update state manager
-        if !isLoggedIn {
+        if isAuthenticating {
+            // Show loading animation when authenticating
+            stateManager.setState(.loading)
+        } else if !isLoggedIn {
             stateManager.setState(.notLoggedIn)
         } else if !hasData {
             stateManager.setState(.loading)
