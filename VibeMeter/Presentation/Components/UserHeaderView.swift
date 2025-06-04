@@ -15,7 +15,7 @@ struct UserHeaderView: View {
             VStack(alignment: .leading, spacing: 6) {
                 if let email = userSessionData.mostRecentSession?.userEmail {
                     Text(email)
-                        .font(.body.weight(.semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -24,7 +24,7 @@ struct UserHeaderView: View {
                 }
 
                 Text(providerCountText)
-                    .font(.footnote)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .accessibilityLabel(providerCountText)
             }
@@ -38,7 +38,15 @@ struct UserHeaderView: View {
     }
 
     private var providerCountText: String {
-        let count = userSessionData.loggedInProviders.count
+        let providers = userSessionData.loggedInProviders
+        let count = providers.count
+        
+        if count == 1, let provider = providers.first, provider == .cursor {
+            if let teamName = userSessionData.getSession(for: .cursor)?.teamName {
+                return teamName
+            }
+        }
+        
         return "\(count) provider\(count == 1 ? "" : "s") connected"
     }
 }
