@@ -50,7 +50,7 @@ struct GaugeIcon: View {
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast
             let trackColor = isDisabled
-                ? Color.gaugeStroke(for: colorScheme).opacity(1.5)
+                ? Color.gaugeDisabled(for: colorScheme)
                 : Color.gaugeStroke(for: colorScheme)
 
             if isLoading {

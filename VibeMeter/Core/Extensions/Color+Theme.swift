@@ -51,6 +51,13 @@ extension Color {
             ? .white.opacity(0.25)
             : .black.opacity(0.15)
     }
+    
+    /// Gauge disabled/disconnected colors for different themes
+    static func gaugeDisabled(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? .white.opacity(0.4)
+            : .black.opacity(0.3)
+    }
 
     /// Gauge background colors
     static func gaugeBackground(for colorScheme: ColorScheme) -> Color {
