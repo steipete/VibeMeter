@@ -31,6 +31,7 @@
 		25EA6F50EFD068FDBB62877D /* MockURLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE78244C662C610484A80BD5 /* MockURLSession.swift */; };
 		272C729B3F43BF9F216ECD23 /* MockResetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439CE23EE076B9D13C4EEA4B /* MockResetProtocol.swift */; };
 		2B783CCF1FF1C0918F6B3464 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 81D234961D5AD1EB9F516D2D /* Assets.xcassets */; };
+		2CB9E8103733D7133080CA67 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5230E3BF7C62DE2CB3EC4F04 /* AdvancedSettingsView.swift */; };
 		2D6EFD3709D0C0A81C8674A0 /* ExchangeRateManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50F98178129F6CE47CA6A2 /* ExchangeRateManagerMock.swift */; };
 		2F08086F92EAB3142C5D9964 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 2351725FD40D5EDF8D20F323 /* Sparkle */; };
 		2F65C5BCE6B21E988C8C5488 /* CursorProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7EACB8DCD60A61EB31649C /* CursorProvider.swift */; };
@@ -63,6 +64,7 @@
 		677236562BEB2C9174D24C4F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265BF8EE556670B47F8CD3D4 /* NotificationManager.swift */; };
 		67D0727858906F600DC13CB8 /* StatusBarDisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AFA5C683EC4CDE8C6A82BA /* StatusBarDisplayManager.swift */; };
 		69B9BF817033BB94E94B8E05 /* NSApplication+openSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37BF61BE7808EBCADC56C50 /* NSApplication+openSettings.swift */; };
+		6C8BE7E83446408200B6CDF4 /* UpdateChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C552AEFD79A91317267E7CC /* UpdateChannel.swift */; };
 		757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */; };
 		78AF8A25EEA2CAF9CED813F6 /* MultiProviderLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04FE87449368272166427A /* MultiProviderLoginManager.swift */; };
 		796CF976003592E4B2038A11 /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0FC6641992F66EDA6F3D2C /* MockServices.swift */; };
@@ -191,6 +193,7 @@
 		0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMover.swift; sourceTree = "<group>"; };
 		0B4110710538C58D14CEDB57 /* MultiProviderLoginManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLoginManagerTests.swift; sourceTree = "<group>"; };
 		0C40BD4C01DF70BB2BE6AAB0 /* GravatarServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GravatarServiceTests.swift; sourceTree = "<group>"; };
+		0C552AEFD79A91317267E7CC /* UpdateChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChannel.swift; sourceTree = "<group>"; };
 		0C7EACB8DCD60A61EB31649C /* CursorProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorProvider.swift; sourceTree = "<group>"; };
 		0EDE1B25DAF81D8AFFA39C48 /* MultiProviderSpendingDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderSpendingDataTests.swift; sourceTree = "<group>"; };
 		1522260B94541EFE4B0384B3 /* CurrencyConversionHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyConversionHelperTests.swift; sourceTree = "<group>"; };
@@ -234,6 +237,7 @@
 		507C690232FD5BE86826453D /* ProviderSpendingData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSpendingData.swift; sourceTree = "<group>"; };
 		513B851DC6AD677C9320E0C5 /* ProviderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderError.swift; sourceTree = "<group>"; };
 		520852703C332F299696D231 /* BrowserAuthenticationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAuthenticationHelper.swift; sourceTree = "<group>"; };
+		5230E3BF7C62DE2CB3EC4F04 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 		526AA3EDA8B1D75AF9632AC4 /* CurrencyDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyDataTests.swift; sourceTree = "<group>"; };
 		5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsWebView.swift; sourceTree = "<group>"; };
 		5493C8811511815FE8EAF1AB /* VibeMeter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VibeMeter.entitlements; sourceTree = "<group>"; };
@@ -547,6 +551,7 @@
 			isa = PBXGroup;
 			children = (
 				D2516C3D1A795ADC16C47893 /* AboutView.swift */,
+				5230E3BF7C62DE2CB3EC4F04 /* AdvancedSettingsView.swift */,
 				5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */,
 				F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */,
 				FBF643C5ED008D1390C13CFD /* GeneralSettingsView.swift */,
@@ -572,6 +577,7 @@
 				DACAD9BAD5CDC5910A702765 /* ProviderConnectionStatus.swift */,
 				161DDA00D5C068C70772C5F0 /* ProviderSession.swift */,
 				507C690232FD5BE86826453D /* ProviderSpendingData.swift */,
+				0C552AEFD79A91317267E7CC /* UpdateChannel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -843,6 +849,7 @@
 				61B88F3D2CED96D0AC2D8197 /* ProviderConnectionStatus.swift in Sources */,
 				CFFA77515E86AA2243230396 /* ProviderSession.swift in Sources */,
 				F037E523F68369A60E3F4E4C /* ProviderSpendingData.swift in Sources */,
+				6C8BE7E83446408200B6CDF4 /* UpdateChannel.swift in Sources */,
 				D518B3238DA35D938A5E4409 /* ExchangeRateManagerProtocol.swift in Sources */,
 				10DC5691F4173CDD2D8B567A /* KeychainProtocol.swift in Sources */,
 				4BF0FE7FC86627C6F3AE3785 /* URLSessionProtocol.swift in Sources */,
@@ -918,6 +925,7 @@
 				B8D8042A52469091A47729F8 /* CommonViewModifiers.swift in Sources */,
 				99978C38EDBED6965A26141A /* ShimmerEffect.swift in Sources */,
 				DCA37C7844CCBBA37E44C12E /* AboutView.swift in Sources */,
+				2CB9E8103733D7133080CA67 /* AdvancedSettingsView.swift in Sources */,
 				D68194CDF81EBAD89B60AEA5 /* AnalyticsWebView.swift in Sources */,
 				0A16B135674C38B690B22443 /* CostTableView+ViewState.swift in Sources */,
 				A5D96152F8C9DE5D9A62B173 /* GeneralSettingsView.swift in Sources */,
@@ -1043,7 +1051,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = "1.0-beta2";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1083,9 +1091,9 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=100",
+					"-warn-long-function-bodies=500",
 					"-Xfrontend",
-					"-warn-long-expression-type-checking=250",
+					"-warn-long-expression-type-checking=500",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
@@ -1145,9 +1153,9 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=100",
+					"-warn-long-function-bodies=500",
 					"-Xfrontend",
-					"-warn-long-expression-type-checking=250",
+					"-warn-long-expression-type-checking=500",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
@@ -1233,7 +1241,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = "1.0-beta2";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;

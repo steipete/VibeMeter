@@ -404,36 +404,35 @@ final class BackgroundDataProcessorTests: XCTestCase {
 
         // When - Make multiple concurrent calls to the actor
         await withTaskGroup(of: ProviderDataResult?.self) { group in
-                for i in 0 ..< callCount {
-                    group.addTask { [sut = self.sut] in
-                        let provider = MockBackgroundProvider(provider: .cursor)
-                        provider.userInfoToReturn = ProviderUserInfo(
-                            email: "user\(i)@test.com",
-                            teamId: i,
-                            provider: .cursor)
+            for i in 0 ..< callCount {
+                group.addTask { [sut = self.sut] in
+                    let provider = MockBackgroundProvider(provider: .cursor)
+                    provider.userInfoToReturn = ProviderUserInfo(
+                        email: "user\(i)@test.com",
+                        teamId: i,
+                        provider: .cursor)
 
-                        do {
-                            return try await sut!.processProviderData(
-                                provider: .cursor,
-                                authToken: "token-\(i)",
-                                providerClient: provider)
-                        } catch {
-                            return nil
-                        }
-                    }
-                }
-
-                for await result in group {
-                    if let result {
-                        results.append((
-                            userInfo: result.userInfo,
-                            teamInfo: result.teamInfo,
-                            invoice: result.invoice,
-                            usage: result.usage
-                        ))
+                    do {
+                        return try await sut!.processProviderData(
+                            provider: .cursor,
+                            authToken: "token-\(i)",
+                            providerClient: provider)
+                    } catch {
+                        return nil
                     }
                 }
             }
+
+            for await result in group {
+                if let result {
+                    results.append((
+                        userInfo: result.userInfo,
+                        teamInfo: result.teamInfo,
+                        invoice: result.invoice,
+                        usage: result.usage))
+                }
+            }
+        }
 
         // Then
         XCTAssertEqual(results.count, callCount, "All concurrent calls should complete")

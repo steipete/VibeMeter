@@ -7,7 +7,8 @@ import SwiftUI
 /// menu bar display options, and dock visibility. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    @Bindable var settingsManager: SettingsManager
+    @Bindable
+    var settingsManager: SettingsManager
 
     @State
     private var hasUserMadeCurrencyChoice = UserDefaults.standard
@@ -52,7 +53,6 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
 
         } header: {
             Text("Application")
@@ -136,7 +136,6 @@ struct GeneralSettingsView: View {
             })
     }
 
-
     private var currencyBinding: Binding<String> {
         Binding(
             get: { settingsManager.selectedCurrencyCode },
@@ -156,7 +155,6 @@ struct GeneralSettingsView: View {
         default: "\(minutes) minutes"
         }
     }
-
 }
 
 // MARK: - Preview

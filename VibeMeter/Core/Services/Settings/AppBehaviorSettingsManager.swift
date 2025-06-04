@@ -72,9 +72,10 @@ public final class AppBehaviorSettingsManager {
         // Load app behavior settings with defaults
         launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
         showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
-        
+
         // Load update channel with auto-detection based on current app version
-        let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let currentVersion = Bundle.main
+            .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
         let defaultChannel = UpdateChannel.defaultChannel(for: currentVersion)
         let savedChannelRaw = userDefaults.string(forKey: Keys.updateChannel) ?? defaultChannel.rawValue
         updateChannel = UpdateChannel(rawValue: savedChannelRaw) ?? defaultChannel

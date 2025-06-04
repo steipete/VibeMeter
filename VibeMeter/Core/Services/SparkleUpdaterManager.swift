@@ -60,9 +60,6 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             startingUpdater: true,
             updaterDelegate: self,
             userDriverDelegate: self)
-        
-        // Set the appropriate feed URL based on update channel
-        updateFeedURL(controller: controller)
 
         // Enable automatic update checks only in release builds
         #if DEBUG
@@ -77,9 +74,6 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")
 
         updaterController = controller
-        
-        // Observe update channel changes
-        observeUpdateChannelChanges()
     }
 
     private func setupNotificationCenter() {
@@ -131,32 +125,6 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             Self.staticLogger.info("Checking for updates on startup")
             self.updaterController.updater.checkForUpdatesInBackground()
         }
-    }
-    
-    // MARK: - Update Channel Management
-    
-    private func updateFeedURL(controller: SPUStandardUpdaterController) {
-        let settingsManager = SettingsManager.shared
-        let feedURL = settingsManager.updateChannel.appcastURL
-        
-        if let url = URL(string: feedURL) {
-            controller.updater.feedURL = url
-            Self.staticLogger.info("Updated feed URL to: \(feedURL)")
-        } else {
-            Self.staticLogger.error("Invalid feed URL: \(feedURL)")
-        }
-    }
-    
-    private func observeUpdateChannelChanges() {
-        // In SwiftUI @Observable, we can't easily observe changes from this class
-        // Instead, we'll provide a public method to update the feed URL
-        Self.staticLogger.info("Update channel observer set up")
-    }
-    
-    /// Updates the Sparkle feed URL based on the current update channel setting
-    public func updateFeedURL() {
-        guard let controller = updaterController else { return }
-        updateFeedURL(controller: controller)
     }
 
     // MARK: - SPUUpdaterDelegate

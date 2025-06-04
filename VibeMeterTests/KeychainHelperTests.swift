@@ -1,7 +1,7 @@
 @testable import VibeMeter
 import XCTest
 
-final class KeychainHelperTests: XCTestCase {
+final class KeychainHelperTests: XCTestCase, @unchecked Sendable {
     var sut: KeychainHelper!
 
     override func setUp() {

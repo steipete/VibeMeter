@@ -303,7 +303,7 @@ final class MenuBarStateManagerTests: XCTestCase {
 
     func testMenuBarStateManager_IsObservable() {
         // Then
-        XCTAssertTrue(sut is any Observable, "MenuBarStateManager should be Observable")
+        XCTAssertNotNil(sut as? any Observable, "MenuBarStateManager should be Observable")
     }
 
     func testStateProperties_ArePublic() {

@@ -724,6 +724,7 @@ private class MockSettingsManager: SettingsManagerProtocol {
     var menuBarDisplayMode: MenuBarDisplayMode = .both
     var showInDock: Bool = false
     var enabledProviders: Set<ServiceProvider> = [.cursor]
+    var updateChannel: UpdateChannel = .stable
 
     func clearUserSessionData() {
         providerSessions.removeAll()

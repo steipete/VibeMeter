@@ -347,7 +347,7 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testCurrencyManager_IsSendable() {
         // Then
-        XCTAssertTrue(type(of: sut) is any Sendable.Type, "CurrencyManager should be Sendable")
+        XCTAssertNotNil(sut as? any Sendable, "CurrencyManager should be Sendable")
     }
 
     func testConcurrentAccess_ThreadSafety() async {
