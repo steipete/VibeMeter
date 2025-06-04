@@ -193,7 +193,7 @@ struct GeneralSettingsView: View {
     private func checkForUpdates() {
         if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
            let sparkleManager = appDelegate.sparkleUpdaterManager {
-            sparkleManager.updaterController.checkForUpdates(nil)
+            sparkleManager.updaterController.updater.checkForUpdates()
         } else {
             // Show alert if Sparkle is not available
             let alert = NSAlert()
