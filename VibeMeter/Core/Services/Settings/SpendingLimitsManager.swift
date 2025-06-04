@@ -109,9 +109,8 @@ public final class SpendingLimitsManager {
         let isValid = warningLimitUSD >= 0 && upperLimitUSD >= 0 && warningLimitUSD <= upperLimitUSD
 
         if !isValid {
-            logger
-                .error(
-                    "Invalid limit configuration detected - warning: $\(self.warningLimitUSD), upper: $\(self.upperLimitUSD)")
+            let limitInfo = "Invalid limit configuration detected - warning: $\(self.warningLimitUSD), upper: $\(self.upperLimitUSD)"
+            logger.error(limitInfo)
         }
 
         return isValid

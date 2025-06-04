@@ -52,9 +52,8 @@ enum CursorDataTransformer {
 
         let totalCents = genericItems.reduce(0) { $0 + $1.cents }
         let totalUSD = Double(totalCents) / 100.0
-        logger
-            .info(
-                "Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents ($\(totalUSD))")
+        let invoiceInfo = "Successfully transformed Cursor invoice: \(genericItems.count) items, total: \(totalCents) cents ($\(totalUSD))"
+        logger.info(invoiceInfo)
 
         return ProviderMonthlyInvoice(
             items: genericItems,
@@ -70,9 +69,8 @@ enum CursorDataTransformer {
         let dateFormatter = ISO8601DateFormatter()
         let startOfMonth = dateFormatter.date(from: response.startOfMonth) ?? Date()
 
-        logger
-            .info(
-                "Successfully transformed Cursor usage: \(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests")
+        let usageInfo = "Successfully transformed Cursor usage: \(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests"
+        logger.info(usageInfo)
 
         return ProviderUsageData(
             currentRequests: primaryUsage.numRequests,

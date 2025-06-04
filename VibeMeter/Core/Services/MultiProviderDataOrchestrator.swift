@@ -103,9 +103,8 @@ public final class MultiProviderDataOrchestrator {
         sessionStateManager.initializeExistingProviderSessions(
             userSessionData: userSessionData)
 
-        logger
-            .info(
-                "MultiProviderDataOrchestrator initialized with \(loginManager.loggedInProviders.count) logged-in providers")
+        let providerCount = loginManager.loggedInProviders.count
+        logger.info("MultiProviderDataOrchestrator initialized with \(providerCount) logged-in providers")
 
         // Trigger initial data refresh for providers with existing tokens
         Task {
@@ -138,9 +137,8 @@ public final class MultiProviderDataOrchestrator {
     public func refreshAllProviders(showSyncedMessage: Bool = false) async {
         let enabledProviders = ProviderRegistry.shared.activeProviders
 
-        logger
-            .info(
-                "refreshAllProviders called for \(enabledProviders.count) providers: \(enabledProviders.map(\.displayName).joined(separator: ", "))")
+        let providerNames = enabledProviders.map(\.displayName).joined(separator: ", ")
+        logger.info("refreshAllProviders called for \(enabledProviders.count) providers: \(providerNames)")
 
         await withTaskGroup(of: Void.self) { group in
             for provider in enabledProviders {

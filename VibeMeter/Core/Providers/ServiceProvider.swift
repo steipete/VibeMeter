@@ -189,9 +189,8 @@ public final class ProviderRegistry {
             }
         }
 
-        logger
-            .info(
-                "ProviderRegistry initialized with enabled providers: \(self.enabledProviders.map(\.displayName).joined(separator: ", "))")
+        let providerNames = self.enabledProviders.map(\.displayName).joined(separator: ", ")
+        logger.info("ProviderRegistry initialized with enabled providers: \(providerNames)")
     }
 
     // MARK: - Public Methods

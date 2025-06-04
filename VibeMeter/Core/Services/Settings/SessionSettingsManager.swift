@@ -28,9 +28,8 @@ public final class SessionSettingsManager {
             saveProviderSessions()
             logger.info("Provider sessions updated: \(self.providerSessions.count) sessions")
             for (provider, session) in self.providerSessions {
-                logger
-                    .debug(
-                        "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+                let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
+                logger.debug(sessionInfo)
             }
         }
     }
@@ -67,9 +66,8 @@ public final class SessionSettingsManager {
 
         logger.info("SessionSettingsManager initialized with \(self.providerSessions.count) provider sessions")
         for (provider, session) in providerSessions {
-            logger
-                .info(
-                    "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+            let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
+            logger.info(sessionInfo)
         }
     }
 
@@ -90,9 +88,8 @@ public final class SessionSettingsManager {
         logger.info("clearSession called for \(provider.displayName)")
 
         if let session = providerSessions[provider] {
-            logger
-                .info(
-                    "  Clearing session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none")")
+            let sessionInfo = "  Clearing session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none")"
+            logger.info(sessionInfo)
         } else {
             logger.info("  No existing session found for \(provider.displayName)")
         }
@@ -111,9 +108,8 @@ public final class SessionSettingsManager {
     /// Updates session data for a specific provider
     public func updateSession(for provider: ServiceProvider, session: ProviderSession) {
         logger.info("updateSession called for \(provider.displayName)")
-        logger
-            .info(
-                "  New session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+        let sessionInfo = "  New session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
+        logger.info(sessionInfo)
 
         providerSessions[provider] = session
         saveProviderSessions()
