@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -925,7 +925,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter.tests;
 				PRODUCT_NAME = VibeMeterTests;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VibeMeter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VibeMeter";
@@ -994,10 +997,7 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 0.9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -1019,7 +1019,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VibeMeter/VibeMeter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/VibeMeter-Info.plist";
@@ -1028,7 +1027,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks";
+				OTHER_SWIFT_FLAGS = (
+					"-strict-concurrency=complete",
+					"-enable-actor-data-race-checks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
@@ -1067,7 +1069,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VibeMeter/VibeMeter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/VibeMeter-Info.plist";
@@ -1076,11 +1077,17 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks";
+				OTHER_SWIFT_FLAGS = (
+					"-strict-concurrency=complete",
+					"-enable-actor-data-race-checks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -1153,10 +1160,7 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 0.9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
