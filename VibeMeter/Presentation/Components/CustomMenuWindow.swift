@@ -10,32 +10,43 @@ import SwiftUI
 @MainActor
 final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?
-    private let hostingController: NSViewController
+    private let hostingController: NSHostingController<AnyView>
+    private var retainedContentView: AnyView?
 
     init(contentView: some View) {
-        // Create content view controller
-        hostingController = NSHostingController(rootView: contentView)
+        // Store the content view to prevent deallocation in Release builds
+        let wrappedView = AnyView(contentView)
+        self.retainedContentView = wrappedView
+        
+        // Create content view controller with the wrapped view
+        hostingController = NSHostingController(rootView: wrappedView)
 
         // Initialize window with appropriate style
         // Start with a minimal size – the real size will be determined from
         // the SwiftUI view's intrinsic content size before the panel is shown.
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
-            styleMask: [.borderless],
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
+            styleMask: [.borderless, .nonactivatingPanel, .utilityWindow],
             backing: .buffered,
             defer: false)
 
         // Configure window appearance
         isOpaque = false
         backgroundColor = .clear
-        level = .statusBar
-        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        level = .popUpMenu // Use popUpMenu level for menu bar dropdowns
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         isMovableByWindowBackground = false
+        hidesOnDeactivate = false // Important for menu bar apps
+        isReleasedWhenClosed = false // Keep window in memory
 
         // Window properties are configured by overriding computed properties
 
         // Set content view controller
         contentViewController = hostingController
+        
+        // IMPORTANT: Force the view to load immediately
+        // This prevents issues in Release builds where the view might not be created
+        _ = hostingController.view
 
         // Add visual effect background with rounded corners
         if let contentView = contentViewController?.view {
@@ -82,9 +93,19 @@ final class CustomMenuWindow: NSPanel {
 
         setFrame(targetFrame, display: false)
 
+        // Ensure the hosting controller's view is loaded
+        // This is critical for Release builds
+        _ = hostingController.view
+        hostingController.view.needsLayout = true
+        hostingController.view.layoutSubtreeIfNeeded()
+        
+        // Make sure panel is activated properly
+        NSApp.activate(ignoringOtherApps: false)
+        
         // Use modern animation APIs with better timing
         alphaValue = 0
-        orderFront(nil)
+        makeKeyAndOrderFront(nil)
+        orderFrontRegardless()
 
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in

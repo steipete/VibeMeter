@@ -76,6 +76,7 @@ final class StatusBarController: NSObject {
             button.imagePosition = .imageLeading
             button.action = #selector(togglePopover)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
             // Accessibility support for menu bar button
             button.setAccessibilityTitle("VibeMeter")

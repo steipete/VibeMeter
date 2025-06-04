@@ -58,7 +58,13 @@ final class MenuWindowManager {
                 .environment(GravatarService.shared)
         }
 
-        customMenuWindow = CustomMenuWindow(contentView: contentView)
+        // Create and store the window
+        let window = CustomMenuWindow(contentView: contentView)
+        self.customMenuWindow = window
+        
+        // Force the window to load its view hierarchy immediately
+        // This is crucial for Release builds where lazy loading might fail
+        _ = window.contentView
     }
 
     /// Toggles the popover visibility
