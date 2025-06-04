@@ -2,18 +2,19 @@ import XCTest
 @testable import VibeMeter
 
 /// Tests for the ApplicationMover service
+@MainActor
 final class ApplicationMoverTests: XCTestCase {
     
     var applicationMover: ApplicationMover!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         applicationMover = ApplicationMover()
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         applicationMover = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     // MARK: - Path Detection Tests
