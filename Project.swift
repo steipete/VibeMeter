@@ -37,6 +37,21 @@ let project = Project(
             "SWIFT_EMIT_LOC_STRINGS": true,
             "SWIFT_VERSION": "6.0",
             "SWIFT_STRICT_CONCURRENCY": "complete",
+            // Enhanced code quality and strictness settings
+            "CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED": true,
+            "CLANG_WARN_DOCUMENTATION_COMMENTS": true,
+            "CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER": true,
+            "CLANG_WARN_UNGUARDED_AVAILABILITY": "YES_AGGRESSIVE",
+            "GCC_TREAT_WARNINGS_AS_ERRORS": true,
+            "SWIFT_TREAT_WARNINGS_AS_ERRORS": true,
+            "WARNING_CFLAGS": ["-Wall", "-Wextra"],
+            "CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION": true,
+            "CLANG_WARN_EMPTY_BODY": true,
+            "CLANG_WARN_CONDITIONAL_UNINITIALIZED": true,
+            "GCC_WARN_UNUSED_FUNCTION": true,
+            "GCC_WARN_UNUSED_VARIABLE": true,
+            "CLANG_WARN_UNREACHABLE_CODE": true,
+            "ENABLE_STRICT_OBJC_MSGSEND": true,
         ],
         configurations: [
             .debug(
@@ -46,6 +61,9 @@ let project = Project(
                     "CODE_SIGN_STYLE": "Automatic",
                     "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["DEBUG"],
                     "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
+                    // Less strict for development
+                    "GCC_TREAT_WARNINGS_AS_ERRORS": false,
+                    "SWIFT_TREAT_WARNINGS_AS_ERRORS": false,
                 ],
                 xcconfig: nil),
             .release(
@@ -101,6 +119,11 @@ let project = Project(
                     "OTHER_SWIFT_FLAGS": [
                         "-strict-concurrency=complete",
                         "-enable-actor-data-race-checks",
+                        "-warn-concurrency",
+                        "-enable-bare-slash-regex",
+                        "-warn-implicit-overrides",
+                        "-Xfrontend", "-warn-long-function-bodies=50",
+                        "-Xfrontend", "-warn-long-expression-type-checking=50",
                     ],
                 ])),
         .target(
@@ -118,6 +141,9 @@ let project = Project(
                 base: [
                     "OTHER_SWIFT_FLAGS": [
                         "-strict-concurrency=complete",
+                        "-warn-concurrency",
+                        "-enable-bare-slash-regex",
+                        "-warn-implicit-overrides",
                     ],
                 ])),
     ])
