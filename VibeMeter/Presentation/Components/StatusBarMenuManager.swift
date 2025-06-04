@@ -16,6 +16,9 @@ final class StatusBarMenuManager {
     private var spendingData: MultiProviderSpendingData?
     private var currencyData: CurrencyData?
     private var orchestrator: MultiProviderDataOrchestrator?
+    
+    // Popover management
+    private var popover: NSPopover?
 
     // MARK: - Initialization
 
@@ -42,23 +45,61 @@ final class StatusBarMenuManager {
         self.orchestrator = orchestrator
     }
 
-    // MARK: - Left-Click Popover Management (Placeholder)
+    // MARK: - Left-Click Popover Management
 
-    /// These methods are kept for compatibility but no longer manage a custom window
-    func togglePopover(relativeTo _: NSStatusBarButton) {
-        // No-op: Custom window functionality removed
+    func togglePopover(relativeTo button: NSStatusBarButton) {
+        if let popover = popover, popover.isShown {
+            hidePopover()
+        } else {
+            showPopover(relativeTo: button)
+        }
     }
 
-    func showPopover(relativeTo _: NSStatusBarButton) {
-        // No-op: Custom window functionality removed
+    func showPopover(relativeTo button: NSStatusBarButton) {
+        guard let settingsManager = settingsManager,
+              let userSession = userSession,
+              let loginManager = loginManager,
+              let spendingData = spendingData,
+              let currencyData = currencyData,
+              let orchestrator = orchestrator else { return }
+        
+        // Create popover if needed
+        if popover == nil {
+            popover = NSPopover()
+            popover?.contentSize = NSSize(width: 320, height: 400)
+            popover?.behavior = .transient
+            popover?.animates = true
+        }
+        
+        // Create the main view with all dependencies
+        let mainView = VibeMeterMainView(
+            settingsManager: settingsManager,
+            userSessionData: userSession,
+            loginManager: loginManager,
+            onRefresh: {
+                Task {
+                    await orchestrator.refreshAllProviders(showSyncedMessage: true)
+                }
+            }
+        )
+        .environment(spendingData)
+        .environment(currencyData)
+        
+        // Set up the hosting view
+        let hostingView = NSHostingView(rootView: mainView)
+        popover?.contentViewController = NSViewController()
+        popover?.contentViewController?.view = hostingView
+        
+        // Show the popover
+        popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
 
     func hidePopover() {
-        // No-op: Custom window functionality removed
+        popover?.performClose(nil)
     }
 
     var isPopoverVisible: Bool {
-        false
+        popover?.isShown ?? false
     }
 
     // MARK: - Right-Click Context Menu

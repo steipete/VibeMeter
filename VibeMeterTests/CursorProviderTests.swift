@@ -63,7 +63,7 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type"), "application/json")
     }
 
-    func testFetchTeamInfo_NoTeamsFound() async {
+    func testFetchTeamInfo_NoTeamsFound_UsesFallback() async {
         // Given
         let mockEmptyTeamsData = """
         {
@@ -80,14 +80,16 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextData = mockEmptyTeamsData
         mockURLSession.nextResponse = mockResponse
 
-        // When/Then
+        // When
         do {
-            _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            XCTFail("Should have thrown noTeamFound error")
-        } catch let error as ProviderError {
-            XCTAssertEqual(error, .noTeamFound)
+            let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
+            
+            // Then - Should return fallback team info instead of throwing
+            XCTAssertEqual(teamInfo.id, 0, "Should use fallback team ID")
+            XCTAssertEqual(teamInfo.name, "Individual", "Should use fallback team name")
+            XCTAssertEqual(teamInfo.provider, .cursor, "Should maintain correct provider")
         } catch {
-            XCTFail("Unexpected error type: \(error)")
+            XCTFail("Should not throw error when teams are empty, should use fallback. Got: \(error)")
         }
     }
 

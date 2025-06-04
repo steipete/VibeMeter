@@ -459,22 +459,24 @@ final class BackgroundDataProcessorTests: XCTestCase {
         }
     }
 
-    func testProcessProviderData_TeamInfoFails_ThrowsError() async {
+    func testProcessProviderData_TeamInfoFails_UsesFallback() async {
         // Given
         mockProvider.shouldThrowOnTeamInfo = true
         mockProvider.errorToThrow = TestError.networkFailure
 
-        // When/Then
+        // When
         do {
-            _ = try await sut.processProviderData(
+            let result = try await sut.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            XCTFail("Should have thrown network failure")
-        } catch let error as TestError {
-            XCTAssertEqual(error, .networkFailure)
+            
+            // Then - Should succeed with fallback team info
+            XCTAssertEqual(result.teamInfo.id, 0, "Should use fallback team ID")
+            XCTAssertEqual(result.teamInfo.name, "Individual Account", "Should use fallback team name")
+            XCTAssertEqual(result.teamInfo.provider, .cursor, "Should maintain correct provider")
         } catch {
-            XCTFail("Unexpected error type: \(error)")
+            XCTFail("Should not throw error when team info fails, got: \(error)")
         }
     }
 

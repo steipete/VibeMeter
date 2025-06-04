@@ -52,18 +52,19 @@ actor CursorAPIClient {
     }
 
     func fetchInvoice(authToken: String, month: Int, year: Int,
-                      teamId _: Int? = nil) async throws -> CursorInvoiceResponse {
-        logger.debug("Fetching Cursor invoice for \(month)/\(year)")
+                      teamId: Int) async throws -> CursorInvoiceResponse {
+        logger.debug("Fetching Cursor invoice for \(month)/\(year) with team ID \(teamId)")
 
         let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
         var request = createRequest(for: endpoint, authToken: authToken)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Use the new API format that matches what the browser sends
+        // Include team ID in the request body as expected by tests
         let body = [
             "month": month,
             "year": year,
+            "teamId": teamId,
             "includeUsageEvents": false,
         ] as [String: Any]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

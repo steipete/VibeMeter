@@ -169,11 +169,11 @@ final class StatusBarController: NSObject {
 
         switch currentEvent.type {
         case .leftMouseUp:
-            openSettings() // For now, left-click opens settings
+            togglePopover()
         case .rightMouseUp:
             showCustomMenu()
         default:
-            openSettings() // For now, fallback to settings
+            togglePopover() // Fallback to popover
         }
     }
 

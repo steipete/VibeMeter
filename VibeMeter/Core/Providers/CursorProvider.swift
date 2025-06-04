@@ -57,12 +57,25 @@ public actor CursorProvider: ProviderProtocol {
                                     teamId: Int?) async throws -> ProviderMonthlyInvoice {
         logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
+        // Determine the team ID to use - either provided or stored
+        let effectiveTeamId: Int?
+        if let providedTeamId = teamId {
+            effectiveTeamId = providedTeamId
+        } else {
+            effectiveTeamId = await getTeamId()
+        }
+        
+        // Cursor API requires a team ID for invoice requests
+        guard let finalTeamId = effectiveTeamId else {
+            throw ProviderError.teamIdNotSet
+        }
+
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchInvoice(
                 authToken: authToken,
                 month: month,
                 year: year,
-                teamId: teamId) // Pass through but API will ignore it
+                teamId: finalTeamId)
             return CursorDataTransformer.transformInvoice(from: response, month: month, year: year)
         }
     }
