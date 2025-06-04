@@ -80,6 +80,7 @@ let project = Project(
                 "SUEnableAutomaticChecks": true,
                 "SUAutomaticallyUpdate": false,
                 "SUCheckAtStartup": true,
+                "SUEnableInstallerLauncherService": true,
             ]),
             sources: [
                 "VibeMeter/App/**/*.swift",

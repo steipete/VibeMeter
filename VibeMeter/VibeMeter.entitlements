@@ -8,6 +8,12 @@
     <true/>
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
+    <!-- Sparkle XPC Service temporary exceptions -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spkd</string>
+    </array>
     <!-- Temporarily disabled keychain access groups for development -->
     <!--
     <key>keychain-access-groups</key>
