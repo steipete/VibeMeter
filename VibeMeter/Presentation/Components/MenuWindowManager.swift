@@ -47,12 +47,9 @@ final class MenuWindowManager {
     func togglePopover(relativeTo button: NSStatusBarButton) {
         guard let window = customMenuWindow else { return }
 
-        // Check multiple criteria to ensure the window is actually showing
-        let isActuallyVisible = window.isVisible && 
-                               window.alphaValue > 0 && 
-                               !window.isMiniaturized
-        
-        if isActuallyVisible {
+        // Simple approach: just check if window thinks it's visible and hide/show accordingly
+        // This avoids state tracking issues by being stateless
+        if window.isVisible {
             window.hide()
         } else {
             window.show(relativeTo: button)
@@ -79,8 +76,7 @@ final class MenuWindowManager {
 
     /// Returns whether the popover is currently visible
     var isPopoverVisible: Bool {
-        guard let window = customMenuWindow else { return false }
-        return window.isVisible && window.alphaValue > 0 && !window.isMiniaturized
+        customMenuWindow?.isVisible ?? false
     }
 
     /// Gets the current menu window for external access if needed

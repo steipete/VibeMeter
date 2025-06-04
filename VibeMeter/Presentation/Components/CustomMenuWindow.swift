@@ -158,15 +158,9 @@ final class CustomMenuWindow: NSPanel {
     }
 
     func hide() {
-        // Animate out
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.15
-            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            animator().alphaValue = 0
-        }, completionHandler: {
-            self.orderOut(nil)
-            self.teardownEventMonitoring()
-        })
+        // Immediately remove from screen (no animation) to avoid toggle state issues
+        orderOut(nil)
+        teardownEventMonitoring()
     }
 
 
