@@ -5,17 +5,8 @@ import XCTest
 @MainActor
 final class ApplicationMoverTests: XCTestCase {
     
-    var applicationMover: ApplicationMover!
-    
-    override func setUp() async throws {
-        try await super.setUp()
-        applicationMover = ApplicationMover()
-    }
-    
-    override func tearDown() async throws {
-        applicationMover = nil
-        try await super.tearDown()
-    }
+    // Using lazy initialization instead of setUp/tearDown to avoid concurrency issues
+    lazy var applicationMover = ApplicationMover()
     
     // MARK: - Path Detection Tests
     
