@@ -9,18 +9,6 @@ import SwiftUI
 struct GeneralSettingsView: View {
     let settingsManager: any SettingsManagerProtocol
 
-    // Using @AppStorage for direct UserDefaults binding
-    @AppStorage("launchAtLoginEnabled")
-    private var launchAtLogin: Bool = false
-    @AppStorage("refreshIntervalMinutes")
-    private var refreshInterval: Int = 5
-    @AppStorage("menuBarDisplayMode")
-    private var menuBarDisplayMode: MenuBarDisplayMode = .both
-    @AppStorage("showInDock")
-    private var showInDock: Bool = false
-    @AppStorage("selectedCurrencyCode")
-    private var selectedCurrency: String = "USD"
-
     private let startupManager = StartupManager()
     private let currencyManager = CurrencyManager.shared
 
@@ -38,11 +26,8 @@ struct GeneralSettingsView: View {
             .scrollContentBackground(.hidden)
             .navigationTitle("General Settings")
         }
-        .onChange(of: refreshInterval) { _, newValue in
+        .onChange(of: settingsManager.refreshIntervalMinutes) { _, newValue in
             validateRefreshInterval(newValue)
-        }
-        .onChange(of: selectedCurrency) { _, newValue in
-            settingsManager.selectedCurrencyCode = newValue
         }
         .onAppear {
             setupInitialState()
@@ -53,8 +38,8 @@ struct GeneralSettingsView: View {
         Section {
             // Launch at Login
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Launch at Login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { _, newValue in
+                Toggle("Launch at Login", isOn: $settingsManager.launchAtLoginEnabled)
+                    .onChange(of: settingsManager.launchAtLoginEnabled) { _, newValue in
                         startupManager.setLaunchAtLogin(enabled: newValue)
                     }
                 Text("Automatically start VibeMeter when you log into your Mac.")
@@ -65,16 +50,16 @@ struct GeneralSettingsView: View {
             // Menu bar display mode
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Menu Bar Display") {
-                    Picker("", selection: $menuBarDisplayMode) {
+                    Picker("", selection: $settingsManager.menuBarDisplayMode) {
                         ForEach(MenuBarDisplayMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)
-                                .id("\(mode.rawValue)-\(menuBarDisplayMode.rawValue)")
+                                .id("\(mode.rawValue)-\(settingsManager.menuBarDisplayMode.rawValue)")
                         }
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Text(menuBarDisplayMode.description)
+                Text(settingsManager.menuBarDisplayMode.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -82,8 +67,8 @@ struct GeneralSettingsView: View {
 
             // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Show in Dock", isOn: $showInDock)
-                    .onChange(of: showInDock) { _, newValue in
+                Toggle("Show in Dock", isOn: $settingsManager.showInDock)
+                    .onChange(of: settingsManager.showInDock) { _, newValue in
                         if newValue {
                             NSApp.setActivationPolicy(.regular)
                         } else {
@@ -99,7 +84,7 @@ struct GeneralSettingsView: View {
             // Refresh Interval
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Refresh Interval") {
-                    Picker("", selection: $refreshInterval) {
+                    Picker("", selection: $settingsManager.refreshIntervalMinutes) {
                         Text("1 minute").tag(1)
                         Text("2 minutes").tag(2)
                         Text("5 minutes").tag(5)
@@ -145,10 +130,10 @@ struct GeneralSettingsView: View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Currency") {
-                    Picker("", selection: $selectedCurrency) {
+                    Picker("", selection: $settingsManager.selectedCurrencyCode) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
                             Text(name).tag(code)
-                                .id("\(code)-\(selectedCurrency)")
+                                .id("\(code)-\(settingsManager.selectedCurrencyCode)")
                         }
                     }
                     .pickerStyle(.menu)
@@ -166,10 +151,10 @@ struct GeneralSettingsView: View {
 
     private func validateRefreshInterval(_ newValue: Int) {
         if SettingsManager.refreshIntervalOptions.contains(newValue) {
-            // Valid interval, it's already saved via @AppStorage
+            // Valid interval, it's already saved via SettingsManager
         } else {
             // Invalid interval, reset to default
-            refreshInterval = 5
+            settingsManager.refreshIntervalMinutes = 5
         }
     }
 
@@ -190,13 +175,12 @@ struct GeneralSettingsView: View {
 
     private func setupInitialState() {
         // Sync with actual launch at login status
-        launchAtLogin = startupManager.isLaunchAtLoginEnabled
+        settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
 
         // Detect system currency if current selection is USD (default)
-        if selectedCurrency == "USD" {
+        if settingsManager.selectedCurrencyCode == "USD" {
             if let systemCurrencyCode = currencyManager.systemCurrencyCode,
                currencyManager.isValidCurrencyCode(systemCurrencyCode) {
-                selectedCurrency = systemCurrencyCode
                 settingsManager.selectedCurrencyCode = systemCurrencyCode
             }
         }
