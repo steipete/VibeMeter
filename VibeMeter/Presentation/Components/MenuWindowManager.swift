@@ -10,6 +10,7 @@ final class MenuWindowManager {
     // MARK: - Private Properties
 
     private var customMenuWindow: CustomMenuWindow?
+    private var isWindowVisible = false
 
     // MARK: - Initialization
 
@@ -41,16 +42,23 @@ final class MenuWindowManager {
         }
 
         customMenuWindow = CustomMenuWindow(contentView: contentView)
+        
+        // Set up callback to track when window is hidden
+        customMenuWindow?.onWindowHidden = { [weak self] in
+            self?.isWindowVisible = false
+        }
     }
 
     /// Toggles the popover visibility
     func togglePopover(relativeTo button: NSStatusBarButton) {
         guard let window = customMenuWindow else { return }
 
-        if window.isVisible {
+        if isWindowVisible {
             window.hide()
+            isWindowVisible = false
         } else {
             window.show(relativeTo: button)
+            isWindowVisible = true
         }
     }
 
@@ -58,19 +66,23 @@ final class MenuWindowManager {
     func showPopover(relativeTo button: NSStatusBarButton) {
         guard let window = customMenuWindow else { return }
 
-        if !window.isVisible {
+        if !isWindowVisible {
             window.show(relativeTo: button)
+            isWindowVisible = true
         }
     }
 
     /// Hides the popover menu if it's currently visible
     func hidePopover() {
-        customMenuWindow?.hide()
+        if isWindowVisible {
+            customMenuWindow?.hide()
+            isWindowVisible = false
+        }
     }
 
     /// Returns whether the popover is currently visible
     var isPopoverVisible: Bool {
-        customMenuWindow?.isVisible ?? false
+        isWindowVisible
     }
 
     /// Gets the current menu window for external access if needed

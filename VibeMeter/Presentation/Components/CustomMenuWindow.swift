@@ -11,6 +11,9 @@ import SwiftUI
 final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?
     private var hostingController: NSViewController
+    
+    /// Callback for when the window is hidden
+    var onWindowHidden: (() -> Void)?
 
     init(contentView: some View) {
         // Create content view controller
@@ -166,6 +169,8 @@ final class CustomMenuWindow: NSPanel {
         }, completionHandler: {
             self.orderOut(nil)
             self.teardownEventMonitoring()
+            // Notify that the window was hidden
+            self.onWindowHidden?()
         })
     }
 
