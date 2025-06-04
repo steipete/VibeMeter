@@ -95,7 +95,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then
         let calendar = Calendar.current
-        let currentMonth = calendar.component(.month, from: Date())
+        let currentMonth = calendar.component(.month, from: Date()) - 1 // API uses 0-based months
         let currentYear = calendar.component(.year, from: Date())
 
         XCTAssertEqual(mockProvider.lastInvoiceMonth, currentMonth)
