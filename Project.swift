@@ -17,7 +17,7 @@ let project = Project(
         base: [
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
-            "CURRENT_PROJECT_VERSION": "101",
+            "CURRENT_PROJECT_VERSION": "100",
             "CODE_SIGN_STYLE": "Automatic",
             "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,
@@ -30,7 +30,7 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "15.0",
-            "MARKETING_VERSION": "1.0",
+            "MARKETING_VERSION": "1.0-beta.1",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",
@@ -84,7 +84,7 @@ let project = Project(
             bundleId: "com.steipete.vibemeter",
             deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "1.0",
+                "CFBundleShortVersionString": "1.0-beta.1",
                 "CFBundleVersion": "1",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
@@ -93,12 +93,13 @@ let project = Project(
                     "NSAllowsArbitraryLoads": true,
                 ],
                 // Sparkle configuration
-                "SUFeedURL": "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml",
-                "SUPublicEDKey": "rLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=",
+                "SUFeedURL": "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml",
+                "SUPublicEDKey": "oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=",
                 "SUEnableAutomaticChecks": true,
                 "SUAutomaticallyUpdate": false,
                 "SUCheckAtStartup": true,
                 "SUEnableInstallerLauncherService": true,
+                "SUEnableDownloaderService": true,
             ]),
             sources: [
                 "VibeMeter/App/**/*.swift",
