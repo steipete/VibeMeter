@@ -7,6 +7,31 @@
         <language>en</language>
         
         <item>
+            <title>VibeMeter 0.9.1</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v0.9.1/VibeMeter-0.9.1.dmg</link>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.9.1</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 0.9.1</h2>
+                <p>Test release to verify Sparkle auto-update functionality.</p>
+                <h3>Updates</h3>
+                <ul>
+                    <li>Fixed Sparkle public key format for proper signature verification</li>
+                    <li>Updated SparkleUpdaterManager to allow manual update checks in all builds</li>
+                    <li>Improved update scripts for better reliability</li>
+                </ul>
+            ]]></description>
+            <pubDate>Wed, 04 Jun 2025 05:06:40 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v0.9.1/VibeMeter-0.9.1.dmg"
+                length="5417046"
+                type="application/octet-stream"
+                sparkle:edSignature="HEripPlonq2vEXBxb+QtgfUr7wxxS/qwmsv3iRbXIclu4eDeOvkK77bMwsw342SHWCEUWWBhX0H6arOcFQEoAQ=="
+            />
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        </item>
+        
+        <item>
             <title>VibeMeter 0.9.0</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v0.9.0/VibeMeter-0.9.0.dmg</link>
             <sparkle:version>1</sparkle:version>
