@@ -17,7 +17,7 @@ final class StatusBarController: NSObject {
     // MARK: - Component Managers
 
     private let displayManager: StatusBarDisplayManager
-    private let menuWindowManager: MenuWindowManager
+    private let menuManager: StatusBarMenuManager
     private let animationController: StatusBarAnimationController
     private let observer: StatusBarObserver
 
@@ -74,7 +74,7 @@ final class StatusBarController: NSObject {
 
         if let button = statusItem?.button {
             button.imagePosition = .imageLeading
-            button.action = #selector(togglePopover)
+            button.action = #selector(handleClick(_:))
             button.target = self
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
@@ -160,9 +160,96 @@ final class StatusBarController: NSObject {
     }
 
     @objc
+    private func handleClick(_: NSStatusBarButton) {
+        guard let currentEvent = NSApp.currentEvent else {
+            // Fallback to left click behavior if we can't determine the event
+            togglePopover()
+            return
+        }
+
+        switch currentEvent.type {
+        case .leftMouseUp:
+            togglePopover()
+        case .rightMouseUp:
+            showCustomMenu()
+        default:
+            togglePopover()
+        }
+    }
+
+    @objc
     private func togglePopover() {
         guard let button = statusItem?.button else { return }
         menuWindowManager.togglePopover(relativeTo: button)
+    }
+
+    @objc
+    private func showCustomMenu() {
+        guard let button = statusItem?.button else { return }
+        showContextMenu(for: button)
+    }
+
+    private func showContextMenu(for _: NSStatusBarButton) {
+        let menu = NSMenu()
+
+        // Add menu items based on current state
+        if userSession.isLoggedInToAnyProvider {
+            let refreshItem = NSMenuItem(title: "Refresh Data", action: #selector(refreshData), keyEquivalent: "r")
+            refreshItem.target = self
+            menu.addItem(refreshItem)
+
+            menu.addItem(NSMenuItem.separator())
+        }
+
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
+        let aboutItem = NSMenuItem(title: "About VibeMeter", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let quitItem = NSMenuItem(title: "Quit VibeMeter", action: #selector(quitApp), keyEquivalent: "q")
+        quitItem.target = self
+        menu.addItem(quitItem)
+
+        // Show the context menu
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil // Clear the menu after use
+    }
+
+    @objc
+    private func refreshData() {
+        Task {
+            await orchestrator.refreshAllProviders(showSyncedMessage: true)
+        }
+    }
+
+    @objc
+    private func openSettings() {
+        NSApp.openSettings()
+    }
+
+    @objc
+    private func showAbout() {
+        // Open settings window first
+        NSApp.openSettings()
+
+        // Send notification to switch to About tab
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            NotificationCenter.default.post(
+                name: Notification.Name("openSettingsTab"),
+                object: MultiProviderSettingsTab.about)
+        }
+    }
+
+    @objc
+    private func quitApp() {
+        NSApp.terminate(nil)
     }
 
     /// Shows the popover menu (used for initial display when not logged in)

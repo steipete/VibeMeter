@@ -102,10 +102,10 @@ final class CustomMenuWindow: NSPanel {
 
         // Use safer window ordering to avoid hangs
         alphaValue = 0
-        
+
         // Try orderBack first to avoid key window conflicts
         orderBack(nil)
-        
+
         // Then safely bring to front
         DispatchQueue.main.async { [weak self] in
             self?.orderFront(nil)

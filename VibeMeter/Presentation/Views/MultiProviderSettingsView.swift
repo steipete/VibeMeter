@@ -14,8 +14,11 @@ struct MultiProviderSettingsView: View {
     @State
     private var showingProviderDetail: ServiceProvider?
 
+    @State
+    private var selectedTab: MultiProviderSettingsTab = .general
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             GeneralSettingsView(
                 settingsManager: settingsManager as! SettingsManager)
                 .tabItem {
@@ -49,6 +52,11 @@ struct MultiProviderSettingsView: View {
                 .tag(MultiProviderSettingsTab.about)
         }
         .frame(width: 570, height: 500)
+        .onReceive(NotificationCenter.default.publisher(for: .openSettingsTab)) { notification in
+            if let tab = notification.object as? MultiProviderSettingsTab {
+                selectedTab = tab
+            }
+        }
         .sheet(item: $showingProviderDetail) { provider in
             ProviderDetailView(
                 provider: provider,
@@ -72,6 +80,12 @@ enum MultiProviderSettingsTab: CaseIterable {
         case .about: "About"
         }
     }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let openSettingsTab = Notification.Name("openSettingsTab")
 }
 
 // MARK: - Preview
