@@ -85,7 +85,6 @@ struct GeneralSettingsView: View {
                     checkForUpdates()
                 }
                 .buttonStyle(.bordered)
-                .disabled(isDebugBuild)
             }
             .padding(.top, 8)
         } header: {
@@ -195,6 +194,14 @@ struct GeneralSettingsView: View {
         if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
            let sparkleManager = appDelegate.sparkleUpdaterManager {
             sparkleManager.updaterController.checkForUpdates(nil)
+        } else {
+            // Show alert if Sparkle is not available
+            let alert = NSAlert()
+            alert.messageText = "Unable to Check for Updates"
+            alert.informativeText = "The update system is not available. This may be because you're running a debug build or Sparkle failed to initialize."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
         }
     }
 
