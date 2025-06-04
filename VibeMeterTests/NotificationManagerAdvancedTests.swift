@@ -182,7 +182,8 @@ final class NotificationManagerAdvancedTests: XCTestCase {
             let request = mockNotificationCenter.lastAddedRequest!
             XCTAssertTrue(
                 request.content.body.contains("\(expectedSymbol)75.00"),
-                "Expected \(expectedSymbol)75.00 in notification body for \(currencyCode), but got: \(request.content.body)")
+                "Expected \(expectedSymbol)75.00 in notification body for \(currencyCode), " +
+                    "but got: \(request.content.body)")
         }
     }
 
@@ -386,10 +387,9 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted =
-            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted =
-            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -412,10 +412,9 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted =
-            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted =
-            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"

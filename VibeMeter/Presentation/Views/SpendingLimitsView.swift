@@ -84,7 +84,7 @@ struct SpendingLimitsView: View {
     private func limitContent(amountUSD _: Double, convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             let textBinding = getTextBinding(for: description)
-            
+
             LabeledContent("Amount") {
                 limitAmountField(textBinding: textBinding, description: description)
             }
@@ -92,15 +92,15 @@ struct SpendingLimitsView: View {
             limitDescriptionSection(convertedAmount: convertedAmount, description: description)
         }
     }
-    
+
     private func getTextBinding(for description: String) -> Binding<String> {
         if description.contains("critical") {
-            return $upperLimitText
+            $upperLimitText
         } else {
-            return $warningLimitText
+            $warningLimitText
         }
     }
-    
+
     private func limitAmountField(textBinding: Binding<String>, description: String) -> some View {
         HStack(spacing: 8) {
             Text("$")
@@ -118,17 +118,17 @@ struct SpendingLimitsView: View {
                 .foregroundStyle(.secondary)
         }
     }
-    
+
     private func handleTextFieldChange(newValue: String, textBinding: Binding<String>, description: String) {
         let filtered = filterNumericInput(newValue)
-        
+
         if filtered != newValue {
             textBinding.wrappedValue = filtered
         }
 
         updateLimitValue(from: filtered, description: description)
     }
-    
+
     private func filterNumericInput(_ input: String) -> String {
         var filtered = ""
         var hasDecimal = false
@@ -142,7 +142,7 @@ struct SpendingLimitsView: View {
         }
         return filtered
     }
-    
+
     private func updateLimitValue(from text: String, description: String) {
         if let value = Double(text), value >= 0 {
             if description.contains("critical") {
@@ -152,7 +152,7 @@ struct SpendingLimitsView: View {
             }
         }
     }
-    
+
     private func limitDescriptionSection(convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             if !currencyData.isUSD {

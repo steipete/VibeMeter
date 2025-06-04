@@ -136,7 +136,7 @@ class MenuBarStateManager {
         updateGaugeAnimation(currentTime: currentTime)
         updateCostAnimation(currentTime: currentTime)
     }
-    
+
     private func updateGaugeAnimation(currentTime: TimeInterval) {
         switch currentState {
         case .notLoggedIn:
@@ -147,7 +147,7 @@ class MenuBarStateManager {
             updateDataAnimation(currentTime: currentTime, targetValue: targetValue)
         }
     }
-    
+
     private func updateLoadingAnimation(currentTime: TimeInterval) {
         if isTransitioning {
             let elapsed = currentTime - animationStartTime
@@ -172,7 +172,7 @@ class MenuBarStateManager {
             animatedGaugeValue = 1.0 - ((cycleTime - halfCycle) / halfCycle)
         }
     }
-    
+
     private func updateDataAnimation(currentTime: TimeInterval, targetValue: Double) {
         let clampedTargetValue = min(max(targetValue, 0.0), 1.0)
         if isTransitioning {
@@ -189,7 +189,7 @@ class MenuBarStateManager {
             animatedGaugeValue = clampedTargetValue
         }
     }
-    
+
     private func updateCostAnimation(currentTime: TimeInterval) {
         if isCostTransitioning {
             let elapsed = currentTime - costAnimationStartTime

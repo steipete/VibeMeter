@@ -114,14 +114,14 @@ public struct ProviderSessionState: Codable, Sendable {
         if let providerError = error as? ProviderError {
             return formatProviderError(providerError)
         }
-        
+
         if let urlError = error as? URLError {
             return formatURLError(urlError)
         }
-        
+
         return formatGenericError(error)
     }
-    
+
     private func formatProviderError(_ error: ProviderError) -> String {
         switch error {
         case .unauthorized:
@@ -141,20 +141,20 @@ public struct ProviderSessionState: Codable, Sendable {
             return "Login failed. Please try again."
         }
     }
-    
+
     private func formatURLError(_ error: URLError) -> String {
         switch error.code {
         case .notConnectedToInternet:
-            return "No internet connection."
+            "No internet connection."
         case .timedOut:
-            return "Request timed out. Please try again."
+            "Request timed out. Please try again."
         case .cannotFindHost, .cannotConnectToHost:
-            return "Cannot connect to server."
+            "Cannot connect to server."
         default:
-            return "Connection error. Please try again."
+            "Connection error. Please try again."
         }
     }
-    
+
     private func formatGenericError(_ error: Error) -> String {
         let message = error.localizedDescription
         if message.count > 60 {

@@ -232,7 +232,8 @@ struct CostTableView: View {
                 loginManager: loginManager)
         }
         .id({
-            let refreshTime = spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0
+            let refreshTime = spendingData.getSpendingData(for: provider)?
+                .lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0
             return "\(provider.rawValue)-\(refreshTime)-\(currencyData.selectedCode)"
         }())
     }

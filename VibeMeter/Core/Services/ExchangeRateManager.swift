@@ -148,7 +148,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
 
     private static let currencySymbols: [String: String] = [
         "USD": "$",
-        "EUR": "€", 
+        "EUR": "€",
         "GBP": "£",
         "JPY": "¥",
         "AUD": "A$",
@@ -156,11 +156,11 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
         "CHF": "CHF",
         "CNY": "¥",
         "SEK": "kr",
-        "NZD": "NZ$"
+        "NZD": "NZ$",
     ]
-    
+
     public static func getSymbol(for currencyCode: String) -> String {
-        return currencySymbols[currencyCode] ?? currencyCode
+        currencySymbols[currencyCode] ?? currencyCode
     }
 }
 
