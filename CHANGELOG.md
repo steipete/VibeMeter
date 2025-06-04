@@ -5,6 +5,38 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-06-05
+
+### 🎉 First Stable Release
+
+VibeMeter 1.0.0 is the first stable release, featuring full app sandboxing and a robust update mechanism.
+
+### 🔒 Security
+- **Full app sandboxing enabled** - Enhanced security with proper entitlements
+- **Hardened runtime** - All binaries signed with hardened runtime
+- **Notarized by Apple** - Gatekeeper approved for safe distribution
+
+### ✨ Major Features
+- **Multi-provider architecture** - Extensible design ready for additional AI services
+- **Automatic updates via Sparkle** - Secure EdDSA-signed updates with update channels
+- **Native Swift 6** - Built with latest Swift concurrency and strict checking
+- **Menu bar monitoring** - Real-time spending tracking with visual gauge
+- **Currency support** - Automatic conversion for 30+ currencies
+
+### 🛠 Technical Improvements
+- Fixed Sparkle XPC service entitlements for sandboxed environment
+- Proper build number management for reliable updates
+- Comprehensive error handling and logging
+- Network resilience with retry mechanisms
+
+### 📦 What's Included
+- Cursor AI spending monitoring
+- Customizable spending limits with warnings
+- Login via secure WebKit session
+- Settings persistence with UserDefaults
+- Launch at Login support
+- Update channel selection (Stable/Pre-release)
+
 ## [1.0-beta1] - 2025-06-04
 
 ### 🎯 Major Changes

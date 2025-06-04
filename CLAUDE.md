@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use modern SwiftUI material API, do not wrap NSVisualEffectsView.
 - We support Swift 6 and macOS 15 only.
 - Don't care about backwards compatibility, always properly refactor.
+- App is fully sandboxed as of v1.0.0 - maintain sandbox compatibility.
 
 ## Project Overview
 

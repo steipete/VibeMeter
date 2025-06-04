@@ -2,6 +2,25 @@
 
 This document describes the process for creating and publishing a new release of VibeMeter.
 
+## Quick Summary for v1.0.0
+
+**Current Status:**
+- Version: 1.0.0
+- Build: 100
+- Sandboxing: ENABLED ✅
+- All entitlements configured for Sparkle compatibility
+
+**Key Changes from Beta:**
+- Full app sandboxing enabled
+- Fixed XPC service entitlements for network access
+- Proper build number management
+
+**Critical Reminders:**
+1. **Build numbers MUST increment** - Sparkle uses build numbers, not version strings
+2. **Verify entitlements after building** - Both main app and XPC services
+3. **Test updates from previous version** - Install beta and verify update to 1.0.0 works
+4. **Appcast build numbers must match** - Manual verification required after generation
+
 ## Prerequisites
 
 ### Required Tools
@@ -413,32 +432,66 @@ generate_keys -f sparkle_private_key_backup
 generate_keys -p
 ```
 
-## Complete Release Checklist
+## Complete Release Checklist for v1.0.0
 
 ### Pre-Release
-- [ ] Update version numbers in Project.swift
-- [ ] Update CHANGELOG.md with new version
-- [ ] Test build and functionality
+- [ ] **CRITICAL**: Increment `CURRENT_PROJECT_VERSION` in Project.swift
+  - Current: "100" for v1.0.0
+  - Must be higher than any previous release
+- [ ] Verify `MARKETING_VERSION` is set to "1.0.0"
+- [ ] Update CHANGELOG.md with v1.0.0 release notes
+- [ ] Verify sandboxing is enabled in VibeMeter.entitlements
+- [ ] Test build and functionality locally
 - [ ] Run tests: `xcodebuild test`
 - [ ] Run linter: `./scripts/lint.sh`
 
 ### Build and Sign
 - [ ] Generate Xcode project: `./scripts/generate-xcproj.sh`
 - [ ] Build release: `./scripts/build.sh --configuration Release`
+- [ ] Verify entitlements on built app:
+  ```bash
+  codesign -d --entitlements :- build/Build/Products/Release/VibeMeter.app 2>/dev/null | plutil -p -
+  # Should show: "com.apple.security.app-sandbox" => 1
+  ```
+- [ ] Verify XPC service entitlements:
+  ```bash
+  codesign -d --entitlements :- build/Build/Products/Release/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc 2>/dev/null | plutil -p -
+  # Should show: "com.apple.security.network.client" => 1
+  ```
 - [ ] Sign and notarize: `./scripts/sign-and-notarize.sh --sign-and-notarize`
 - [ ] Create DMG: `./scripts/create-dmg.sh`
-- [ ] Generate EdDSA signature: `sign_update build/VibeMeter-X.X.X.dmg`
+- [ ] Generate EdDSA signature: `sign_update build/VibeMeter-1.0.0.dmg -p`
+
+### Appcast Update
+- [ ] Run `./scripts/generate-appcast.sh`
+- [ ] **MANUALLY VERIFY** build numbers in appcast match actual app:
+  ```bash
+  defaults read build/Build/Products/Release/VibeMeter.app/Contents/Info.plist CFBundleVersion
+  # Should match <sparkle:version> in appcast
+  ```
+- [ ] Update appcast with correct signature from sign_update
+- [ ] Ensure appcast has proper download URLs pointing to GitHub releases
 
 ### Release
-- [ ] Update appcast.xml with signature and file size
-- [ ] Commit and push changelog updates
-- [ ] Create GitHub release with signed DMG
-- [ ] Test Sparkle update from previous version
-- [ ] Verify release notes display correctly
+- [ ] Commit all changes including appcast
+- [ ] Create GitHub release: `./scripts/release.sh --stable`
+- [ ] Verify DMG is attached to release
+- [ ] Test download URL from appcast works
+
+### Post-Release Testing
+- [ ] Install previous version (if exists)
+- [ ] Open Console.app and filter for "VibeMeter"
+- [ ] Check for updates - should find v1.0.0
+- [ ] Verify update installs successfully
+- [ ] Verify sandboxed app functions correctly:
+  - [ ] Network access works (Cursor API, exchange rates)
+  - [ ] Login via WebKit works
+  - [ ] Settings persistence works
+  - [ ] Sparkle updates work
 
 ### Post-Release
-- [ ] Test automatic update check on startup
-- [ ] Monitor for any update issues
+- [ ] Push updated appcast to main branch
+- [ ] Monitor GitHub issues for any problems
 - [ ] Update documentation if needed
 - [ ] Announce release
 
@@ -506,17 +559,58 @@ VibeMeter uses comprehensive signing for Sparkle components:
 
 See `scripts/notarize-app.sh` for the complete signing order and entitlements.
 
-## Sandboxing Experiments and Findings
+## Sandboxing Configuration
 
-### App Sandboxing Status: DISABLED
+### App Sandboxing Status: ENABLED (as of v1.0.0)
 
-#### Critical: Sparkle XPC Service Entitlements
+VibeMeter now runs with full app sandboxing enabled for enhanced security and potential future App Store distribution.
 
-**IMPORTANT**: Even though the main VibeMeter app has sandboxing disabled, Sparkle's XPC services (Downloader.xpc and Installer.xpc) are ALWAYS sandboxed by macOS. These services require specific entitlements to function properly:
+#### Complete Sandboxing Setup
 
-##### Required XPC Service Entitlements for Non-Sandboxed Apps
+##### Main App Entitlements (VibeMeter/VibeMeter.entitlements)
 
-When signing Sparkle XPC services in the notarize-app.sh script, ensure these entitlements are included:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Enable app sandboxing -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    
+    <!-- Network access for Cursor API and exchange rates -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    
+    <!-- Downloads folder access for Sparkle updates -->
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    
+    <!-- Required for WebKit-based login -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    
+    <!-- Required for Sparkle framework loading -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    
+    <!-- XPC service communication with Sparkle -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.steipete.vibemeter-spks</string>
+        <string>com.steipete.vibemeter-spkd</string>
+    </array>
+</dict>
+</plist>
+```
+
+##### Critical: Sparkle XPC Service Entitlements
+
+**IMPORTANT**: Sparkle's XPC services (Downloader.xpc and Installer.xpc) are ALWAYS sandboxed by macOS, regardless of the main app's sandbox status. These services require specific entitlements to function properly:
+
+##### XPC Service Entitlements (Applied by notarize-app.sh)
+
+The notarize-app.sh script automatically applies these entitlements to XPC services:
 
 ```xml
 <!-- XPC services are always sandboxed -->
@@ -530,6 +624,13 @@ When signing Sparkle XPC services in the notarize-app.sh script, ensure these en
 <!-- Required for file operations during update -->
 <key>com.apple.security.files.user-selected.read-write</key>
 <true/>
+
+<!-- XPC service communication -->
+<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+<array>
+    <string>com.steipete.vibemeter-spks</string>
+    <string>com.steipete.vibemeter-spkd</string>
+</array>
 ```
 
 ##### Common Errors Without Proper Entitlements
@@ -557,11 +658,11 @@ codesign -d --entitlements :- /path/to/VibeMeter.app/Contents/Frameworks/Sparkle
 # "com.apple.security.files.user-selected.read-write" => 1
 ```
 
-### App Sandboxing Status: DISABLED
+### Sandboxing Evolution
 
-**IMPORTANT**: VibeMeter currently runs with app sandboxing **disabled** (`com.apple.security.app-sandbox = false`) due to Sparkle framework compatibility requirements.
+VibeMeter v1.0.0 successfully enabled full app sandboxing after resolving Sparkle XPC service issues.
 
-### Experiment History
+#### Key Learnings
 
 During development of v1.0-beta.1 and v1.0-beta.2, we conducted extensive experiments with sandboxing:
 
