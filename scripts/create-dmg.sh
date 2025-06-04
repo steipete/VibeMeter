@@ -55,9 +55,47 @@ hdiutil create \
 # Clean up
 rm -rf "$DMG_TEMP"
 
-# Sign the DMG
-echo "Signing DMG..."
-codesign --force --sign "Developer ID Application" "$DMG_PATH"
+# Sign the DMG if signing credentials are available
+if command -v codesign &> /dev/null; then
+    # Use the same signing identity as the app signing process
+    SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application}"
+    
+    # Check if we're in CI and have a specific keychain
+    KEYCHAIN_OPTS=""
+    if [ -n "${KEYCHAIN_NAME:-}" ]; then
+        echo "Using keychain: $KEYCHAIN_NAME"
+        KEYCHAIN_OPTS="--keychain $KEYCHAIN_NAME"
+    fi
+    
+    # Try to find a valid signing identity
+    IDENTITY_CHECK_CMD="security find-identity -v -p codesigning"
+    if [ -n "${KEYCHAIN_NAME:-}" ]; then
+        IDENTITY_CHECK_CMD="$IDENTITY_CHECK_CMD $KEYCHAIN_NAME"
+    fi
+    
+    # Check if any signing identity is available
+    if $IDENTITY_CHECK_CMD 2>/dev/null | grep -q "valid identities found"; then
+        # Check if our specific identity exists
+        if $IDENTITY_CHECK_CMD 2>/dev/null | grep -q "$SIGN_IDENTITY"; then
+            echo "Signing DMG with identity: $SIGN_IDENTITY"
+            codesign --force --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$DMG_PATH"
+        else
+            # Try to use the first available Developer ID Application identity
+            AVAILABLE_IDENTITY=$($IDENTITY_CHECK_CMD 2>/dev/null | grep "Developer ID Application" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ -n "$AVAILABLE_IDENTITY" ]; then
+                echo "Using available identity: $AVAILABLE_IDENTITY"
+                codesign --force --sign "$AVAILABLE_IDENTITY" $KEYCHAIN_OPTS "$DMG_PATH"
+            else
+                echo "⚠️ No Developer ID Application identity found - DMG will not be signed"
+            fi
+        fi
+    else
+        echo "⚠️ No signing identities available - DMG will not be signed"
+        echo "This is expected for PR builds where certificates are not imported"
+    fi
+else
+    echo "⚠️ codesign not available - DMG will not be signed"
+fi
 
 # Verify DMG
 echo "Verifying DMG..."
