@@ -68,12 +68,15 @@ final class ApplicationMover {
     /// Checks if the app should be moved to Applications and offers to do so if needed.
     /// This should be called early in the app lifecycle, typically in applicationDidFinishLaunching.
     func checkAndOfferToMoveToApplications() {
+        logger.info("ApplicationMover: Starting check...")
+        logger.info("ApplicationMover: Bundle path: \(Bundle.main.bundlePath)")
+        
         guard shouldOfferToMove() else {
-            logger.info("App is already in Applications or move not needed")
+            logger.info("ApplicationMover: App is already in Applications or move not needed")
             return
         }
 
-        logger.info("App is running from DMG, offering to move to Applications")
+        logger.info("ApplicationMover: App needs to be moved, offering to move to Applications")
         offerToMoveToApplications()
     }
 
@@ -82,25 +85,30 @@ final class ApplicationMover {
     /// Determines if we should offer to move the app to Applications
     private func shouldOfferToMove() -> Bool {
         let bundlePath = Bundle.main.bundlePath
+        logger.info("ApplicationMover: Checking bundle path: \(bundlePath)")
 
         // Check if already in Applications
-        if isInApplicationsFolder(bundlePath) {
-            logger.debug("App is already in Applications folder")
+        let inApps = isInApplicationsFolder(bundlePath)
+        logger.info("ApplicationMover: Is in Applications folder: \(inApps)")
+        if inApps {
             return false
         }
 
         // Check if running from DMG or other mounted volume
-        if isRunningFromDMG(bundlePath) {
-            logger.debug("App is running from DMG at path: \(bundlePath)")
+        let fromDMG = isRunningFromDMG(bundlePath)
+        logger.info("ApplicationMover: Is running from DMG: \(fromDMG)")
+        if fromDMG {
             return true
         }
 
         // Check if running from Downloads or Desktop (common when downloaded)
-        if isRunningFromTemporaryLocation(bundlePath) {
-            logger.debug("App is running from temporary location: \(bundlePath)")
+        let fromTemp = isRunningFromTemporaryLocation(bundlePath)
+        logger.info("ApplicationMover: Is running from temporary location: \(fromTemp)")
+        if fromTemp {
             return true
         }
 
+        logger.info("ApplicationMover: No move needed for path: \(bundlePath)")
         return false
     }
 
@@ -115,23 +123,33 @@ final class ApplicationMover {
     /// Checks if the app is running from a DMG (mounted disk image)
     /// Uses the proven approach from PFMoveApplication/LetsMove
     private func isRunningFromDMG(_ path: String) -> Bool {
+        logger.info("ApplicationMover: Checking if running from DMG for path: \(path)")
+        
         guard let diskImageDevice = containingDiskImageDevice(for: path) else {
+            logger.info("ApplicationMover: No disk image device found")
             return false
         }
 
-        logger.debug("App is running from disk image device: \(diskImageDevice)")
+        logger.info("ApplicationMover: App is running from disk image device: \(diskImageDevice)")
         return true
     }
 
     /// Determines the disk image device containing the given path
     /// Based on the proven PFMoveApplication implementation
     private func containingDiskImageDevice(for path: String) -> String? {
+        logger.info("ApplicationMover: Checking disk image device for path: \(path)")
+        
         var fs = statfs()
         let result = statfs(path, &fs)
 
         // If statfs fails or this is the root filesystem, not a disk image
-        guard result == 0, (fs.f_flags & UInt32(MNT_ROOTFS)) == 0 else {
-            logger.debug("Path is on root filesystem or statfs failed")
+        guard result == 0 else {
+            logger.info("ApplicationMover: statfs failed with result: \(result)")
+            return nil
+        }
+        
+        guard (fs.f_flags & UInt32(MNT_ROOTFS)) == 0 else {
+            logger.info("ApplicationMover: Path is on root filesystem")
             return nil
         }
 
@@ -143,7 +161,7 @@ final class ApplicationMover {
             }
         }
 
-        logger.debug("Device name: \(deviceName)")
+        logger.info("ApplicationMover: Device name: \(deviceName)")
 
         // Use hdiutil to check if this device is a disk image
         return checkDeviceIsDiskImage(deviceName)
@@ -154,6 +172,8 @@ final class ApplicationMover {
     /// but we keep it as it provides the most accurate DMG detection when available.
     /// The app will still work via path-based detection as a fallback.
     private func checkDeviceIsDiskImage(_ deviceName: String) -> String? {
+        logger.info("ApplicationMover: Checking if device is disk image: \(deviceName)")
+        
         let task = Process()
         task.launchPath = "/usr/bin/hdiutil"
         task.arguments = ["info", "-plist"]
@@ -163,19 +183,22 @@ final class ApplicationMover {
         task.standardError = Pipe() // Suppress stderr
 
         do {
+            logger.info("ApplicationMover: Running hdiutil info -plist")
             try task.run()
             task.waitUntilExit()
 
             guard task.terminationStatus == 0 else {
-                logger.warning("hdiutil command failed with status: \(task.terminationStatus)")
+                logger.warning("ApplicationMover: hdiutil command failed with status: \(task.terminationStatus)")
                 return nil
             }
 
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            logger.info("ApplicationMover: hdiutil returned \(data.count) bytes")
 
             guard let plist = try PropertyListSerialization
                 .propertyList(from: data, options: [], format: nil) as? [String: Any],
                 let images = plist["images"] as? [[String: Any]] else {
+                logger.info("ApplicationMover: Failed to parse hdiutil plist or no images found")
                 logger.warning("Failed to parse hdiutil output")
                 return nil
             }

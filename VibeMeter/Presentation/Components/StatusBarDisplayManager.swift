@@ -68,6 +68,9 @@ final class StatusBarDisplayManager {
     private let userSession: MultiProviderUserSessionData
     private let spendingData: MultiProviderSpendingData
     private let currencyData: CurrencyData
+    
+    private let tooltipProvider: StatusBarTooltipProvider
+    private let accessibilityProvider: StatusBarAccessibilityProvider
 
     private var lastDisplayState: DisplayState?
     private var lastTooltip: String = ""
@@ -86,6 +89,19 @@ final class StatusBarDisplayManager {
         self.userSession = userSession
         self.spendingData = spendingData
         self.currencyData = currencyData
+        
+        self.tooltipProvider = StatusBarTooltipProvider(
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData,
+            settingsManager: settingsManager
+        )
+        self.accessibilityProvider = StatusBarAccessibilityProvider(
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData,
+            settingsManager: settingsManager
+        )
     }
 
     // MARK: - Public Methods
@@ -287,8 +303,8 @@ final class StatusBarDisplayManager {
     }
 
     private func updateTooltipAndAccessibility(button: NSStatusBarButton) {
-        let tooltip = createTooltipText()
-        let accessibility = createAccessibilityDescription()
+        let tooltip = tooltipProvider.createTooltipText()
+        let accessibility = accessibilityProvider.createAccessibilityDescription()
 
         // Only update if text actually changed
         if tooltip != lastTooltip {
@@ -302,117 +318,4 @@ final class StatusBarDisplayManager {
         }
     }
 
-    private func createTooltipText() -> String {
-        guard userSession.isLoggedInToAnyProvider else {
-            return "VibeMeter - Not logged in to any provider"
-        }
-
-        let providers = spendingData.providersWithData
-        guard !providers.isEmpty else {
-            return "VibeMeter - Loading data..."
-        }
-
-        // Calculate spending percentage
-        let totalSpendingUSD = spendingData.totalSpendingConverted(
-            to: "USD",
-            rates: currencyData.effectiveRates)
-        let upperLimit = settingsManager.upperLimitUSD
-        let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
-
-        // Get most recent refresh date
-        let mostRecentRefresh = providers
-            .compactMap { provider in
-                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
-            }
-            .max()
-
-        var tooltip = "VibeMeter - \(Int(percentage))% of limit"
-
-        if let lastRefresh = mostRecentRefresh {
-            let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .withPrefix)
-            let freshnessIndicator = RelativeTimeFormatter.isFresh(lastRefresh) ? "🟢" : "🟡"
-            tooltip += "\n\(freshnessIndicator) \(refreshText)"
-
-            // Add data freshness context
-            if !RelativeTimeFormatter.isFresh(lastRefresh, withinMinutes: 15) {
-                tooltip += " (May be outdated)"
-            }
-        } else {
-            tooltip += "\n🔴 Never updated"
-        }
-
-        // Add keyboard shortcuts info
-        tooltip += "\n\nKeyboard shortcuts:"
-        tooltip += "\n⌘R - Refresh data"
-        tooltip += "\n⌘, - Open Settings"
-        tooltip += "\n⌘Q - Quit VibeMeter"
-        tooltip += "\nESC - Close menu"
-
-        return tooltip
-    }
-
-    private func createAccessibilityDescription() -> String {
-        guard userSession.isLoggedInToAnyProvider else {
-            return "Not logged in to any AI service provider. Click to open VibeMeter and log in."
-        }
-
-        let providers = spendingData.providersWithData
-        guard !providers.isEmpty else {
-            return "Loading AI service spending data. Please wait."
-        }
-
-        // Calculate spending percentage
-        let totalSpendingUSD = spendingData.totalSpendingConverted(
-            to: "USD",
-            rates: currencyData.effectiveRates)
-        let upperLimit = settingsManager.upperLimitUSD
-        let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
-
-        // Convert to user's preferred currency for accessibility
-        let userSpending = spendingData.totalSpendingConverted(
-            to: currencyData.selectedCode,
-            rates: currencyData.effectiveRates)
-        let userLimit = settingsManager.upperLimitUSD * currencyData.effectiveRates[
-            currencyData.selectedCode,
-            default: 1.0
-        ]
-
-        let spendingText =
-            "\(currencyData.selectedSymbol)\(userSpending.formatted(.number.precision(.fractionLength(2))))"
-        let limitText = "\(currencyData.selectedSymbol)\(userLimit.formatted(.number.precision(.fractionLength(2))))"
-
-        // Provide context about spending level
-        let statusText = switch percentage {
-        case 0 ..< 50:
-            "Low usage"
-        case 50 ..< 80:
-            "Moderate usage"
-        case 80 ..< 100:
-            "High usage, approaching limit"
-        default:
-            "Over limit"
-        }
-
-        // Add refresh information for accessibility
-        let refreshProviders = spendingData.providersWithData
-        let mostRecentRefresh = refreshProviders
-            .compactMap { provider in
-                spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh
-            }
-            .max()
-
-        var accessibilityText =
-            "\(statusText). Current spending: \(spendingText) of \(limitText) limit. \(Int(percentage)) percent used."
-
-        if let lastRefresh = mostRecentRefresh {
-            let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .medium)
-            accessibilityText += " Data \(refreshText)."
-        } else {
-            accessibilityText += " Data never updated."
-        }
-
-        accessibilityText += " Click to view details."
-
-        return accessibilityText
-    }
 }

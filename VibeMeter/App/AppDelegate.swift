@@ -171,7 +171,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func checkApplicationLocation(processInfo: ProcessInfo) {
-        if !processInfo.isRunningInTests, !processInfo.isRunningInPreview {
+        logger.info("Checking application location...")
+        
+        if processInfo.isRunningInTests {
+            logger.info("Skipping ApplicationMover check - running in tests")
+        } else if processInfo.isRunningInPreview {
+            logger.info("Skipping ApplicationMover check - running in preview")
+        } else {
+            logger.info("Creating ApplicationMover and checking...")
             let applicationMover = ApplicationMover()
             applicationMover.checkAndOfferToMoveToApplications()
         }
