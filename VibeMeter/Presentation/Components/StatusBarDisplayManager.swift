@@ -219,7 +219,7 @@ final class StatusBarDisplayManager {
                 button.image?.isTemplate = true
             } else {
                 print("GaugeIcon rendering failed, using fallback")
-                button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "VibeMeter")
+                button.image = NSImage(systemSymbolName: "gauge", accessibilityDescription: "Vibe Meter")
                 button.image?.isTemplate = true
             }
         } else {

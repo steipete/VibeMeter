@@ -153,8 +153,8 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
 
     public func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
-        content.title = "VibeMeter Already Running"
-        content.body = "Another instance of VibeMeter is already running. The existing instance has been brought to the front."
+        content.title = "Vibe Meter Already Running"
+        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 
