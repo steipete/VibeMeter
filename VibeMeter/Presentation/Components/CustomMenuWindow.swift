@@ -12,6 +12,7 @@ final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?
     private let hostingController: NSHostingController<AnyView>
     private var retainedContentView: AnyView?
+    private var isEventMonitoringActive = false
 
     init(contentView: some View) {
         // Store the content view to prevent deallocation in Release builds
@@ -115,11 +116,8 @@ final class CustomMenuWindow: NSPanel {
             animator().alphaValue = 1
         }
 
-        // Set up event monitoring with better timing
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(100))
-            setupEventMonitoring()
-        }
+        // Set up event monitoring immediately after window is visible
+        setupEventMonitoring()
     }
 
     
@@ -185,10 +183,13 @@ final class CustomMenuWindow: NSPanel {
     private func setupEventMonitoring() {
         // Ensure we don't have duplicate monitors
         teardownEventMonitoring()
+        
+        // Ensure window is actually visible before setting up monitoring
+        guard isVisible else { return }
 
-        // Monitor clicks outside the window
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            guard let self else { return }
+        // Monitor clicks outside the window with stronger reference management
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, self.isVisible else { return }
 
             // Get the mouse location in screen coordinates
             let mouseLocation = NSEvent.mouseLocation
@@ -198,12 +199,15 @@ final class CustomMenuWindow: NSPanel {
                 self.hide()
             }
         }
+        
+        isEventMonitoringActive = true
     }
 
     private func teardownEventMonitoring() {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
+            isEventMonitoringActive = false
         }
     }
 
