@@ -149,11 +149,13 @@ final class StatusBarDisplayManager {
         let lastShouldShowIcon = lastState.map { !$0.hasData || $0.displayMode.showsIcon } ?? true
         let currentShouldShowIcon = !currentState.hasData || currentState.displayMode.showsIcon
 
-        return lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
+        let shouldUpdate = lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
             lastShouldShowIcon != currentShouldShowIcon ||
             lastState?.currencySymbol != currentState.currencySymbol ||
             lastState?.hasData != currentState.hasData ||
-            abs((lastState?.animatedCostValue ?? 0) - currentState.animatedCostValue) > 0.01
+            abs((lastState?.totalSpending ?? 0) - currentState.totalSpending) > 0.01
+        
+        return shouldUpdate
     }
 
     private func shouldUpdateTooltipAndAccessibility(from lastState: DisplayState?,
@@ -227,13 +229,36 @@ final class StatusBarDisplayManager {
 
     private func updateTitle(button: NSStatusBarButton, state: DisplayState) {
         if state.displayMode.showsMoney, stateManager.currentState.showsGauge, state.hasData {
-            stateManager.setCostValue(state.totalSpending)
+            // Check if currency changed in two ways:
+            // 1. Direct currency code comparison with last state
+            let lastCurrencyCode = lastDisplayState?.currencyCode
+            let currencyCodeChanged = lastCurrencyCode != nil && lastCurrencyCode != state.currencyCode
+            
+            // 2. Check if animated value significantly differs from target (indicates currency change)
+            let currentAnimated = stateManager.animatedCostValue
+            let targetSpending = state.totalSpending
+            let animatedValueMismatch = abs(currentAnimated - targetSpending) > 0.5 // More than 50 cent difference
+            
+            let currencyChanged = currencyCodeChanged || animatedValueMismatch
+            
+            if currencyChanged {
+                // Currency changed - reset cost value immediately without animation
+                stateManager.setCostValueImmediately(state.totalSpending)
+            } else {
+                // Normal operation - use animated transition
+                stateManager.setCostValue(state.totalSpending)
+            }
+            
+            // Force the animation manager to update immediately to sync with current data
+            stateManager.updateAnimation()
+            
             // Use new logic: icon is shown when there's no data OR user setting shows icon
             let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
             let spacingPrefix = shouldShowIcon ? "  " : ""
-            button
-                .title =
-                "\(spacingPrefix)\(state.currencySymbol)\(state.animatedCostValue.formatted(.number.precision(.fractionLength(2))))"
+            let displayValue = stateManager.animatedCostValue.formatted(.number.precision(.fractionLength(2)))
+
+            let titleText = "\(spacingPrefix)\(state.currencySymbol)\(displayValue)"
+            button.title = titleText
         } else {
             button.title = ""
         }

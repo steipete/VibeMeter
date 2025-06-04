@@ -55,25 +55,14 @@ public actor CursorProvider: ProviderProtocol {
 
     public func fetchMonthlyInvoice(authToken: String, month: Int, year: Int,
                                     teamId: Int?) async throws -> ProviderMonthlyInvoice {
-        // Use provided team ID, or fall back to stored team ID if not provided
-        let resolvedTeamId: Int
-        if let teamId {
-            resolvedTeamId = teamId
-        } else if let storedTeamId = await getTeamId() {
-            resolvedTeamId = storedTeamId
-        } else {
-            logger.error("Cursor team ID not set and not provided")
-            throw ProviderError.teamIdNotSet
-        }
-
-        logger.debug("Fetching Cursor invoice for \(month)/\(year) for team \(resolvedTeamId)")
+        logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchInvoice(
                 authToken: authToken,
                 month: month,
                 year: year,
-                teamId: resolvedTeamId)
+                teamId: teamId) // Pass through but API will ignore it
             return CursorDataTransformer.transformInvoice(from: response, month: month, year: year)
         }
     }

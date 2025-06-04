@@ -239,18 +239,27 @@ public final class MultiProviderDataOrchestrator {
             spendingData.updateConnectionStatus(for: provider, status: .connected)
 
         } catch let error as ProviderError where error == .unauthorized || error == .noTeamFound {
-            let errorMessage = error == .unauthorized ? "Authentication failed" : "Team not found"
-            logger.warning("\(errorMessage) for \(provider.displayName), clearing session data")
+            let errorMessage = error == .unauthorized ? "Authentication failed" : "Team data unavailable"
+            logger.warning("\(errorMessage) for \(provider.displayName)")
 
-            // Update connection status
-            spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
-
-            // Handle authentication error via session manager
-            sessionStateManager.handleAuthenticationError(
-                for: provider,
-                error: error,
-                userSessionData: userSessionData,
-                spendingData: spendingData)
+            // Only clear session data for actual authentication failures
+            if error == .unauthorized {
+                logger.warning("Clearing session data due to authentication failure")
+                // Update connection status
+                spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
+                
+                // Handle authentication error via session manager
+                sessionStateManager.handleAuthenticationError(
+                    for: provider,
+                    error: error,
+                    userSessionData: userSessionData,
+                    spendingData: spendingData)
+            } else {
+                // For team not found, just set a warning but keep user logged in
+                logger.info("Team data unavailable but user remains authenticated")
+                spendingData.updateConnectionStatus(for: provider, status: .connected)
+                userSessionData.setTeamFetchError(for: provider, message: "Team data unavailable, but you remain logged in.")
+            }
 
         } catch let error as ProviderError where error == .rateLimitExceeded {
             logger.warning("Rate limit exceeded for \(provider.displayName)")
@@ -342,8 +351,9 @@ public final class MultiProviderDataOrchestrator {
         }
 
         // Currency orchestrator callbacks
-        currencyOrchestrator.onCurrencyChanged = { [weak self] _ in
+        currencyOrchestrator.onCurrencyChanged = { [weak self] currencyCode in
             guard let self else { return }
+            // Re-convert all existing spending data to the new currency
             await self.currencyOrchestrator.updateCurrencyConversions(spendingData: self.spendingData)
         }
     }

@@ -143,14 +143,12 @@ public final class SessionStateManager {
                 spendingData: spendingData)
 
         case .noTeamFound:
-            logger.error("Team not found for \(provider.displayName), clearing session data")
-            clearSessionData(
-                for: provider,
-                userSessionData: userSessionData,
-                spendingData: spendingData)
+            logger.warning("Team not found for \(provider.displayName), but keeping user logged in with valid token")
+            // Don't clear session data - user still has valid authentication
+            // Just set an error message to inform them that team features may be limited
             userSessionData.setTeamFetchError(
                 for: provider,
-                message: "Team not found. Please log in again.")
+                message: "Team data unavailable, but you remain logged in.")
 
         default:
             // For other errors, don't clear session data
