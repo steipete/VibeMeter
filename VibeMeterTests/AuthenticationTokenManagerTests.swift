@@ -8,23 +8,19 @@ final class AuthenticationTokenManagerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        MainActor.assumeIsolated {
-            self.setupMockKeychainServices()
+        setupMockKeychainServices()
 
-            // Create token manager with mock keychain services
-            var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
-            for provider in ServiceProvider.allCases {
-                keychainHelpers[provider] = self.mockKeychainServices[provider]
-            }
-            self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
+        // Create token manager with mock keychain services
+        var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
+        for provider in ServiceProvider.allCases {
+            keychainHelpers[provider] = mockKeychainServices[provider]
         }
+        tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
     override func tearDown() {
-        MainActor.assumeIsolated {
-            self.tokenManager = nil
-            self.mockKeychainServices.removeAll()
-        }
+        tokenManager = nil
+        mockKeychainServices.removeAll()
         super.tearDown()
     }
 
@@ -37,19 +33,17 @@ final class AuthenticationTokenManagerTests: XCTestCase {
     // MARK: - Token Storage Tests
 
     func testSaveToken_Success() {
-        MainActor.assumeIsolated {
-            // Given
-            let token = "test-auth-token-123"
-            let provider = ServiceProvider.cursor
+        // Given
+        let token = "test-auth-token-123"
+        let provider = ServiceProvider.cursor
 
-            // When
-            let result = tokenManager.saveToken(token, for: provider)
+        // When
+        let result = tokenManager.saveToken(token, for: provider)
 
-            // Then
-            XCTAssertTrue(result)
-            XCTAssertEqual(mockKeychainServices[provider]?.saveTokenCallCount, 1)
-            XCTAssertEqual(mockKeychainServices[provider]?.lastSavedToken, token)
-        }
+        // Then
+        XCTAssertTrue(result)
+        XCTAssertEqual(mockKeychainServices[provider]?.saveTokenCallCount, 1)
+        XCTAssertEqual(mockKeychainServices[provider]?.lastSavedToken, token)
     }
 
     func testSaveToken_Failure() {

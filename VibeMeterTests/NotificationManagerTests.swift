@@ -511,8 +511,7 @@ final class NotificationManagerTests: XCTestCase {
 
 // MARK: - TestableNotificationManager
 
-@MainActor
-private final class TestableNotificationManager: NotificationManagerProtocol {
+private final class TestableNotificationManager: NotificationManagerProtocol, @unchecked Sendable {
     private let notificationCenter: MockUNUserNotificationCenter
 
     // Track which notifications have been shown
@@ -549,7 +548,9 @@ private final class TestableNotificationManager: NotificationManagerProtocol {
             content: content,
             trigger: nil)
 
-        try? await notificationCenter.add(request)
+        try? await Task { @MainActor in
+            try await notificationCenter.add(request)
+        }.value
         warningNotificationShown = true
     }
 
@@ -572,7 +573,9 @@ private final class TestableNotificationManager: NotificationManagerProtocol {
             content: content,
             trigger: nil)
 
-        try? await notificationCenter.add(request)
+        try? await Task { @MainActor in
+            try await notificationCenter.add(request)
+        }.value
         upperLimitNotificationShown = true
     }
 
@@ -601,7 +604,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol {
 
 // MARK: - MockUNUserNotificationCenter
 
-private class MockUNUserNotificationCenter {
+private class MockUNUserNotificationCenter: @unchecked Sendable {
     var authorizationResult: Result<Bool, Error> = .success(true)
     var addResult: Result<Void, Error> = .success(())
 
