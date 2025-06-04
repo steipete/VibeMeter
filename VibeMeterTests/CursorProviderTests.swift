@@ -332,7 +332,7 @@ final class CursorProviderTests: XCTestCase {
         """.data(using: .utf8)!
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/usage")!,
+            url: URL(string: "https://www.cursor.com/api/usage?user=test-token")!,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -384,7 +384,7 @@ final class CursorProviderTests: XCTestCase {
         """.data(using: .utf8)!
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/usage")!,
+            url: URL(string: "https://www.cursor.com/api/usage?user=test-token")!,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
