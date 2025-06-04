@@ -92,7 +92,8 @@ actor CursorAPIClient {
 
     private func createRequest(for url: URL, authToken: String) -> URLRequest {
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        // Set the session cookie instead of Bearer token
+        request.setValue("WorkosCursorSessionToken=\(authToken)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("VibeMeter/1.0", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 30.0
