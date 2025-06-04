@@ -280,22 +280,32 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(bodyJSON?["teamId"] as? Int, 999)
     }
 
-    func testFetchMonthlyInvoice_NoTeamIdAvailable() async {
+    func testFetchMonthlyInvoice_NoTeamIdAvailable() async throws {
         // Given - no stored team ID and none provided
+        let expectedInvoice = CursorInvoiceResponse(
+            items: [
+                CursorInvoiceItem(cents: 1000, description: "Usage"),
+            ],
+            pricingDescription: nil)
+        
+        mockURLSession.nextResponse = (
+            data: try JSONEncoder().encode(expectedInvoice),
+            response: HTTPURLResponse(
+                url: URL(string: "https://api.cursor.sh/dashboard/get-monthly-invoice")!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil)!
+        )
 
-        // When/Then
-        do {
-            _ = try await cursorProvider.fetchMonthlyInvoice(
-                authToken: "test-token",
-                month: 5,
-                year: 2023,
-                teamId: nil)
-            XCTFail("Should have thrown teamIdNotSet error")
-        } catch let error as ProviderError {
-            XCTAssertEqual(error, .teamIdNotSet)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
+        // When - Should succeed even without team ID
+        let invoice = try await cursorProvider.fetchMonthlyInvoice(
+            authToken: "test-token",
+            month: 5,
+            year: 2023,
+            teamId: nil)
+        
+        // Then
+        XCTAssertEqual(invoice.totalSpendingCents, 1000)
     }
 
     // MARK: - Usage Data Tests
