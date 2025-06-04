@@ -174,37 +174,107 @@ final class NotificationManagerBasicTests: XCTestCase {
 private final class TestableNotificationManager: NSObject, NotificationManagerProtocol {
     let notificationCenter: MockUNUserNotificationCenter
 
+    // Track which notifications have been shown
+    private var warningNotificationShown = false
+    private var upperLimitNotificationShown = false
+
     init(notificationCenter: MockUNUserNotificationCenter) {
         self.notificationCenter = notificationCenter
         super.init()
     }
 
     func requestAuthorization() async -> Bool {
-        true // Mock implementation
+        return await withCheckedContinuation { continuation in
+            notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                continuation.resume(returning: granted)
+            }
+        }
     }
 
-    func showWarningNotification(currentSpending _: Double, limitAmount _: Double, currencyCode _: String) async {
-        // Mock implementation
+    func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+        guard !warningNotificationShown else {
+            return
+        }
+
+        let symbol = currencyCode == "USD" ? "$" : (currencyCode == "EUR" ? "€" : currencyCode)
+        let spendingFormatted = "\(symbol)\(String(format: "%.2f", currentSpending))"
+        let limitFormatted = "\(symbol)\(String(format: "%.2f", limitAmount))"
+
+        let content = UNMutableNotificationContent()
+        content.title = "Spending Alert ⚠️"
+        content.body = "You've reached \(spendingFormatted) of your \(limitFormatted) warning limit"
+        content.sound = .default
+        content.categoryIdentifier = "SPENDING_WARNING"
+
+        let request = UNNotificationRequest(
+            identifier: "warning_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+
+        notificationCenter.add(request, withCompletionHandler: nil)
+        warningNotificationShown = true
     }
 
-    func showUpperLimitNotification(currentSpending _: Double, limitAmount _: Double, currencyCode _: String) async {
-        // Mock implementation
+    func showUpperLimitNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+        guard !upperLimitNotificationShown else {
+            return
+        }
+
+        let symbol = currencyCode == "USD" ? "$" : (currencyCode == "EUR" ? "€" : currencyCode)
+        let spendingFormatted = "\(symbol)\(String(format: "%.2f", currentSpending))"
+        let limitFormatted = "\(symbol)\(String(format: "%.2f", limitAmount))"
+
+        let content = UNMutableNotificationContent()
+        content.title = "Spending Limit Reached! 🚨"
+        content.body = "You've exceeded your maximum limit! Current: \(spendingFormatted), Limit: \(limitFormatted)"
+        content.sound = .defaultCritical
+        content.categoryIdentifier = "SPENDING_CRITICAL"
+        content.interruptionLevel = .critical
+
+        let request = UNNotificationRequest(
+            identifier: "upper_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+
+        notificationCenter.add(request, withCompletionHandler: nil)
+        upperLimitNotificationShown = true
     }
 
     func resetNotificationStateIfBelow(
-        limitType _: NotificationLimitType,
-        currentSpendingUSD _: Double,
-        warningLimitUSD _: Double,
-        upperLimitUSD _: Double) async {
-        // Mock implementation
+        limitType: NotificationLimitType,
+        currentSpendingUSD: Double,
+        warningLimitUSD: Double,
+        upperLimitUSD: Double) async {
+        switch limitType {
+        case .warning:
+            if currentSpendingUSD < warningLimitUSD, warningNotificationShown {
+                warningNotificationShown = false
+            }
+        case .upper:
+            if currentSpendingUSD < upperLimitUSD, upperLimitNotificationShown {
+                upperLimitNotificationShown = false
+            }
+        }
     }
 
     func resetAllNotificationStatesForNewSession() async {
-        // Mock implementation
+        warningNotificationShown = false
+        upperLimitNotificationShown = false
     }
 
     func showInstanceAlreadyRunningNotification() async {
-        // Mock implementation
+        let content = UNMutableNotificationContent()
+        content.title = "Vibe Meter Already Running"
+        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content.sound = .default
+        content.categoryIdentifier = "APP_INSTANCE"
+
+        let request = UNNotificationRequest(
+            identifier: "instance_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+
+        notificationCenter.add(request, withCompletionHandler: nil)
     }
 }
 
