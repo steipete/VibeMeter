@@ -77,6 +77,13 @@ public struct ProviderSessionState: Codable, Sendable {
             lastErrorMessage = nil
         } else if error.localizedDescription.contains("cancelled") {
             lastErrorMessage = nil
+        } else if isUnauthorizedError(error) {
+            // Unauthorized errors clear the session completely
+            lastErrorMessage = nil
+            userEmail = nil
+            teamName = nil
+            teamId = nil
+            teamIdFetchFailed = false
         } else {
             // Create user-friendly error messages
             lastErrorMessage = formatErrorMessage(error)
@@ -85,6 +92,23 @@ public struct ProviderSessionState: Codable, Sendable {
         lastUpdated = Date()
     }
 
+    /// Checks if an error is an unauthorized error (401).
+    private func isUnauthorizedError(_ error: Error) -> Bool {
+        // Check for NSError with 401 code
+        if let nsError = error as NSError?, nsError.code == 401 {
+            return true
+        }
+        
+        // Check for ProviderError.unauthorized
+        if let providerError = error as? ProviderError,
+           case .unauthorized = providerError {
+            return true
+        }
+        
+        // Check for unauthorized in description
+        return error.localizedDescription.lowercased().contains("unauthorized")
+    }
+    
     /// Formats error messages for user display.
     private func formatErrorMessage(_ error: Error) -> String {
         if let providerError = error as? ProviderError {
@@ -202,9 +226,8 @@ public final class MultiProviderUserSessionData {
 
     /// Handles logout for a specific provider.
     public func handleLogout(from provider: ServiceProvider) {
-        var session = providerSessions[provider] ?? ProviderSessionState(provider: provider)
-        session.handleLogout()
-        providerSessions[provider] = session
+        // Completely remove the session on logout
+        providerSessions.removeValue(forKey: provider)
     }
 
     /// Sets authenticating state for a specific provider.
