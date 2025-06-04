@@ -460,23 +460,26 @@ final class BackgroundDataProcessorTests: XCTestCase {
         }
     }
 
-    func testProcessProviderData_TeamInfoFails_ThrowsError() async {
+    func testProcessProviderData_TeamInfoFails_UsesFallbackTeam() async throws {
         // Given
         mockProvider.shouldThrowOnTeamInfo = true
         mockProvider.errorToThrow = TestError.networkFailure
 
-        // When/Then
-        do {
-            _ = try await sut.processProviderData(
-                provider: .cursor,
-                authToken: "test-token",
-                providerClient: mockProvider)
-            XCTFail("Should have thrown network failure")
-        } catch let error as TestError {
-            XCTAssertEqual(error, .networkFailure)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
+        // When
+        let result = try await sut.processProviderData(
+            provider: .cursor,
+            authToken: "test-token",
+            providerClient: mockProvider)
+
+        // Then - Should use fallback team instead of throwing
+        XCTAssertEqual(result.teamInfo.id, 0)
+        XCTAssertEqual(result.teamInfo.name, "Individual Account")
+        XCTAssertEqual(result.teamInfo.provider, .cursor)
+        
+        // Other data should still be fetched successfully
+        XCTAssertEqual(result.userInfo.email, "test@example.com")
+        XCTAssertEqual(result.invoice.totalSpendingCents, 1000)
+        XCTAssertEqual(result.usage.currentRequests, 100)
     }
 
     func testProcessProviderData_InvoiceFails_ThrowsError() async {
