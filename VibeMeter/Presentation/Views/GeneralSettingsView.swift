@@ -205,6 +205,6 @@ struct GeneralSettingsView: View {
 // MARK: - Preview
 
 #Preview("General Settings") {
-    GeneralSettingsView(settingsManager: MockSettingsManager() as! SettingsManager)
+    GeneralSettingsView(settingsManager: SettingsManager.shared)
         .frame(width: 620, height: 550)
 }
