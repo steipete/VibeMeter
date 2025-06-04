@@ -8,6 +8,11 @@ import SwiftUI
 /// GitHub repository and support channels.
 struct AboutView: View {
     let orchestrator: MultiProviderDataOrchestrator?
+    var appName: String {
+        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
+            Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "VibeMeter"
+    }
+
     var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
@@ -30,7 +35,7 @@ struct AboutView: View {
                 .standardPadding()
             }
             .scrollContentBackground(.hidden)
-            .navigationTitle("About VibeMeter")
+            .navigationTitle("About \(appName)")
         }
     }
 
@@ -38,7 +43,7 @@ struct AboutView: View {
         VStack(spacing: 16) {
             InteractiveAppIcon()
 
-            Text("VibeMeter")
+            Text(appName)
                 .font(.largeTitle)
                 .fontWeight(.medium)
 
@@ -128,6 +133,24 @@ struct InteractiveAppIcon: View {
                     y: shadowOffset)
                 .animation(.easeInOut(duration: 0.2), value: isHovering)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
+
+            // Hover arrow indicator
+            if isHovering {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(8)
+                            .background(.black.opacity(0.6), in: Circle())
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .frame(width: 128, height: 128)
+                .allowsHitTesting(false)
+            }
 
             // Invisible button overlay for click handling
             Button(action: openWebsite) {
