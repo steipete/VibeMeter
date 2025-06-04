@@ -7,12 +7,12 @@
         <language>en</language>
         
         <item>
-            <title>VibeMeter 1.0-beta.2</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.2/VibeMeter-1.0-beta.2.dmg</link>
-            <sparkle:version>101</sparkle:version>
-            <sparkle:shortVersionString>1.0-beta.2</sparkle:shortVersionString>
+            <title>VibeMeter 1.0-beta.1</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.1/VibeMeter-1.0-beta.1.dmg</link>
+            <sparkle:version>100</sparkle:version>
+            <sparkle:shortVersionString>1.0-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0-beta.2</h2>
+                <h2>VibeMeter 1.0-beta.1</h2>
                 <p><strong>Pre-release version</strong> with new features and improvements.</p>
                 <ul>
                     <li>Latest experimental features</li>
@@ -21,12 +21,12 @@
                 </ul>
                 <p><strong>Note:</strong> This is a pre-release version and may contain bugs.</p>
             ]]></description>
-            <pubDate>Wed, 04 Jun 2025 14:45:36 +0100</pubDate>
+            <pubDate>Wed, 04 Jun 2025 14:53:56 +0100</pubDate>
             <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.2/VibeMeter-1.0-beta.2.dmg"
-                length="5591848"
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.1/VibeMeter-1.0-beta.1.dmg"
+                length="5591434"
                 type="application/octet-stream"
-                sparkle:edSignature="S2hUmmDv657an1goS1L8x79QsbB3ZaWQ/VqZU6CtErdQEtDcck3dXbieUKAM9VVE3ZxohWWxMU7/88CqliJGBA=="
+                sparkle:edSignature="6mEIF/ao7T2Okla96TkOIq1qitJcPDlaM+3LxpzcWzJg+vIbY0jBoxZcxtzd+JNGArOlwrpKzuiypuZMDzOWCg=="
             />
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>
