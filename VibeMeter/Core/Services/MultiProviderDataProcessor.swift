@@ -35,7 +35,7 @@ final class MultiProviderDataProcessor {
         result: ProviderDataResult,
         userSessionData: MultiProviderUserSessionData,
         spendingData: MultiProviderSpendingData,
-        lastRefreshDates: inout [ServiceProvider: Date]) async {
+        lastRefreshDates: [ServiceProvider: Date]) async -> [ServiceProvider: Date] {
         let userInfo = result.userInfo
         let teamInfo = result.teamInfo
         let invoice = result.invoice
@@ -53,13 +53,14 @@ final class MultiProviderDataProcessor {
             teamInfo: teamInfo,
             usage: usage,
             context: &context)
-        lastRefreshDates = context.lastRefreshDates
 
         await updateCurrencyAndSpending(for: provider, invoice: invoice, spendingData: spendingData)
         updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
         logSuccessAndSpending(for: provider, spendingData: spendingData)
 
         spendingData.updateConnectionStatus(for: provider, status: .connected)
+        
+        return context.lastRefreshDates
     }
 
     // MARK: - Private Methods

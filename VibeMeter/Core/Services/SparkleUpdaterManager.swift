@@ -178,8 +178,8 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         if let error = error as NSError? {
             Self.staticLogger
                 .error(
-                    "Update cycle finished with error - Domain: \(error.domain), " +
-                    "Code: \(error.code), Description: \(error.localizedDescription)")
+                    "Update cycle finished with error - Domain: \(error.domain, privacy: .public), " +
+                    "Code: \(error.code, privacy: .public), Description: \(error.localizedDescription, privacy: .public)")
 
             // Check if it's a "no update found" error - this is normal and shouldn't be logged as an error
             if error.domain == "SUSparkleErrorDomain", error.code == 1001 {

@@ -30,6 +30,7 @@ final class StatusBarAccessibilityProvider {
     // MARK: - Public Methods
 
     /// Creates accessibility description for the status bar item.
+    @MainActor
     func createAccessibilityDescription() -> String {
         guard userSession.isLoggedInToAnyProvider else {
             return "Not logged in to any AI service provider. Click to open VibeMeter and log in."
@@ -48,6 +49,7 @@ final class StatusBarAccessibilityProvider {
 
     // MARK: - Private Methods
 
+    @MainActor
     private func createSpendingAccessibilityInfo() -> String {
         let totalSpendingUSD = spendingData.totalSpendingConverted(
             to: "USD",
@@ -86,6 +88,7 @@ final class StatusBarAccessibilityProvider {
         }
     }
 
+    @MainActor
     private func createRefreshAccessibilityInfo(for providers: [ServiceProvider]) -> String {
         let mostRecentRefresh = providers
             .compactMap { provider in
