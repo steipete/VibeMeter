@@ -220,6 +220,25 @@ Update the appcast.xml file with:
 - File size
 - HTML description from changelog
 
+**CRITICAL: Build Number Management**
+
+The `sparkle:version` field in the appcast MUST match the actual `CFBundleVersion` in the built app's Info.plist. Sparkle uses this number (not the marketing version) to determine if an update is available.
+
+**Common Issues:**
+1. **Build number mismatch**: If the appcast has a lower build number than what's installed, users will see "You're up to date!" even when a newer version exists.
+2. **Same build number**: If multiple releases have the same build number, Sparkle won't see them as updates.
+
+**Best Practice:**
+- Always increment `CURRENT_PROJECT_VERSION` in Project.swift before each release
+- Verify the build number matches between:
+  - Project.swift: `"CURRENT_PROJECT_VERSION": "201"`
+  - Built app: `defaults read /path/to/VibeMeter.app/Contents/Info.plist CFBundleVersion`
+  - Appcast: `<sparkle:version>201</sparkle:version>`
+
+#### Automatic Appcast Generation Note
+
+The `generate-appcast.sh` script tries to automatically assign build numbers based on version strings (e.g., beta.1 = 100, beta.2 = 101). However, this often doesn't match the actual build numbers in your compiled apps. **Always manually verify and update the sparkle:version fields after running the script.**
+
 ### Step 7: Create GitHub Release
 ```bash
 # Commit appcast
