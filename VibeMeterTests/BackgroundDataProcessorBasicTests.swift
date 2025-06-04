@@ -227,7 +227,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             provider.invoiceToReturn = mockProvider.invoiceToReturn
             provider.usageToReturn = mockProvider.usageToReturn
 
-            Task {
+            Task { @Sendable in
                 _ = try? await processor.processProviderData(
                     provider: .cursor,
                     authToken: "test-token",

@@ -222,11 +222,13 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         mockProvider.userInfoDelay = 1.0 // Long delay to allow cancellation
 
         // When
-        let task = Task {
-            try await processor.processProviderData(
+        let capturedProcessor = processor!
+        let capturedMockProvider = mockProvider!
+        let task = Task { @Sendable in
+            try await capturedProcessor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                providerClient: mockProvider)
+                providerClient: capturedMockProvider)
         }
 
         // Cancel after a short delay
