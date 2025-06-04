@@ -63,6 +63,7 @@
 		677236562BEB2C9174D24C4F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265BF8EE556670B47F8CD3D4 /* NotificationManager.swift */; };
 		67D0727858906F600DC13CB8 /* StatusBarDisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AFA5C683EC4CDE8C6A82BA /* StatusBarDisplayManager.swift */; };
 		69B9BF817033BB94E94B8E05 /* NSApplication+openSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37BF61BE7808EBCADC56C50 /* NSApplication+openSettings.swift */; };
+		71589296E2487C9158460184 /* CustomMenuWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB697A4C32F96C56898AAB /* CustomMenuWindow.swift */; };
 		757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */; };
 		78AF8A25EEA2CAF9CED813F6 /* MultiProviderLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04FE87449368272166427A /* MultiProviderLoginManager.swift */; };
 		796CF976003592E4B2038A11 /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0FC6641992F66EDA6F3D2C /* MockServices.swift */; };
@@ -204,6 +205,7 @@
 		1D976BE50C633CE293D244FB /* TuistBundle+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistBundle+VibeMeter.swift"; sourceTree = "<group>"; };
 		1F474488714BE9E47D88675F /* ProviderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderStateManager.swift; sourceTree = "<group>"; };
 		1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdaterManagerTests.swift; sourceTree = "<group>"; };
+		1FCB697A4C32F96C56898AAB /* CustomMenuWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomMenuWindow.swift; sourceTree = "<group>"; };
 		21FBF5EB11048D0250897223 /* ProviderHealthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderHealthModels.swift; sourceTree = "<group>"; };
 		22A5858BB0B7778AF58EC08C /* URL+QueryItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+QueryItems.swift"; sourceTree = "<group>"; };
 		22BAD71CDBE33AEB1BB0D028 /* URL+QueryItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+QueryItemsTests.swift"; sourceTree = "<group>"; };
@@ -515,6 +517,7 @@
 				F0662AEC9A00132BD74EDFC4 /* ActionButtonsView.swift */,
 				E264800440E6344663CD5ABC /* ButtonStyles.swift */,
 				F82940A9689EB56962329BAA /* CostTableView.swift */,
+				1FCB697A4C32F96C56898AAB /* CustomMenuWindow.swift */,
 				161E99B569965C545579BA10 /* GaugeIcon.swift */,
 				C6B5D9C53CC36213616E28BF /* MenuBarState.swift */,
 				4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */,
@@ -894,6 +897,7 @@
 				8A9DE903DAE2CD34C639E565 /* ActionButtonsView.swift in Sources */,
 				ECA2A3760B1A4D1D39E3580D /* ButtonStyles.swift in Sources */,
 				4DD39BD6620B281E8E19CA25 /* CostTableView.swift in Sources */,
+				71589296E2487C9158460184 /* CustomMenuWindow.swift in Sources */,
 				EDDFDA14BBD2E04F13A3ED35 /* GaugeIcon.swift in Sources */,
 				BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */,
 				3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */,
