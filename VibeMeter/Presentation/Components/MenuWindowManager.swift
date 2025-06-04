@@ -10,6 +10,14 @@ final class MenuWindowManager {
     // MARK: - Private Properties
 
     private var customMenuWindow: CustomMenuWindow?
+    
+    // Strong references to prevent deallocation in Release builds
+    private var settingsManager: (any SettingsManagerProtocol)?
+    private var userSession: MultiProviderUserSessionData?
+    private var loginManager: MultiProviderLoginManager?
+    private var spendingData: MultiProviderSpendingData?
+    private var currencyData: CurrencyData?
+    private var orchestrator: MultiProviderDataOrchestrator?
 
     // MARK: - Initialization
 
@@ -27,13 +35,23 @@ final class MenuWindowManager {
         spendingData: MultiProviderSpendingData,
         currencyData: CurrencyData,
         orchestrator: MultiProviderDataOrchestrator?) {
+        
+        // Store strong references to prevent deallocation in Release builds
+        self.settingsManager = settingsManager
+        self.userSession = userSession
+        self.loginManager = loginManager
+        self.spendingData = spendingData
+        self.currencyData = currencyData
+        self.orchestrator = orchestrator
+        
         let contentView = CustomMenuContainer {
             VibeMeterMainView(
                 settingsManager: settingsManager,
                 userSessionData: userSession,
                 loginManager: loginManager,
-                onRefresh: { [weak orchestrator] in
-                    await orchestrator?.refreshAllProviders(showSyncedMessage: true)
+                onRefresh: { [weak self] in
+                    // Use self instead of weak orchestrator to maintain the reference chain
+                    await self?.orchestrator?.refreshAllProviders(showSyncedMessage: true)
                 })
                 .environment(spendingData)
                 .environment(currencyData)
