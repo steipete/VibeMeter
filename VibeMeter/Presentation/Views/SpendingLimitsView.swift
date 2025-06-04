@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Settings view for configuring spending notification thresholds.
 ///
-/// This view allows users to review their warning and upper spending limits
+/// This view allows users to edit their warning and upper spending limits
 /// with currency conversion display. It shows both USD amounts (stored values)
 /// and converted amounts in the user's selected currency for better understanding.
 struct SpendingLimitsView: View {
@@ -11,6 +11,10 @@ struct SpendingLimitsView: View {
 
     @Environment(CurrencyData.self)
     private var currencyData
+    
+    @State private var warningLimitText: String = ""
+    @State private var upperLimitText: String = ""
+    @State private var showingResetAlert = false
 
     init(settingsManager: any SettingsManagerProtocol, userSessionData: MultiProviderUserSessionData) {
         self.settingsManager = settingsManager
@@ -45,11 +49,41 @@ struct SpendingLimitsView: View {
 
     private func limitContent(amountUSD: Double, convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Determine which text binding to use
+            let textBinding: Binding<String> = {
+                if description.contains("critical") {
+                    return $upperLimitText
+                } else {
+                    return $warningLimitText
+                }
+            }()
+            
             LabeledContent("Amount") {
                 HStack(spacing: 8) {
-                    Text("$\(amountUSD.formatted(.number.precision(.fractionLength(0))))")
+                    Text("$")
                         .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.secondary)
+                    TextField("0", text: textBinding)
+                        .textFieldStyle(.plain)
+                        .font(.system(.body, design: .monospaced))
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                        .onChange(of: textBinding.wrappedValue) { _, newValue in
+                            // Allow only numbers and decimal point
+                            let filtered = newValue.filter { $0.isNumber || $0 == "." }
+                            if filtered != newValue {
+                                textBinding.wrappedValue = filtered
+                            }
+                            
+                            // Update the actual limit value
+                            if let value = Double(filtered) {
+                                if description.contains("critical") {
+                                    settingsManager.upperLimitUSD = value
+                                } else {
+                                    settingsManager.warningLimitUSD = value
+                                }
+                            }
+                        }
                     Text("USD")
                         .foregroundStyle(.secondary)
                 }
@@ -96,11 +130,33 @@ struct SpendingLimitsView: View {
                 Form {
                     warningLimitSection
                     upperLimitSection
+                    
+                    Section {
+                        Button("Reset to Defaults", action: {
+                            showingResetAlert = true
+                        })
+                        .foregroundColor(.blue)
+                    }
                 }
                 .formStyle(.grouped)
                 .scrollContentBackground(.hidden)
             }
             .navigationTitle("Spending Limits")
+            .onAppear {
+                warningLimitText = String(format: "%.0f", settingsManager.warningLimitUSD)
+                upperLimitText = String(format: "%.0f", settingsManager.upperLimitUSD)
+            }
+            .alert("Reset Spending Limits", isPresented: $showingResetAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Reset", role: .destructive) {
+                    settingsManager.warningLimitUSD = 200.0
+                    settingsManager.upperLimitUSD = 1000.0
+                    warningLimitText = "200"
+                    upperLimitText = "1000"
+                }
+            } message: {
+                Text("Reset spending limits to default values?\n\nWarning limit: $200\nUpper limit: $1000")
+            }
         }
     }
 
