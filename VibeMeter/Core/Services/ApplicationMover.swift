@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import os.log
+import Darwin.sys.mount
 
 /// Service responsible for detecting if the app is running from a DMG and offering to move it to Applications.
 ///
@@ -66,30 +67,89 @@ final class ApplicationMover {
     }
     
     /// Checks if the app is running from a DMG (mounted disk image)
+    /// Uses the proven approach from PFMoveApplication/LetsMove
     private func isRunningFromDMG(_ path: String) -> Bool {
-        // Check if path contains /Volumes/ which indicates a mounted disk image
-        if path.hasPrefix("/Volumes/") {
-            return true
+        guard let diskImageDevice = containingDiskImageDevice(for: path) else {
+            return false
         }
         
-        // Additional check: see if the parent volume is a disk image
-        // This catches cases where DMG is mounted at /Volumes/SomeName/
-        let url = URL(fileURLWithPath: path)
+        logger.debug("App is running from disk image device: \(diskImageDevice)")
+        return true
+    }
+    
+    /// Determines the disk image device containing the given path
+    /// Based on the proven PFMoveApplication implementation
+    private func containingDiskImageDevice(for path: String) -> String? {
+        var fs = statfs()
+        let result = statfs(path, &fs)
+        
+        // If statfs fails or this is the root filesystem, not a disk image
+        guard result == 0, (fs.f_flags & UInt32(MNT_ROOTFS)) == 0 else {
+            logger.debug("Path is on root filesystem or statfs failed")
+            return nil
+        }
+        
+        // Get the device name from the mount point
+        let deviceNameTuple = fs.f_mntfromname
+        let deviceName = withUnsafePointer(to: deviceNameTuple) {
+            $0.withMemoryRebound(to: CChar.self, capacity: MemoryLayout.size(ofValue: deviceNameTuple)) {
+                String(cString: $0)
+            }
+        }
+        
+        logger.debug("Device name: \(deviceName)")
+        
+        // Use hdiutil to check if this device is a disk image
+        return checkDeviceIsDiskImage(deviceName)
+    }
+    
+    /// Checks if the given device is a mounted disk image using hdiutil
+    private func checkDeviceIsDiskImage(_ deviceName: String) -> String? {
+        let task = Process()
+        task.launchPath = "/usr/bin/hdiutil"
+        task.arguments = ["info", "-plist"]
+        
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = Pipe() // Suppress stderr
         
         do {
-            let resourceValues = try url.resourceValues(forKeys: [.volumeNameKey])
-            if let volumeName = resourceValues.volumeName {
-                logger.debug("Volume name: \(volumeName)")
-                
-                // Most DMGs will have the app path starting with /Volumes/
-                // This is a reasonable heuristic for detecting disk images
-                return path.hasPrefix("/Volumes/")
+            try task.run()
+            task.waitUntilExit()
+            
+            guard task.terminationStatus == 0 else {
+                logger.warning("hdiutil command failed with status: \(task.terminationStatus)")
+                return nil
             }
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            
+            guard let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
+                  let images = plist["images"] as? [[String: Any]] else {
+                logger.warning("Failed to parse hdiutil output")
+                return nil
+            }
+            
+            // Check each mounted disk image
+            for image in images {
+                if let entities = image["system-entities"] as? [[String: Any]] {
+                    for entity in entities {
+                        if let entityDevName = entity["dev-entry"] as? String,
+                           entityDevName == deviceName {
+                            logger.debug("Found matching disk image for device: \(deviceName)")
+                            return deviceName
+                        }
+                    }
+                }
+            }
+            
+            logger.debug("Device \(deviceName) is not a disk image")
+            return nil
+            
         } catch {
-            logger.warning("Failed to get volume information: \(error)")
+            logger.error("Error running hdiutil: \(error)")
+            return nil
         }
-        
-        return false
     }
     
     /// Checks if app is running from Downloads, Desktop, or other temporary locations
