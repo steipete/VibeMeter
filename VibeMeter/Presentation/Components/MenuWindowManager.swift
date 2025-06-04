@@ -10,7 +10,6 @@ final class MenuWindowManager {
     // MARK: - Private Properties
 
     private var customMenuWindow: CustomMenuWindow?
-    private var isWindowVisible = false
 
     // MARK: - Initialization
 
@@ -42,23 +41,21 @@ final class MenuWindowManager {
         }
 
         customMenuWindow = CustomMenuWindow(contentView: contentView)
-        
-        // Set up callback to track when window is hidden
-        customMenuWindow?.onWindowHidden = { [weak self] in
-            self?.isWindowVisible = false
-        }
     }
 
     /// Toggles the popover visibility
     func togglePopover(relativeTo button: NSStatusBarButton) {
         guard let window = customMenuWindow else { return }
 
-        if isWindowVisible {
+        // Check multiple criteria to ensure the window is actually showing
+        let isActuallyVisible = window.isVisible && 
+                               window.alphaValue > 0 && 
+                               !window.isMiniaturized
+        
+        if isActuallyVisible {
             window.hide()
-            isWindowVisible = false
         } else {
             window.show(relativeTo: button)
-            isWindowVisible = true
         }
     }
 
@@ -66,23 +63,24 @@ final class MenuWindowManager {
     func showPopover(relativeTo button: NSStatusBarButton) {
         guard let window = customMenuWindow else { return }
 
-        if !isWindowVisible {
+        if !window.isVisible {
             window.show(relativeTo: button)
-            isWindowVisible = true
         }
     }
 
     /// Hides the popover menu if it's currently visible
     func hidePopover() {
-        if isWindowVisible {
-            customMenuWindow?.hide()
-            isWindowVisible = false
+        guard let window = customMenuWindow else { return }
+        
+        if window.isVisible {
+            window.hide()
         }
     }
 
     /// Returns whether the popover is currently visible
     var isPopoverVisible: Bool {
-        isWindowVisible
+        guard let window = customMenuWindow else { return false }
+        return window.isVisible && window.alphaValue > 0 && !window.isMiniaturized
     }
 
     /// Gets the current menu window for external access if needed
