@@ -66,10 +66,44 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 # Create DMG
 ./scripts/create-dmg.sh
 
+# Generate EdDSA signature for Sparkle updates
+export PATH="$HOME/.local/bin:$PATH"
+sign_update build/VibeMeter-X.X.X.dmg
+
 # Individual scripts (if needed)
 ./scripts/codesign-app.sh build/Build/Products/Release/VibeMeter.app
 ./scripts/notarize-app.sh build/Build/Products/Release/VibeMeter.app
 ```
+
+### Sparkle EdDSA Signing
+
+VibeMeter uses Sparkle for automatic updates with cryptographic verification:
+
+```bash
+# Install Sparkle tools (first time setup)
+curl -L "https://github.com/sparkle-project/Sparkle/releases/download/2.7.0/Sparkle-2.7.0.tar.xz" -o Sparkle-2.7.0.tar.xz
+tar -xf Sparkle-2.7.0.tar.xz
+mkdir -p ~/.local/bin
+cp bin/sign_update ~/.local/bin/
+cp bin/generate_appcast ~/.local/bin/
+cp bin/generate_keys ~/.local/bin/
+export PATH="$HOME/.local/bin:$PATH"
+
+# Generate EdDSA keys (first time only)
+generate_keys
+
+# Generate signature for releases
+sign_update VibeMeter-1.0.dmg
+# Output: sparkle:edSignature="..." length="..."
+
+# Generate appcast XML
+generate_appcast /path/to/releases/
+```
+
+**Key Details:**
+- Private key stored in macOS Keychain (account: "ed25519")
+- Public key: `oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=` (in Info.plist)
+- EdDSA signatures provide cryptographic verification of updates
 
 ### Code Signing & Notarization Setup
 

@@ -31,7 +31,7 @@ echo "🔐 Signing and notarizing..."
 # Create DMG
 echo "📀 Creating DMG..."
 DMG_PATH="$PROJECT_ROOT/build/VibeMeter-$VERSION.dmg"
-./scripts/create-dmg.sh "$APP_PATH" "$DMG_PATH"
+./scripts/create-dmg.sh "$APP_PATH"
 
 # Generate release notes
 RELEASE_NOTES="Release notes for VibeMeter v$VERSION
@@ -57,7 +57,7 @@ gh release create "v$VERSION" "$DMG_PATH" \
 
 # Update appcast.xml
 echo "📡 Updating appcast.xml..."
-./scripts/generate-appcast.sh
+./scripts/update-appcast.sh "$VERSION" "$BUILD_NUMBER" "$DMG_PATH"
 
 echo "✅ GitHub release created successfully!"
 echo "📡 Don't forget to commit and push the updated appcast.xml"

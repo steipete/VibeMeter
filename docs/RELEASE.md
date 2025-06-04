@@ -10,6 +10,7 @@ This document describes the process for creating and publishing a new release of
 - **Tuist** - Install with `curl -Ls https://install.tuist.io | bash`
 - **Apple Developer Certificate** - "Developer ID Application" certificate in Keychain
 - **App Store Connect API Key** - For notarization
+- **Sparkle Tools** - sign_update, generate_appcast, generate_keys (installed automatically)
 
 ### Environment Variables
 Ensure these are set for notarization:
@@ -19,10 +20,11 @@ export APP_STORE_CONNECT_ISSUER_ID="YOUR_ISSUER_ID"
 export APP_STORE_CONNECT_API_KEY_P8="-----BEGIN PRIVATE KEY-----..."
 ```
 
-### Sparkle Keys
-- **Private Key**: Stored in `private/sparkle_private_key` (gitignored)
-- **Public Key**: `MCowBQYDK2VwAyEArLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=` (in Project.swift)
-- **Backup Location**: `/Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/`
+### Sparkle EdDSA Keys
+- **Private Key**: Stored securely in macOS Keychain
+- **Public Key**: `oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=` (in Info.plist)
+- **Tools Location**: `~/.local/bin/` (sign_update, generate_appcast, generate_keys)
+- **Backup Location**: Private key exported to secure location
 
 ## Release Types
 
@@ -200,16 +202,14 @@ APP_PATH="build/Build/Products/Release/VibeMeter.app"
 # Output: build/VibeMeter-X.X.X.dmg
 ```
 
-### Step 5: Sign with Sparkle
+### Step 5: Generate EdDSA Signature
 ```bash
-# Get EdDSA signature using private key
-openssl pkeyutl -sign -in build/VibeMeter-X.X.X.dmg \
-    -inkey private/sparkle_private_key \
-    -out /tmp/sig.bin
+# Generate EdDSA signature using Sparkle tools
+export PATH="$HOME/.local/bin:$PATH"
+sign_update build/VibeMeter-X.X.X.dmg
 
-SPARKLE_SIG=$(base64 < /tmp/sig.bin)
-echo "sparkle:edSignature=\"$SPARKLE_SIG\""
-rm /tmp/sig.bin
+# Output includes both signature and file size:
+# sparkle:edSignature="7kvxbN+PyzPQjL7JbIIwjlxyRsG2//P6drllJG+soJJgkngvweLu8luyG2NxSKI/0jwRoLGXNzgxojgPLduXBA==" length="3510654"
 ```
 
 ### Step 6: Update appcast.xml
@@ -355,21 +355,43 @@ private func scheduleStartupUpdateCheck() {
 ## EdDSA Key Management
 
 ### Key Storage and Backup
-- **Primary**: `private/sparkle_private_key` (gitignored)
-- **Public Key**: In Project.swift as `SUPublicEDKey`
-- **Backup Location**: `/Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/`
+- **Primary**: macOS Keychain (account: "ed25519")
+- **Public Key**: In Info.plist as `SUPublicEDKey`
+- **Backup**: Export private key to secure location
+
+### Sparkle Tools Setup
+```bash
+# Install Sparkle tools (first time only)
+curl -L "https://github.com/sparkle-project/Sparkle/releases/download/2.7.0/Sparkle-2.7.0.tar.xz" -o Sparkle-2.7.0.tar.xz
+tar -xf Sparkle-2.7.0.tar.xz
+mkdir -p ~/.local/bin
+cp bin/sign_update ~/.local/bin/
+cp bin/generate_appcast ~/.local/bin/
+cp bin/generate_keys ~/.local/bin/
+export PATH="$HOME/.local/bin:$PATH"
+```
 
 ### Key Generation (if needed)
 ```bash
-# Generate new EdDSA keys
-openssl genpkey -algorithm Ed25519 -out sparkle_private_key
-openssl pkey -in sparkle_private_key -pubout -outform DER | base64 > sparkle_public_key
+# Generate new EdDSA keys using Sparkle tools
+export PATH="$HOME/.local/bin:$PATH"
+generate_keys
+
+# Output shows public key for Info.plist:
+# <key>SUPublicEDKey</key>
+# <string>oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=</string>
 ```
 
-### Restoring Keys
-If keys are lost, restore from backup:
+### Backup and Restore Keys
 ```bash
-cp /Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/sparkle_* private/
+# Export private key from Keychain
+generate_keys -x sparkle_private_key_backup
+
+# Import private key to Keychain
+generate_keys -f sparkle_private_key_backup
+
+# Verify public key
+generate_keys -p
 ```
 
 ## Complete Release Checklist
@@ -386,7 +408,7 @@ cp /Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/s
 - [ ] Build release: `./scripts/build.sh --configuration Release`
 - [ ] Sign and notarize: `./scripts/sign-and-notarize.sh --sign-and-notarize`
 - [ ] Create DMG: `./scripts/create-dmg.sh`
-- [ ] Sign DMG with EdDSA
+- [ ] Generate EdDSA signature: `sign_update build/VibeMeter-X.X.X.dmg`
 
 ### Release
 - [ ] Update appcast.xml with signature and file size
@@ -440,14 +462,17 @@ Important files to backup:
 ### Backup Verification
 Regularly verify backup integrity:
 ```bash
-# Check private key exists
-ls -la private/sparkle_private_key
+# Check Sparkle tools are installed
+which sign_update generate_appcast generate_keys
 
-# Check Dropbox backup
-ls -la "/Users/steipete/Library/CloudStorage/Dropbox/certificates/May2025/VibeMeter/"
+# Check private key exists in Keychain
+generate_keys -p
 
-# Verify public key matches
-grep "SUPublicEDKey" Project.swift
+# Verify public key in Info.plist matches Keychain
+grep "SUPublicEDKey" VibeMeter/Info.plist
+
+# Check certificates
+security find-identity -v -p codesigning
 ```
 
 ## Deep Notarization Details

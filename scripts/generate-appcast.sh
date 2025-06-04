@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+# Add Sparkle tools to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # Configuration
 GITHUB_REPO="steipete/VibeMeter"
 SPARKLE_PRIVATE_KEY_PATH="private/sparkle_private_key"
