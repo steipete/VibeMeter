@@ -92,12 +92,25 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     public nonisolated func getAuthenticationURL() -> URL {
-        URL(string: "https://authenticator.cursor.sh")!
+        URL(string: "https://authenticator.cursor.sh/")!
     }
 
     public nonisolated func extractAuthToken(from callbackData: [String: Any]) -> String? {
         // Extract cursor_auth_token from callback data
-        callbackData["cursor_auth_token"] as? String
+        if let token = callbackData["cursor_auth_token"] as? String {
+            return token
+        }
+        
+        // Extract from cookies if available
+        if let cookies = callbackData["cookies"] as? [HTTPCookie] {
+            for cookie in cookies {
+                if cookie.name == "WorkosCursorSessionToken" {
+                    return cookie.value
+                }
+            }
+        }
+        
+        return nil
     }
 
     // MARK: - Private Methods

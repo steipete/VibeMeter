@@ -60,7 +60,7 @@ actor CursorAPIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body = [
-            "team_id": teamId,
+            "teamId": teamId,
             "month": month,
             "year": year,
         ]
@@ -103,7 +103,13 @@ actor CursorAPIClient {
     private func performRequest<T: Decodable & Sendable>(_ request: URLRequest) async throws -> T {
         logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
 
-        let (data, response) = try await urlSession.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await urlSession.data(for: request)
+        } catch {
+            // Convert URLSession errors to ProviderError
+            throw ProviderError.networkError(message: error.localizedDescription, statusCode: nil)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ProviderError.networkError(message: "Invalid response type", statusCode: nil)
@@ -152,14 +158,11 @@ actor CursorAPIClient {
 
         case 429:
             logger.warning("Cursor rate limit exceeded")
-            // Extract retry-after header if available
-            let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After")
-                .flatMap { TimeInterval($0) }
-            throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: retryAfter)
+            throw ProviderError.rateLimitExceeded
 
         case 503:
             logger.warning("Cursor service unavailable")
-            throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
+            throw ProviderError.serviceUnavailable
 
         default:
             let message = String(data: data, encoding: .utf8) ?? "Unknown error"

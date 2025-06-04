@@ -98,7 +98,7 @@ class MenuBarStateManager {
             // Continue from current position
             transitionTargetValue = animatedGaugeValue
         case let .data(value):
-            transitionTargetValue = value
+            transitionTargetValue = min(max(value, 0.0), 1.0)
         }
 
         currentState = newState
@@ -159,18 +159,19 @@ class MenuBarStateManager {
             }
 
         case let .data(targetValue):
+            let clampedTargetValue = min(max(targetValue, 0.0), 1.0)
             if isTransitioning {
                 let elapsed = currentTime - animationStartTime
                 if elapsed >= transitionDuration {
                     isTransitioning = false
-                    animatedGaugeValue = targetValue
+                    animatedGaugeValue = clampedTargetValue
                 } else {
                     let progress = elapsed / transitionDuration
-                    animatedGaugeValue = transitionStartValue + (targetValue - transitionStartValue) *
+                    animatedGaugeValue = transitionStartValue + (clampedTargetValue - transitionStartValue) *
                         easeInOut(progress)
                 }
             } else {
-                animatedGaugeValue = targetValue
+                animatedGaugeValue = clampedTargetValue
             }
         }
 

@@ -104,8 +104,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
-        // process early.
-        if !isRunningInPreview, !isRunningInTests {
+        // process early. Skip this entirely when running tests.
+        if !isRunningInPreview && !isRunningInTests {
             let runningApps = NSRunningApplication
                 .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             if runningApps.count > 1 {
@@ -113,14 +113,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.terminate(nil)
                 return
             }
+            
+            // Register to listen for the settings-window request from any subsequent launches.
+            DistributedNotificationCenter.default().addObserver(
+                self,
+                selector: #selector(handleShowSettingsNotification),
+                name: Self.showSettingsNotification,
+                object: nil)
         }
-
-        // Register to listen for the settings-window request from any subsequent launches.
-        DistributedNotificationCenter.default().addObserver(
-            self,
-            selector: #selector(handleShowSettingsNotification),
-            name: Self.showSettingsNotification,
-            object: nil)
 
         logger.info("VibeMeter launching...")
 
@@ -135,9 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 "Activation policy set to: \(self.settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)")")
 
         // Initialize auto-updater
-        #if !DEBUG
-            sparkleUpdaterManager = SparkleUpdaterManager()
-        #endif
+        sparkleUpdaterManager = SparkleUpdaterManager()
 
         // Ensure login states are properly synchronized with keychain
         loginManager.refreshLoginStatesFromKeychain()
@@ -191,10 +189,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Cleanup
         multiProviderOrchestrator = nil
 
-        logger.info("VibeMeter terminated")
+        // Remove distributed-notification observer (only if we registered it)
+        let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+            NSClassFromString("XCTestCase") != nil
+        let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        
+        if !isRunningInPreview && !isRunningInTests {
+            DistributedNotificationCenter.default().removeObserver(self, name: Self.showSettingsNotification, object: nil)
+        }
 
-        // Remove distributed-notification observer
-        DistributedNotificationCenter.default().removeObserver(self, name: Self.showSettingsNotification, object: nil)
+        logger.info("VibeMeter terminated")
     }
 
     func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {

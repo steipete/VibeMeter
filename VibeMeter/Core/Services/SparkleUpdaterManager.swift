@@ -30,18 +30,16 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             return
         }
 
-        // Skip Sparkle in debug builds - auto-updates don't make sense during development
-        #if DEBUG
-            Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - Sparkle disabled")
-            return
-        #else
-            // Initialize the updater controller
-            initializeUpdaterController()
-            Self.staticLogger
-                .info("SparkleUpdaterManager initialized. Updater controller initialization completed.")
+        // Initialize the updater controller
+        initializeUpdaterController()
+        Self.staticLogger
+            .info("SparkleUpdaterManager initialized. Updater controller initialization completed.")
 
-            // Schedule startup update check
+        // Only schedule startup update check in release builds
+        #if !DEBUG
             scheduleStartupUpdateCheck()
+        #else
+            Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - automatic update checks disabled")
         #endif
     }
 
@@ -51,14 +49,27 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     public private(set) var updaterController: SPUStandardUpdaterController!
 
     private func initializeUpdaterController() {
-        let controller = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: self,
-            userDriverDelegate: self)
+        // In debug mode, we create the controller but don't start the updater
+        #if DEBUG
+            let controller = SPUStandardUpdaterController(
+                startingUpdater: false,
+                updaterDelegate: self,
+                userDriverDelegate: self)
+        #else
+            let controller = SPUStandardUpdaterController(
+                startingUpdater: true,
+                updaterDelegate: self,
+                userDriverDelegate: self)
+        #endif
 
-        // Enable automatic update checks
-        controller.updater.automaticallyChecksForUpdates = true
-        Self.staticLogger.info("Automatic update checks enabled")
+        // Enable automatic update checks only in release builds
+        #if DEBUG
+            controller.updater.automaticallyChecksForUpdates = false
+            Self.staticLogger.info("Automatic update checks disabled in DEBUG mode")
+        #else
+            controller.updater.automaticallyChecksForUpdates = true
+            Self.staticLogger.info("Automatic update checks enabled")
+        #endif
 
         Self.staticLogger
             .info("SparkleUpdaterManager: SPUStandardUpdaterController initialized with self as delegates.")

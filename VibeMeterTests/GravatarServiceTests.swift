@@ -375,7 +375,9 @@ final class GravatarServiceTests: XCTestCase {
 
     func testGravatarService_IsObservable() {
         // Then
-        XCTAssertTrue(type(of: sut) is any Observable.Type, "GravatarService should be Observable")
+        // GravatarService should be marked with @Observable macro
+        // We can verify this by checking if it conforms to Observable protocol
+        XCTAssertTrue(sut is any Observable, "GravatarService should be Observable")
     }
 
     func testCurrentAvatarURL_IsReadable() {
