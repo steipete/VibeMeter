@@ -68,7 +68,7 @@ struct CursorUsageResponse: Decodable, Sendable {
         case gpt35Turbo = "gpt-3.5-turbo"
         case gpt4 = "gpt-4"
         case gpt432K = "gpt-4-32k"
-        case startOfMonth // Changed from "start_of_month" to "startOfMonth"
+        case startOfMonth = "start_of_month"
     }
 }
 
@@ -79,4 +79,12 @@ struct ModelUsage: Decodable, Sendable {
     let maxTokenUsage: Int?
     let numTokens: Int
     let maxRequestUsage: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case numRequests = "num_requests"
+        case numRequestsTotal = "num_requests_total"
+        case maxTokenUsage = "max_token_usage"
+        case numTokens = "num_tokens"
+        case maxRequestUsage = "max_request_usage"
+    }
 }
