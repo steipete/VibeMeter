@@ -251,16 +251,10 @@ final class ApplicationMover {
         alert.alertStyle = .informational
         alert.icon = NSApp.applicationIconImage
 
-        // Make sure the alert appears in front
-        if let window = NSApp.windows.first {
-            alert.beginSheetModal(for: window) { [weak self] response in
-                self?.handleMoveResponse(response)
-            }
-        } else {
-            // No window available, show as modal dialog
-            let response = alert.runModal()
-            handleMoveResponse(response)
-        }
+        // For menu bar apps, always show as modal dialog since there's typically no main window
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        handleMoveResponse(response)
     }
 
     /// Handles the user's response to the move offer
