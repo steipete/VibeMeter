@@ -24,15 +24,6 @@ RELEASE_DATE=$(date -R)
 GITHUB_USERNAME="${GITHUB_USERNAME:-steipete}"
 DOWNLOAD_URL="https://github.com/$GITHUB_USERNAME/VibeMeter/releases/download/v$VERSION/$DMG_FILENAME"
 
-# Generate HTML description from changelog
-echo "📝 Generating HTML description from changelog..."
-DESCRIPTION_HTML=$("$SCRIPT_DIR/changelog-to-html.sh" "$VERSION" 2>/dev/null | tail -n +2)
-
-# Fallback if no changelog entry found
-if [ -z "$DESCRIPTION_HTML" ]; then
-    DESCRIPTION_HTML="<h2>VibeMeter $VERSION</h2><p>Bug fixes and improvements.</p>"
-fi
-
 # Create or update appcast.xml
 cat > "$PROJECT_ROOT/appcast.xml" << APPCAST_EOF
 <?xml version="1.0" encoding="utf-8"?>
@@ -49,7 +40,13 @@ cat > "$PROJECT_ROOT/appcast.xml" << APPCAST_EOF
             <sparkle:version>$BUILD_NUMBER</sparkle:version>
             <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
             <description><![CDATA[
-                $DESCRIPTION_HTML
+                <h2>VibeMeter $VERSION</h2>
+                <p>Latest version of VibeMeter with new features and improvements.</p>
+                <ul>
+                    <li>Enhanced spending tracking</li>
+                    <li>Improved UI and performance</li>
+                    <li>Bug fixes and stability improvements</li>
+                </ul>
             ]]></description>
             <pubDate>$RELEASE_DATE</pubDate>
             <enclosure 
@@ -71,23 +68,29 @@ PRIVATE_KEY_PATH="$PROJECT_ROOT/private/sparkle_private_key"
 if [ -f "$PRIVATE_KEY_PATH" ]; then
     echo "🔐 Signing DMG with Sparkle EdDSA key..."
     
-    # Create signature
-    TEMP_SIG="/tmp/vibe_sig_$$.bin"
-    openssl pkeyutl -sign -inkey "$PRIVATE_KEY_PATH" -in "$DMG_PATH" -out "$TEMP_SIG" 2>/dev/null
-    
-    if [ -f "$TEMP_SIG" ]; then
-        # Convert to base64
-        SPARKLE_SIG=$(base64 < "$TEMP_SIG")
-        rm "$TEMP_SIG"
+    # Create signature using sign_update tool
+    SPARKLE_BIN="$PROJECT_ROOT/build/SourcePackages/artifacts/sparkle/Sparkle/bin"
+    if [ -d "$SPARKLE_BIN" ] && [ -f "$SPARKLE_BIN/sign_update" ]; then
+        # Extract raw private key from PEM format
+        openssl pkey -in "$PRIVATE_KEY_PATH" -outform DER | tail -c 32 | base64 > /tmp/vibemeter_private_raw.key
         
-        # Update the appcast with the actual signature
-        sed -i '' "s/sparkle:edSignature=\"SIGNATURE_PLACEHOLDER\"/sparkle:edSignature=\"$SPARKLE_SIG\"/" "$PROJECT_ROOT/appcast.xml"
-        echo "✅ DMG signed and appcast.xml updated with signature"
+        # Sign and get the signature
+        SPARKLE_SIG=$("$SPARKLE_BIN/sign_update" "$DMG_PATH" -f /tmp/vibemeter_private_raw.key | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
+        
+        # Clean up temp key
+        rm -f /tmp/vibemeter_private_raw.key
+        
+        if [ -n "$SPARKLE_SIG" ]; then
+            # Update the appcast with the actual signature
+            sed -i '' "s/SIGNATURE_PLACEHOLDER/$SPARKLE_SIG/" "$PROJECT_ROOT/appcast.xml"
+            echo "✅ DMG signed and appcast.xml updated with signature"
+        else
+            echo "⚠️  Failed to create EdDSA signature"
+        fi
     else
-        echo "⚠️  Failed to create EdDSA signature"
+        echo "⚠️  Sparkle sign_update tool not found. Run a build first."
     fi
 else
     echo "⚠️  Sparkle private key not found at: $PRIVATE_KEY_PATH"
     echo "⚠️  Run ./scripts/setup-sparkle-release.sh to generate keys"
-    echo "⚠️  Or manually sign: openssl pkeyutl -sign -inkey /path/to/key -in '$DMG_PATH'"
 fi

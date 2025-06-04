@@ -3,10 +3,10 @@
 set -euo pipefail
 
 # Script to create a DMG for VibeMeter
-# Usage: ./scripts/create-dmg.sh <app_path>
+# Usage: ./scripts/create-dmg.sh <app_path> [output_path]
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <app_path>"
+if [[ $# -lt 1 ]] || [[ $# -gt 2 ]]; then
+    echo "Usage: $0 <app_path> [output_path]"
     exit 1
 fi
 
@@ -23,7 +23,13 @@ fi
 # Get version info
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
 DMG_NAME="VibeMeter-${VERSION}.dmg"
-DMG_PATH="$BUILD_DIR/$DMG_NAME"
+
+# Use provided output path or default
+if [[ $# -eq 2 ]]; then
+    DMG_PATH="$2"
+else
+    DMG_PATH="$BUILD_DIR/$DMG_NAME"
+fi
 
 echo "Creating DMG: $DMG_NAME"
 
@@ -49,22 +55,9 @@ hdiutil create \
 # Clean up
 rm -rf "$DMG_TEMP"
 
-# Sign the DMG if code signing is available
-if [[ -n "${MACOS_SIGNING_CERTIFICATE_P12_BASE64:-}" ]] || [[ -n "${MACOS_SIGNING_P12_FILE_PATH:-}" ]]; then
-    echo "Signing DMG..."
-    # Find signing identity
-    if [[ -n "${MACOS_SIGNING_CERTIFICATE_P12_BASE64:-}" ]]; then
-        # For CI, we need to extract the identity from the certificate
-        # This would be done in the codesign script, so we'll call it indirectly
-        codesign --sign "Developer ID Application" --timestamp "$DMG_PATH" 2>/dev/null || true
-    else
-        # For local signing
-        SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
-        if [[ -n "$SIGNING_IDENTITY" ]]; then
-            codesign --sign "$SIGNING_IDENTITY" --timestamp "$DMG_PATH"
-        fi
-    fi
-fi
+# Sign the DMG
+echo "Signing DMG..."
+codesign --force --sign "Developer ID Application" "$DMG_PATH"
 
 # Verify DMG
 echo "Verifying DMG..."

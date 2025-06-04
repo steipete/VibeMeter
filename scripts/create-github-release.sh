@@ -31,44 +31,29 @@ echo "🔐 Signing and notarizing..."
 # Create DMG
 echo "📀 Creating DMG..."
 DMG_PATH="$PROJECT_ROOT/build/VibeMeter-$VERSION.dmg"
-./scripts/create-dmg.sh "$APP_PATH"
+./scripts/create-dmg.sh "$APP_PATH" "$DMG_PATH"
 
-# Generate release notes from CHANGELOG.md
-RELEASE_NOTES="## VibeMeter $VERSION
+# Generate release notes
+RELEASE_NOTES="Release notes for VibeMeter v$VERSION
 
-### Installation
+This release includes:
+- Latest features and improvements
+- Bug fixes and performance enhancements
+
+## Installation
 1. Download the DMG file
 2. Open it and drag VibeMeter to Applications
-3. Launch VibeMeter from Applications
+3. Grant necessary permissions when prompted
 
-### Auto-Updates
-This version supports automatic updates via Sparkle.
-
-"
-
-# Extract version section from CHANGELOG.md
-CHANGELOG_SECTION=$(<"$PROJECT_ROOT/CHANGELOG.md" sed -n "/## \[$VERSION\]/,/## \[/p" | sed '$ d' | tail -n +2)
-
-if [ -n "$CHANGELOG_SECTION" ]; then
-    RELEASE_NOTES="$RELEASE_NOTES$CHANGELOG_SECTION"
-else
-    RELEASE_NOTES="${RELEASE_NOTES}Bug fixes and improvements."
-fi
-
-# Check if gh is installed
-if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI (gh) not found"
-    echo "Install with: brew install gh"
-    echo "Then run: gh auth login"
-    exit 1
-fi
+## Auto-Updates
+This version supports automatic updates via Sparkle."
 
 # Create GitHub release (requires gh CLI)
 echo "🚀 Creating GitHub release..."
 gh release create "v$VERSION" "$DMG_PATH" \
-    --title "VibeMeter $VERSION" \
+    --title "VibeMeter v$VERSION" \
     --notes "$RELEASE_NOTES" \
-    --latest
+    --generate-notes
 
 # Update appcast.xml
 echo "📡 Updating appcast.xml..."
