@@ -7,7 +7,7 @@ import os.log
 ///
 /// This handler centralizes error processing logic for all provider types,
 /// ensuring consistent error handling and appropriate status updates.
-final class MultiProviderErrorHandler {
+final class MultiProviderErrorHandler: Sendable {
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderErrorHandler")
@@ -22,12 +22,14 @@ final class MultiProviderErrorHandler {
     // MARK: - Public Methods
 
     /// Handles errors that occur during provider data refresh operations.
+    @MainActor
     func handleRefreshError(
         for provider: ServiceProvider,
         error: Error,
         userSessionData: MultiProviderUserSessionData,
         spendingData: MultiProviderSpendingData,
-        refreshErrors: inout [ServiceProvider: String]) {
+        refreshErrors: [ServiceProvider: String]) -> [ServiceProvider: String] {
+        var updatedErrors = refreshErrors
         switch error {
         case let providerError as ProviderError where providerError == .unauthorized || providerError == .noTeamFound:
             handleProviderSpecificError(
@@ -36,25 +38,27 @@ final class MultiProviderErrorHandler {
                 userSessionData: userSessionData,
                 spendingData: spendingData)
         case let providerError as ProviderError where providerError == .rateLimitExceeded:
-            handleRateLimitError(for: provider, spendingData: spendingData, refreshErrors: &refreshErrors)
+            updatedErrors = handleRateLimitError(for: provider, spendingData: spendingData, refreshErrors: updatedErrors)
         case let retryableError as NetworkRetryHandler.RetryableError:
-            handleNetworkError(
+            updatedErrors = handleNetworkError(
                 for: provider,
                 error: retryableError,
                 spendingData: spendingData,
-                refreshErrors: &refreshErrors)
+                refreshErrors: updatedErrors)
         default:
-            handleGenericError(
+            updatedErrors = handleGenericError(
                 for: provider,
                 error: error,
                 userSessionData: userSessionData,
                 spendingData: spendingData,
-                refreshErrors: &refreshErrors)
+                refreshErrors: updatedErrors)
         }
+        return updatedErrors
     }
 
     // MARK: - Private Methods
 
+    @MainActor
     private func handleProviderSpecificError(
         for provider: ServiceProvider,
         error: ProviderError,
@@ -80,38 +84,46 @@ final class MultiProviderErrorHandler {
         }
     }
 
+    @MainActor
     private func handleRateLimitError(
         for provider: ServiceProvider,
         spendingData: MultiProviderSpendingData,
-        refreshErrors: inout [ServiceProvider: String]) {
+        refreshErrors: [ServiceProvider: String]) -> [ServiceProvider: String] {
         logger.warning("Rate limit exceeded for \(provider.displayName)")
         spendingData.updateConnectionStatus(for: provider, status: .rateLimited(until: nil))
-        refreshErrors[provider] = "Rate limit exceeded"
+        var updatedErrors = refreshErrors
+        updatedErrors[provider] = "Rate limit exceeded"
+        return updatedErrors
     }
 
+    @MainActor
     private func handleNetworkError(
         for provider: ServiceProvider,
         error: NetworkRetryHandler.RetryableError,
         spendingData: MultiProviderSpendingData,
-        refreshErrors: inout [ServiceProvider: String]) {
+        refreshErrors: [ServiceProvider: String]) -> [ServiceProvider: String] {
         logger.error("Network error for \(provider.displayName): \(error)")
         if let status = ProviderConnectionStatus.from(error) {
             spendingData.updateConnectionStatus(for: provider, status: status)
         } else {
             spendingData.updateConnectionStatus(for: provider, status: .error(message: "Network error"))
         }
-        refreshErrors[provider] = error.localizedDescription
+        var updatedErrors = refreshErrors
+        updatedErrors[provider] = error.localizedDescription
+        return updatedErrors
     }
 
+    @MainActor
     private func handleGenericError(
         for provider: ServiceProvider,
         error: Error,
         userSessionData: MultiProviderUserSessionData,
         spendingData: MultiProviderSpendingData,
-        refreshErrors: inout [ServiceProvider: String]) {
+        refreshErrors: [ServiceProvider: String]) -> [ServiceProvider: String] {
         logger.error("Failed to refresh data for \(provider.displayName): \(error)")
         let errorMessage = "Error fetching data: \(error.localizedDescription)".prefix(50)
-        refreshErrors[provider] = String(errorMessage)
+        var updatedErrors = refreshErrors
+        updatedErrors[provider] = String(errorMessage)
         userSessionData.setErrorMessage(for: provider, message: String(errorMessage))
 
         if let providerError = error as? ProviderError {
@@ -119,5 +131,6 @@ final class MultiProviderErrorHandler {
         } else {
             spendingData.updateConnectionStatus(for: provider, status: .error(message: String(errorMessage)))
         }
+        return updatedErrors
     }
 }

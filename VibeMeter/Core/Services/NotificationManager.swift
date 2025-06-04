@@ -80,7 +80,7 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let precision = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
         let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
         let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 
@@ -107,7 +107,7 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let precision = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
         let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
         let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 

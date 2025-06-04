@@ -30,6 +30,7 @@ final class StatusBarTooltipProvider {
     // MARK: - Public Methods
 
     /// Creates tooltip text for the status bar item.
+    @MainActor
     func createTooltipText() -> String {
         guard userSession.isLoggedInToAnyProvider else {
             return "VibeMeter - Not logged in to any provider"
@@ -49,6 +50,7 @@ final class StatusBarTooltipProvider {
 
     // MARK: - Private Methods
 
+    @MainActor
     private func createSpendingInfo() -> String {
         let totalSpendingUSD = spendingData.totalSpendingConverted(
             to: "USD",
@@ -59,6 +61,7 @@ final class StatusBarTooltipProvider {
         return "VibeMeter - \(Int(percentage))% of limit"
     }
 
+    @MainActor
     private func createRefreshInfo(for providers: [ServiceProvider]) -> String {
         let mostRecentRefresh = providers
             .compactMap { provider in

@@ -7,7 +7,7 @@ import os.log
 ///
 /// This processor handles the complex logic of updating user sessions, spending data,
 /// currency conversions, and avatar updates after successful provider data retrieval.
-final class MultiProviderDataProcessor {
+final class MultiProviderDataProcessor: Sendable {
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderDataProcessor")
@@ -34,7 +34,7 @@ final class MultiProviderDataProcessor {
         result: ProviderDataResult,
         userSessionData: MultiProviderUserSessionData,
         spendingData: MultiProviderSpendingData,
-        lastRefreshDates: inout [ServiceProvider: Date]) async {
+        lastRefreshDates: [ServiceProvider: Date]) async -> [ServiceProvider: Date] {
         let userInfo = result.userInfo
         let teamInfo = result.teamInfo
         let invoice = result.invoice
@@ -46,19 +46,20 @@ final class MultiProviderDataProcessor {
             userSessionData: userSessionData,
             spendingData: spendingData,
             lastRefreshDates: lastRefreshDates)
-        updateDataStores(
+        await updateDataStores(
             for: provider,
             userInfo: userInfo,
             teamInfo: teamInfo,
             usage: usage,
             context: &context)
-        lastRefreshDates = context.lastRefreshDates
 
         await updateCurrencyAndSpending(for: provider, invoice: invoice, spendingData: spendingData)
-        updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
-        logSuccessAndSpending(for: provider, spendingData: spendingData)
+        await updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
+        await logSuccessAndSpending(for: provider, spendingData: spendingData)
 
-        spendingData.updateConnectionStatus(for: provider, status: .connected)
+        await spendingData.updateConnectionStatus(for: provider, status: .connected)
+        
+        return context.lastRefreshDates
     }
 
     // MARK: - Private Methods
@@ -83,6 +84,7 @@ final class MultiProviderDataProcessor {
         var lastRefreshDates: [ServiceProvider: Date]
     }
 
+    @MainActor
     private func updateDataStores(
         for provider: ServiceProvider,
         userInfo: ProviderUserInfo,
@@ -113,6 +115,7 @@ final class MultiProviderDataProcessor {
         logger.info("Updated spending data for \(provider.displayName)")
     }
 
+    @MainActor
     private func updateGravatarIfNeeded(
         for provider: ServiceProvider,
         userEmail: String,
@@ -123,6 +126,7 @@ final class MultiProviderDataProcessor {
         }
     }
 
+    @MainActor
     private func logSuccessAndSpending(for provider: ServiceProvider, spendingData: MultiProviderSpendingData) {
         logger.info("Successfully refreshed data for \(provider.displayName)")
         let providerSpending = spendingData.getSpendingData(for: provider)

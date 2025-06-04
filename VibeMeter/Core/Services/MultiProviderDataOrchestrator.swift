@@ -231,21 +231,21 @@ public final class MultiProviderDataOrchestrator {
     }
 
     private func processSuccessfulRefresh(for provider: ServiceProvider, result: ProviderDataResult) async {
-        await dataProcessor.processSuccessfulRefresh(
+        lastRefreshDates = await dataProcessor.processSuccessfulRefresh(
             for: provider,
             result: result,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            lastRefreshDates: &lastRefreshDates)
+            lastRefreshDates: lastRefreshDates)
     }
 
     private func handleRefreshError(for provider: ServiceProvider, error: Error) {
-        errorHandler.handleRefreshError(
+        refreshErrors = errorHandler.handleRefreshError(
             for: provider,
             error: error,
             userSessionData: userSessionData,
             spendingData: spendingData,
-            refreshErrors: &refreshErrors)
+            refreshErrors: refreshErrors)
     }
 
     private func finishRefresh(for provider: ServiceProvider) {
