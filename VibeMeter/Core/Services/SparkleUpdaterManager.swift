@@ -66,10 +66,12 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         // Enable automatic update checks only in release builds
         #if DEBUG
             controller.updater.automaticallyChecksForUpdates = false
+            controller.updater.automaticallyDownloadsUpdates = false
             Self.staticLogger.info("Automatic update checks disabled in DEBUG mode")
         #else
             controller.updater.automaticallyChecksForUpdates = true
-            Self.staticLogger.info("Automatic update checks enabled")
+            controller.updater.automaticallyDownloadsUpdates = true
+            Self.staticLogger.info("Automatic update checks and downloads enabled")
         #endif
 
         Self.staticLogger
