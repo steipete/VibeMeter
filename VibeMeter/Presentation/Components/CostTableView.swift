@@ -46,71 +46,7 @@ struct CostTableView: View {
     private var providerBreakdownSection: some View {
         VStack(spacing: 4) {
             ForEach(spendingData.providersWithData, id: \.self) { provider in
-                VStack(spacing: 8) {
-                    // Top row: Icon, provider name, and amount
-                    HStack(spacing: 12) {
-                        // Provider icon on the left
-                        ProviderIconView(provider: provider, spendingData: spendingData)
-                            .frame(width: 20, height: 20)
-
-                        // Provider name
-                        Text(provider.displayName)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-
-                        // Amount on the right
-                        ProviderSpendingAmountView(
-                            provider: provider,
-                            spendingData: spendingData,
-                            currencyData: currencyData)
-                            .font(.body.weight(.medium))
-                    }
-
-                    // Usage bar with text on the same line
-                    if let providerData = spendingData.getSpendingData(for: provider),
-                       let usageData = providerData.usageData,
-                       let maxRequests = usageData.maxRequests {
-                        HStack(spacing: 8) {
-                            // Progress bar
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    // Background track
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color.secondary.opacity(0.2))
-                                        .frame(height: 6)
-
-                                    // Progress fill
-                                    let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(progress > 0.8 ? Color.orange : Color.accentColor)
-                                        .frame(width: geometry.size.width * progress, height: 6)
-                                }
-                            }
-                            .frame(height: 6)
-
-                            // Usage text on the same line
-                            Text("\(usageData.currentRequests)/\(maxRequests)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize()
-                        }
-                        .padding(.leading, 32) // Align with text above (icon width + spacing)
-                    }
-                }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.primary.opacity(0.05)))
-                .onTapGesture {
-                    ProviderInteractionHandler.openProviderDashboard(
-                        for: provider,
-                        loginManager: loginManager)
-                }
-                .id(
-                    "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
+                providerRowContent(for: provider)
             }
         }
         .accessibilityElement(children: .contain)
@@ -168,24 +104,20 @@ struct CostTableView: View {
             Spacer(minLength: 20)
 
             HStack(spacing: 12) {
-                Text(
-                    "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+                Text(formattedWarningLimit)
                     .font(.body.weight(.medium))
                     .foregroundStyle(.orange)
-                    .accessibilityLabel(
-                        "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+                    .accessibilityLabel("Warning limit: \(formattedWarningLimit)")
 
                 Text("•")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
 
-                Text(
-                    "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+                Text(formattedUpperLimit)
                     .font(.body.weight(.medium))
                     .foregroundStyle(.red)
-                    .accessibilityLabel(
-                        "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+                    .accessibilityLabel("Upper limit: \(formattedUpperLimit)")
             }
 
             Spacer()
@@ -197,12 +129,19 @@ struct CostTableView: View {
                 .fill(Color.primary.opacity(0.03)))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Spending limits")
-        .accessibilityValue(
-            "Warning at \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0)))), upper limit at \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+        .accessibilityValue("Warning at \(formattedWarningLimit), upper limit at \(formattedUpperLimit)")
         .accessibilityHint("Configure these limits in settings")
     }
 
     // MARK: - Helper Properties
+    
+    private var formattedWarningLimit: String {
+        "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))"
+    }
+    
+    private var formattedUpperLimit: String {
+        "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))"
+    }
 
     private var currentSpendingDisplay: String? {
         let providers = spendingData.providersWithData
@@ -255,6 +194,76 @@ struct CostTableView: View {
         hasher.combine(settingsManager.upperLimitUSD)
         hasher.combine(providers.count)
         return hasher.finalize()
+    }
+    // MARK: - Helper Views
+    
+    @ViewBuilder
+    private func providerRowContent(for provider: ServiceProvider) -> some View {
+        VStack(spacing: 8) {
+            providerHeaderRow(for: provider)
+            providerUsageBar(for: provider)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.primary.opacity(0.05)))
+        .onTapGesture {
+            ProviderInteractionHandler.openProviderDashboard(
+                for: provider,
+                loginManager: loginManager)
+        }
+        .id(
+            "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
+    }
+    
+    @ViewBuilder
+    private func providerHeaderRow(for provider: ServiceProvider) -> some View {
+        HStack(spacing: 12) {
+            ProviderIconView(provider: provider, spendingData: spendingData)
+                .frame(width: 20, height: 20)
+
+            Text(provider.displayName)
+                .font(.body.weight(.medium))
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            ProviderSpendingAmountView(
+                provider: provider,
+                spendingData: spendingData,
+                currencyData: currencyData)
+                .font(.body.weight(.medium))
+        }
+    }
+    
+    @ViewBuilder
+    private func providerUsageBar(for provider: ServiceProvider) -> some View {
+        if let providerData = spendingData.getSpendingData(for: provider),
+           let usageData = providerData.usageData,
+           let maxRequests = usageData.maxRequests {
+            HStack(spacing: 8) {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.secondary.opacity(0.2))
+                            .frame(height: 6)
+
+                        let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(progress > 0.8 ? Color.orange : Color.accentColor)
+                            .frame(width: geometry.size.width * progress, height: 6)
+                    }
+                }
+                .frame(height: 6)
+
+                Text("\(usageData.currentRequests)/\(maxRequests)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+            .padding(.leading, 32)
+        }
     }
 }
 

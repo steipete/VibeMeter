@@ -11,43 +11,58 @@ struct ProviderSpendingAmountView: View {
 
     var body: some View {
         Group {
-            if let providerData = spendingData.getSpendingData(for: provider),
-               let spendingUSD = providerData.currentSpendingUSD {
-                // Convert using current rates for consistency with total
-                let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
-                    ExchangeRateManager.shared.convert(
-                        spendingUSD,
-                        from: "USD",
-                        to: currencyData.selectedCode,
-                        rates: currencyData.effectiveRates) ?? spendingUSD
-
-                Text(
-                    "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                    .font(.body.weight(.semibold).monospaced())
-                    .foregroundStyle(.primary)
-                    .accessibilityLabel(
-                        "Spending: \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                    .animation(.easeOut(duration: 0.3), value: spendingUSD)
+            if let spendingUSD = providerSpendingUSD {
+                spendingText(for: spendingUSD)
+            } else if isLoadingData {
+                loadingShimmer
             } else {
-                // Check if we're in a loading state vs no data
-                if let providerData = spendingData.getSpendingData(for: provider),
-                   providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing {
-                    // Show shimmer while loading
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.secondary.opacity(0.2))
-                        .frame(width: 60, height: 20)
-                        .shimmer()
-                        .accessibilityLabel("Loading spending data")
-                } else {
-                    // Show placeholder when no data available
-                    Text("--")
-                        .font(.body)
-                        .foregroundStyle(.tertiary)
-                        .accessibilityLabel("No spending data")
-                }
+                noDataPlaceholder
             }
         }
+    }
+    
+    // MARK: - Helper Views
+    
+    private var providerSpendingUSD: Double? {
+        spendingData.getSpendingData(for: provider)?.currentSpendingUSD
+    }
+    
+    private var isLoadingData: Bool {
+        guard let providerData = spendingData.getSpendingData(for: provider) else { return false }
+        return providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing
+    }
+    
+    private func spendingText(for spendingUSD: Double) -> some View {
+        let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
+            ExchangeRateManager.shared.convert(
+                spendingUSD,
+                from: "USD",
+                to: currencyData.selectedCode,
+                rates: currencyData.effectiveRates) ?? spendingUSD
+        
+        let formattedAmount = "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))"
+        
+        return Text(formattedAmount)
+            .font(.body.weight(.semibold).monospaced())
+            .foregroundStyle(.primary)
+            .accessibilityLabel("Spending: \(formattedAmount)")
+            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            .animation(.easeOut(duration: 0.3), value: spendingUSD)
+    }
+    
+    private var loadingShimmer: some View {
+        RoundedRectangle(cornerRadius: 4)
+            .fill(Color.secondary.opacity(0.2))
+            .frame(width: 60, height: 20)
+            .shimmer()
+            .accessibilityLabel("Loading spending data")
+    }
+    
+    private var noDataPlaceholder: some View {
+        Text("--")
+            .font(.body)
+            .foregroundStyle(.tertiary)
+            .accessibilityLabel("No spending data")
     }
 }
 

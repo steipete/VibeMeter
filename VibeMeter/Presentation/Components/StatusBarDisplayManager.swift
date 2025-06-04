@@ -30,18 +30,34 @@ final class StatusBarDisplayManager {
         let animatedCostValue: Double
 
         static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
-            lhs.isLoggedIn == rhs.isLoggedIn &&
-                lhs.hasData == rhs.hasData &&
-                abs(lhs.gaugeValue - rhs.gaugeValue) < 0.001 &&
-                abs(lhs.totalSpending - rhs.totalSpending) < 0.01 &&
-                lhs.currencyCode == rhs.currencyCode &&
-                lhs.currencySymbol == rhs.currencySymbol &&
-                lhs.displayMode == rhs.displayMode &&
-                lhs.isDarkMode == rhs.isDarkMode &&
-                lhs.hasProviderIssues == rhs.hasProviderIssues &&
-                lhs.connectionStatus == rhs.connectionStatus &&
-                abs(lhs.animatedGaugeValue - rhs.animatedGaugeValue) < 0.001 &&
-                abs(lhs.animatedCostValue - rhs.animatedCostValue) < 0.01
+            lhs.basicPropertiesEqual(to: rhs) &&
+                lhs.currencyPropertiesEqual(to: rhs) &&
+                lhs.valuesEqual(to: rhs) &&
+                lhs.animatedValuesEqual(to: rhs)
+        }
+        
+        private func basicPropertiesEqual(to other: DisplayState) -> Bool {
+            isLoggedIn == other.isLoggedIn &&
+                hasData == other.hasData &&
+                displayMode == other.displayMode &&
+                isDarkMode == other.isDarkMode &&
+                hasProviderIssues == other.hasProviderIssues &&
+                connectionStatus == other.connectionStatus
+        }
+        
+        private func currencyPropertiesEqual(to other: DisplayState) -> Bool {
+            currencyCode == other.currencyCode &&
+                currencySymbol == other.currencySymbol
+        }
+        
+        private func valuesEqual(to other: DisplayState) -> Bool {
+            abs(gaugeValue - other.gaugeValue) < 0.001 &&
+                abs(totalSpending - other.totalSpending) < 0.01
+        }
+        
+        private func animatedValuesEqual(to other: DisplayState) -> Bool {
+            abs(animatedGaugeValue - other.animatedGaugeValue) < 0.001 &&
+                abs(animatedCostValue - other.animatedCostValue) < 0.01
         }
     }
 

@@ -2,6 +2,29 @@ import AppKit
 import os.log
 import SwiftUI
 
+// MARK: - Environment Detection Helper
+
+extension ProcessInfo {
+    /// Detects if the app is running in SwiftUI previews
+    var isRunningInPreview: Bool {
+        environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    }
+    
+    /// Detects if the app is running in test environment
+    var isRunningInTests: Bool {
+        environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTestCase") != nil
+    }
+    
+    /// Detects if running in debug mode (using DEBUG compilation condition)
+    var isRunningInDebug: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }
+}
+
 // MARK: - App Entry Point
 
 /// The main entry point for the VibeMeter application.
@@ -98,15 +121,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_: Notification) {
-        // Skip single instance check for SwiftUI previews
-        let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-
-        // Detect if running in test environment
-        let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-            NSClassFromString("XCTestCase") != nil
-
-        // Detect if running in debug mode (Xcode debugging)
-        let isRunningInDebug = _isDebugAssertConfiguration()
+        // Detect runtime environment
+        let processInfo = ProcessInfo.processInfo
+        let isRunningInPreview = processInfo.isRunningInPreview
+        let isRunningInTests = processInfo.isRunningInTests
+        let isRunningInDebug = processInfo.isRunningInDebug
 
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
@@ -219,10 +238,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         multiProviderOrchestrator = nil
 
         // Remove distributed-notification observer (only if we registered it)
-        let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-            NSClassFromString("XCTestCase") != nil
-        let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        let isRunningInDebug = _isDebugAssertConfiguration()
+        let processInfo = ProcessInfo.processInfo
+        let isRunningInTests = processInfo.isRunningInTests
+        let isRunningInPreview = processInfo.isRunningInPreview
+        let isRunningInDebug = processInfo.isRunningInDebug
 
         if !isRunningInPreview, !isRunningInTests, !isRunningInDebug {
             DistributedNotificationCenter.default().removeObserver(

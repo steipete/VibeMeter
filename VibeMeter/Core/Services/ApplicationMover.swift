@@ -5,11 +5,58 @@ import os.log
 
 /// Service responsible for detecting if the app is running from a DMG and offering to move it to Applications.
 ///
-/// This service provides functionality to:
-/// - Detect if the app is running from a mounted disk image (DMG)
-/// - Check if the app is already installed in the Applications folder
-/// - Offer to move the app to Applications with user consent
-/// - Handle the move operation safely with proper error handling
+/// ## Overview
+/// This service automatically detects when the app is running from a temporary location (such as a DMG,
+/// Downloads folder, or Desktop) and offers to move it to the Applications folder for better user experience.
+/// This is a common pattern for macOS apps to ensure they're installed in the proper location.
+///
+/// ## How It Works
+/// The detection uses multiple strategies in order of preference:
+/// 1. **DMG Detection**: Uses `hdiutil` to check if the app is running from a mounted disk image
+/// 2. **Path-based Detection**: Checks if the app is running from Downloads, Desktop, or Documents folders
+/// 3. **Applications Check**: Verifies the app isn't already in /Applications or ~/Applications
+///
+/// ## Required Entitlements for Sandboxed Apps
+/// For full functionality in sandboxed apps, add these entitlements to your app:
+/// ```xml
+/// <!-- Required for accessing Downloads folder -->
+/// <key>com.apple.security.files.downloads.read-write</key>
+/// <true/>
+/// 
+/// <!-- Required for automatic relaunch functionality -->
+/// <key>com.apple.security.automation.apple-events</key>
+/// <true/>
+/// 
+/// <!-- Basic sandbox requirement -->
+/// <key>com.apple.security.app-sandbox</key>
+/// <true/>
+/// ```
+///
+/// ## Sandbox Limitations
+/// - The `hdiutil` command may fail in strict sandboxed environments, but path-based detection will still work
+/// - User will see system permission dialogs when moving from/to certain folders
+/// - All file operations require explicit user consent through system dialogs
+///
+/// ## Usage
+/// Call `checkAndOfferToMoveToApplications()` early in your app lifecycle:
+/// ```swift
+/// let applicationMover = ApplicationMover()
+/// applicationMover.checkAndOfferToMoveToApplications()
+/// ```
+///
+/// ## Safety Considerations
+/// - Always prompts user before performing any operations
+/// - Handles existing apps in Applications folder with replace confirmation
+/// - Provides clear error messages and graceful failure handling
+/// - Logs all operations for debugging purposes
+/// - Only operates when not running from Applications folder already
+///
+/// ## Implementation Notes
+/// Based on proven techniques from PFMoveApplication/LetsMove libraries, using:
+/// - `statfs()` for mount point detection
+/// - `hdiutil info` for disk image verification
+/// - Standard FileManager operations for copying
+/// - NSWorkspace for relaunching from new location
 @MainActor
 final class ApplicationMover {
     // MARK: - Properties
@@ -103,6 +150,9 @@ final class ApplicationMover {
     }
 
     /// Checks if the given device is a mounted disk image using hdiutil
+    /// Note: This may fail in sandboxed apps due to restricted access to system processes,
+    /// but we keep it as it provides the most accurate DMG detection when available.
+    /// The app will still work via path-based detection as a fallback.
     private func checkDeviceIsDiskImage(_ deviceName: String) -> String? {
         let task = Process()
         task.launchPath = "/usr/bin/hdiutil"
