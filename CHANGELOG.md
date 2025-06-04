@@ -5,6 +5,28 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-06-04
+
+### 🎨 User Interface
+- **Redesigned cost table layout** - Provider icons and spending amounts are now centered with improved visual hierarchy
+- **Enhanced provider display** - Moved provider breakdown to the top with full-width usage progress bars
+- **Professional styling** - Cleaner, less chaotic layout with better spacing and alignment
+
+### 🐛 Bug Fixes
+- **Fixed authentication loop** - Resolved issue where login would fail despite correct credentials
+- **Fixed progressive disclosure animations** - Smooth transitions when expanding/collapsing cost details
+- **Improved error messages** - More user-friendly authentication error descriptions
+
+### 🏗️ Architecture
+- **Removed circuit breaker pattern** - Simplified error handling by removing unnecessary retry complexity
+- **Enhanced authentication state management** - Replaced boolean flags with proper state enum
+- **Improved loading states** - Better visual feedback during login and data fetching
+
+### 🔧 Technical Improvements
+- **Swift 6 compliance** - Fixed all concurrency warnings and actor isolation issues
+- **Code organization** - Created dedicated component files for provider icons and usage badges
+- **Build system** - Resolved duplicate file issues and improved project structure
+
 ## [1.0.0] - 2025-06-03
 
 🎉 **Initial Release** - Welcome to VibeMeter, your AI spending companion!
