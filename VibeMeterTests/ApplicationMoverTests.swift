@@ -68,6 +68,7 @@ final class ApplicationMoverTests: XCTestCase {
         XCTAssertFalse(appsResult, "Should not detect Applications as temporary")
     }
     
+    @MainActor
     func testShouldOfferToMoveLogic() {
         // Test that we don't offer to move when already in Applications
         let applicationsPath = "/Applications/VibeMeter.app"
