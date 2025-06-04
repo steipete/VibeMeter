@@ -225,7 +225,8 @@ struct GeneralSettingsView: View {
             if let systemCurrencyCode = currencyManager.systemCurrencyCode,
                currencyManager.isValidCurrencyCode(systemCurrencyCode) {
                 settingsManager.selectedCurrencyCode = systemCurrencyCode
-                UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference) // Prevent future auto-detection
+                UserDefaults.standard
+                    .set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference) // Prevent future auto-detection
 
                 // Mark that we've set the initial currency (but not that user made a manual choice)
                 // This prevents auto-detection on subsequent launches while still allowing manual changes

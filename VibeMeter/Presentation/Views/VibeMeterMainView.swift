@@ -41,7 +41,7 @@ struct VibeMeterMainView: View {
             // Modern key handling for ESC to close menu
             // Look for any borderless window that might be our menu
             for window in NSApp.windows {
-                if window.styleMask.contains(.borderless) && window.isVisible && window.level == .popUpMenu {
+                if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
                     window.orderOut(nil)
                     return .handled
                 }
