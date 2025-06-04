@@ -242,8 +242,8 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         } catch {
             XCTAssertTrue(error is CancellationError)
             // Only user info should have been attempted
-            XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-            XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 0)
+            XCTAssertEqual(capturedMockProvider.fetchUserInfoCallCount, 1)
+            XCTAssertEqual(capturedMockProvider.fetchTeamInfoCallCount, 0)
         }
     }
 }
