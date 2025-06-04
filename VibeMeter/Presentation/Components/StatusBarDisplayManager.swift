@@ -134,7 +134,11 @@ final class StatusBarDisplayManager {
     }
     
     private func shouldUpdateIcon(from lastState: DisplayState?, to currentState: DisplayState) -> Bool {
-        return lastState?.displayMode.showsIcon != currentState.displayMode.showsIcon ||
+        // Calculate whether icon should be shown for both states
+        let lastShouldShowIcon = lastState.map { !$0.hasData || $0.displayMode.showsIcon } ?? true
+        let currentShouldShowIcon = !currentState.hasData || currentState.displayMode.showsIcon
+        
+        return lastShouldShowIcon != currentShouldShowIcon ||
                lastState?.isDarkMode != currentState.isDarkMode ||
                lastState?.isLoggedIn != currentState.isLoggedIn ||
                lastState?.hasData != currentState.hasData ||
@@ -144,8 +148,12 @@ final class StatusBarDisplayManager {
     }
     
     private func shouldUpdateTitle(from lastState: DisplayState?, to currentState: DisplayState) -> Bool {
+        // Calculate whether icon should be shown for both states (affects title spacing)
+        let lastShouldShowIcon = lastState.map { !$0.hasData || $0.displayMode.showsIcon } ?? true
+        let currentShouldShowIcon = !currentState.hasData || currentState.displayMode.showsIcon
+        
         return lastState?.displayMode.showsMoney != currentState.displayMode.showsMoney ||
-               lastState?.displayMode.showsIcon != currentState.displayMode.showsIcon ||
+               lastShouldShowIcon != currentShouldShowIcon ||
                lastState?.currencySymbol != currentState.currencySymbol ||
                lastState?.hasData != currentState.hasData ||
                abs((lastState?.animatedCostValue ?? 0) - currentState.animatedCostValue) > 0.01
@@ -159,11 +167,15 @@ final class StatusBarDisplayManager {
     }
     
     private func updateIcon(button: NSStatusBarButton, state: DisplayState) {
-        if state.displayMode.showsIcon {
+        // Always show icon when there's no data, otherwise respect user setting
+        let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
+        
+        if shouldShowIcon {
             let colorScheme: ColorScheme = state.isDarkMode ? .dark : .light
             
             // Check if display mode changed (icon was hidden and now showing)
-            let shouldAnimate = lastDisplayState?.displayMode.showsIcon == false && state.displayMode.showsIcon
+            let lastShouldShowIcon = lastDisplayState.map { !$0.hasData || $0.displayMode.showsIcon } ?? false
+            let shouldAnimate = !lastShouldShowIcon && shouldShowIcon
             
             let gaugeView: some View = ZStack(alignment: .topTrailing) {
                 Group {
@@ -218,7 +230,9 @@ final class StatusBarDisplayManager {
     private func updateTitle(button: NSStatusBarButton, state: DisplayState) {
         if state.displayMode.showsMoney, stateManager.currentState.showsGauge, state.hasData {
             stateManager.setCostValue(state.totalSpending)
-            let spacingPrefix = state.displayMode.showsIcon ? "  " : ""
+            // Use new logic: icon is shown when there's no data OR user setting shows icon
+            let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
+            let spacingPrefix = shouldShowIcon ? "  " : ""
             button.title = "\(spacingPrefix)\(state.currencySymbol)\(state.animatedCostValue.formatted(.number.precision(.fractionLength(2))))"
         } else {
             button.title = ""
