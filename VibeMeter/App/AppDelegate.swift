@@ -84,6 +84,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil)
         }
 
+        // Listen for update check requests from settings
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCheckForUpdatesNotification),
+            name: Notification.Name("checkForUpdates"),
+            object: nil)
+
         logger.info("VibeMeter launching...")
 
         // Set activation policy based on user preference
@@ -171,6 +178,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil)
         }
 
+        // Remove update check notification observer
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name("checkForUpdates"),
+            object: nil)
+
         logger.info("VibeMeter terminated")
     }
 
@@ -185,5 +198,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handleShowSettingsNotification(_: Notification) {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.openSettings()
+    }
+
+    @objc
+    private func handleCheckForUpdatesNotification(_: Notification) {
+        if let sparkleManager = sparkleUpdaterManager {
+            sparkleManager.updaterController.checkForUpdates(nil)
+        }
     }
 }
