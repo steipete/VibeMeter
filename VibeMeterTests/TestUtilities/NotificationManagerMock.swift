@@ -23,6 +23,12 @@ final class NotificationManagerMock: NotificationManagerProtocol, MockResetProto
     var lastResetWarningLimitUSD: Double?
     var lastResetUpperLimitUSD: Double?
 
+    var showInstanceAlreadyRunningNotificationCalled = false
+
+    func showInstanceAlreadyRunningNotification() async {
+        showInstanceAlreadyRunningNotificationCalled = true
+    }
+
     func requestAuthorization() async -> Bool {
         requestAuthorizationCalled = true
         return authorizationGrantedToReturn
@@ -69,6 +75,7 @@ final class NotificationManagerMock: NotificationManagerProtocol, MockResetProto
         showUpperLimitNotificationCalled = false
         resetAllNotificationStatesCalled = false
         resetNotificationStateIfBelowCalled = false
+        showInstanceAlreadyRunningNotificationCalled = false
     }
 
     func resetReturnValues() {

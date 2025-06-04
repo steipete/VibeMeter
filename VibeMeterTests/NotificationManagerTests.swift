@@ -604,6 +604,25 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
+
+    func showInstanceAlreadyRunningNotification() async {
+        let content = UNMutableNotificationContent()
+        content.title = "Vibe Meter Already Running"
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content.sound = .default
+        content.categoryIdentifier = "APP_INSTANCE"
+
+        let request = UNNotificationRequest(
+            identifier: "instance_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+
+        try? await Task { @MainActor in
+            try await notificationCenter.add(request)
+        }.value
+    }
 }
 
 // MARK: - MockUNUserNotificationCenter
