@@ -194,47 +194,24 @@ struct GaugeIcon: View {
         }
     }
 
-    /// Theme-aware gauge colors for menu bar display
+    /// Template image compatible gauge colors
+    /// Uses black with varying opacity that macOS will automatically invert based on menu bar appearance
     private func color(for v: Double) -> Color {
-        // For menu bar icons, use white in dark mode and color gradients in light mode
-        if colorScheme == .dark {
-            // In dark mode, use white with varying opacity based on gauge value
-            let intensity = 0.6 + (v * 0.4) // Range from 0.6 to 1.0 opacity
-            return Color.white.opacity(intensity)
-        } else {
-            // In light mode, use the standard color progression
-            let palette: [Color] = Color.accessibleGaugeColors(for: colorScheme)
-            let adjustedPalette: [Color] = Color.isHighContrastEnabled ? palette : 
-                palette.map { $0.opacity(0.8) } // Slightly more subtle for menu bar
-            
-            let seg = min(4, Int(v * 4))
-            let t = v * 4 - Double(seg)
-            return adjustedPalette[seg].blend(with: adjustedPalette[min(seg + 1, 4)], ratio: t)
-                .withAccessibilityContrast()
-        }
+        // For template images, use black with varying intensity
+        // macOS will automatically invert this to appropriate color based on menu bar background
+        let intensity = 0.6 + (v * 0.4) // Range from 0.6 to 1.0 opacity
+        return Color.black.opacity(intensity)
     }
 
-    /// Loading state uses theme-aware colors for menu bar
+    /// Loading state for template images
+    /// Uses black with pulsing opacity that macOS will automatically invert
     private func loadingColor(for v: Double) -> Color {
-        if colorScheme == .dark {
-            // In dark mode, use white with pulsing opacity for loading animation
-            let baseOpacity = 0.7
-            let pulseAmount = 0.3
-            let opacity = baseOpacity + (pulseAmount * sin(v * .pi))
-            return Color.white.opacity(opacity)
-        } else {
-            // In light mode, use subtle blue gradient
-            let palette: [Color] = [
-                Color.blue.opacity(0.4),
-                Color.blue.opacity(0.6),
-                Color.blue.opacity(0.8),
-                Color.blue.opacity(0.6),
-                Color.blue.opacity(0.4),
-            ]
-            let seg = min(4, Int(v * 4))
-            let t = v * 4 - Double(seg)
-            return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
-        }
+        // For template images, use black with pulsing opacity for loading animation
+        // macOS will automatically invert this to appropriate color
+        let baseOpacity = 0.7
+        let pulseAmount = 0.3
+        let opacity = baseOpacity + (pulseAmount * sin(v * .pi))
+        return Color.black.opacity(opacity)
     }
 }
 
