@@ -63,7 +63,7 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type"), "application/json")
     }
 
-    func testFetchTeamInfo_NoTeamsFound() async {
+    func testFetchTeamInfo_NoTeamsFound() async throws {
         // Given
         let mockEmptyTeamsData = """
         {
@@ -80,15 +80,13 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextData = mockEmptyTeamsData
         mockURLSession.nextResponse = mockResponse
 
-        // When/Then
-        do {
-            _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            XCTFail("Should have thrown noTeamFound error")
-        } catch let error as ProviderError {
-            XCTAssertEqual(error, .noTeamFound)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
+        // When - Should return fallback team instead of throwing
+        let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
+        
+        // Then
+        XCTAssertEqual(teamInfo.id, 0)
+        XCTAssertEqual(teamInfo.name, "Individual")
+        XCTAssertEqual(teamInfo.provider, .cursor)
     }
 
     func testFetchTeamInfo_UnauthorizedError() async {
@@ -234,7 +232,8 @@ final class CursorProviderTests: XCTestCase {
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         XCTAssertEqual(bodyJSON?["month"] as? Int, 11)
         XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 789)
+        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
+        // teamId is no longer included in the request
     }
 
     func testFetchMonthlyInvoice_WithStoredTeamId() async throws {
@@ -274,28 +273,36 @@ final class CursorProviderTests: XCTestCase {
         XCTAssertEqual(invoice.totalSpendingCents, 0)
         XCTAssertNil(invoice.pricingDescription)
 
-        // Verify stored team ID was used
+        // Verify request body (teamId no longer sent to API)
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 999)
+        XCTAssertEqual(bodyJSON?["month"] as? Int, 5)
+        XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
+        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
     }
 
     func testFetchMonthlyInvoice_NoTeamIdAvailable() async throws {
         // Given - no stored team ID and none provided
-        let expectedInvoice = CursorInvoiceResponse(
-            items: [
-                CursorInvoiceItem(cents: 1000, description: "Usage"),
+        let mockInvoiceData = """
+        {
+            "items": [
+                {
+                    "cents": 1000,
+                    "description": "Usage"
+                }
             ],
-            pricingDescription: nil)
-        
-        mockURLSession.nextResponse = (
-            data: try JSONEncoder().encode(expectedInvoice),
-            response: HTTPURLResponse(
-                url: URL(string: "https://api.cursor.sh/dashboard/get-monthly-invoice")!,
-                statusCode: 200,
-                httpVersion: nil,
-                headerFields: nil)!
-        )
+            "pricing_description": null
+        }
+        """.data(using: .utf8)!
+
+        let mockResponse = HTTPURLResponse(
+            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil)!
+
+        mockURLSession.nextData = mockInvoiceData
+        mockURLSession.nextResponse = mockResponse
 
         // When - Should succeed even without team ID
         let invoice = try await cursorProvider.fetchMonthlyInvoice(
@@ -349,10 +356,15 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextResponse = mockResponse
 
         // When
-        let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
+        let usageData = try await cursorProvider.fetchUsageData(authToken: "user123::jwt-token")
 
         // Then
         XCTAssertEqual(usageData.currentRequests, 25) // Uses GPT-4 as primary
+        
+        // Verify the user parameter was extracted and used
+        XCTAssertNotNil(mockURLSession.lastRequest?.url)
+        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
+        XCTAssertEqual(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value, "user123")
         XCTAssertEqual(usageData.totalRequests, 50)
         XCTAssertEqual(usageData.maxRequests, 100)
         XCTAssertEqual(usageData.provider, .cursor)
@@ -401,11 +413,16 @@ final class CursorProviderTests: XCTestCase {
         mockURLSession.nextResponse = mockResponse
 
         // When
-        let usageData = try await cursorProvider.fetchUsageData(authToken: "test-token")
+        let usageData = try await cursorProvider.fetchUsageData(authToken: "user456::jwt-token")
 
         // Then - should use current date as fallback
         let timeDifference = abs(usageData.startOfMonth.timeIntervalSinceNow)
         XCTAssertLessThan(timeDifference, 60) // Within 1 minute of now
+        
+        // Verify the user parameter was extracted and used
+        XCTAssertNotNil(mockURLSession.lastRequest?.url)
+        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
+        XCTAssertEqual(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value, "user456")
     }
 
     // MARK: - Token Validation Tests
