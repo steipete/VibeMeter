@@ -197,15 +197,15 @@ public final class SettingsManager: SettingsManagerProtocol {
         public static let selectedCurrencyCode = "selectedCurrencyCode"
         public static let refreshIntervalMinutes = "refreshIntervalMinutes"
         public static let menuBarDisplayMode = "menuBarDisplayMode"
-        
+
         // Spending limits keys
         public static let warningLimitUSD = "warningLimitUSD"
         public static let upperLimitUSD = "upperLimitUSD"
-        
+
         // App behavior keys
         public static let launchAtLoginEnabled = "launchAtLoginEnabled"
         public static let showInDock = "showInDock"
-        
+
         // Session keys
         public static let enabledProviders = "enabledProviders"
         public static let providerSessions = "providerSessions"
