@@ -57,6 +57,20 @@ fi
 
 echo "✅ Build number $BUILD_NUMBER is valid (highest existing: $HIGHEST_BUILD)"
 
+# Pre-flight summary
+echo ""
+echo "📋 Pre-flight Summary:"
+echo "   Version: $VERSION"
+echo "   Build Number: $BUILD_NUMBER"
+echo "   Highest Existing Build: $HIGHEST_BUILD"
+echo ""
+read -p "Continue with build? (y/N): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "❌ Aborted by user"
+    exit 1
+fi
+
 # Build the app
 echo "🔨 Building application..."
 cd "$PROJECT_ROOT"
