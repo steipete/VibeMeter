@@ -5,6 +5,16 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-06-04
+
+### 🔄 Updates
+- **Test release for Sparkle auto-update** - Verifying that automatic updates work correctly
+- **Fixed notarization script** - Resolved API key format issues for proper notarization
+
+### 🔧 Technical Improvements  
+- **Improved build scripts** - Fixed shell script errors in notarization process
+- **Updated changelog rendering** - Ensured proper HTML formatting for Sparkle update window
+
 ## [0.9.0] - 2025-06-04
 
 ### 🎨 User Interface

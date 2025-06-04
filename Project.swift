@@ -30,7 +30,7 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "15.0",
-            "MARKETING_VERSION": "0.9.0",
+            "MARKETING_VERSION": "0.9.1",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",

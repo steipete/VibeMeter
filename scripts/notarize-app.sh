@@ -39,7 +39,7 @@ fi
 
 # Create temporary API key file
 API_KEY_FILE=$(mktemp)
-echo "$APP_STORE_CONNECT_API_KEY_P8" > "$API_KEY_FILE"
+echo "$APP_STORE_CONNECT_API_KEY_P8" | sed 's/\\n/\n/g' > "$API_KEY_FILE"
 
 cleanup() {
     rm -f "$API_KEY_FILE" "/tmp/VibeMeter_notarize.zip"
