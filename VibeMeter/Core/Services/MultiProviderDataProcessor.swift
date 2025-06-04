@@ -41,7 +41,7 @@ final class MultiProviderDataProcessor {
         let usage = result.usage
 
         logFetchedData(for: provider, userInfo: userInfo, teamInfo: teamInfo, invoice: invoice, usage: usage)
-        
+
         var context = DataStoreContext(
             userSessionData: userSessionData,
             spendingData: spendingData,
@@ -53,7 +53,7 @@ final class MultiProviderDataProcessor {
             usage: usage,
             context: &context)
         lastRefreshDates = context.lastRefreshDates
-        
+
         await updateCurrencyAndSpending(for: provider, invoice: invoice, spendingData: spendingData)
         updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
         logSuccessAndSpending(for: provider, spendingData: spendingData)

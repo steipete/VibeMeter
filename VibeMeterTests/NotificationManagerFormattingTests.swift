@@ -223,7 +223,9 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
         content.title = "Vibe Meter Already Running"
-        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 
