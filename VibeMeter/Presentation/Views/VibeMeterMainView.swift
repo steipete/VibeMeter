@@ -30,6 +30,7 @@ struct VibeMeterMainView: View {
                     })
             }
         }
+        .frame(minWidth: 320)
         .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel("VibeMeter main interface")
