@@ -73,6 +73,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private(set) var sparkleUpdaterManager: SparkleUpdaterManager?
     var multiProviderOrchestrator: MultiProviderDataOrchestrator?
+    
+    // Strong reference to prevent StatusBarController deallocation
+    // This must be retained for the entire app lifecycle
     private var statusBarController: StatusBarController?
 
     // Observable models for SwiftUI
@@ -192,7 +195,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_: Notification) {
         logger.info("VibeMeter terminating...")
 
-        // Cleanup
+        // Cleanup in proper order
+        statusBarController = nil
         multiProviderOrchestrator = nil
 
         // Remove distributed-notification observer (only if we registered it)

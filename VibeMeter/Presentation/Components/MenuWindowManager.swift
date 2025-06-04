@@ -34,7 +34,7 @@ final class MenuWindowManager {
         loginManager: MultiProviderLoginManager,
         spendingData: MultiProviderSpendingData,
         currencyData: CurrencyData,
-        orchestrator: MultiProviderDataOrchestrator?) {
+        orchestrator: MultiProviderDataOrchestrator) {
         
         // Store strong references to prevent deallocation in Release builds
         self.settingsManager = settingsManager
@@ -50,7 +50,7 @@ final class MenuWindowManager {
                 userSessionData: userSession,
                 loginManager: loginManager,
                 onRefresh: { [weak self] in
-                    // Use self instead of weak orchestrator to maintain the reference chain
+                    // Use strong reference to orchestrator
                     await self?.orchestrator?.refreshAllProviders(showSyncedMessage: true)
                 })
                 .environment(spendingData)

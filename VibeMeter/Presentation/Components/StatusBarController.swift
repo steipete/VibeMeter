@@ -28,7 +28,7 @@ final class StatusBarController: NSObject {
     private let loginManager: MultiProviderLoginManager
     private let spendingData: MultiProviderSpendingData
     private let currencyData: CurrencyData
-    private weak var orchestrator: MultiProviderDataOrchestrator?
+    private let orchestrator: MultiProviderDataOrchestrator
 
     init(settingsManager: any SettingsManagerProtocol,
          userSession: MultiProviderUserSessionData,
@@ -127,7 +127,7 @@ final class StatusBarController: NSObject {
 
     private func updateStatusItemState() {
         let isLoggedIn = userSession.isLoggedInToAnyProvider
-        let isFetchingData = orchestrator?.isRefreshing.values.contains(true) ?? false
+        let isFetchingData = orchestrator.isRefreshing.values.contains(true)
         let providers = spendingData.providersWithData
         let hasData = !providers.isEmpty
 
