@@ -121,9 +121,10 @@ public final class NetworkConnectivityMonitor {
         let newIsExpensive = path.isExpensive
         let newIsConstrained = path.isConstrained
 
-        logger
-            .debug(
-                "Network path update: connected=\(newConnectionState), type=\(newConnectionType?.displayName ?? "none"), expensive=\(newIsExpensive), constrained=\(newIsConstrained)")
+        let debugMessage = "Network path update: connected=\(newConnectionState), " +
+            "type=\(newConnectionType?.displayName ?? "none"), expensive=\(newIsExpensive), " +
+            "constrained=\(newIsConstrained)"
+        logger.debug(debugMessage)
 
         // Update state
         let wasConnected = isConnected
@@ -161,9 +162,9 @@ public final class NetworkConnectivityMonitor {
 
         // Connection type changed while connected
         if isNowConnected, wasConnected, wasConnectionType != newConnectionType {
-            logger
-                .info(
-                    "Connection type changed from \(wasConnectionType?.displayName ?? "none") to \(newConnectionType?.displayName ?? "none")")
+            let typeChangeMessage = "Connection type changed from \(wasConnectionType?.displayName ?? "none") " +
+                "to \(newConnectionType?.displayName ?? "none")"
+            logger.info(typeChangeMessage)
             await onConnectionTypeChanged?(newConnectionType)
         }
     }

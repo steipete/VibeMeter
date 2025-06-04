@@ -218,9 +218,9 @@ final class ApplicationMover {
     private func offerToMoveToApplications() {
         let alert = NSAlert()
         alert.messageText = "Move VibeMeter to Applications?"
-        alert
-            .informativeText =
-            "VibeMeter is currently running from a disk image or temporary location. Would you like to move it to your Applications folder for better performance and convenience?"
+        let informativeText = "VibeMeter is currently running from a disk image or temporary location. " +
+            "Would you like to move it to your Applications folder for better performance and convenience?"
+        alert.informativeText = informativeText
 
         alert.addButton(withTitle: "Move to Applications")
         alert.addButton(withTitle: "Don't Move")
@@ -304,9 +304,9 @@ final class ApplicationMover {
     private func showMoveSuccessAndRelaunch(newPath: String) {
         let alert = NSAlert()
         alert.messageText = "App Moved Successfully"
-        alert
-            .informativeText =
-            "VibeMeter has been moved to Applications. Would you like to quit this version and launch the one in Applications?"
+        let informativeText = "VibeMeter has been moved to Applications. " +
+            "Would you like to quit this version and launch the one in Applications?"
+        alert.informativeText = informativeText
 
         alert.addButton(withTitle: "Relaunch from Applications")
         alert.addButton(withTitle: "Continue Running")
@@ -357,9 +357,9 @@ final class ApplicationMover {
     private func showLaunchError(_ error: Error) {
         let alert = NSAlert()
         alert.messageText = "Failed to Launch from Applications"
-        alert
-            .informativeText =
-            "Could not launch VibeMeter from Applications: \(error.localizedDescription)\n\nYou can manually launch it from Applications later."
+        let informativeText = "Could not launch VibeMeter from Applications: \(error.localizedDescription)\n\n" +
+            "You can manually launch it from Applications later."
+        alert.informativeText = informativeText
         alert.addButton(withTitle: "OK")
         alert.alertStyle = .warning
         alert.runModal()

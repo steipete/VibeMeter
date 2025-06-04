@@ -247,9 +247,9 @@ public final class MultiProviderDataOrchestrator {
         logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
         logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
         logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
-        logger
-            .info(
-                "Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
+        let usageInfo = "Fetched usage for \(provider.displayName): " +
+            "\(usage.currentRequests)/\(usage.maxRequests ?? 0) requests"
+        logger.info(usageInfo)
     }
 
     private func updateDataStores(

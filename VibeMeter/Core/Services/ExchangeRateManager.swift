@@ -146,20 +146,21 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
 
     // MARK: - Static Helpers
 
+    private static let currencySymbols: [String: String] = [
+        "USD": "$",
+        "EUR": "€", 
+        "GBP": "£",
+        "JPY": "¥",
+        "AUD": "A$",
+        "CAD": "C$",
+        "CHF": "CHF",
+        "CNY": "¥",
+        "SEK": "kr",
+        "NZD": "NZ$"
+    ]
+    
     public static func getSymbol(for currencyCode: String) -> String {
-        switch currencyCode {
-        case "USD": "$"
-        case "EUR": "€"
-        case "GBP": "£"
-        case "JPY": "¥"
-        case "AUD": "A$"
-        case "CAD": "C$"
-        case "CHF": "CHF"
-        case "CNY": "¥"
-        case "SEK": "kr"
-        case "NZD": "NZ$"
-        default: currencyCode
-        }
+        return currencySymbols[currencyCode] ?? currencyCode
     }
 }
 

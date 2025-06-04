@@ -112,40 +112,50 @@ public struct ProviderSessionState: Codable, Sendable {
     /// Formats error messages for user display.
     private func formatErrorMessage(_ error: Error) -> String {
         if let providerError = error as? ProviderError {
-            switch providerError {
-            case .unauthorized:
-                return "Authentication failed. Please try logging in again."
-            case let .networkError(message, _):
-                if message.contains("timed out") {
-                    return "Connection timed out. Please check your internet connection."
-                }
-                return "Network error. Please try again."
-            case .tokenExpired:
-                return "Session expired. Please log in again."
-            case .rateLimitExceeded:
-                return "Too many requests. Please try again later."
-            case .serviceUnavailable:
-                return "Service temporarily unavailable."
-            default:
-                return "Login failed. Please try again."
-            }
+            return formatProviderError(providerError)
         }
-
-        // Check for network errors
+        
         if let urlError = error as? URLError {
-            switch urlError.code {
-            case .notConnectedToInternet:
-                return "No internet connection."
-            case .timedOut:
-                return "Request timed out. Please try again."
-            case .cannotFindHost, .cannotConnectToHost:
-                return "Cannot connect to server."
-            default:
-                return "Connection error. Please try again."
-            }
+            return formatURLError(urlError)
         }
-
-        // Generic error
+        
+        return formatGenericError(error)
+    }
+    
+    private func formatProviderError(_ error: ProviderError) -> String {
+        switch error {
+        case .unauthorized:
+            return "Authentication failed. Please try logging in again."
+        case let .networkError(message, _):
+            if message.contains("timed out") {
+                return "Connection timed out. Please check your internet connection."
+            }
+            return "Network error. Please try again."
+        case .tokenExpired:
+            return "Session expired. Please log in again."
+        case .rateLimitExceeded:
+            return "Too many requests. Please try again later."
+        case .serviceUnavailable:
+            return "Service temporarily unavailable."
+        default:
+            return "Login failed. Please try again."
+        }
+    }
+    
+    private func formatURLError(_ error: URLError) -> String {
+        switch error.code {
+        case .notConnectedToInternet:
+            return "No internet connection."
+        case .timedOut:
+            return "Request timed out. Please try again."
+        case .cannotFindHost, .cannotConnectToHost:
+            return "Cannot connect to server."
+        default:
+            return "Connection error. Please try again."
+        }
+    }
+    
+    private func formatGenericError(_ error: Error) -> String {
         let message = error.localizedDescription
         if message.count > 60 {
             return "Login failed. Please try again."

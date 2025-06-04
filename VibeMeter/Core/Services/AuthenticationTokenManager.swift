@@ -89,7 +89,8 @@ final class AuthenticationTokenManager: @unchecked Sendable {
             let keychain = KeychainHelper(service: provider.keychainService)
             helpers[provider] = keychain
             let hasToken = keychain.getToken() != nil
-            let keychainInfo = "Keychain check for \(provider.displayName): service=\(provider.keychainService), hasToken=\(hasToken)"
+            let keychainInfo = "Keychain check for \(provider.displayName): " +
+                "service=\(provider.keychainService), hasToken=\(hasToken)"
             logger.debug(keychainInfo)
         }
 

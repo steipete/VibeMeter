@@ -160,15 +160,17 @@ public final class CurrencyOrchestrator {
 
         // Check and send notifications
         if spendingUSD >= upperLimitUSD {
-            logger.info(
-                "Upper limit exceeded for \(provider.displayName): \(displaySpending) \(currency) >= \(displayUpperLimit) \(currency)")
+            let upperLimitMessage = "Upper limit exceeded for \(provider.displayName): " +
+                "\(displaySpending) \(currency) >= \(displayUpperLimit) \(currency)"
+            logger.info(upperLimitMessage)
             await notificationManager.showUpperLimitNotification(
                 currentSpending: displaySpending,
                 limitAmount: displayUpperLimit,
                 currencyCode: currency)
         } else if spendingUSD >= warningLimitUSD {
-            logger.info(
-                "Warning limit exceeded for \(provider.displayName): \(displaySpending) \(currency) >= \(displayWarningLimit) \(currency)")
+            let warningLimitMessage = "Warning limit exceeded for \(provider.displayName): " +
+                "\(displaySpending) \(currency) >= \(displayWarningLimit) \(currency)"
+            logger.info(warningLimitMessage)
             await notificationManager.showWarningNotification(
                 currentSpending: displaySpending,
                 limitAmount: displayWarningLimit,

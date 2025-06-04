@@ -28,8 +28,11 @@ struct ProvidersSettingsView: View {
                             showDetail: {
                                 showingProviderDetail = provider
                             })
-                            .id(
-                                "\(provider.rawValue)-\(userSessionData.getSession(for: provider)?.userEmail ?? "none")-\(userSessionData.isLoggedIn(to: provider))")
+                            .id({
+                                let email = userSessionData.getSession(for: provider)?.userEmail ?? "none"
+                                let isLoggedIn = userSessionData.isLoggedIn(to: provider)
+                                return "\(provider.rawValue)-\(email)-\(isLoggedIn)"
+                            }())
                     }
                 } header: {
                     HStack {

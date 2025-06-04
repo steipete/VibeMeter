@@ -133,56 +133,64 @@ class MenuBarStateManager {
     /// Calculate the current gauge value based on state and time
     func updateAnimation() {
         let currentTime = Date().timeIntervalSinceReferenceDate
-
+        updateGaugeAnimation(currentTime: currentTime)
+        updateCostAnimation(currentTime: currentTime)
+    }
+    
+    private func updateGaugeAnimation(currentTime: TimeInterval) {
         switch currentState {
         case .notLoggedIn:
             animatedGaugeValue = 0.0
-
         case .loading:
-            if isTransitioning {
-                // Handle transition into loading state
-                let elapsed = currentTime - animationStartTime
-                if elapsed >= transitionDuration {
-                    isTransitioning = false
-                    animationStartTime = currentTime
-                } else {
-                    let progress = elapsed / transitionDuration
-                    animatedGaugeValue = transitionStartValue + (transitionTargetValue - transitionStartValue) *
-                        easeInOut(progress)
-                    return
-                }
-            }
-
-            // Loading animation: 0→1→0
-            let cycleTime = (currentTime - animationStartTime).truncatingRemainder(dividingBy: loadingCycleDuration)
-            let halfCycle = loadingCycleDuration / 2
-
-            if cycleTime < halfCycle {
-                // Going up: 0→1
-                animatedGaugeValue = cycleTime / halfCycle
-            } else {
-                // Going down: 1→0
-                animatedGaugeValue = 1.0 - ((cycleTime - halfCycle) / halfCycle)
-            }
-
+            updateLoadingAnimation(currentTime: currentTime)
         case let .data(targetValue):
-            let clampedTargetValue = min(max(targetValue, 0.0), 1.0)
-            if isTransitioning {
-                let elapsed = currentTime - animationStartTime
-                if elapsed >= transitionDuration {
-                    isTransitioning = false
-                    animatedGaugeValue = clampedTargetValue
-                } else {
-                    let progress = elapsed / transitionDuration
-                    animatedGaugeValue = transitionStartValue + (clampedTargetValue - transitionStartValue) *
-                        easeInOut(progress)
-                }
+            updateDataAnimation(currentTime: currentTime, targetValue: targetValue)
+        }
+    }
+    
+    private func updateLoadingAnimation(currentTime: TimeInterval) {
+        if isTransitioning {
+            let elapsed = currentTime - animationStartTime
+            if elapsed >= transitionDuration {
+                isTransitioning = false
+                animationStartTime = currentTime
             } else {
-                animatedGaugeValue = clampedTargetValue
+                let progress = elapsed / transitionDuration
+                animatedGaugeValue = transitionStartValue + (transitionTargetValue - transitionStartValue) *
+                    easeInOut(progress)
+                return
             }
         }
 
-        // Handle cost animation independently
+        // Loading animation: 0→1→0
+        let cycleTime = (currentTime - animationStartTime).truncatingRemainder(dividingBy: loadingCycleDuration)
+        let halfCycle = loadingCycleDuration / 2
+
+        if cycleTime < halfCycle {
+            animatedGaugeValue = cycleTime / halfCycle
+        } else {
+            animatedGaugeValue = 1.0 - ((cycleTime - halfCycle) / halfCycle)
+        }
+    }
+    
+    private func updateDataAnimation(currentTime: TimeInterval, targetValue: Double) {
+        let clampedTargetValue = min(max(targetValue, 0.0), 1.0)
+        if isTransitioning {
+            let elapsed = currentTime - animationStartTime
+            if elapsed >= transitionDuration {
+                isTransitioning = false
+                animatedGaugeValue = clampedTargetValue
+            } else {
+                let progress = elapsed / transitionDuration
+                animatedGaugeValue = transitionStartValue + (clampedTargetValue - transitionStartValue) *
+                    easeInOut(progress)
+            }
+        } else {
+            animatedGaugeValue = clampedTargetValue
+        }
+    }
+    
+    private func updateCostAnimation(currentTime: TimeInterval) {
         if isCostTransitioning {
             let elapsed = currentTime - costAnimationStartTime
             if elapsed >= costTransitionDuration {

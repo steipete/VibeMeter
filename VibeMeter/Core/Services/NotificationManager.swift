@@ -80,10 +80,9 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted =
-            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted =
-            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -108,10 +107,9 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let spendingFormatted =
-            "\(symbol)\(currentSpending.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
-        let limitFormatted =
-            "\(symbol)\(limitAmount.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))"
+        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
+        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
+        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"

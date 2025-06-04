@@ -145,9 +145,9 @@ public final class SettingsManager: SettingsManagerProtocol {
 
         logger.info("SettingsManager initialized with \(self.providerSessions.count) provider sessions")
         for (provider, session) in providerSessions {
-            logger
-                .info(
-                    "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
+            let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), " +
+                "teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
+            logger.info(sessionInfo)
         }
     }
 

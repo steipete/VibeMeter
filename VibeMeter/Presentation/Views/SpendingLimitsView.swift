@@ -83,63 +83,85 @@ struct SpendingLimitsView: View {
 
     private func limitContent(amountUSD _: Double, convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Determine which text binding to use
-            let textBinding: Binding<String> = if description.contains("critical") {
-                $upperLimitText
-            } else {
-                $warningLimitText
-            }
-
+            let textBinding = getTextBinding(for: description)
+            
             LabeledContent("Amount") {
-                HStack(spacing: 8) {
-                    Text("$")
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                    TextField("0", text: textBinding)
-                        .textFieldStyle(.plain)
-                        .font(.system(.body, design: .monospaced))
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                        .onChange(of: textBinding.wrappedValue) { _, newValue in
-                            // Allow only numbers and one decimal point
-                            var filtered = ""
-                            var hasDecimal = false
-                            for char in newValue {
-                                if char.isNumber {
-                                    filtered.append(char)
-                                } else if char == ".", !hasDecimal {
-                                    filtered.append(char)
-                                    hasDecimal = true
-                                }
-                            }
-
-                            if filtered != newValue {
-                                textBinding.wrappedValue = filtered
-                            }
-
-                            // Update the actual limit value
-                            if let value = Double(filtered), value >= 0 {
-                                if description.contains("critical") {
-                                    settingsManager.upperLimitUSD = value
-                                } else {
-                                    settingsManager.warningLimitUSD = value
-                                }
-                            }
-                        }
-                    Text("USD")
-                        .foregroundStyle(.secondary)
-                }
+                limitAmountField(textBinding: textBinding, description: description)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                if !currencyData.isUSD {
-                    currencyApproximation(convertedAmount: convertedAmount)
+            limitDescriptionSection(convertedAmount: convertedAmount, description: description)
+        }
+    }
+    
+    private func getTextBinding(for description: String) -> Binding<String> {
+        if description.contains("critical") {
+            return $upperLimitText
+        } else {
+            return $warningLimitText
+        }
+    }
+    
+    private func limitAmountField(textBinding: Binding<String>, description: String) -> some View {
+        HStack(spacing: 8) {
+            Text("$")
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(.secondary)
+            TextField("0", text: textBinding)
+                .textFieldStyle(.plain)
+                .font(.system(.body, design: .monospaced))
+                .multilineTextAlignment(.trailing)
+                .frame(width: 80)
+                .onChange(of: textBinding.wrappedValue) { _, newValue in
+                    handleTextFieldChange(newValue: newValue, textBinding: textBinding, description: description)
                 }
+            Text("USD")
+                .foregroundStyle(.secondary)
+        }
+    }
+    
+    private func handleTextFieldChange(newValue: String, textBinding: Binding<String>, description: String) {
+        let filtered = filterNumericInput(newValue)
+        
+        if filtered != newValue {
+            textBinding.wrappedValue = filtered
+        }
 
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        updateLimitValue(from: filtered, description: description)
+    }
+    
+    private func filterNumericInput(_ input: String) -> String {
+        var filtered = ""
+        var hasDecimal = false
+        for char in input {
+            if char.isNumber {
+                filtered.append(char)
+            } else if char == ".", !hasDecimal {
+                filtered.append(char)
+                hasDecimal = true
             }
+        }
+        return filtered
+    }
+    
+    private func updateLimitValue(from text: String, description: String) {
+        if let value = Double(text), value >= 0 {
+            if description.contains("critical") {
+                settingsManager.upperLimitUSD = value
+            } else {
+                settingsManager.warningLimitUSD = value
+            }
+        }
+    }
+    
+    private func limitDescriptionSection(convertedAmount: Double, description: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if !currencyData.isUSD {
+                currencyApproximation(convertedAmount: convertedAmount)
+            }
+
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -157,8 +179,11 @@ struct SpendingLimitsView: View {
     private var footerContent: some View {
         HStack {
             Spacer()
-            Text(
-                "Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor.")
+            Text({
+                let limitText = "Limits are stored in USD and will be displayed in your selected currency " +
+                    "(\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor."
+                return limitText
+            }())
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

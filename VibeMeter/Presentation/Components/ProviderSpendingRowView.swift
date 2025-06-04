@@ -130,9 +130,9 @@ struct ProviderSpendingRowView: View {
                     from: "USD",
                     to: currencyData.selectedCode,
                     rates: currencyData.effectiveRates) ?? spendingUSD
-            components
-                .append(
-                    "spending \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
+            let formattedSpending = convertedSpending.formatted(.number.precision(.fractionLength(2)))
+            let spendingText = "spending \(currencyData.selectedSymbol)\(formattedSpending)"
+            components.append(spendingText)
         } else {
             components.append("no spending data")
         }
