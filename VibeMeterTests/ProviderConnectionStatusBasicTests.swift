@@ -136,7 +136,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
         // When/Then
         for error in authErrors {
-            let status = ProviderConnectionStatus.from( error)
+            let status = ProviderConnectionStatus.from(error)
             XCTAssertEqual(status, .disconnected, "Authentication errors should result in disconnected status")
         }
     }
@@ -146,7 +146,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let rateLimitError = ProviderError.rateLimitExceeded
 
         // When
-        let status = ProviderConnectionStatus.from( rateLimitError)
+        let status = ProviderConnectionStatus.from(rateLimitError)
 
         // Then
         if case .rateLimited = status {
@@ -163,7 +163,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
             statusCode: 500)
 
         // When
-        let status = ProviderConnectionStatus.from( networkError)
+        let status = ProviderConnectionStatus.from(networkError)
 
         // Then
         if case let .error(message) = status {
@@ -178,23 +178,23 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let dataError = ProviderError.serviceUnavailable
 
         // When
-        let status = ProviderConnectionStatus.from( dataError)
+        let status = ProviderConnectionStatus.from(dataError)
 
         // Then
         XCTAssertEqual(status, .stale, "Service unavailable errors should result in stale status")
     }
 
     func testFromProviderError_OtherErrors() {
-        // Given
+        // Given - Test non-authentication errors that should result in error status
         let otherErrors: [ProviderError] = [
             .decodingError(message: "Invalid JSON", statusCode: 200),
-            .unauthorized,
-            .tokenExpired,
+            .noTeamFound,
+            .teamIdNotSet,
         ]
 
         // When/Then
         for error in otherErrors {
-            let status = ProviderConnectionStatus.from( error)
+            let status = ProviderConnectionStatus.from(error)
             if case .error = status {
                 // Success - all other errors should result in error status
             } else {
@@ -303,7 +303,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
         // When/Then - Ensure each error produces a valid status
         for error in allErrors {
-            let status = ProviderConnectionStatus.from( error)
+            let status = ProviderConnectionStatus.from(error)
             // Just verify it doesn't crash and returns a valid status
             XCTAssertNotNil(status)
         }
