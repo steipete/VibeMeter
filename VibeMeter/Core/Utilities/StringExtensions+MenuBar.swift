@@ -14,8 +14,8 @@ extension String {
     func truncated(to length: Int) -> String {
         if count > length {
             if length <= 3 {
-                // If target length is 3 or less, just return ellipsis or truncate without ellipsis
-                return length > 0 ? String(repeating: ".", count: min(length, 3)) : ""
+                // For very short lengths, always return full ellipsis
+                return "..."
             }
             return String(prefix(length - 3)) + "..."
         }
