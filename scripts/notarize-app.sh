@@ -75,6 +75,8 @@ EOF
         cat >> "$entitlements_file" << 'EOF'
     <key>com.apple.security.app-sandbox</key>
     <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
 EOF
