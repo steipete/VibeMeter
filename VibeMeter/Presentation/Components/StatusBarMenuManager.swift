@@ -9,6 +9,8 @@ import SwiftUI
 final class StatusBarMenuManager {
     // MARK: - Private Properties
 
+    private var customMenuWindow: CustomMenuWindow?
+
     // Strong references to prevent deallocation in Release builds
     private var settingsManager: (any SettingsManagerProtocol)?
     private var userSession: MultiProviderUserSessionData?
@@ -40,25 +42,81 @@ final class StatusBarMenuManager {
         self.spendingData = spendingData
         self.currencyData = currencyData
         self.orchestrator = orchestrator
+
+        setupCustomMenuWindow()
     }
 
-    // MARK: - Left-Click Popover Management (Placeholder)
+    private func setupCustomMenuWindow() {
+        guard let settingsManager = settingsManager,
+              let userSession = userSession,
+              let loginManager = loginManager,
+              let spendingData = spendingData,
+              let currencyData = currencyData,
+              let orchestrator = orchestrator else { return }
 
-    /// These methods are kept for compatibility but no longer manage a custom window
-    func togglePopover(relativeTo _: NSStatusBarButton) {
-        // No-op: Custom window functionality removed
+        let contentView = CustomMenuContainer {
+            VibeMeterMainView(
+                settingsManager: settingsManager,
+                userSessionData: userSession,
+                loginManager: loginManager,
+                onRefresh: { [weak self] in
+                    // Use strong reference to orchestrator
+                    await self?.orchestrator?.refreshAllProviders(showSyncedMessage: true)
+                })
+                .environment(spendingData)
+                .environment(currencyData)
+        }
+
+        // Create and store the window
+        let window = CustomMenuWindow(contentView: contentView)
+        self.customMenuWindow = window
+
+        // Force the window to load its view hierarchy immediately
+        // This is crucial for Release builds where lazy loading might fail
+        _ = window.contentView
     }
 
-    func showPopover(relativeTo _: NSStatusBarButton) {
-        // No-op: Custom window functionality removed
+    // MARK: - Left-Click Popover Management
+
+    /// Toggles the popover visibility for left-click
+    func togglePopover(relativeTo button: NSStatusBarButton) {
+        guard let window = customMenuWindow else { return }
+
+        // Simple approach: just check if window thinks it's visible and hide/show accordingly
+        // This avoids state tracking issues by being stateless
+        if window.isVisible {
+            window.hide()
+        } else {
+            window.show(relativeTo: button)
+        }
     }
 
+    /// Shows the popover menu (used for initial display when not logged in)
+    func showPopover(relativeTo button: NSStatusBarButton) {
+        guard let window = customMenuWindow else { return }
+
+        if !window.isVisible {
+            window.show(relativeTo: button)
+        }
+    }
+
+    /// Hides the popover menu if it's currently visible
     func hidePopover() {
-        // No-op: Custom window functionality removed
+        guard let window = customMenuWindow else { return }
+
+        if window.isVisible {
+            window.hide()
+        }
     }
 
+    /// Returns whether the popover is currently visible
     var isPopoverVisible: Bool {
-        false
+        customMenuWindow?.isVisible ?? false
+    }
+
+    /// Gets the current menu window for external access if needed
+    var menuWindow: CustomMenuWindow? {
+        customMenuWindow
     }
 
     // MARK: - Right-Click Context Menu
