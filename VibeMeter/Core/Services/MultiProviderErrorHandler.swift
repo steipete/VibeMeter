@@ -22,6 +22,7 @@ final class MultiProviderErrorHandler {
     // MARK: - Public Methods
 
     /// Handles errors that occur during provider data refresh operations.
+    @MainActor
     func handleRefreshError(
         for provider: ServiceProvider,
         error: Error,
@@ -55,6 +56,7 @@ final class MultiProviderErrorHandler {
 
     // MARK: - Private Methods
 
+    @MainActor
     private func handleProviderSpecificError(
         for provider: ServiceProvider,
         error: ProviderError,
@@ -80,6 +82,7 @@ final class MultiProviderErrorHandler {
         }
     }
 
+    @MainActor
     private func handleRateLimitError(
         for provider: ServiceProvider,
         spendingData: MultiProviderSpendingData,
@@ -89,6 +92,7 @@ final class MultiProviderErrorHandler {
         refreshErrors[provider] = "Rate limit exceeded"
     }
 
+    @MainActor
     private func handleNetworkError(
         for provider: ServiceProvider,
         error: NetworkRetryHandler.RetryableError,
@@ -103,6 +107,7 @@ final class MultiProviderErrorHandler {
         refreshErrors[provider] = error.localizedDescription
     }
 
+    @MainActor
     private func handleGenericError(
         for provider: ServiceProvider,
         error: Error,

@@ -29,6 +29,7 @@ final class MultiProviderDataProcessor {
     // MARK: - Public Methods
 
     /// Processes a successful data fetch result from a provider.
+    @MainActor
     func processSuccessfulRefresh(
         for provider: ServiceProvider,
         result: ProviderDataResult,
@@ -83,6 +84,7 @@ final class MultiProviderDataProcessor {
         var lastRefreshDates: [ServiceProvider: Date]
     }
 
+    @MainActor
     private func updateDataStores(
         for provider: ServiceProvider,
         userInfo: ProviderUserInfo,
@@ -113,6 +115,7 @@ final class MultiProviderDataProcessor {
         logger.info("Updated spending data for \(provider.displayName)")
     }
 
+    @MainActor
     private func updateGravatarIfNeeded(
         for provider: ServiceProvider,
         userEmail: String,
@@ -123,6 +126,7 @@ final class MultiProviderDataProcessor {
         }
     }
 
+    @MainActor
     private func logSuccessAndSpending(for provider: ServiceProvider, spendingData: MultiProviderSpendingData) {
         logger.info("Successfully refreshed data for \(provider.displayName)")
         let providerSpending = spendingData.getSpendingData(for: provider)
