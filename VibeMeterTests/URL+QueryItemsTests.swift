@@ -273,7 +273,7 @@ final class URLQueryItemsTests: XCTestCase {
         let result = baseURL.appendingQueryItems(currencyItems)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://frankfurter.app/latest?from=USD&to=EUR%2CGBP%2CJPY")
+        XCTAssertEqual(result.absoluteString, "https://frankfurter.app/latest?from=USD&to=EUR,GBP,JPY")
     }
 
     // MARK: - Chaining Tests

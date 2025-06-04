@@ -177,7 +177,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = email.truncated(to: length)
 
         // Then
-        XCTAssertEqual(result, "user@verylongdom...")
+        XCTAssertEqual(result, "user@verylongdoma...")
         XCTAssertEqual(result.count, 20)
     }
 
@@ -257,7 +257,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = string.truncated(to: length)
 
         // Then
-        XCTAssertEqual(result, "Hello W...")
+        XCTAssertEqual(result, "Hello Wo...")
         XCTAssertEqual(result.count, 11)
     }
 
@@ -372,7 +372,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = errorMessage.truncated(to: maxLength)
 
         // Then
-        XCTAssertEqual(result, "Authentication failed: The provided API key i...")
+        XCTAssertEqual(result, "Authentication failed: The provided API key is ...")
         XCTAssertEqual(result.count, 50)
     }
 
@@ -393,7 +393,7 @@ final class StringExtensionsTests: XCTestCase {
         XCTAssertEqual(truncateResult.count, 18) // 15 + 3
 
         // truncated() ensures total length doesn't exceed specified length
-        XCTAssertEqual(truncatedResult, "This is a t...")
+        XCTAssertEqual(truncatedResult, "This is a te...")
         XCTAssertEqual(truncatedResult.count, 15)
     }
 
@@ -499,7 +499,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "English 中文 E...")
+        XCTAssertEqual(result, "English 中文 ا...")
     }
 
     // MARK: - Boundary Value Tests
