@@ -67,7 +67,7 @@ let project = Project(
             deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": "1.0.0",
-                "CFBundleVersion": "1",
+                "CFBundleVersion": "2",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
                 "NSSupportsAutomaticTermination": false,
@@ -76,7 +76,7 @@ let project = Project(
                 ],
                 // Sparkle configuration
                 "SUFeedURL": "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml",
-                "SUPublicEDKey": "MCowBQYDK2VwAyEArLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=",
+                "SUPublicEDKey": "rLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=",
                 "SUEnableAutomaticChecks": true,
                 "SUAutomaticallyUpdate": false,
                 "SUCheckAtStartup": true,
