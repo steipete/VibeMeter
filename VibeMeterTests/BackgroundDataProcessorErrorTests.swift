@@ -30,7 +30,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
 
         mockProvider.invoiceToReturn = ProviderMonthlyInvoice(
             items: [
-                ProviderInvoiceItem(cents: 2000, description: "Test Item", provider: .cursor)
+                ProviderInvoiceItem(cents: 2000, description: "Test Item", provider: .cursor),
             ],
             pricingDescription: nil,
             provider: .cursor,
@@ -91,7 +91,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         XCTAssertEqual(result.teamInfo.id, 0) // Fallback team ID
         XCTAssertEqual(result.teamInfo.name, "Individual Account") // Fallback team name
         XCTAssertNil(mockProvider.lastTeamId) // Should pass nil for fallback team
-        
+
         // All methods should be called
         XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
         XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
@@ -136,7 +136,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         XCTAssertEqual(result.usage.totalRequests, 0)
         XCTAssertNil(result.usage.maxRequests)
         XCTAssertEqual(result.usage.provider, .cursor)
-        
+
         // All methods should be called
         XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
         XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
@@ -161,10 +161,10 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         XCTAssertEqual(result.teamInfo.name, "Individual Account")
         XCTAssertEqual(result.usage.currentRequests, 0) // Fallback usage
         XCTAssertEqual(result.usage.totalRequests, 0)
-        
+
         // Invoice should still have real data
         XCTAssertEqual(result.invoice.totalSpendingCents, 2000)
-        
+
         // All methods should be called
         XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
         XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)

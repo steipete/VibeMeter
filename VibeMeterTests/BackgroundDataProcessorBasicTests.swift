@@ -30,7 +30,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         mockProvider.invoiceToReturn = ProviderMonthlyInvoice(
             items: [
-                ProviderInvoiceItem(cents: 2000, description: "Test Item", provider: .cursor)
+                ProviderInvoiceItem(cents: 2000, description: "Test Item", provider: .cursor),
             ],
             pricingDescription: nil,
             provider: .cursor,
@@ -201,7 +201,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // When
         let startTime = Date()
-        for _ in 0..<iterations {
+        for _ in 0 ..< iterations {
             _ = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",

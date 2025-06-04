@@ -124,7 +124,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             forName: Notification.Name("UpdateChannelChanged"),
             object: nil,
             queue: .main) { [weak self] notification in
-                guard let self = self,
+                guard let self,
                       let userInfo = notification.userInfo,
                       let channel = userInfo["channel"] as? UpdateChannel else { return }
 
@@ -213,7 +213,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     }
 
     // Provide dynamic feed URL based on current update channel
-    public nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
+    public nonisolated func feedURLString(for _: SPUUpdater) -> String? {
         let channel = MainActor.assumeIsolated {
             self.currentChannel
         }

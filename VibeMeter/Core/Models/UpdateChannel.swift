@@ -12,9 +12,9 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     public var displayName: String {
         switch self {
         case .stable:
-            return "Stable Only"
+            "Stable Only"
         case .prerelease:
-            return "Include Pre-releases"
+            "Include Pre-releases"
         }
     }
 
@@ -22,9 +22,9 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     public var description: String {
         switch self {
         case .stable:
-            return "Receive only stable, production-ready releases"
+            "Receive only stable, production-ready releases"
         case .prerelease:
-            return "Receive both stable releases and beta/pre-release versions"
+            "Receive both stable releases and beta/pre-release versions"
         }
     }
 
@@ -32,9 +32,9 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     public var appcastURL: String {
         switch self {
         case .stable:
-            return "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml"
+            "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml"
         case .prerelease:
-            return "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml"
+            "https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml"
         }
     }
 
@@ -42,9 +42,9 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     public var includesPreReleases: Bool {
         switch self {
         case .stable:
-            return false
+            false
         case .prerelease:
-            return true
+            true
         }
     }
 

@@ -133,7 +133,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         self.provider = provider
     }
 
-    func fetchUserInfo(authToken: String) async throws -> ProviderUserInfo {
+    func fetchUserInfo(authToken _: String) async throws -> ProviderUserInfo {
         lock.withLock { _fetchUserInfoCallCount += 1 }
 
         if userInfoDelay > 0 {
@@ -151,7 +151,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         return userInfo
     }
 
-    func fetchTeamInfo(authToken: String) async throws -> ProviderTeamInfo {
+    func fetchTeamInfo(authToken _: String) async throws -> ProviderTeamInfo {
         lock.withLock { _fetchTeamInfoCallCount += 1 }
 
         if teamInfoDelay > 0 {
@@ -170,7 +170,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
     }
 
     func fetchMonthlyInvoice(
-        authToken: String,
+        authToken _: String,
         month: Int,
         year: Int,
         teamId: Int?) async throws -> ProviderMonthlyInvoice {
@@ -196,7 +196,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         return invoice
     }
 
-    func fetchUsageData(authToken: String) async throws -> ProviderUsageData {
+    func fetchUsageData(authToken _: String) async throws -> ProviderUsageData {
         lock.withLock { _fetchUsageDataCallCount += 1 }
 
         if usageDelay > 0 {
@@ -228,7 +228,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
     }
 
     func extractAuthToken(from callbackData: [String: Any]) -> String? {
-        return callbackData["test_token"] as? String
+        callbackData["test_token"] as? String
     }
 
     func reset() {

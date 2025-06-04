@@ -58,11 +58,10 @@ public actor CursorProvider: ProviderProtocol {
         logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
         // Determine the team ID to use - either provided or stored
-        let effectiveTeamId: Int?
-        if let providedTeamId = teamId {
-            effectiveTeamId = providedTeamId
+        let effectiveTeamId: Int? = if let providedTeamId = teamId {
+            providedTeamId
         } else {
-            effectiveTeamId = await getTeamId()
+            await getTeamId()
         }
 
         // Cursor API requires a team ID for invoice requests

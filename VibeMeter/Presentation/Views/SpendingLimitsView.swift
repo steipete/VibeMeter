@@ -12,9 +12,12 @@ struct SpendingLimitsView: View {
     @Environment(CurrencyData.self)
     private var currencyData
 
-    @State private var warningLimitText: String = ""
-    @State private var upperLimitText: String = ""
-    @State private var showingResetAlert = false
+    @State
+    private var warningLimitText: String = ""
+    @State
+    private var upperLimitText: String = ""
+    @State
+    private var showingResetAlert = false
 
     init(settingsManager: any SettingsManagerProtocol, userSessionData: MultiProviderUserSessionData) {
         self.settingsManager = settingsManager
@@ -41,11 +44,15 @@ struct SpendingLimitsView: View {
     // MARK: - Computed Properties
 
     private var convertedWarningLimit: Double {
-        currencyData.convertAmount(settingsManager.warningLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager.warningLimitUSD
+        currencyData
+            .convertAmount(settingsManager.warningLimitUSD, from: "USD", to: currencyData.selectedCode) ??
+            settingsManager.warningLimitUSD
     }
 
     private var convertedUpperLimit: Double {
-        currencyData.convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
+        currencyData
+            .convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager
+            .upperLimitUSD
     }
 
     // MARK: - Helper Views
@@ -74,16 +81,14 @@ struct SpendingLimitsView: View {
         }
     }
 
-    private func limitContent(amountUSD: Double, convertedAmount: Double, description: String) -> some View {
+    private func limitContent(amountUSD _: Double, convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // Determine which text binding to use
-            let textBinding: Binding<String> = {
-                if description.contains("critical") {
-                    return $upperLimitText
-                } else {
-                    return $warningLimitText
-                }
-            }()
+            let textBinding: Binding<String> = if description.contains("critical") {
+                $upperLimitText
+            } else {
+                $warningLimitText
+            }
 
             LabeledContent("Amount") {
                 HStack(spacing: 8) {
@@ -102,7 +107,7 @@ struct SpendingLimitsView: View {
                             for char in newValue {
                                 if char.isNumber {
                                     filtered.append(char)
-                                } else if char == "." && !hasDecimal {
+                                } else if char == ".", !hasDecimal {
                                     filtered.append(char)
                                     hasDecimal = true
                                 }
@@ -165,8 +170,7 @@ struct SpendingLimitsView: View {
 #Preview {
     SpendingLimitsView(
         settingsManager: MockSettingsManager(),
-        userSessionData: PreviewData.mockUserSession()
-    )
-    .environment(PreviewData.mockCurrencyData())
-    .frame(width: 600, height: 400)
+        userSessionData: PreviewData.mockUserSession())
+        .environment(PreviewData.mockCurrencyData())
+        .frame(width: 600, height: 400)
 }

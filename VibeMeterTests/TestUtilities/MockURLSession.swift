@@ -16,7 +16,7 @@ public final class MockURLSession: URLSessionProtocol, @unchecked Sendable {
         dataTaskCallCount += 1
         lastURL = request.url
         lastRequest = request
-        
+
         print("MockURLSession: Request URL: \(request.url?.absoluteString ?? "nil")")
         print("MockURLSession: Has nextData: \(nextData != nil), Data size: \(nextData?.count ?? 0)")
 

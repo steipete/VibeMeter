@@ -7,7 +7,8 @@ import SwiftUI
 /// and menu bar display options. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    @Bindable var settingsManager: SettingsManager
+    @Bindable
+    var settingsManager: SettingsManager
 
     @State
     private var hasUserMadeCurrencyChoice = UserDefaults.standard

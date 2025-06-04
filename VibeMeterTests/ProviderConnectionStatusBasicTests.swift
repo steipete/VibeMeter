@@ -143,24 +143,16 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
     func testFromProviderError_RateLimitErrors() {
         // Given
-        let rateLimitErrors: [ProviderError] = [
-            .rateLimited(resetDate: nil),
-            .rateLimited(resetDate: Date().addingTimeInterval(300)),
-        ]
+        let rateLimitError = ProviderError.rateLimitExceeded
 
-        // When/Then
-        for error in rateLimitErrors {
-            let status = ProviderConnectionStatus.from(providerError: error)
-            if case let .rateLimited(until) = status {
-                switch error {
-                case let .rateLimited(resetDate):
-                    XCTAssertEqual(until, resetDate)
-                default:
-                    XCTFail("Unexpected error type")
-                }
-            } else {
-                XCTFail("Rate limit errors should result in rateLimited status")
-            }
+        // When
+        let status = ProviderConnectionStatus.from(providerError: rateLimitError)
+
+        // Then
+        if case .rateLimited = status {
+            // Success - rate limit error should result in rateLimited status
+        } else {
+            XCTFail("Rate limit errors should result in rateLimited status")
         }
     }
 
@@ -300,13 +292,13 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
         // Given - Create instances of all ProviderError cases
         let allErrors: [ProviderError] = [
-            .networkError(message: "test", underlyingError: nil),
-            .authenticationFailed(message: "test"),
-            .invalidResponse(statusCode: 500),
+            .networkError(message: "test", statusCode: 500),
+            .authenticationFailed(reason: "test"),
             .decodingError(message: "test", statusCode: 200),
-            .rateLimited(resetDate: nil),
-            .dataUnavailable(message: "test"),
-            .cacheExpired,
+            .rateLimitExceeded,
+            .serviceUnavailable,
+            .unauthorized,
+            .tokenExpired,
         ]
 
         // When/Then - Ensure each error produces a valid status

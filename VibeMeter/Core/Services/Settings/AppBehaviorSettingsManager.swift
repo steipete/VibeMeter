@@ -69,6 +69,7 @@ public final class AppBehaviorSettingsManager {
             logger.debug("Update channel changed to: \(self.updateChannel.rawValue)")
         }
     }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard, startupManager: StartupControlling = StartupManager()) {

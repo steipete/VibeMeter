@@ -173,36 +173,36 @@ final class NotificationManagerBasicTests: XCTestCase {
 
 private final class TestableNotificationManager: NSObject, NotificationManagerProtocol {
     let notificationCenter: MockUNUserNotificationCenter
-    
+
     init(notificationCenter: MockUNUserNotificationCenter) {
         self.notificationCenter = notificationCenter
         super.init()
     }
-    
+
     func requestAuthorization() async -> Bool {
         true // Mock implementation
     }
-    
-    func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+
+    func showWarningNotification(currentSpending _: Double, limitAmount _: Double, currencyCode _: String) async {
         // Mock implementation
     }
-    
-    func showUpperLimitNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+
+    func showUpperLimitNotification(currentSpending _: Double, limitAmount _: Double, currencyCode _: String) async {
         // Mock implementation
     }
-    
+
     func resetNotificationStateIfBelow(
-        limitType: NotificationLimitType,
-        currentSpendingUSD: Double,
-        warningLimitUSD: Double,
-        upperLimitUSD: Double) async {
+        limitType _: NotificationLimitType,
+        currentSpendingUSD _: Double,
+        warningLimitUSD _: Double,
+        upperLimitUSD _: Double) async {
         // Mock implementation
     }
-    
+
     func resetAllNotificationStatesForNewSession() async {
         // Mock implementation
     }
-    
+
     func showInstanceAlreadyRunningNotification() async {
         // Mock implementation
     }
@@ -217,15 +217,14 @@ private final class MockUNUserNotificationCenter {
 
     var addCallCount = 0
     var lastAddedRequest: UNNotificationRequest?
-    
+
     init() {
         // Custom init for testing
     }
 
     func requestAuthorization(
         options: UNAuthorizationOptions,
-        completionHandler: @escaping (Bool, Error?) -> Void
-    ) {
+        completionHandler: @escaping (Bool, Error?) -> Void) {
         requestAuthorizationCallCount += 1
         lastRequestedOptions = options
 

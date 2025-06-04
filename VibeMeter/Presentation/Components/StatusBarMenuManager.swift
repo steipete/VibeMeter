@@ -27,7 +27,7 @@ final class StatusBarMenuManager {
     }
 
     // MARK: - Configuration
-    
+
     /// Configuration for menu manager setup
     struct Configuration {
         let settingsManager: any SettingsManagerProtocol
@@ -62,12 +62,12 @@ final class StatusBarMenuManager {
     }
 
     func showCustomWindow(relativeTo button: NSStatusBarButton) {
-        guard let settingsManager = settingsManager,
-              let userSession = userSession,
-              let loginManager = loginManager,
-              let spendingData = spendingData,
-              let currencyData = currencyData,
-              let orchestrator = orchestrator else { return }
+        guard let settingsManager,
+              let userSession,
+              let loginManager,
+              let spendingData,
+              let currencyData,
+              let orchestrator else { return }
 
         // Hide any existing context menu first
         // Note: Context menu hiding is handled by the StatusBarController
@@ -81,10 +81,9 @@ final class StatusBarMenuManager {
                 Task {
                     await orchestrator.refreshAllProviders(showSyncedMessage: true)
                 }
-            }
-        )
-        .environment(spendingData)
-        .environment(currencyData)
+            })
+            .environment(spendingData)
+            .environment(currencyData)
 
         // Wrap in custom container for proper styling
         let containerView = CustomMenuContainer {
