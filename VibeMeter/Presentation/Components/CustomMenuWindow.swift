@@ -10,18 +10,18 @@ import SwiftUI
 @MainActor
 final class CustomMenuWindow: NSPanel {
     private var eventMonitor: Any?
-    private let hostingController: NSViewController
+    private var hostingController: NSViewController
 
     init(contentView: some View) {
         // Create content view controller
         hostingController = NSHostingController(rootView: contentView)
 
         // Initialize window with appropriate style
-        // Start with a minimal height – the real height will be determined from
+        // Start with a minimal size – the real size will be determined from
         // the SwiftUI view's intrinsic content size before the panel is shown.
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 100),
-            styleMask: [.borderless, .nonactivatingPanel],
+            contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false)
 
@@ -31,6 +31,8 @@ final class CustomMenuWindow: NSPanel {
         level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isMovableByWindowBackground = false
+
+        // Window properties are configured by overriding computed properties
 
         // Set content view controller
         contentViewController = hostingController
@@ -64,10 +66,9 @@ final class CustomMenuWindow: NSPanel {
         // hosting view reports an accurate fitting size.
         hostingController.view.layoutSubtreeIfNeeded()
 
-        // Determine the preferred height based on the content. We fix the
-        // width to 300 pt for consistency with the design language.
-        let preferredHeight = hostingController.view.fittingSize.height
-        let preferredSize = NSSize(width: 300, height: preferredHeight)
+        // Determine the preferred size based on the content's intrinsic size
+        let fittingSize = hostingController.view.fittingSize
+        let preferredSize = NSSize(width: fittingSize.width, height: fittingSize.height)
 
         // Update the panel's content size so auto-layout inside the window gets
         // the right dimensions.
@@ -85,6 +86,9 @@ final class CustomMenuWindow: NSPanel {
         alphaValue = 0
         orderFront(nil)
 
+        // Make the window key for text input when login is visible
+        makeKeyAndOrderFront(nil)
+
         // Modern animation with improved easing
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
@@ -97,6 +101,30 @@ final class CustomMenuWindow: NSPanel {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(100))
             setupEventMonitoring()
+        }
+    }
+
+    
+    /// Animates the window to a new size without flipping
+    func animateToSize(_ newSize: NSSize, relativeTo statusItemButton: NSStatusBarButton) {
+        guard let statusWindow = statusItemButton.window else { return }
+
+        // Get status item frame for positioning
+        let buttonBounds = statusItemButton.bounds
+        let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
+        let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
+
+        // Calculate new frame with updated size
+        let newFrame = calculateOptimalFrame(
+            relativeTo: buttonFrameInScreen,
+            preferredSize: newSize)
+
+        // Animate the frame change
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.4
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.0, 0.2, 1.0)
+            context.allowsImplicitAnimation = true
+            animator().setFrame(newFrame, display: true)
         }
     }
 
@@ -141,6 +169,7 @@ final class CustomMenuWindow: NSPanel {
         })
     }
 
+
     private func setupEventMonitoring() {
         // Ensure we don't have duplicate monitors
         teardownEventMonitoring()
@@ -170,6 +199,15 @@ final class CustomMenuWindow: NSPanel {
         super.resignKey()
         hide()
     }
+
+    // Override computed properties for window behavior
+    override var canBecomeKey: Bool {
+        true
+    }
+
+    override var canBecomeMain: Bool {
+        false
+    }
 }
 
 /// A wrapper view that applies modern SwiftUI material background to menu content.
@@ -183,10 +221,8 @@ struct CustomMenuContainer<Content: View>: View {
 
     var body: some View {
         content
-            .frame(width: 300)
-            // Let the height be dictated by the intrinsic size so the panel
-            // grows or shrinks exactly to the content we supply.
-            .fixedSize(horizontal: false, vertical: true)
+            // Let both width and height be dictated by the intrinsic size
+            .fixedSize()
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }

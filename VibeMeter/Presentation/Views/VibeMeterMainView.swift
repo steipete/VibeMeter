@@ -13,30 +13,24 @@ struct VibeMeterMainView: View {
     let onRefresh: () async -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        Group {
             if userSessionData.isLoggedInToAnyProvider {
                 LoggedInContentView(
                     settingsManager: settingsManager,
                     userSessionData: userSessionData,
                     loginManager: loginManager,
                     onRefresh: onRefresh)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)))
-                    .id("logged-in")
             } else {
-                LoggedOutContentView(loginManager: loginManager, userSessionData: userSessionData)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .leading).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)))
-                    .id("logged-out")
+                LoggedOutContentView(
+                    loginManager: loginManager,
+                    userSessionData: userSessionData,
+                    onLoginTrigger: {
+                        // Open login in separate window
+                        loginManager.showLoginWindow(for: .cursor)
+                    })
             }
         }
-        .drawingGroup()
-        .animation(.easeInOut(duration: 0.4), value: userSessionData.isLoggedInToAnyProvider)
-        .frame(width: 300)
-        .fixedSize(horizontal: false, vertical: true)
-        .animation(.easeInOut(duration: 0.4), value: userSessionData.isLoggedInToAnyProvider)
+        .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel("VibeMeter main interface")
         .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?

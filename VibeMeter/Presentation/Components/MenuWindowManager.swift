@@ -77,4 +77,5 @@ final class MenuWindowManager {
     var menuWindow: CustomMenuWindow? {
         customMenuWindow
     }
+
 }
