@@ -8,24 +8,33 @@ final class CurrencyManager: Sendable {
 
     /// Available currencies from macOS system with commonly used currencies prioritized
     var availableCurrencies: [(String, String)] {
-        let availableCurrencies = Locale.availableIdentifiers
-            .compactMap { identifier -> (String, String)? in
-                let locale = Locale(identifier: identifier)
-                guard let currencyCode = locale.currency?.identifier,
-                      let currencySymbol = locale.currencySymbol else {
-                    return nil
-                }
-
-                // Use custom names for common currencies to ensure consistent English names
-                let currencyName = customCurrencyName(for: currencyCode) ??
-                    locale.localizedString(forCurrencyCode: currencyCode) ?? currencyCode
-
-                let capitalizedCurrencyName = currencyName.prefix(1).uppercased() + currencyName.dropFirst()
-                return (currencyCode, "\(capitalizedCurrencyName) (\(currencySymbol))")
+        // Get all unique currency codes from available locales
+        let allCurrencyCodes = Set(Locale.availableIdentifiers.compactMap { identifier in
+            Locale(identifier: identifier).currency?.identifier
+        })
+        
+        // Use en_US locale for consistent symbols and names
+        let enUSLocale = Locale(identifier: "en_US")
+        
+        let availableCurrencies = allCurrencyCodes.compactMap { currencyCode -> (String, String)? in
+            // Create a locale that uses this currency code with en_US as base
+            let localeIdentifier = "en_US@currency=\(currencyCode)"
+            let currencyLocale = Locale(identifier: localeIdentifier)
+            
+            guard let currencySymbol = currencyLocale.currencySymbol else {
+                return nil
             }
 
-        // Remove duplicates and sort with commonly used currencies first
-        let uniqueCurrencies = Dictionary(availableCurrencies) { _, second in second }
+            // Use custom names for common currencies to ensure consistent English names
+            let currencyName = customCurrencyName(for: currencyCode) ??
+                enUSLocale.localizedString(forCurrencyCode: currencyCode) ?? currencyCode
+
+            let capitalizedCurrencyName = currencyName.prefix(1).uppercased() + currencyName.dropFirst()
+            return (currencyCode, "\(capitalizedCurrencyName) (\(currencySymbol))")
+        }
+
+        // Convert to dictionary to ensure uniqueness, then back to array
+        let uniqueCurrencies = Dictionary(availableCurrencies.map { ($0.0, $0.1) }) { _, second in second }
         let commonCurrencies = [
             "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NOK", "DKK", "PLN",
             "CZK", "HUF", "RON", "BGN", "HRK", "RUB", "UAH", "TRY", "INR", "KRW", "SGD", "HKD",
