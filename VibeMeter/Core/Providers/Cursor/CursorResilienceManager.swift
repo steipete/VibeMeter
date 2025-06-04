@@ -14,13 +14,13 @@ actor CursorResilienceManager {
 
     /// Executes an operation with retry logic.
     func executeWithResilience<T: Sendable>(_ operation: @escaping @Sendable () async throws -> T) async throws -> T {
-        return try await executeWithRetry(operation)
+        try await executeWithRetry(operation)
     }
 
     /// Gets the current health status of the Cursor provider.
     func getHealthStatus() async -> ProviderHealthStatus {
         // Return a simple healthy status without circuit breaker
-        return ProviderHealthStatus(
+        ProviderHealthStatus(
             provider: .cursor,
             isHealthy: true,
             circuitState: .closed,

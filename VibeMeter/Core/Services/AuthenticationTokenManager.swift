@@ -2,17 +2,16 @@ import Foundation
 import os.log
 
 /// Manages authentication tokens and keychain operations for service providers.
-@MainActor
-final class AuthenticationTokenManager {
+final class AuthenticationTokenManager: @unchecked Sendable {
     // MARK: - Private Properties
 
-    private var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
+    private let keychainHelpers: [ServiceProvider: KeychainServicing]
     private let logger = Logger(subsystem: "com.vibemeter", category: "AuthTokenManager")
 
     // MARK: - Initialization
 
     init() {
-        setupKeychainHelpers()
+        self.keychainHelpers = Self.createKeychainHelpers()
     }
 
     // For testing purposes
@@ -82,14 +81,19 @@ final class AuthenticationTokenManager {
 
     // MARK: - Private Methods
 
-    private func setupKeychainHelpers() {
+    private static func createKeychainHelpers() -> [ServiceProvider: KeychainServicing] {
+        var helpers: [ServiceProvider: KeychainServicing] = [:]
+        let logger = Logger(subsystem: "com.vibemeter", category: "AuthTokenManager")
+
         for provider in ServiceProvider.allCases {
             let keychain = KeychainHelper(service: provider.keychainService)
-            keychainHelpers[provider] = keychain
+            helpers[provider] = keychain
             let hasToken = keychain.getToken() != nil
             logger
                 .debug(
                     "Keychain check for \(provider.displayName): service=\(provider.keychainService), hasToken=\(hasToken)")
         }
+
+        return helpers
     }
 }

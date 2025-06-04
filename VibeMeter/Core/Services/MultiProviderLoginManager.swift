@@ -156,6 +156,19 @@ public final class MultiProviderLoginManager {
         }
     }
 
+    /// Handles successful login with a cookie value from embedded WebView.
+    public func handleLoginSuccess(for provider: ServiceProvider, cookieValue: String) {
+        handleSuccessfulLogin(for: provider, token: cookieValue)
+    }
+
+    /// Handles login failure from embedded WebView.
+    public func handleLoginFailure(for provider: ServiceProvider, error: Error) {
+        logger.error("Login failed for \(provider.displayName): \(error.localizedDescription)")
+        stateManager.setError(for: provider, message: error.localizedDescription)
+        refreshProperties()
+        onLoginFailure?(provider, error)
+    }
+
     private func handleSuccessfulLogin(for provider: ServiceProvider, token: String) {
         logger.info("handleSuccessfulLogin called for \(provider.displayName)")
 

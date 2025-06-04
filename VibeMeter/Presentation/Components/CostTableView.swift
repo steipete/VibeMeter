@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Component that displays spending data in a structured table format.
 ///
-/// This view presents total spending, provider breakdown, and spending limits in organized
+/// This view presents provider details, total spending, and spending limits in organized
 /// sections with proper visual hierarchy. It includes currency conversion, progress indicators,
 /// and spending threshold warnings with color-coded visual feedback.
 struct CostTableView: View {
@@ -28,25 +28,114 @@ struct CostTableView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            totalSpendingSection
-
+        VStack(alignment: .leading, spacing: 8) {
+            // Provider breakdown at the top
             if !spendingData.providersWithData.isEmpty {
                 providerBreakdownSection
             }
 
+            // Total spending in the middle
+            totalSpendingSection
+
+            // Spending limits at the bottom
             spendingLimitsSection
         }
         .id("cost-table-\(spendingData.providersWithData.count)-\(currencyData.selectedCode)-\(totalSpendingHash)")
     }
 
+    private var providerBreakdownSection: some View {
+        VStack(spacing: 4) {
+            ForEach(spendingData.providersWithData, id: \.self) { provider in
+                VStack(spacing: 8) {
+                    // Provider icon centered above
+                    HStack {
+                        Spacer()
+                        ProviderIconView(provider: provider, spendingData: spendingData)
+                            .scaleEffect(1.2)
+                        Spacer()
+                    }
+
+                    // Provider name and amount
+                    HStack {
+                        Spacer()
+
+                        Text(provider.displayName)
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(.primary)
+
+                        Spacer(minLength: 20)
+
+                        // Amount aligned to the right
+                        ProviderSpendingAmountView(
+                            provider: provider,
+                            spendingData: spendingData,
+                            currencyData: currencyData)
+                            .font(.body.weight(.medium))
+
+                        Spacer()
+                    }
+
+                    // Usage bar below, full width
+                    if let providerData = spendingData.getSpendingData(for: provider),
+                       let usageData = providerData.usageData,
+                       let maxRequests = usageData.maxRequests {
+                        VStack(spacing: 4) {
+                            // Progress bar
+                            GeometryReader { geometry in
+                                ZStack(alignment: .leading) {
+                                    // Background track
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.secondary.opacity(0.2))
+                                        .frame(height: 6)
+
+                                    // Progress fill
+                                    let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(progress > 0.8 ? Color.orange : Color.accentColor)
+                                        .frame(width: geometry.size.width * progress, height: 6)
+                                }
+                            }
+                            .frame(height: 6)
+
+                            // Usage text
+                            HStack {
+                                Text("\(usageData.currentRequests)/\(maxRequests)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                        }
+                        .padding(.horizontal, 4)
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.primary.opacity(0.05)))
+                .onTapGesture {
+                    ProviderInteractionHandler.openProviderDashboard(
+                        for: provider,
+                        loginManager: loginManager)
+                }
+                .id(
+                    "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Provider spending breakdown")
+        .accessibilityHint("Lists spending for each connected AI service provider")
+    }
+
     private var totalSpendingSection: some View {
         HStack(alignment: .center) {
+            Spacer()
+
             Text("Total Spending")
                 .font(.body.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.8))
 
-            Spacer()
+            Spacer(minLength: 20)
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
@@ -64,63 +153,57 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
                     .accessibilityLabel("No spending data available")
             }
+
+            Spacer()
         }
-        .standardPadding(horizontal: 12, vertical: 8)
-        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.primary.opacity(0.03)))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Total spending section")
         .accessibilityValue(currentSpendingDisplay ?? "No data available")
     }
 
-    private var providerBreakdownSection: some View {
-        VStack(spacing: 0) {
-            ForEach(spendingData.providersWithData, id: \.self) { provider in
-                ProviderSpendingRowView(
-                    provider: provider,
-                    loginManager: loginManager,
-                    selectedProvider: $selectedProvider,
-                    showTimestamp: showTimestamps)
-                    .id(
-                        "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
-            }
-        }
-        .standardPadding(horizontal: 3, vertical: 3)
-        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Provider spending breakdown")
-        .accessibilityHint("Lists spending for each connected AI service provider")
-    }
-
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
-            Text("Limits")
-                .font(.body.weight(.medium))
-                .foregroundStyle(.secondary)
-
             Spacer()
 
-            Text(
-                "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+            Text("Limits")
                 .font(.body.weight(.medium))
-                .foregroundStyle(.orange)
-                .accessibilityLabel(
-                    "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+                .foregroundStyle(.primary.opacity(0.8))
 
-            Text("•")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 4)
-                .accessibilityHidden(true)
+            Spacer(minLength: 20)
 
-            Text(
-                "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
-                .font(.body.weight(.medium))
-                .foregroundStyle(.red)
-                .accessibilityLabel(
-                    "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+            HStack(spacing: 12) {
+                Text(
+                    "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.orange)
+                    .accessibilityLabel(
+                        "Warning limit: \(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))")
+
+                Text("•")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+
+                Text(
+                    "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.red)
+                    .accessibilityLabel(
+                        "Upper limit: \(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))")
+            }
+
+            Spacer()
         }
-        .standardPadding(horizontal: 12, vertical: 8)
-        .materialBackground(cornerRadius: 10, material: .ultraThinMaterial)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.primary.opacity(0.03)))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Spending limits")
         .accessibilityValue(

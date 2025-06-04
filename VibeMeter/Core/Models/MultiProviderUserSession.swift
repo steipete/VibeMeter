@@ -41,12 +41,12 @@ public struct ProviderSessionState: Codable, Sendable {
         self.teamIdFetchFailed = teamIdFetchFailed
         self.lastUpdated = lastUpdated
     }
-    
+
     /// Computed property for backward compatibility
     public var isLoggedIn: Bool {
         authState == .loggedIn
     }
-    
+
     /// Computed property to check if authenticating
     public var isAuthenticating: Bool {
         authState == .authenticating
@@ -62,7 +62,7 @@ public struct ProviderSessionState: Codable, Sendable {
         teamIdFetchFailed = false
         lastUpdated = Date()
     }
-    
+
     /// Sets state to authenticating.
     public mutating func setAuthenticating() {
         authState = .authenticating
@@ -84,14 +84,14 @@ public struct ProviderSessionState: Codable, Sendable {
         // Don't clear user data on failure, just update state
         lastUpdated = Date()
     }
-    
+
     /// Formats error messages for user display.
     private func formatErrorMessage(_ error: Error) -> String {
         if let providerError = error as? ProviderError {
             switch providerError {
             case .unauthorized:
                 return "Authentication failed. Please try logging in again."
-            case .networkError(let message, _):
+            case let .networkError(message, _):
                 if message.contains("timed out") {
                     return "Connection timed out. Please check your internet connection."
                 }
@@ -106,7 +106,7 @@ public struct ProviderSessionState: Codable, Sendable {
                 return "Login failed. Please try again."
             }
         }
-        
+
         // Check for network errors
         if let urlError = error as? URLError {
             switch urlError.code {
@@ -120,7 +120,7 @@ public struct ProviderSessionState: Codable, Sendable {
                 return "Connection error. Please try again."
             }
         }
-        
+
         // Generic error
         let message = error.localizedDescription
         if message.count > 60 {
@@ -206,7 +206,7 @@ public final class MultiProviderUserSessionData {
         session.handleLogout()
         providerSessions[provider] = session
     }
-    
+
     /// Sets authenticating state for a specific provider.
     public func setAuthenticating(for provider: ServiceProvider) {
         var session = providerSessions[provider] ?? ProviderSessionState(provider: provider)
