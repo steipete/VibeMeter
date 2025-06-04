@@ -14,21 +14,21 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# Xcode
+# Xcode - Keep user-specific files ignored but allow project structure
 *.xcuserdata/
 *.xcuserdatad/
-project.xcworkspace/
+# project.xcworkspace/  # Allow project workspace metadata
 xcuserdata/
 *.xccheckout
 *.xcscmblueprint
-*.xcscheme
+# *.xcscheme  # Allow schemes to be checked in
 !*.xcscheme.shared
 *.hmap
 *.ipa
 *.dSYM.zip
 *.dSYM
 timeline.xctimeline
-playground.xcworkspace
+# playground.xcworkspace  # Allow if needed
 .build/
 Carthage/Build/
 
