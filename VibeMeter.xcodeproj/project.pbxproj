@@ -1087,7 +1087,7 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=250",
+					"-warn-long-function-bodies=100",
 					"-Xfrontend",
 					"-warn-long-expression-type-checking=250",
 				);
@@ -1149,7 +1149,7 @@
 					"-enable-bare-slash-regex",
 					"-warn-implicit-overrides",
 					"-Xfrontend",
-					"-warn-long-function-bodies=250",
+					"-warn-long-function-bodies=100",
 					"-Xfrontend",
 					"-warn-long-expression-type-checking=250",
 				);

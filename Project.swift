@@ -122,7 +122,7 @@ let project = Project(
                         "-warn-concurrency",
                         "-enable-bare-slash-regex",
                         "-warn-implicit-overrides",
-                        "-Xfrontend", "-warn-long-function-bodies=250",
+                        "-Xfrontend", "-warn-long-function-bodies=100",
                         "-Xfrontend", "-warn-long-expression-type-checking=250",
                     ],
                 ])),

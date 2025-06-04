@@ -102,3 +102,17 @@ struct VibeMeterMainView: View {
         .environment(spendingData)
         .environment(CurrencyData())
 }
+
+// MARK: - Helper Methods
+
+private extension VibeMeterMainView {
+    func handleEscapeKey() -> KeyPress.Result {
+        for window in NSApp.windows {
+            if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
+                window.orderOut(nil)
+                return .handled
+            }
+        }
+        return .ignored
+    }
+}
