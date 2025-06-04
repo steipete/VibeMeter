@@ -17,9 +17,9 @@ public actor CursorProvider: ProviderProtocol {
 
     private let settingsManager: any SettingsManagerProtocol
     private let logger = Logger(subsystem: "com.vibemeter", category: "CursorProvider")
-    
+
     // MARK: - Component Dependencies
-    
+
     private let apiClient: CursorAPIClient
     private let resilienceManager: CursorResilienceManager
 
@@ -37,7 +37,7 @@ public actor CursorProvider: ProviderProtocol {
 
     public func fetchTeamInfo(authToken: String) async throws -> ProviderTeamInfo {
         logger.debug("Fetching Cursor team info")
-        
+
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchTeams(authToken: authToken)
             return try CursorDataTransformer.transformTeamInfo(from: response)
@@ -80,15 +80,14 @@ public actor CursorProvider: ProviderProtocol {
                 authToken: authToken,
                 month: month,
                 year: year,
-                teamId: resolvedTeamId
-            )
+                teamId: resolvedTeamId)
             return CursorDataTransformer.transformInvoice(from: response, month: month, year: year)
         }
     }
 
     public func fetchUsageData(authToken: String) async throws -> ProviderUsageData {
         logger.debug("Fetching Cursor usage data")
-        
+
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchUsage(authToken: authToken)
             return try CursorDataTransformer.transformUsageData(from: response)
@@ -96,32 +95,32 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     public func validateToken(authToken: String) async -> Bool {
-        return await apiClient.validateToken(authToken: authToken)
+        await apiClient.validateToken(authToken: authToken)
     }
-    
-    nonisolated public func getAuthenticationURL() -> URL {
-        return URL(string: "https://authenticator.cursor.sh")!
+
+    public nonisolated func getAuthenticationURL() -> URL {
+        URL(string: "https://authenticator.cursor.sh")!
     }
-    
-    nonisolated public func extractAuthToken(from callbackData: [String: Any]) -> String? {
+
+    public nonisolated func extractAuthToken(from callbackData: [String: Any]) -> String? {
         // Extract cursor_auth_token from callback data
-        return callbackData["cursor_auth_token"] as? String
+        callbackData["cursor_auth_token"] as? String
     }
-    
+
     // MARK: - Private Methods
 
     private func getTeamId() async -> Int? {
         // Access team ID from provider-specific settings
         await settingsManager.getSession(for: .cursor)?.teamId
     }
-    
+
     // MARK: - Resilience Methods
-    
+
     /// Gets the current health status of the provider.
     public func getHealthStatus() async -> ProviderHealthStatus {
-        return await resilienceManager.getHealthStatus()
+        await resilienceManager.getHealthStatus()
     }
-    
+
     /// Manually resets the circuit breaker for this provider.
     public func resetCircuitBreaker() async {
         await resilienceManager.resetCircuitBreaker()

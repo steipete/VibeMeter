@@ -8,26 +8,25 @@ import os.log
 @Observable
 @MainActor
 public final class DisplaySettingsManager {
-    
     // MARK: - Constants
-    
+
     public static let refreshIntervalOptions = [1, 2, 5, 10, 15, 30, 60]
-    
+
     // MARK: - Properties
-    
+
     private let userDefaults: UserDefaults
     private let logger = Logger(subsystem: "com.vibemeter", category: "DisplaySettings")
-    
+
     // MARK: - Keys
-    
+
     private enum Keys {
         static let selectedCurrencyCode = "selectedCurrencyCode"
         static let refreshIntervalMinutes = "refreshIntervalMinutes"
         static let menuBarDisplayMode = "menuBarDisplayMode"
     }
-    
+
     // MARK: - Display Preferences
-    
+
     /// Selected currency code for display
     public var selectedCurrencyCode: String {
         didSet {
@@ -35,7 +34,7 @@ public final class DisplaySettingsManager {
             logger.debug("Currency updated: \(self.selectedCurrencyCode)")
         }
     }
-    
+
     /// Data refresh interval in minutes
     public var refreshIntervalMinutes: Int {
         didSet {
@@ -43,7 +42,7 @@ public final class DisplaySettingsManager {
             logger.debug("Refresh interval updated: \(self.refreshIntervalMinutes) minutes")
         }
     }
-    
+
     /// Menu bar display mode (icon only, amount only, or both)
     public var menuBarDisplayMode: MenuBarDisplayMode {
         didSet {
@@ -51,16 +50,16 @@ public final class DisplaySettingsManager {
             logger.debug("Menu bar display mode: \(self.menuBarDisplayMode.displayName)")
         }
     }
-    
+
     // MARK: - Initialization
-    
+
     public init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        
+
         // Load display settings with defaults
         selectedCurrencyCode = userDefaults.string(forKey: Keys.selectedCurrencyCode) ?? "USD"
         refreshIntervalMinutes = userDefaults.object(forKey: Keys.refreshIntervalMinutes) as? Int ?? 5
-        
+
         // Initialize menu bar display mode
         if let displayModeString = userDefaults.object(forKey: Keys.menuBarDisplayMode) as? String,
            let displayMode = MenuBarDisplayMode(rawValue: displayModeString) {
@@ -68,22 +67,24 @@ public final class DisplaySettingsManager {
         } else {
             menuBarDisplayMode = .both // Default to "both" (icon + money)
         }
-        
+
         // Validate refresh interval
         if !Self.refreshIntervalOptions.contains(refreshIntervalMinutes) {
             refreshIntervalMinutes = 5
         }
-        
-        logger.info("DisplaySettingsManager initialized - currency: \(self.selectedCurrencyCode), refresh: \(self.refreshIntervalMinutes)min, display: \(self.menuBarDisplayMode.displayName)")
+
+        logger
+            .info(
+                "DisplaySettingsManager initialized - currency: \(self.selectedCurrencyCode), refresh: \(self.refreshIntervalMinutes)min, display: \(self.menuBarDisplayMode.displayName)")
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Updates the selected currency and persists the change
     public func updateCurrency(to currencyCode: String) {
         selectedCurrencyCode = currencyCode
     }
-    
+
     /// Updates the refresh interval and validates it against allowed options
     public func updateRefreshInterval(to minutes: Int) {
         guard Self.refreshIntervalOptions.contains(minutes) else {
@@ -93,12 +94,12 @@ public final class DisplaySettingsManager {
         }
         refreshIntervalMinutes = minutes
     }
-    
+
     /// Updates the menu bar display mode
     public func updateMenuBarDisplayMode(to mode: MenuBarDisplayMode) {
         menuBarDisplayMode = mode
     }
-    
+
     /// Validates and corrects invalid settings
     public func validateSettings() {
         if !Self.refreshIntervalOptions.contains(refreshIntervalMinutes) {

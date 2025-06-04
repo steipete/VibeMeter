@@ -62,7 +62,7 @@ struct AboutView: View {
                 url: "https://github.com/steipete/VibeMeter/issues",
                 title: "Report an Issue",
                 icon: "exclamationmark.bubble")
-            HoverableLink(url: "https://x.com/steipete", title: "Follow @steipete on X", icon: "bird")
+            HoverableLink(url: "https://x.com/steipete", title: "Follow @steipete on Twitter", icon: "bird")
         }
     }
 
@@ -115,7 +115,7 @@ struct InteractiveAppIcon: View {
     private var colorScheme
 
     var body: some View {
-        Button(action: openWebsite) {
+        ZStack {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 128, height: 128)
@@ -128,12 +128,19 @@ struct InteractiveAppIcon: View {
                     y: shadowOffset)
                 .animation(.easeInOut(duration: 0.2), value: isHovering)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
+
+            // Invisible button overlay for click handling
+            Button(action: openWebsite) {
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 128, height: 128)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
-        .buttonStyle(PlainButtonStyle())
+        .pointingHandCursor()
         .onHover { hovering in
             isHovering = hovering
         }
-        .pointingHandCursor()
         .pressEvents(
             onPress: { isPressed = true },
             onRelease: { isPressed = false })
@@ -179,15 +186,33 @@ struct PressEventModifier: ViewModifier {
 struct PointingHandCursorModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .onHover { isHovering in
-                DispatchQueue.main.async {
-                    if isHovering {
-                        NSCursor.pointingHand.push()
-                    } else {
-                        NSCursor.pop()
-                    }
-                }
-            }
+            .background(
+                CursorTrackingView()
+                    .allowsHitTesting(false))
+    }
+}
+
+/// NSViewRepresentable that handles cursor changes properly
+struct CursorTrackingView: NSViewRepresentable {
+    func makeNSView(context _: Context) -> CursorTrackingNSView {
+        CursorTrackingNSView()
+    }
+
+    func updateNSView(_: CursorTrackingNSView, context _: Context) {
+        // No updates needed
+    }
+}
+
+/// Custom NSView that properly handles cursor tracking
+class CursorTrackingNSView: NSView {
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.invalidateCursorRects(for: self)
     }
 }
 

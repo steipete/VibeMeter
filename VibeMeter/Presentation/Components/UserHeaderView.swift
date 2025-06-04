@@ -40,13 +40,13 @@ struct UserHeaderView: View {
     private var providerCountText: String {
         let providers = userSessionData.loggedInProviders
         let count = providers.count
-        
+
         if count == 1, let provider = providers.first, provider == .cursor {
             if let teamName = userSessionData.getSession(for: .cursor)?.teamName {
                 return teamName
             }
         }
-        
+
         return "\(count) provider\(count == 1 ? "" : "s") connected"
     }
 }

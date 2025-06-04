@@ -18,10 +18,13 @@ struct GaugeIcon: View {
 
     @State
     private var animationProgress: Double = 1.0
+    
+    @State
+    private var shimmerPhase: Double = 0
 
     private let lineRatio = 0.18 // stroke thickness vs. frame
-    private let startAngle = 210.0 // ° (left-down)
-    private let sweepAngle = -240.0 // clockwise span
+    private let startAngle = 330.0 // ° (right-down, like car speedometer)
+    private let sweepAngle = 240.0 // counter-clockwise span
 
     var body: some View {
         Canvas { ctx, size in
@@ -35,23 +38,47 @@ struct GaugeIcon: View {
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
             let progPath = Path { p in
                 p.addArc(center: center,
                          radius: radius,
                          startAngle: .degrees(startAngle),
                          endAngle: .degrees(startAngle + sweepAngle * value * animationProgress),
-                         clockwise: true)
+                         clockwise: false)
             }
 
             // Draw track (always visible) - adjust for appearance with better dark mode contrast
             let trackColor = isDisabled
                 ? Color.gaugeStroke(for: colorScheme).opacity(1.5)
                 : Color.gaugeStroke(for: colorScheme)
-            ctx.stroke(trackPath,
-                       with: .color(trackColor),
-                       style: StrokeStyle(lineWidth: line, lineCap: .round))
+            
+            if isLoading {
+                // Add shimmer effect to track during loading
+                let shimmerGradient = Gradient(colors: [
+                    trackColor.opacity(0.3),
+                    trackColor.opacity(0.8),
+                    Color.menuBarContent(for: colorScheme).opacity(0.6),
+                    trackColor.opacity(0.8),
+                    trackColor.opacity(0.3)
+                ])
+                
+                // Calculate shimmer position along the arc
+                let shimmerStartAngle = startAngle + (sweepAngle * shimmerPhase * 1.2) - (sweepAngle * 0.1)
+                let shimmerEndAngle = shimmerStartAngle + (sweepAngle * 0.2)
+                
+                ctx.stroke(trackPath,
+                           with: .conicGradient(
+                               shimmerGradient,
+                               center: center,
+                               angle: Angle(degrees: shimmerStartAngle)
+                           ),
+                           style: StrokeStyle(lineWidth: line, lineCap: .round))
+            } else {
+                ctx.stroke(trackPath,
+                           with: .color(trackColor),
+                           style: StrokeStyle(lineWidth: line, lineCap: .round))
+            }
 
             // Only draw progress arc if not disabled
             if !isDisabled {

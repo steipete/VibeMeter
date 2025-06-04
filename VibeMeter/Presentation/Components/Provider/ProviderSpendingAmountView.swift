@@ -8,7 +8,7 @@ struct ProviderSpendingAmountView: View {
     let provider: ServiceProvider
     let spendingData: MultiProviderSpendingData
     let currencyData: CurrencyData
-    
+
     var body: some View {
         Group {
             if let providerData = spendingData.getSpendingData(for: provider),
@@ -20,7 +20,7 @@ struct ProviderSpendingAmountView: View {
                         from: "USD",
                         to: currencyData.selectedCode,
                         rates: currencyData.effectiveRates) ?? spendingUSD
-                
+
                 Text(
                     "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
                     .font(.body.weight(.semibold).monospaced())
@@ -56,7 +56,7 @@ struct ProviderSpendingAmountView: View {
 #Preview("With Data") {
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
-    
+
     // Add sample data
     spendingData.updateSpending(
         for: .cursor,
@@ -70,7 +70,7 @@ struct ProviderSpendingAmountView: View {
             year: 2025),
         rates: [:],
         targetCurrency: "USD")
-    
+
     return ProviderSpendingAmountView(
         provider: .cursor,
         spendingData: spendingData,
@@ -82,7 +82,7 @@ struct ProviderSpendingAmountView: View {
 #Preview("Loading") {
     let spendingData = MultiProviderSpendingData()
     let currencyData = CurrencyData()
-    
+
     return ProviderSpendingAmountView(
         provider: .cursor,
         spendingData: spendingData,

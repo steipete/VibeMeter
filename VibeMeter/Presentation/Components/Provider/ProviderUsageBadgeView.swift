@@ -8,8 +8,9 @@ struct ProviderUsageBadgeView: View {
     let provider: ServiceProvider
     let spendingData: MultiProviderSpendingData
     let showTimestamp: Bool
-    @Environment(\.colorScheme) private var colorScheme
-    
+    @Environment(\.colorScheme)
+    private var colorScheme
+
     var body: some View {
         if let providerData = spendingData.getSpendingData(for: provider) {
             if let usage = providerData.usageData,
@@ -21,7 +22,7 @@ struct ProviderUsageBadgeView: View {
             }
         }
     }
-    
+
     private func usageDataShimmer() -> some View {
         HStack(spacing: 6) {
             // Usage text shimmer
@@ -29,7 +30,7 @@ struct ProviderUsageBadgeView: View {
                 .fill(Color.secondary.opacity(0.2))
                 .frame(width: 45, height: 12)
                 .shimmer()
-            
+
             // Progress bar shimmer
             RoundedRectangle(cornerRadius: 1.5)
                 .fill(Color.secondary.opacity(0.2))
@@ -38,7 +39,7 @@ struct ProviderUsageBadgeView: View {
         }
         .accessibilityLabel("Loading usage data")
     }
-    
+
     private func usageDataBadge(usage: ProviderUsageData, maxRequests: Int) -> some View {
         let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
         let progressPercentage = Int((progress * 100).rounded())
@@ -49,7 +50,7 @@ struct ProviderUsageBadgeView: View {
                 .accessibilityLabel("Usage: \(usage.currentRequests) of \(maxRequests) requests")
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 .animation(.easeOut(duration: 0.3), value: usage.currentRequests)
-            
+
             CustomProgressBar(
                 progress: progress,
                 progressColor: Color.progressColor(for: progress, colorScheme: colorScheme),
@@ -69,21 +70,22 @@ private struct CustomProgressBar: View {
     let progress: Double
     let progressColor: Color
     let backgroundColor: Color
-    
-    @State private var animatedProgress: Double = 0
-    
+
+    @State
+    private var animatedProgress: Double = 0
+
     var body: some View {
         Canvas { context, size in
             let cornerRadius: CGFloat = 1.5
             let backgroundRect = CGRect(origin: .zero, size: size)
             let progressWidth = size.width * animatedProgress
             let progressRect = CGRect(x: 0, y: 0, width: progressWidth, height: size.height)
-            
+
             // Draw background
             context.fill(
                 Path(roundedRect: backgroundRect, cornerRadius: cornerRadius),
                 with: .color(backgroundColor))
-            
+
             // Draw progress fill
             if animatedProgress > 0 {
                 context.fill(
@@ -108,7 +110,7 @@ private struct CustomProgressBar: View {
 
 #Preview("With Usage Data") {
     let spendingData = MultiProviderSpendingData()
-    
+
     // Add sample usage data
     spendingData.updateUsage(
         for: .cursor,
@@ -118,13 +120,13 @@ private struct CustomProgressBar: View {
             maxRequests: 500,
             startOfMonth: Date(),
             provider: .cursor))
-    
+
     return VStack(spacing: 16) {
         ProviderUsageBadgeView(
             provider: .cursor,
             spendingData: spendingData,
             showTimestamp: true)
-        
+
         ProviderUsageBadgeView(
             provider: .cursor,
             spendingData: spendingData,
@@ -136,7 +138,7 @@ private struct CustomProgressBar: View {
 
 #Preview("Loading") {
     let spendingData = MultiProviderSpendingData()
-    
+
     return ProviderUsageBadgeView(
         provider: .cursor,
         spendingData: spendingData,

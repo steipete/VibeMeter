@@ -4,21 +4,19 @@ import Foundation
 ///
 /// This class manages provider-specific interaction logic including
 /// authenticated browser sessions and fallback URL handling.
-struct ProviderInteractionHandler {
-    
+enum ProviderInteractionHandler {
     /// Opens the provider dashboard with authentication if available.
     @MainActor
     static func openProviderDashboard(
         for provider: ServiceProvider,
-        loginManager: MultiProviderLoginManager?
-    ) {
+        loginManager: MultiProviderLoginManager?) {
         guard let loginManager,
               let authToken = loginManager.getAuthToken(for: provider) else {
             // Fallback to opening without auth
             BrowserAuthenticationHelper.openURL(provider.dashboardURL)
             return
         }
-        
+
         // For providers that support authenticated browser sessions,
         // we can create a URL with the session token
         switch provider {

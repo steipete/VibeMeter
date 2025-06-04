@@ -20,6 +20,7 @@ struct GeneralSettingsView: View {
         NavigationStack {
             Form {
                 applicationSection
+                displaySection
                 currencySection
             }
             .formStyle(.grouped)
@@ -40,7 +41,7 @@ struct GeneralSettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Launch at Login", isOn: .init(
                     get: { settingsManager.launchAtLoginEnabled },
-                    set: { newValue in 
+                    set: { newValue in
                         settingsManager.launchAtLoginEnabled = newValue
                         startupManager.setLaunchAtLogin(enabled: newValue)
                     }
@@ -50,32 +51,11 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Menu bar display mode
-            VStack(alignment: .leading, spacing: 4) {
-                LabeledContent("Menu Bar Display") {
-                    Picker("", selection: .init(
-                        get: { settingsManager.menuBarDisplayMode },
-                        set: { newValue in settingsManager.menuBarDisplayMode = newValue }
-                    )) {
-                        ForEach(MenuBarDisplayMode.allCases) { mode in
-                            Text(mode.displayName).tag(mode)
-                                .id("\(mode.rawValue)-\(settingsManager.menuBarDisplayMode.rawValue)")
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                }
-                Text(settingsManager.menuBarDisplayMode.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 8)
-
             // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Show in Dock", isOn: .init(
                     get: { settingsManager.showInDock },
-                    set: { newValue in 
+                    set: { newValue in
                         settingsManager.showInDock = newValue
                         if newValue {
                             NSApp.setActivationPolicy(.regular)
@@ -85,30 +65,6 @@ struct GeneralSettingsView: View {
                     }
                 ))
                 Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 8)
-
-            // Refresh Interval
-            VStack(alignment: .leading, spacing: 4) {
-                LabeledContent("Refresh Interval") {
-                    Picker("", selection: .init(
-                        get: { settingsManager.refreshIntervalMinutes },
-                        set: { newValue in settingsManager.refreshIntervalMinutes = newValue }
-                    )) {
-                        Text("1 minute").tag(1)
-                        Text("2 minutes").tag(2)
-                        Text("5 minutes").tag(5)
-                        Text("10 minutes").tag(10)
-                        Text("15 minutes").tag(15)
-                        Text("30 minutes").tag(30)
-                        Text("1 hour").tag(60)
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                }
-                Text("How often VibeMeter checks for updated spending data.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -138,10 +94,64 @@ struct GeneralSettingsView: View {
         }
     }
 
+    private var displaySection: some View {
+        Section {
+            // Menu bar display mode
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Menu Bar Display")
+                    Spacer()
+                    Picker("", selection: .init(
+                        get: { settingsManager.menuBarDisplayMode },
+                        set: { newValue in settingsManager.menuBarDisplayMode = newValue }
+                    )) {
+                        ForEach(MenuBarDisplayMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                                .id("\(mode.rawValue)-\(settingsManager.menuBarDisplayMode.rawValue)")
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+                Text(settingsManager.menuBarDisplayMode.description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            // Refresh Interval
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Refresh Interval")
+                    Spacer()
+                    Picker("", selection: .init(
+                        get: { settingsManager.refreshIntervalMinutes },
+                        set: { newValue in settingsManager.refreshIntervalMinutes = newValue }
+                    )) {
+                        Text("1 minute").tag(1)
+                        Text("2 minutes").tag(2)
+                        Text("5 minutes").tag(5)
+                        Text("10 minutes").tag(10)
+                        Text("15 minutes").tag(15)
+                        Text("30 minutes").tag(30)
+                        Text("1 hour").tag(60)
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+                Text("How often VibeMeter checks for updated spending data.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 8)
+        }
+    }
+
     private var currencySection: some View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
-                LabeledContent("Currency") {
+                HStack {
+                    Text("Currency")
+                    Spacer()
                     Picker("", selection: .init(
                         get: { settingsManager.selectedCurrencyCode },
                         set: { newValue in settingsManager.selectedCurrencyCode = newValue }
@@ -158,9 +168,6 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-        } header: {
-            Text("Currency")
-                .font(.headline)
         }
     }
 

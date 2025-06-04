@@ -129,7 +129,7 @@ extension Color {
     /// Universal progress-based colors for usage indicators, progress bars, gauges, and spending visualizations
     /// This replaces the previous ProgressColorHelper with theme-aware implementation
     static let progressSafe = Color.green
-    static let progressCaution = Color.yellow  
+    static let progressCaution = Color.yellow
     static let progressWarning = Color.orange
     static let progressDanger = Color.red
 
@@ -139,7 +139,7 @@ extension Color {
         case ..<0.5:
             .progressSafe
         case 0.5 ..< 0.75:
-            .progressCaution  
+            .progressCaution
         case 0.75 ..< 0.9:
             .progressWarning
         default:
@@ -162,7 +162,7 @@ extension Color {
         case low
         case medium
         case high
-        
+
         /// Get warning level for a given progress value
         static func level(for progress: Double) -> ProgressWarningLevel {
             switch progress {

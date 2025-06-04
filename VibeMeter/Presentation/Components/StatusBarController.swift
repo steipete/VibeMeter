@@ -10,19 +10,19 @@ import SwiftUI
 @MainActor
 final class StatusBarController: NSObject {
     // MARK: - Core Properties
-    
+
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
-    
+
     // MARK: - Component Managers
-    
+
     private let displayManager: StatusBarDisplayManager
     private let menuWindowManager: MenuWindowManager
     private let animationController: StatusBarAnimationController
     private let observer: StatusBarObserver
-    
+
     // MARK: - Dependencies
-    
+
     private let settingsManager: any SettingsManagerProtocol
     private let userSession: MultiProviderUserSessionData
     private let loginManager: MultiProviderLoginManager
@@ -42,29 +42,27 @@ final class StatusBarController: NSObject {
         self.spendingData = spendingData
         self.currencyData = currencyData
         self.orchestrator = orchestrator
-        
+
         // Initialize component managers
         self.displayManager = StatusBarDisplayManager(
             stateManager: stateManager,
             settingsManager: settingsManager,
             userSession: userSession,
             spendingData: spendingData,
-            currencyData: currencyData
-        )
-        
+            currencyData: currencyData)
+
         self.menuWindowManager = MenuWindowManager()
-        
+
         self.animationController = StatusBarAnimationController(stateManager: stateManager)
-        
+
         self.observer = StatusBarObserver(
             userSession: userSession,
             spendingData: spendingData,
             currencyData: currencyData,
-            settingsManager: settingsManager
-        )
-        
+            settingsManager: settingsManager)
+
         super.init()
-        
+
         setupStatusItem()
         setupCustomMenu()
         setupCallbacks()
@@ -95,26 +93,25 @@ final class StatusBarController: NSObject {
             loginManager: loginManager,
             spendingData: spendingData,
             currencyData: currencyData,
-            orchestrator: orchestrator
-        )
+            orchestrator: orchestrator)
     }
-    
+
     private func setupCallbacks() {
         // Set up animation controller callback
         animationController.onDisplayUpdateNeeded = { [weak self] in
             self?.updateStatusItemDisplay()
         }
-        
+
         // Set up observer callbacks
         observer.onDataChanged = { [weak self] in
             self?.updateStatusItemDisplay()
         }
-        
+
         observer.onStateUpdateNeeded = { [weak self] in
             self?.updateStatusItemState()
         }
     }
-    
+
     private func startComponents() {
         animationController.startTimers()
         observer.startObserving()
@@ -122,17 +119,17 @@ final class StatusBarController: NSObject {
 
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
-        
+
         // Update state manager first, then delegate display to DisplayManager
         updateStatusItemState()
         displayManager.updateDisplay(for: button)
     }
-    
+
     private func updateStatusItemState() {
         let isLoggedIn = userSession.isLoggedInToAnyProvider
         let providers = spendingData.providersWithData
         let hasData = !providers.isEmpty
-        
+
         // Update state manager
         if !isLoggedIn {
             stateManager.setState(.notLoggedIn)

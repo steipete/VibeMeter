@@ -53,12 +53,12 @@ public final class SettingsManager: SettingsManagerProtocol {
     public static let refreshIntervalOptions = DisplaySettingsManager.refreshIntervalOptions
 
     // MARK: - Component Managers
-    
+
     private let sessionManager: SessionSettingsManager
     private let displayManager: DisplaySettingsManager
     private let limitsManager: SpendingLimitsManager
     private let behaviorManager: AppBehaviorSettingsManager
-    
+
     private let logger = Logger(subsystem: "com.vibemeter", category: "Settings")
 
     // MARK: - Delegated Properties
@@ -168,7 +168,7 @@ public final class SettingsManager: SettingsManagerProtocol {
     }
 
     public func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        return sessionManager.getSession(for: provider)
+        sessionManager.getSession(for: provider)
     }
 
     public func updateSession(for provider: ServiceProvider, session: ProviderSession) {
@@ -178,11 +178,11 @@ public final class SettingsManager: SettingsManagerProtocol {
     }
 
     // MARK: - Validation and Utility Methods
-    
+
     /// Validates all settings across all managers
     public func validateAllSettings() {
         displayManager.validateSettings()
-        
+
         if !limitsManager.validateLimits() {
             logger.warning("Invalid spending limits detected, consider resetting to defaults")
         }

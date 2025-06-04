@@ -12,10 +12,14 @@ final class CurrencyManager: Sendable {
             .compactMap { identifier -> (String, String)? in
                 let locale = Locale(identifier: identifier)
                 guard let currencyCode = locale.currency?.identifier,
-                      let currencySymbol = locale.currencySymbol,
-                      let currencyName = locale.localizedString(forCurrencyCode: currencyCode) else {
+                      let currencySymbol = locale.currencySymbol else {
                     return nil
                 }
+
+                // Use custom names for common currencies to ensure consistent English names
+                let currencyName = customCurrencyName(for: currencyCode) ??
+                    locale.localizedString(forCurrencyCode: currencyCode) ?? currencyCode
+
                 let capitalizedCurrencyName = currencyName.prefix(1).uppercased() + currencyName.dropFirst()
                 return (currencyCode, "\(capitalizedCurrencyName) (\(currencySymbol))")
             }
@@ -51,5 +55,40 @@ final class CurrencyManager: Sendable {
     /// Checks if a currency code is available in the system
     func isValidCurrencyCode(_ code: String) -> Bool {
         availableCurrencies.contains { $0.0 == code }
+    }
+
+    /// Provides custom English names for common currencies to ensure consistency
+    private func customCurrencyName(for currencyCode: String) -> String? {
+        let customNames: [String: String] = [
+            "USD": "US Dollar",
+            "EUR": "Euro",
+            "GBP": "British Pound",
+            "JPY": "Japanese Yen",
+            "AUD": "Australian Dollar",
+            "CAD": "Canadian Dollar",
+            "CHF": "Swiss Franc",
+            "CNY": "Chinese Yuan",
+            "SEK": "Swedish Krona",
+            "NOK": "Norwegian Krone",
+            "DKK": "Danish Krone",
+            "PLN": "Polish Zloty",
+            "CZK": "Czech Koruna",
+            "HUF": "Hungarian Forint",
+            "INR": "Indian Rupee",
+            "KRW": "South Korean Won",
+            "SGD": "Singapore Dollar",
+            "HKD": "Hong Kong Dollar",
+            "BRL": "Brazilian Real",
+            "MXN": "Mexican Peso",
+            "RUB": "Russian Ruble",
+            "TRY": "Turkish Lira",
+            "ZAR": "South African Rand",
+            "ILS": "Israeli Shekel",
+            "SAR": "Saudi Riyal",
+            "AED": "UAE Dirham",
+            "NZD": "New Zealand Dollar",
+        ]
+
+        return customNames[currencyCode]
     }
 }

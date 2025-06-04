@@ -8,7 +8,8 @@ import SwiftUI
 struct UserAvatarView: View {
     let email: String?
     let size: CGFloat
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     init(email: String?, size: CGFloat = 40) {
         self.email = email
@@ -53,7 +54,7 @@ struct UserAvatarView: View {
             .shadow(color: shadowColor, radius: 3, x: 0, y: 2)
             .accessibilityLabel(email != nil ? "User avatar with initial \(userInitial)" : "Default user avatar")
     }
-    
+
     private var shadowColor: Color {
         colorScheme == .dark ? Color.black.opacity(0.5) : Color.black.opacity(0.2)
     }

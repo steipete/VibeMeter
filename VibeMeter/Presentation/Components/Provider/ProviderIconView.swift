@@ -7,7 +7,7 @@ import SwiftUI
 struct ProviderIconView: View {
     let provider: ServiceProvider
     let spendingData: MultiProviderSpendingData
-    
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Group {
@@ -24,7 +24,7 @@ struct ProviderIconView: View {
             }
             .foregroundStyle(provider.accentColor)
             .frame(width: 16, height: 16)
-            
+
             // Status badge overlay
             if let providerData = spendingData.getSpendingData(for: provider) {
                 ProviderStatusBadge(
@@ -54,10 +54,10 @@ private extension ServiceProvider {
 
 #Preview {
     let spendingData = MultiProviderSpendingData()
-    
+
     HStack(spacing: 16) {
         ProviderIconView(provider: .cursor, spendingData: spendingData)
-        
+
         // Add some connection status examples
         let connectingData = MultiProviderSpendingData()
         ProviderIconView(provider: .cursor, spendingData: connectingData)

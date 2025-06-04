@@ -257,15 +257,14 @@ public struct ProviderHealthStatus: Sendable {
     public let successRate: Double
     public let totalCalls: Int
     public let healthDescription: String
-    
+
     public init(
         provider: ServiceProvider,
         isHealthy: Bool,
         circuitState: CircuitBreakerState,
         successRate: Double,
         totalCalls: Int,
-        healthDescription: String
-    ) {
+        healthDescription: String) {
         self.provider = provider
         self.isHealthy = isHealthy
         self.circuitState = circuitState
@@ -276,19 +275,20 @@ public struct ProviderHealthStatus: Sendable {
 }
 
 /// Circuit breaker state for health monitoring.
+/// Note: Circuit breaker functionality has been removed, but this enum is kept for API compatibility.
 public enum CircuitBreakerState: Sendable, Equatable {
     case closed
     case open(openedAt: Date)
     case halfOpen(callsAttempted: Int)
-    
+
     public var description: String {
         switch self {
         case .closed:
-            return "Closed"
+            "Closed"
         case .open:
-            return "Open"
-        case .halfOpen(let calls):
-            return "Half-Open (\(calls) calls)"
+            "Open"
+        case let .halfOpen(calls):
+            "Half-Open (\(calls) calls)"
         }
     }
 }

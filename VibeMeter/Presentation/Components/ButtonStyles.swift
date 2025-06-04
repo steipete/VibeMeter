@@ -14,7 +14,8 @@ import SwiftUI
 /// style used throughout the application for secondary actions.
 struct GlassButtonStyle: ButtonStyle {
     let isDestructive: Bool
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     init(isDestructive: Bool = false) {
         self.isDestructive = isDestructive
@@ -42,8 +43,9 @@ struct GlassButtonStyle: ButtonStyle {
 /// hover effects, used for primary actions that need to stand out in the UI.
 /// Features enhanced hover states and more prominent visual feedback.
 struct ProminentGlassButtonStyle: ButtonStyle {
-    @Environment(\.colorScheme) private var colorScheme
-    
+    @Environment(\.colorScheme)
+    private var colorScheme
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.horizontal, 24)
@@ -71,8 +73,10 @@ struct ProminentGlassButtonStyle: ButtonStyle {
 /// and press states for clear interaction feedback without overwhelming the UI.
 struct IconButtonStyle: ButtonStyle {
     let isDestructive: Bool
-    @State private var isHovering = false
-    @Environment(\.colorScheme) private var colorScheme
+    @State
+    private var isHovering = false
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     init(isDestructive: Bool = false) {
         self.isDestructive = isDestructive
