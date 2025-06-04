@@ -89,7 +89,6 @@ final class StatusBarObserver {
             named: UserDefaults.didChangeNotification)
 
         for await _ in notificationSequence {
-            logger.debug("Settings changed, updating status bar")
             onDataChanged?()
         }
     }
