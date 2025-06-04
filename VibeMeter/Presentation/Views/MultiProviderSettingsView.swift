@@ -44,17 +44,11 @@ struct MultiProviderSettingsView: View {
                     Label("Limits", systemImage: "exclamationmark.triangle")
                 }
                 .tag(MultiProviderSettingsTab.limits)
-            
+
             AdvancedSettingsView(
                 settingsManager: settingsManager as! SettingsManager)
                 .tabItem {
                     Label("Advanced", systemImage: "gearshape.2")
-                }
-                .tag(MultiProviderSettingsTab.advanced)
-
-            AdvancedSettingsView(settingsManager: settingsManager as! SettingsManager)
-                .tabItem {
-                    Label("Advanced", systemImage: "slider.horizontal.3")
                 }
                 .tag(MultiProviderSettingsTab.advanced)
 
