@@ -67,8 +67,11 @@ if [[ -z "$RELEASE_TYPE" ]]; then
 fi
 
 # Get current version info
-BASE_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
+MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
 BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"CURRENT_PROJECT_VERSION": "\(.*\)".*/\1/')
+
+# Extract base version without pre-release suffix if present
+BASE_VERSION=$(echo "$MARKETING_VERSION" | sed 's/-[a-zA-Z]*\.[0-9]*$//')
 
 echo "🚀 VibeMeter Release Script"
 echo "📦 Base version: $BASE_VERSION"

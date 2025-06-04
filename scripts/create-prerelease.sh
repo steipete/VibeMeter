@@ -34,12 +34,23 @@ PRERELEASE_TYPE="${1:-beta}"  # beta, alpha, rc
 PRERELEASE_NUMBER="${2:-1}"   # 1, 2, 3, etc.
 
 # Get base version from Project.swift
-BASE_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
+MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
 BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"CURRENT_PROJECT_VERSION": "\(.*\)".*/\1/')
+
+# Extract base version without pre-release suffix if present
+# This handles cases where MARKETING_VERSION might already be "1.0.0-beta.1"
+BASE_VERSION=$(echo "$MARKETING_VERSION" | sed 's/-[a-zA-Z]*\.[0-9]*$//')
 
 # Create pre-release version
 PRERELEASE_VERSION="$BASE_VERSION-$PRERELEASE_TYPE.$PRERELEASE_NUMBER"
 PRERELEASE_BUILD_NUMBER="$BUILD_NUMBER"
+
+# Validate that we're not creating a double suffix
+if [[ "$MARKETING_VERSION" == *"-"* && "$MARKETING_VERSION" != "$PRERELEASE_VERSION" ]]; then
+    echo "⚠️  Warning: Marketing version ($MARKETING_VERSION) already contains a pre-release suffix"
+    echo "   Creating version: $PRERELEASE_VERSION"
+    echo "   Consider updating Project.swift to base version: $BASE_VERSION"
+fi
 
 echo "📦 Creating pre-release for VibeMeter v$PRERELEASE_VERSION (build $PRERELEASE_BUILD_NUMBER)"
 
@@ -63,6 +74,16 @@ cd "$PROJECT_ROOT"
 APP_PATH="$PROJECT_ROOT/build/Build/Products/Release/VibeMeter.app"
 if [[ ! -d "$APP_PATH" ]]; then
     echo "❌ Built app not found at $APP_PATH"
+    exit 1
+fi
+
+# Verify the built app has the correct build number
+BUILT_BUILD_NUMBER=$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleVersion 2>/dev/null || echo "unknown")
+if [[ "$BUILT_BUILD_NUMBER" != "$BUILD_NUMBER" ]]; then
+    echo "❌ Build number mismatch!"
+    echo "   Expected: $BUILD_NUMBER"
+    echo "   Found: $BUILT_BUILD_NUMBER"
+    echo "   The app may not have been rebuilt after updating Project.swift"
     exit 1
 fi
 

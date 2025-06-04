@@ -2,6 +2,38 @@
 
 This document describes the process for creating and publishing a new release of VibeMeter.
 
+## ⚠️ CRITICAL: Common Release Pitfalls
+
+### 1. Double Beta Suffix Problem
+**Issue**: Creating pre-releases when MARKETING_VERSION already contains a suffix (e.g., "1.0.0-beta.1") results in doubled suffixes like "1.0.0-beta.1-beta.1"
+
+**Solution**: 
+- Always reset MARKETING_VERSION to base version (e.g., "1.0.0") before creating pre-releases
+- The scripts now handle this automatically with warnings
+
+### 2. Build Number Confusion
+**Issue**: Sparkle uses CFBundleVersion (build number) to determine if an update is available, NOT the marketing version
+
+**Critical Rules**:
+- Build numbers MUST always increment
+- Never reuse build numbers
+- If beta.1 has build 100, beta.2 must have 101 or higher
+- Check actual build numbers in compiled apps, not just Project.swift
+
+### 3. Failed Builds Packaged as New Releases
+**Issue**: Release scripts may package old builds if compilation fails silently
+
+**Solution**: Scripts now verify build numbers match before packaging
+
+### 4. Appcast Build Number Verification
+**Always manually verify** build numbers in appcast match the actual compiled app:
+```bash
+# Check build number in DMG
+hdiutil attach VibeMeter-X.X.X.dmg
+defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleVersion
+hdiutil detach "/Volumes/VibeMeter"
+```
+
 ## Quick Summary for v1.0.0
 
 **Current Status:**
@@ -151,26 +183,46 @@ To build everything from scratch:
 
 #### Pre-release Workflow
 
+**IMPORTANT**: Always ensure MARKETING_VERSION in Project.swift is set to base version (e.g., "1.0.0") NOT a pre-release version before running release scripts!
+
 1. **Prepare Pre-release:**
    ```bash
-   # Create pre-release version
-   ./scripts/version.sh --prerelease beta
+   # FIRST: Check current version
+   grep MARKETING_VERSION Project.swift
+   # If it shows a pre-release suffix, reset to base version:
+   # Edit Project.swift: "1.0.0-beta.1" -> "1.0.0"
    
-   # Commit version bump
+   # Increment build number
+   # Edit Project.swift: "CURRENT_PROJECT_VERSION": "101" -> "102"
+   
+   # Commit version changes
    git add Project.swift
-   git commit -m "Bump version to 0.9.2-beta.1"
+   git commit -m "Prepare for beta.2 release"
    ```
 
 2. **Create Pre-release:**
    ```bash
-   ./scripts/release.sh --prerelease beta 1
+   # This will create version "1.0.0-beta.2" from base "1.0.0"
+   ./scripts/release.sh --prerelease beta 2
+   
+   # Or use the direct script:
+   ./scripts/create-prerelease.sh beta 2
    ```
 
-3. **Post-Release:**
+3. **Verify Build:**
+   ```bash
+   # CRITICAL: Verify the DMG contains the correct build
+   hdiutil attach build/VibeMeter-1.0.0-beta.2.dmg
+   defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleVersion
+   defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleShortVersionString
+   hdiutil detach "/Volumes/VibeMeter"
+   ```
+
+4. **Post-Release:**
    ```bash
    # Commit updated pre-release appcast
    git add appcast-prerelease.xml
-   git commit -m "Update pre-release appcast for v0.9.2-beta.1"
+   git commit -m "Update pre-release appcast for v1.0.0-beta.2"
    git push origin main
    ```
 
@@ -300,6 +352,30 @@ git push origin main
 1. Tag → 2. GitHub Release → 3. Appcast Update → 4. Push Appcast
 
 ## Troubleshooting
+
+### Release Version Issues
+
+#### "You're up to date!" when update should be available
+**Cause**: Build number in appcast is lower than or equal to installed version
+**Solution**: 
+1. Check installed app build number
+2. Ensure new release has higher build number
+3. Update appcast with correct build number
+
+#### Double beta suffix (e.g., "1.0.0-beta.1-beta.1")
+**Cause**: MARKETING_VERSION already contains pre-release suffix
+**Solution**:
+1. Reset MARKETING_VERSION to base version in Project.swift
+2. Re-run release script
+3. Scripts now detect and warn about this
+
+#### Release contains wrong app version
+**Cause**: Build failed but script packaged old build
+**Solution**:
+1. Clean build folder: `rm -rf build/`
+2. Verify Project.swift has correct version/build
+3. Re-run release script
+4. Always verify DMG contents before uploading
 
 ### Notarization fails
 - Check API credentials are correct
