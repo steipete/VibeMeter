@@ -26,23 +26,29 @@ final class StatusBarMenuManager {
         // Empty initializer - components will be set up when needed
     }
 
+    // MARK: - Configuration
+    
+    /// Configuration for menu manager setup
+    struct Configuration {
+        let settingsManager: any SettingsManagerProtocol
+        let userSession: MultiProviderUserSessionData
+        let loginManager: MultiProviderLoginManager
+        let spendingData: MultiProviderSpendingData
+        let currencyData: CurrencyData
+        let orchestrator: MultiProviderDataOrchestrator
+    }
+
     // MARK: - Setup
 
     /// Sets up the menu manager with required dependencies
-    func setup(
-        settingsManager: any SettingsManagerProtocol,
-        userSession: MultiProviderUserSessionData,
-        loginManager: MultiProviderLoginManager,
-        spendingData: MultiProviderSpendingData,
-        currencyData: CurrencyData,
-        orchestrator: MultiProviderDataOrchestrator) {
+    func setup(with configuration: Configuration) {
         // Store strong references to prevent deallocation in Release builds
-        self.settingsManager = settingsManager
-        self.userSession = userSession
-        self.loginManager = loginManager
-        self.spendingData = spendingData
-        self.currencyData = currencyData
-        self.orchestrator = orchestrator
+        self.settingsManager = configuration.settingsManager
+        self.userSession = configuration.userSession
+        self.loginManager = configuration.loginManager
+        self.spendingData = configuration.spendingData
+        self.currencyData = configuration.currencyData
+        self.orchestrator = configuration.orchestrator
     }
 
     // MARK: - Left-Click Custom Window Management

@@ -88,13 +88,14 @@ final class StatusBarController: NSObject {
     }
 
     private func setupMenuManager() {
-        menuManager.setup(
+        let configuration = StatusBarMenuManager.Configuration(
             settingsManager: settingsManager,
             userSession: userSession,
             loginManager: loginManager,
             spendingData: spendingData,
             currencyData: currencyData,
             orchestrator: orchestrator)
+        menuManager.setup(with: configuration)
     }
 
     private func setupCallbacks() {

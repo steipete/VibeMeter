@@ -134,6 +134,15 @@ public enum PreviewData {
     }
 }
 
+// MARK: - Preview Data Bundle
+
+/// Preview data bundle containing all required data models
+public struct PreviewDataBundle {
+    public let userSession: MultiProviderUserSessionData
+    public let spendingData: MultiProviderSpendingData
+    public let currencyData: CurrencyData
+}
+
 // MARK: - Preview Scenarios
 
 public extension PreviewData {
@@ -143,15 +152,8 @@ public extension PreviewData {
     ///   - email: User email (default: "user@example.com")
     ///   - cents: Spending amount in cents (default: 2497)
     ///   - currencyCode: Display currency (default: "USD")
-    /// - Returns: Tuple containing (userSession, spendingData, currencyData)
+    /// - Returns: PreviewDataBundle containing all required data models
     @MainActor
-    /// Preview data bundle containing all required data models
-    struct PreviewDataBundle {
-        let userSession: MultiProviderUserSessionData
-        let spendingData: MultiProviderSpendingData
-        let currencyData: CurrencyData
-    }
-
     static func loggedInWithSpending(
         email: String = "user@example.com",
         cents: Int = 2497,
@@ -168,7 +170,7 @@ public extension PreviewData {
 
     /// Complete preview setup for logged-out state.
     ///
-    /// - Returns: PreviewDataBundle containing all required data
+    /// - Returns: PreviewDataBundle containing all required data models
     @MainActor
     static func loggedOut() -> PreviewDataBundle {
         let userSession = emptyUserSession()

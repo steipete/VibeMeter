@@ -91,7 +91,7 @@ struct LoggedInContentView: View {
     let (userSession, spendingData, currencyData) = PreviewData.loggedInWithSpending(cents: 4997)
     let services = MockServices.standard
 
-    return LoggedInContentView(
+    LoggedInContentView(
         settingsManager: services.0,
         userSessionData: userSession,
         loginManager: nil,
@@ -104,7 +104,7 @@ struct LoggedInContentView: View {
 #Preview("Logged In Content - Loading") {
     let userSession = PreviewData.mockUserSession(email: "john.doe@company.com", teamName: "Company Team", teamId: 456)
 
-    return LoggedInContentView(
+    LoggedInContentView(
         settingsManager: MockServices.settingsManager,
         userSessionData: userSession,
         loginManager: nil,

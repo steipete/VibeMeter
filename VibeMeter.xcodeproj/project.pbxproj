@@ -50,6 +50,7 @@
 		431CBB59100A77D27DEAD638 /* RelativeTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C150557B8157403E9A54FF79 /* RelativeTimeFormatter.swift */; };
 		4357DE50E5EED568AD6F66CF /* CurrencyConversionHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1522260B94541EFE4B0384B3 /* CurrencyConversionHelperTests.swift */; };
 		45967DE75B7FF83B3DA274C3 /* PreviewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254DA98B907022FE1B39774F /* PreviewExtensions.swift */; };
+		46C31B45E50900D6F7583601 /* ProviderConnectionStatusAdvancedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1507FD3A26CAB88BC0E65A /* ProviderConnectionStatusAdvancedTests.swift */; };
 		47439950839E053E2DA81356 /* ProviderUsageBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F7E622E1810FDE201E18A3 /* ProviderUsageBadgeView.swift */; };
 		4911DB31E785337FADFFFEC5 /* NotificationManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1ACCBD26778AE1AF2C88833 /* NotificationManagerMock.swift */; };
 		49AD1BB61A9EA4B9B1D0E2C9 /* CursorResponseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361705F5E57667204920498C /* CursorResponseModels.swift */; };
@@ -83,6 +84,7 @@
 		848734AF850DE72227CA379D /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB3FFE9B30474D1A3682A49 /* SettingsComponents.swift */; };
 		84E6CC9BF0E0AB4686920646 /* CurrencyManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167C5A841794D591A38B0D57 /* CurrencyManagerTests.swift */; };
 		85522A0DBD45FB5A419B734A /* LoginWebViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF0BD0FE19A878590C1D5A /* LoginWebViewManager.swift */; };
+		85E29810DB5BC37225547BCD /* ProviderConnectionStatusBasicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6A711C1ADDBEBD76E8A785 /* ProviderConnectionStatusBasicTests.swift */; };
 		8A9DE903DAE2CD34C639E565 /* ActionButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0662AEC9A00132BD74EDFC4 /* ActionButtonsView.swift */; };
 		8B30F40E713D481998D105A3 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015331CD42B541280D9A9665 /* StatusBarController.swift */; };
 		8B440C4339F736C465A3A5A4 /* StatusBarMenuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0C2D9BC11AE1486876B5DF /* StatusBarMenuManager.swift */; };
@@ -119,7 +121,6 @@
 		BFC06D21B7FE855C6ADD9720 /* VibeMeterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0E5910E69B56D05D2C196 /* VibeMeterApp.swift */; };
 		C1E09E9E879F4194272EA6BA /* TuistBundle+VibeMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D976BE50C633CE293D244FB /* TuistBundle+VibeMeter.swift */; };
 		C33D4B994D668FAC2935D1C6 /* SparkleUpdaterManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */; };
-		C4D6599FA8F0AB68F29EB7FE /* ProviderConnectionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04F8B936436212D02F8F7FE /* ProviderConnectionStatusTests.swift */; };
 		C5818C079A861F1D022E3645 /* CursorAPIClientMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E932EF65E9AEA35850A27829 /* CursorAPIClientMock.swift */; };
 		C8325B5F4DFDFB399612D23C /* ApplicationMoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96AD55C6554D8107202CFB8 /* ApplicationMoverTests.swift */; };
 		C8BB9215399E2BE0A4851A5B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE6B3050D9B7CD810F4A338 /* AppDelegate.swift */; };
@@ -305,8 +306,10 @@
 		C1ACCBD26778AE1AF2C88833 /* NotificationManagerMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManagerMock.swift; sourceTree = "<group>"; };
 		C24E5B8C040D897EAB0397E6 /* MockSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsManager.swift; sourceTree = "<group>"; };
 		C6B5D9C53CC36213616E28BF /* MenuBarState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarState.swift; sourceTree = "<group>"; };
+		CB1507FD3A26CAB88BC0E65A /* ProviderConnectionStatusAdvancedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatusAdvancedTests.swift; sourceTree = "<group>"; };
 		CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeter-Info.plist"; sourceTree = "<group>"; };
 		CCB48421ED6BB82167A61CF6 /* NetworkRetryHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandlerTests.swift; sourceTree = "<group>"; };
+		CF6A711C1ADDBEBD76E8A785 /* ProviderConnectionStatusBasicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatusBasicTests.swift; sourceTree = "<group>"; };
 		D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupManagerTests.swift; sourceTree = "<group>"; };
 		D2516C3D1A795ADC16C47893 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D2FD2BDE953D0620D8A6A6C6 /* Error+NetworkRetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+NetworkRetry.swift"; sourceTree = "<group>"; };
@@ -324,7 +327,6 @@
 		ED0B5A578E2D63827397C55E /* NetworkRetryHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandler.swift; sourceTree = "<group>"; };
 		EDAC9756EEC771ECAE3C1522 /* AuthenticationTokenManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationTokenManagerTests.swift; sourceTree = "<group>"; };
 		EDB66367033919CE2DDBD9C3 /* CurrencyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyData.swift; sourceTree = "<group>"; };
-		F04F8B936436212D02F8F7FE /* ProviderConnectionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatusTests.swift; sourceTree = "<group>"; };
 		F0662AEC9A00132BD74EDFC4 /* ActionButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonsView.swift; sourceTree = "<group>"; };
 		F232967C420EA4E6E10C8A97 /* ProviderModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderModels.swift; sourceTree = "<group>"; };
 		F37BF61BE7808EBCADC56C50 /* NSApplication+openSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSApplication+openSettings.swift"; sourceTree = "<group>"; };
@@ -679,7 +681,8 @@
 				95FE6E1538D6DF6B1FD585AA /* NotificationManagerAdvancedTests.swift */,
 				45FCE153EC194DC643AE53CA /* NotificationManagerBasicTests.swift */,
 				003EEA364584BD846B3F2F51 /* ProgressColorHelperTests.swift */,
-				F04F8B936436212D02F8F7FE /* ProviderConnectionStatusTests.swift */,
+				CB1507FD3A26CAB88BC0E65A /* ProviderConnectionStatusAdvancedTests.swift */,
+				CF6A711C1ADDBEBD76E8A785 /* ProviderConnectionStatusBasicTests.swift */,
 				3D664A9FA300689BE83E77FF /* SettingsManagerTests.swift */,
 				1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */,
 				D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */,
@@ -841,7 +844,8 @@
 				FAFE370841213826A8E168A3 /* NotificationManagerAdvancedTests.swift in Sources */,
 				CD218C62EDC261594C59E8BD /* NotificationManagerBasicTests.swift in Sources */,
 				E9E83B56BDA62835CB6753E7 /* ProgressColorHelperTests.swift in Sources */,
-				C4D6599FA8F0AB68F29EB7FE /* ProviderConnectionStatusTests.swift in Sources */,
+				46C31B45E50900D6F7583601 /* ProviderConnectionStatusAdvancedTests.swift in Sources */,
+				85E29810DB5BC37225547BCD /* ProviderConnectionStatusBasicTests.swift in Sources */,
 				3B98EB13BD13B2375FE03238 /* SettingsManagerTests.swift in Sources */,
 				C33D4B994D668FAC2935D1C6 /* SparkleUpdaterManagerTests.swift in Sources */,
 				0DED20E09192DFB74E04FFBB /* StartupManagerTests.swift in Sources */,
