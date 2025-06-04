@@ -194,41 +194,47 @@ struct GaugeIcon: View {
         }
     }
 
-    /// Theme-aware gauge colors that adapt to light/dark mode and accessibility settings
+    /// Theme-aware gauge colors for menu bar display
     private func color(for v: Double) -> Color {
-        // Use accessibility-aware colors that respect high contrast mode
-        let palette: [Color] = Color.accessibleGaugeColors(for: colorScheme)
-
-        // Apply dark mode brightness adjustments if not in high contrast mode
-        let adjustedPalette: [Color] = Color.isHighContrastEnabled ? palette :
-            (colorScheme == .dark ? palette.map { $0.opacity(0.9) } : palette)
-
-        let seg = min(4, Int(v * 4))
-        let t = v * 4 - Double(seg)
-        return adjustedPalette[seg].blend(with: adjustedPalette[min(seg + 1, 4)], ratio: t)
-            .withAccessibilityContrast()
+        // For menu bar icons, use white in dark mode and color gradients in light mode
+        if colorScheme == .dark {
+            // In dark mode, use white with varying opacity based on gauge value
+            let intensity = 0.6 + (v * 0.4) // Range from 0.6 to 1.0 opacity
+            return Color.white.opacity(intensity)
+        } else {
+            // In light mode, use the standard color progression
+            let palette: [Color] = Color.accessibleGaugeColors(for: colorScheme)
+            let adjustedPalette: [Color] = Color.isHighContrastEnabled ? palette : 
+                palette.map { $0.opacity(0.8) } // Slightly more subtle for menu bar
+            
+            let seg = min(4, Int(v * 4))
+            let t = v * 4 - Double(seg)
+            return adjustedPalette[seg].blend(with: adjustedPalette[min(seg + 1, 4)], ratio: t)
+                .withAccessibilityContrast()
+        }
     }
 
-    /// Loading state uses theme-aware blue gradient
+    /// Loading state uses theme-aware colors for menu bar
     private func loadingColor(for v: Double) -> Color {
-        let palette: [Color] = colorScheme == .dark
-            ? [
-                Color.cyan.opacity(0.9), // Much brighter for dark mode visibility
-                Color.cyan.opacity(1.0),
-                Color.blue.opacity(1.0),
-                Color.cyan.opacity(1.0),
-                Color.cyan.opacity(0.9),
-            ]
-            : [
-                Color.blue.opacity(0.4), // Subtle blues for light mode
+        if colorScheme == .dark {
+            // In dark mode, use white with pulsing opacity for loading animation
+            let baseOpacity = 0.7
+            let pulseAmount = 0.3
+            let opacity = baseOpacity + (pulseAmount * sin(v * .pi))
+            return Color.white.opacity(opacity)
+        } else {
+            // In light mode, use subtle blue gradient
+            let palette: [Color] = [
+                Color.blue.opacity(0.4),
                 Color.blue.opacity(0.6),
                 Color.blue.opacity(0.8),
                 Color.blue.opacity(0.6),
                 Color.blue.opacity(0.4),
             ]
-        let seg = min(4, Int(v * 4))
-        let t = v * 4 - Double(seg)
-        return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
+            let seg = min(4, Int(v * 4))
+            let t = v * 4 - Double(seg)
+            return palette[seg].blend(with: palette[min(seg + 1, 4)], ratio: t)
+        }
     }
 }
 
