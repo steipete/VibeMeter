@@ -72,8 +72,10 @@ final class AuthenticationTokenManagerTests: XCTestCase {
         XCTAssertTrue(cursorResult)
         XCTAssertEqual(mockKeychainServices[testProvider]?.lastSavedToken, cursorToken)
 
-        // Verify tokens are isolated per provider
-        XCTAssertNotEqual(mockKeychainServices[testProvider]?.lastSavedToken, cursorToken)
+        // Verify tokens are isolated per provider - other providers should not have this token
+        for provider in ServiceProvider.allCases where provider != testProvider {
+            XCTAssertNil(mockKeychainServices[provider]?.lastSavedToken)
+        }
     }
 
     // MARK: - Token Retrieval Tests

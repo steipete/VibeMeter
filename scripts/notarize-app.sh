@@ -105,7 +105,7 @@ sign_binary() {
     log "Signing $description: $(basename "$binary")"
     
     # Add keychain option if available
-    local keychain_opts=""
+    keychain_opts=""
     if [ -n "${KEYCHAIN_NAME:-}" ]; then
         keychain_opts="--keychain $KEYCHAIN_NAME"
     fi
@@ -128,7 +128,7 @@ sign_app_bundle() {
     log "Signing $description: $(basename "$bundle")"
     
     # Add keychain option if available
-    local keychain_opts=""
+    keychain_opts=""
     if [ -n "${KEYCHAIN_NAME:-}" ]; then
         keychain_opts="--keychain $KEYCHAIN_NAME"
     fi
@@ -200,7 +200,7 @@ if [ -d "$SPARKLE_FRAMEWORK" ]; then
     
     # Sign the framework bundle
     log "Signing Sparkle framework bundle..."
-    local keychain_opts=""
+    keychain_opts=""
     if [ -n "${KEYCHAIN_NAME:-}" ]; then
         keychain_opts="--keychain $KEYCHAIN_NAME"
     fi
@@ -222,7 +222,7 @@ find "$APP_BUNDLE/Contents/Frameworks" -name "*.framework" -not -path "*Sparkle*
         sign_binary "$framework_binary" "$MAIN_ENTITLEMENTS" "Framework binary"
     fi
     
-    local keychain_opts=""
+    keychain_opts=""
     if [ -n "${KEYCHAIN_NAME:-}" ]; then
         keychain_opts="--keychain $KEYCHAIN_NAME"
     fi

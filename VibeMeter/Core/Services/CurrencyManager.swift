@@ -3,11 +3,21 @@ import Foundation
 /// Manages currency selection and formatting for the application.
 final class CurrencyManager: Sendable {
     static let shared = CurrencyManager()
+    
+    // Cache for available currencies to improve performance
+    private let _availableCurrencies: [(String, String)]
 
-    private init() {}
+    private init() {
+        self._availableCurrencies = Self.generateAvailableCurrencies()
+    }
 
     /// Available currencies from macOS system with commonly used currencies prioritized
     var availableCurrencies: [(String, String)] {
+        return _availableCurrencies
+    }
+    
+    /// Generates the available currencies list (called once during initialization)
+    private static func generateAvailableCurrencies() -> [(String, String)] {
         // Get all unique currency codes from available locales
         let allCurrencyCodes = Set(Locale.availableIdentifiers.compactMap { identifier in
             Locale(identifier: identifier).currency?.identifier
@@ -67,7 +77,7 @@ final class CurrencyManager: Sendable {
     }
 
     /// Provides custom English names for common currencies to ensure consistency
-    private func customCurrencyName(for currencyCode: String) -> String? {
+    private static func customCurrencyName(for currencyCode: String) -> String? {
         let customNames: [String: String] = [
             "USD": "US Dollar",
             "EUR": "Euro",
