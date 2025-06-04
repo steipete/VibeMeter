@@ -125,6 +125,11 @@ actor CursorAPIClient {
     }
 
     private func performRequest<T: Decodable & Sendable>(_ request: URLRequest) async throws -> T {
+        let (data, httpResponse) = try await executeRequest(request)
+        return try handleResponse(data: data, response: httpResponse, request: request)
+    }
+
+    private func executeRequest(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         logger.debug("Performing request to: \(request.url?.absoluteString ?? "nil")")
 
         let (data, response): (Data, URLResponse)
@@ -138,6 +143,11 @@ actor CursorAPIClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ProviderError.networkError(message: "Invalid response type", statusCode: nil)
         }
+
+        return (data, httpResponse)
+    }
+
+    private func handleResponse<T: Decodable & Sendable>(data: Data, response httpResponse: HTTPURLResponse, request: URLRequest) throws -> T {
 
         switch httpResponse.statusCode {
         case 200 ... 299:
@@ -206,28 +216,8 @@ actor CursorAPIClient {
             let message = String(data: data, encoding: .utf8) ?? "Unknown error"
             logger.error("Cursor API error \(httpResponse.statusCode): \(message)")
 
-            // Parse specific error types from response body
-            if let errorData = data.isEmpty ? nil : data,
-               let json = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
-               let error = json["error"] as? [String: Any],
-               let details = error["details"] as? [[String: Any]] {
-                for detail in details {
-                    if let errorCode = detail["error"] as? String,
-                       let errorDetails = detail["details"] as? [String: Any] {
-                        // Check for unauthorized/team not found errors
-                        if errorCode == "ERROR_UNAUTHORIZED" {
-                            if let errorDetail = errorDetails["detail"] as? String,
-                               errorDetail.contains("Team not found") {
-                                logger.warning("Team not found error detected")
-                                throw ProviderError.noTeamFound
-                            } else {
-                                logger.warning("Unauthorized error detected")
-                                throw ProviderError.unauthorized
-                            }
-                        }
-                    }
-                }
-            }
+            // Check for specific error types
+            try checkForSpecificErrors(in: data)
 
             // Handle status code specific errors
             if httpResponse.statusCode == 500, message.contains("Team not found") {
@@ -243,6 +233,32 @@ actor CursorAPIClient {
             throw ProviderError.networkError(
                 message: message,
                 statusCode: httpResponse.statusCode)
+        }
+    }
+
+    private func checkForSpecificErrors(in data: Data) throws {
+        guard !data.isEmpty,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let error = json["error"] as? [String: Any],
+              let details = error["details"] as? [[String: Any]] else {
+            return
+        }
+
+        for detail in details {
+            if let errorCode = detail["error"] as? String,
+               let errorDetails = detail["details"] as? [String: Any] {
+                // Check for unauthorized/team not found errors
+                if errorCode == "ERROR_UNAUTHORIZED" {
+                    if let errorDetail = errorDetails["detail"] as? String,
+                       errorDetail.contains("Team not found") {
+                        logger.warning("Team not found error detected")
+                        throw ProviderError.noTeamFound
+                    } else {
+                        logger.warning("Unauthorized error detected")
+                        throw ProviderError.unauthorized
+                    }
+                }
+            }
         }
     }
 }

@@ -168,7 +168,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         // Given
         let networkError = ProviderError.networkError(
             message: "Network connection failed",
-            underlyingError: nil)
+            statusCode: 500)
 
         // When
         let status = ProviderConnectionStatus.from(providerError: networkError)
@@ -183,14 +183,13 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
     func testFromProviderError_DataUnavailableError() {
         // Given
-        let dataError = ProviderError.dataUnavailable(
-            message: "Service temporarily unavailable")
+        let dataError = ProviderError.serviceUnavailable
 
         // When
         let status = ProviderConnectionStatus.from(providerError: dataError)
 
         // Then
-        XCTAssertEqual(status, .stale, "Data unavailable errors should result in stale status")
+        XCTAssertEqual(status, .stale, "Service unavailable errors should result in stale status")
     }
 
     func testFromProviderError_OtherErrors() {

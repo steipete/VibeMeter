@@ -88,7 +88,10 @@ struct LoggedInContentView: View {
 // MARK: - Preview
 
 #Preview("Logged In Content - With Data") {
-    let (userSession, spendingData, currencyData) = PreviewData.loggedInWithSpending(cents: 4997)
+    let bundle = PreviewData.loggedInWithSpending(cents: 4997)
+    let userSession = bundle.userSession
+    let spendingData = bundle.spendingData
+    let currencyData = bundle.currencyData
     let services = MockServices.standard
 
     LoggedInContentView(

@@ -177,7 +177,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         mockProvider.shouldThrowOnUserInfo = true
         mockProvider.errorToThrow = ProviderError.networkError(
             message: "Connection timeout",
-            underlyingError: nil)
+            statusCode: 408)
 
         // When/Then
         do {
@@ -199,7 +199,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         // Given
         mockProvider.shouldThrowOnUserInfo = true
         mockProvider.errorToThrow = ProviderError.authenticationFailed(
-            message: "Invalid token")
+            reason: "Invalid token")
 
         // When/Then
         do {
@@ -209,8 +209,8 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
                 providerClient: mockProvider)
             XCTFail("Should have thrown error")
         } catch {
-            if case let ProviderError.authenticationFailed(message) = error {
-                XCTAssertEqual(message, "Invalid token")
+            if case let ProviderError.authenticationFailed(reason) = error {
+                XCTAssertEqual(reason, "Invalid token")
             } else {
                 XCTFail("Wrong error type: \(error)")
             }
