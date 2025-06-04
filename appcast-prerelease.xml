@@ -7,53 +7,26 @@
         <language>en</language>
         
         <item>
-            <title>VibeMeter 1.0-beta2</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0-beta2/VibeMeter-1.0-beta2.dmg</link>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>1.0-beta2</sparkle:shortVersionString>
+            <title>VibeMeter 1.0-beta.1-beta.1</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.1-beta.1/VibeMeter-1.0-beta.1-beta.1.dmg</link>
+            <sparkle:version>100</sparkle:version>
+            <sparkle:shortVersionString>1.0-beta.1-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0-beta2</h2>
-                <p><strong>Pre-release version</strong> with continued development of the multi-provider architecture.</p>
+                <h2>VibeMeter 1.0-beta.1-beta.1</h2>
+                <p><strong>Pre-release version</strong> with new features and improvements.</p>
                 <ul>
-                    <li>Additional refinements to the update channel system</li>
-                    <li>Continued testing of the beta release process</li>
-                    <li>Bug fixes and stability improvements</li>
+                    <li>Latest experimental features</li>
+                    <li>Bug fixes and performance enhancements</li>
+                    <li>Enhanced update channel selection</li>
                 </ul>
                 <p><strong>Note:</strong> This is a pre-release version and may contain bugs.</p>
             ]]></description>
-            <pubDate>Wed, 04 Jun 2025 13:10:38 +0100</pubDate>
+            <pubDate>Wed, 04 Jun 2025 14:32:44 +0100</pubDate>
             <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v1.0-beta2/VibeMeter-1.0-beta2.dmg"
-                length="5258127"
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.0-beta.1-beta.1/VibeMeter-1.0-beta.1-beta.1.dmg"
+                length="5591917"
                 type="application/octet-stream"
-                sparkle:edSignature="DfZ5XrwBHChP02p83azhGiVFh5K3c+EcGEHhS04jPaChlNN1j6NfMouatPRb1n/0xVmffSiPZQ4hxVyYhUYfDQ=="
-            />
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-        </item>
-        
-        <item>
-            <title>VibeMeter 1.0-beta1</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0-beta1/VibeMeter-1.0-beta1.dmg</link>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>1.0-beta1</sparkle:shortVersionString>
-            <description><![CDATA[
-                <h2>VibeMeter 1.0-beta1</h2>
-                <p><strong>Pre-release version</strong> with major new features and improvements.</p>
-                <ul>
-                    <li>Multi-provider architecture ready for future AI services</li>
-                    <li>Advanced settings section with update channel functionality</li>
-                    <li>Editable spending limits with decimal support</li>
-                    <li>Auto-detection of beta versions for pre-release updates</li>
-                    <li>Fixed pre-release update mechanism</li>
-                </ul>
-                <p><strong>Note:</strong> This is a pre-release version and may contain bugs.</p>
-            ]]></description>
-            <pubDate>Wed, 04 Jun 2025 13:01:19 +0100</pubDate>
-            <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v1.0-beta1/VibeMeter-1.0-beta1.dmg"
-                length="5258309"
-                type="application/octet-stream"
-                sparkle:edSignature="PdbG6X5rnLj8eV4xa4USbjn5qg+b+pnjI0x/5yAIbrqBt7Q2eXulFEU7aEc0w6fcZ7ng7CErxPuREGnEskUcAA=="
+                sparkle:edSignature="AN3ZTqTd9uc2yx/7NNa+bDKUTWyjENriXfzPxDueucJ9vWDCIjkbY7jgi2b2Om3trDXpA8Rj/5JjsXqdvreAAQ=="
             />
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>

@@ -217,7 +217,7 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         }
     }
 
-    func testProcessProviderData_CancellationDuringUserInfo_ThrowsCancellationError() async {
+    func testProcessProviderData_CancellationDuringUserInfo_ThrowsCancellationError() async throws {
         // Given
         mockProvider.userInfoDelay = 1.0 // Long delay to allow cancellation
 
@@ -230,10 +230,8 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         }
 
         // Cancel after a short delay
-        Task {
-            try await Task.sleep(nanoseconds: 10_000_000) // 0.01s
-            task.cancel()
-        }
+        try await Task.sleep(nanoseconds: 10_000_000) // 0.01s
+        task.cancel()
 
         // Then
         do {

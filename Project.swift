@@ -30,7 +30,7 @@ let project = Project(
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
             "MACOSX_DEPLOYMENT_TARGET": "15.0",
-            "MARKETING_VERSION": "1.0-beta.1",
+            "MARKETING_VERSION": "1.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",
             "SUPPORTED_PLATFORMS": "macosx",
@@ -84,7 +84,7 @@ let project = Project(
             bundleId: "com.steipete.vibemeter",
             deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "1.0-beta2",
+                "CFBundleShortVersionString": "1.0",
                 "CFBundleVersion": "1",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
