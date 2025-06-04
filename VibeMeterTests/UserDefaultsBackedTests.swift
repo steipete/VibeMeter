@@ -549,6 +549,7 @@ final class UserDefaultsBackedTests: XCTestCase {
         // Then - The wrapper should not retain the UserDefaults
         // Note: This test might be flaky depending on autoreleasepool behavior
         // In practice, UserDefaults instances are often retained by the system
+        XCTAssertNil(weakUserDefaults, "UserDefaults should be deallocated after autoreleasepool")
     }
 
     // MARK: - Concurrent Access Tests

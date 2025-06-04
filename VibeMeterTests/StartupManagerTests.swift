@@ -209,7 +209,7 @@ final class StartupManagerTests: XCTestCase, @unchecked Sendable {
 
         // When/Then - This compiles because StartupManager conforms to Sendable
         Task {
-            await manager.setLaunchAtLogin(enabled: false)
+            manager.setLaunchAtLogin(enabled: false)
         }
     }
 

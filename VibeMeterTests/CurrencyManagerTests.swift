@@ -347,7 +347,13 @@ final class CurrencyManagerTests: XCTestCase {
 
     func testCurrencyManager_IsSendable() {
         // Then
-        XCTAssertNotNil(sut as? any Sendable, "CurrencyManager should be Sendable")
+        // Verify CurrencyManager is Sendable by attempting to use it in a concurrent context
+        let manager = sut
+        Task {
+            // If CurrencyManager is Sendable, this will compile
+            _ = manager?.availableCurrencies
+        }
+        XCTAssertNotNil(sut, "CurrencyManager should exist and be usable in concurrent contexts")
     }
 
     func testConcurrentAccess_ThreadSafety() async {

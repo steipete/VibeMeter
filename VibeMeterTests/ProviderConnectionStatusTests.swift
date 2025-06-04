@@ -536,8 +536,16 @@ final class ProviderConnectionStatusTests: XCTestCase {
     // MARK: - Sendable Conformance Tests
 
     func testProviderConnectionStatus_IsSendable() {
+        // Given
+        let status = ProviderConnectionStatus.connected
+
         // Then
-        XCTAssertTrue(ProviderConnectionStatus.self is any Sendable.Type, "ProviderConnectionStatus should be Sendable")
+        // Verify ProviderConnectionStatus is Sendable by using it in a concurrent context
+        Task {
+            // If ProviderConnectionStatus is Sendable, this will compile
+            _ = status.description
+        }
+        XCTAssertEqual(status, .connected, "ProviderConnectionStatus should be usable in concurrent contexts")
     }
 
     func testConcurrentAccess_ThreadSafety() async {

@@ -245,6 +245,12 @@ final class MultiProviderLoginManagerTests: XCTestCase, @unchecked Sendable {
         // Then - In real flow, callback would be called through handleSuccessfulLogin
         // For this test, we verify the state is set correctly
         XCTAssertTrue(sut.isLoggedIn(to: .cursor))
+
+        // Note: In this test, successCallbackCalled and successProvider would be used
+        // if we had a proper callback mechanism, but the current implementation
+        // uses a different pattern
+        _ = successCallbackCalled // Acknowledge the variable
+        _ = successProvider // Acknowledge the variable
     }
 
     func testOnLoginDismiss_ConfigurableCallback() {
