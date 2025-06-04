@@ -16,6 +16,7 @@ public protocol NotificationManagerProtocol: Sendable {
         warningLimitUSD: Double,
         upperLimitUSD: Double) async
     func resetAllNotificationStatesForNewSession() async
+    func showInstanceAlreadyRunningNotification() async
 }
 
 // MARK: - Limit Type
@@ -150,6 +151,22 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
         logger.info("All notification states reset for new session")
     }
 
+    public func showInstanceAlreadyRunningNotification() async {
+        let content = UNMutableNotificationContent()
+        content.title = "VibeMeter Already Running"
+        content.body = "Another instance of VibeMeter is already running. The existing instance has been brought to the front."
+        content.sound = .default
+        content.categoryIdentifier = "APP_INSTANCE"
+
+        let request = UNNotificationRequest(
+            identifier: "instance_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+        await scheduleNotification(request: request)
+
+        logger.info("Instance already running notification scheduled")
+    }
+
     // MARK: - Private Methods
 
     private func setupNotificationCategories() {
@@ -165,7 +182,13 @@ public final class NotificationManager: NSObject, NotificationManagerProtocol {
             intentIdentifiers: [],
             options: [.customDismissAction])
 
-        UNUserNotificationCenter.current().setNotificationCategories([warningCategory, criticalCategory])
+        let instanceCategory = UNNotificationCategory(
+            identifier: "APP_INSTANCE",
+            actions: [],
+            intentIdentifiers: [],
+            options: [])
+
+        UNUserNotificationCenter.current().setNotificationCategories([warningCategory, criticalCategory, instanceCategory])
     }
 
     private func scheduleNotification(request: sending UNNotificationRequest) async {

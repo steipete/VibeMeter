@@ -105,13 +105,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             NSClassFromString("XCTestCase") != nil
 
+        // Detect if running in debug mode (Xcode debugging)
+        let isRunningInDebug = _isDebugAssertConfiguration()
+
         // Ensure only a single instance of VibeMeter is running. If another instance is
         // already active, notify it to display the Settings window and terminate this
-        // process early. Skip this entirely when running tests.
-        if !isRunningInPreview && !isRunningInTests {
+        // process early. Skip this entirely when running tests or in debug mode.
+        if !isRunningInPreview && !isRunningInTests && !isRunningInDebug {
             let runningApps = NSRunningApplication
                 .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             if runningApps.count > 1 {
+                // Show user notification about existing instance
+                Task {
+                    await notificationManager.showInstanceAlreadyRunningNotification()
+                }
+                
                 DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
                 NSApp.terminate(nil)
                 return
@@ -203,8 +211,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let isRunningInTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             NSClassFromString("XCTestCase") != nil
         let isRunningInPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        let isRunningInDebug = _isDebugAssertConfiguration()
         
-        if !isRunningInPreview && !isRunningInTests {
+        if !isRunningInPreview && !isRunningInTests && !isRunningInDebug {
             DistributedNotificationCenter.default().removeObserver(self, name: Self.showSettingsNotification, object: nil)
         }
 
