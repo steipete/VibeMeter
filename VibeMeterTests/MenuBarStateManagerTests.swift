@@ -468,10 +468,10 @@ final class MenuBarStateManagerTests: XCTestCase {
     func testEaseInOut_EdgeCases() {
         // Test easing function with edge cases
         let testCases = [
-            (-0.1, 0.02), // Below 0
-            (1.1, 1.42), // Above 1
-            (0.25, 0.125), // First quarter
-            (0.75, 0.875), // Third quarter
+            (-0.1, 0.02), // Below 0: 2 * (-0.1) * (-0.1) = 0.02
+            (1.1, 0.98), // Above 1: -1 + (4 - 2*1.1) * 1.1 = -1 + 1.8 * 1.1 = 0.98
+            (0.25, 0.125), // First quarter: 2 * 0.25 * 0.25 = 0.125
+            (0.75, 0.875), // Third quarter: -1 + (4 - 2*0.75) * 0.75 = -1 + 2.5 * 0.75 = 0.875
         ]
 
         for (input, approximateExpected) in testCases {

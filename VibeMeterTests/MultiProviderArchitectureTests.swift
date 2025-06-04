@@ -134,7 +134,7 @@ final class MultiProviderArchitectureTests: XCTestCase {
 
     func testKeychain() {
         // Test that KeychainHelper can be created without crashing
-        let keychain = KeychainHelper(service: "test.service")
+        let keychain = KeychainHelper(service: "test.service.unique.\(UUID().uuidString)")
 
         // Test basic operations (should not crash)
         let initialToken = keychain.getToken()

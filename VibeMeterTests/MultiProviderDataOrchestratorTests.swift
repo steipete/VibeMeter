@@ -10,6 +10,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
     var mockSettingsManager: SettingsManager!
     var mockExchangeRateManager: ExchangeRateManagerMock!
     var mockNotificationManager: NotificationManagerMock!
+    var mockURLSession: MockURLSession!
     var providerFactory: ProviderFactory!
     var mockApiClient: CursorAPIClientMock!
 
@@ -39,7 +40,8 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager = ExchangeRateManagerMock()
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
-            providerFactory = ProviderFactory(settingsManager: mockSettingsManager)
+            mockURLSession = MockURLSession()
+            providerFactory = ProviderFactory(settingsManager: mockSettingsManager, urlSession: mockURLSession)
             mockLoginManager = MultiProviderLoginManager(providerFactory: providerFactory)
 
             // Initialize data models
@@ -109,8 +111,14 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             month: 5,
             year: 2025)
 
-        // Simulate existing login state
-        mockLoginManager._test_setLoginState(true, for: .cursor)
+        // Simulate existing login state by setting up user session data and auth token
+        userSessionData.handleLoginSuccess(
+            for: .cursor,
+            email: "test@example.com",
+            teamName: "Test Team",
+            teamId: 123)
+        
+        // Note: Authentication token management is handled internally by the orchestrator
 
         // Create new orchestrator with logged-in state
         orchestrator = MultiProviderDataOrchestrator(
@@ -124,7 +132,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             currencyData: currencyData)
 
         // Wait for async operations to complete
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
 
         XCTAssertTrue(mockApiClient.fetchTeamInfoCallCount > 0, "fetchTeamInfo should be called if logged in on init")
         XCTAssertTrue(mockApiClient.fetchUserInfoCallCount > 0, "fetchUserInfo should be called")
