@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.0-beta.1</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
@@ -45,11 +45,13 @@
 	<true/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<key>SUEnableDownloaderService</key>
+	<true/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>rLg3Mlihl14FWJJpZDg97VRt+CWAbQt7P8DleufK1cY=</string>
+	<string>oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=</string>
 </dict>
 </plist>
