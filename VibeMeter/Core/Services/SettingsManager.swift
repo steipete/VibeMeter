@@ -147,7 +147,7 @@ public final class SettingsManager: SettingsManagerProtocol {
         for (provider, session) in providerSessions {
             let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), " +
                 "teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
-            logger.info(sessionInfo)
+            logger.info("\(sessionInfo)")
         }
     }
 

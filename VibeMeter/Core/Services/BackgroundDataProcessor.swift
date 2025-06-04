@@ -86,7 +86,7 @@ actor BackgroundDataProcessor {
         } catch {
             let errorMessage = "Usage data fetch failed for \(provider.displayName), using fallback: " +
                 "\(error.localizedDescription)"
-            logger.warning(errorMessage)
+            logger.warning("\(errorMessage)")
             // Create fallback usage data - zero usage with no limits
             usage = ProviderUsageData(
                 currentRequests: 0,

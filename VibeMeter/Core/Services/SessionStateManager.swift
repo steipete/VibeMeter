@@ -192,7 +192,7 @@ public final class SessionStateManager {
             if !hasToken {
                 let warningMessage = "Inconsistent state detected for \(provider.displayName): " +
                     "stored session active but no keychain token"
-                logger.warning(warningMessage)
+                logger.warning("\(warningMessage)")
                 logger.warning("Clearing stale session data for \(provider.displayName)")
 
                 // Clear the inconsistent session data

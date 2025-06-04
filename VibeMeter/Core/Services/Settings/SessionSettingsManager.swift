@@ -30,7 +30,7 @@ public final class SessionSettingsManager {
             for (provider, session) in self.providerSessions {
                 let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), " +
                     "teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
-                logger.debug(sessionInfo)
+                logger.debug("\(sessionInfo)")
             }
         }
     }
@@ -42,7 +42,7 @@ public final class SessionSettingsManager {
             userDefaults.set(enabledArray, forKey: Keys.enabledProviders)
             let enabledMessage = "Enabled providers updated: " +
                 "\(self.enabledProviders.map(\.displayName).joined(separator: ", "))"
-            logger.debug(enabledMessage)
+            logger.debug("\(enabledMessage)")
         }
     }
 
@@ -70,7 +70,7 @@ public final class SessionSettingsManager {
         for (provider, session) in providerSessions {
             let sessionInfo = "  \(provider.displayName): email=\(session.userEmail ?? "none"), " +
                 "teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
-            logger.info(sessionInfo)
+            logger.info("\(sessionInfo)")
         }
     }
 
@@ -93,7 +93,7 @@ public final class SessionSettingsManager {
         if let session = providerSessions[provider] {
             let sessionInfo = "  Clearing session: email=\(session.userEmail ?? "none"), " +
                 "teamId=\(session.teamId?.description ?? "none")"
-            logger.info(sessionInfo)
+            logger.info("\(sessionInfo)")
         } else {
             logger.info("  No existing session found for \(provider.displayName)")
         }
@@ -114,7 +114,7 @@ public final class SessionSettingsManager {
         logger.info("updateSession called for \(provider.displayName)")
         let sessionInfo = "  New session: email=\(session.userEmail ?? "none"), " +
             "teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)"
-        logger.info(sessionInfo)
+        logger.info("\(sessionInfo)")
 
         providerSessions[provider] = session
         saveProviderSessions()

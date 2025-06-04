@@ -54,7 +54,7 @@ enum CursorDataTransformer {
         let totalUSD = Double(totalCents) / 100.0
         let invoiceInfo = "Successfully transformed Cursor invoice: \(genericItems.count) items, " +
             "total: \(totalCents) cents ($\(totalUSD))"
-        logger.info(invoiceInfo)
+        logger.info("\(invoiceInfo)")
 
         return ProviderMonthlyInvoice(
             items: genericItems,
@@ -72,7 +72,7 @@ enum CursorDataTransformer {
 
         let usageInfo = "Successfully transformed Cursor usage: " +
             "\(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests"
-        logger.info(usageInfo)
+        logger.info("\(usageInfo)")
 
         return ProviderUsageData(
             currentRequests: primaryUsage.numRequests,

@@ -74,7 +74,7 @@ final class MultiProviderDataProcessor {
         logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
         let usageInfo = "Fetched usage for \(provider.displayName): " +
             "\(usage.currentRequests)/\(usage.maxRequests ?? 0) requests"
-        logger.info(usageInfo)
+        logger.info("\(usageInfo)")
     }
 
     private struct DataStoreContext {

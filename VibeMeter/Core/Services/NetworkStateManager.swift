@@ -81,7 +81,7 @@ public final class NetworkStateManager {
         if !providersToRefresh.isEmpty {
             let refreshMessage = "Found \(providersToRefresh.count) providers needing refresh after network restore: " +
                 "\(providersToRefresh.map(\.displayName).joined(separator: ", "))"
-            logger.info(refreshMessage)
+            logger.info("\(refreshMessage)")
             await onNetworkRestored?()
         } else {
             logger.info("No providers need refreshing after network restore")
@@ -197,7 +197,7 @@ public final class NetworkStateManager {
                data.isStale(olderThan: staleThreshold) {
                 let staleMessage = "Marking \(provider.displayName) as stale " +
                     "(last refresh: \(data.lastSuccessfulRefresh?.description ?? "never"))"
-                logger.info(staleMessage)
+                logger.info("\(staleMessage)")
                 spendingData.updateConnectionStatus(for: provider, status: .stale)
             }
         }

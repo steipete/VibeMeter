@@ -111,7 +111,7 @@ public final class SpendingLimitsManager {
         if !isValid {
             let limitInfo = "Invalid limit configuration detected - warning: $\(self.warningLimitUSD), " +
                 "upper: $\(self.upperLimitUSD)"
-            logger.error(limitInfo)
+            logger.error("\(limitInfo)")
         }
 
         return isValid
