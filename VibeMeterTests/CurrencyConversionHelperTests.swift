@@ -486,7 +486,7 @@ final class CurrencyConversionHelperTests: XCTestCase {
         // When - Perform concurrent operations on MainActor
         await withTaskGroup(of: Bool.self) { group in
             for i in 0 ..< taskCount {
-                group.addTask {
+                group.addTask { @Sendable in
                     await MainActor.run {
                         let amount = Double(i * 10)
                         let rate = 0.85
