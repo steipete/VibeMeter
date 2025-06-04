@@ -8,6 +8,11 @@ import SwiftUI
 /// based on the current application state.
 @MainActor
 final class StatusBarDisplayManager {
+    // MARK: - Constants
+    
+    /// Threshold for detecting currency changes based on animated value difference (in currency units)
+    private static let currencyChangeThreshold: Double = 0.5
+    
     // MARK: - Display State
 
     struct DisplayState: Equatable {
@@ -237,7 +242,7 @@ final class StatusBarDisplayManager {
             // 2. Check if animated value significantly differs from target (indicates currency change)
             let currentAnimated = stateManager.animatedCostValue
             let targetSpending = state.totalSpending
-            let animatedValueMismatch = abs(currentAnimated - targetSpending) > 0.5 // More than 50 cent difference
+            let animatedValueMismatch = abs(currentAnimated - targetSpending) > Self.currencyChangeThreshold // More than 50 cent difference
             
             let currencyChanged = currencyCodeChanged || animatedValueMismatch
             
