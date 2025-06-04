@@ -122,7 +122,7 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
         case let .error(message):
             return userFriendlyError(from: message)
         case let .rateLimited(until):
-            if let until {
+            if let until, until > Date() {
                 let formatter = RelativeDateTimeFormatter()
                 formatter.unitsStyle = .short
                 return "Rate limited \(formatter.localizedString(for: until, relativeTo: Date()))"
@@ -176,19 +176,66 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
     // MARK: - Private Helpers
 
     private func userFriendlyError(from message: String) -> String {
-        // Convert technical errors to user-friendly messages
-        if message.lowercased().contains("network") || message.lowercased().contains("connection") {
-            "Connection failed"
-        } else if message.lowercased().contains("unauthorized") || message.lowercased().contains("auth") {
-            "Authentication failed"
-        } else if message.lowercased().contains("timeout") || message.lowercased().contains("timed out") {
-            "Request timed out"
-        } else if message.lowercased().contains("team not found") {
-            "Team not found"
-        } else {
-            // Truncate long error messages
-            String(message.prefix(50))
+        // Handle empty or whitespace-only messages
+        let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedMessage.isEmpty {
+            return "Something went wrong"
         }
+
+        let lowercasedMessage = trimmedMessage.lowercased()
+
+        // Authentication errors
+        if lowercasedMessage.contains("unauthorized") ||
+            lowercasedMessage.contains("authentication") ||
+            lowercasedMessage.contains("auth") {
+            return "Authentication required"
+        }
+
+        // Rate limit errors
+        if lowercasedMessage.contains("rate limit") ||
+            lowercasedMessage.contains("too many requests") ||
+            lowercasedMessage.contains("rate_limited") {
+            return "Too many requests"
+        }
+
+        // Server errors
+        if lowercasedMessage.contains("internal server error") ||
+            lowercasedMessage.contains("500") ||
+            lowercasedMessage.contains("service unavailable") {
+            return "Service unavailable"
+        }
+
+        // Network/connection errors
+        if lowercasedMessage.contains("network") ||
+            lowercasedMessage.contains("connection") {
+            return "Connection failed"
+        }
+
+        // Timeout errors
+        if lowercasedMessage.contains("timeout") ||
+            lowercasedMessage.contains("timed out") {
+            return "Request timed out"
+        }
+
+        // Team-specific errors
+        if lowercasedMessage.contains("team not found") {
+            return "Team not found"
+        }
+
+        // Generic/unknown errors
+        if lowercasedMessage.contains("unknown error") ||
+            lowercasedMessage.contains("unexpected response") ||
+            lowercasedMessage.contains("something went wrong") {
+            return "Something went wrong"
+        }
+
+        // Fallback for any other error - truncate long messages
+        if trimmedMessage.count > 50 {
+            return String(trimmedMessage.prefix(50))
+        }
+
+        // If message doesn't match known patterns, default to generic message
+        return "Something went wrong"
     }
 }
 
@@ -199,7 +246,7 @@ extension ProviderConnectionStatus {
     public static func from(_ error: ProviderError) -> ProviderConnectionStatus {
         switch error {
         case .unauthorized:
-            .error(message: "Authentication failed")
+            .disconnected
         case .rateLimitExceeded:
             .rateLimited(until: nil)
         case let .networkError(message, _):
@@ -209,15 +256,15 @@ extension ProviderConnectionStatus {
         case .teamIdNotSet:
             .error(message: "Team not configured")
         case .serviceUnavailable:
-            .error(message: "Service unavailable")
+            .stale
         case let .decodingError(message, _):
             .error(message: "Data error: \(message)")
         case let .unsupportedProvider(provider):
             .error(message: "Unsupported provider: \(provider.displayName)")
-        case let .authenticationFailed(reason):
-            .error(message: "Authentication failed: \(reason)")
+        case .authenticationFailed:
+            .disconnected
         case .tokenExpired:
-            .error(message: "Token expired")
+            .disconnected
         }
     }
 

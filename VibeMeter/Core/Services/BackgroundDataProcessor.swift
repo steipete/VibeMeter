@@ -78,7 +78,23 @@ actor BackgroundDataProcessor {
         async let usageTask = providerClient.fetchUsageData(authToken: authToken)
 
         let invoice = try await invoiceTask
-        let usage = try await usageTask
+
+        // Try to fetch usage data, but don't fail if it's unavailable
+        let usage: ProviderUsageData
+        do {
+            usage = try await usageTask
+        } catch {
+            logger
+                .warning(
+                    "Usage data fetch failed for \(provider.displayName), using fallback: \(error.localizedDescription)")
+            // Create fallback usage data - zero usage with no limits
+            usage = ProviderUsageData(
+                currentRequests: 0,
+                totalRequests: 0,
+                maxRequests: nil,
+                startOfMonth: currentDate,
+                provider: provider)
+        }
 
         logger.info("Completed background processing for \(provider.displayName)")
         return ProviderDataResult(
