@@ -22,6 +22,70 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
     var testUserDefaults: UserDefaults!
     let testSuiteName = "com.vibemeter.tests.MultiProviderDataOrchestratorTests"
 
+    private func setupMockAPIResponses() {
+        // Teams response JSON
+        let teamsJSON = """
+        {
+            "teams": [
+                {
+                    "id": 123,
+                    "name": "Test Team"
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+        
+        // User info response JSON
+        let userJSON = """
+        {
+            "email": "test@example.com",
+            "teamId": 123
+        }
+        """.data(using: .utf8)!
+        
+        // Invoice response JSON
+        let invoiceJSON = """
+        {
+            "items": [
+                {
+                    "cents": 5000,
+                    "description": "Usage"
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+        
+        // Usage response JSON
+        let usageJSON = """
+        {
+            "gpt35Turbo": {
+                "currentRequests": 150,
+                "totalRequests": 1000,
+                "maxRequests": 500
+            },
+            "gpt4": {
+                "currentRequests": 50,
+                "totalRequests": 500,
+                "maxRequests": 200
+            },
+            "gpt432K": {
+                "currentRequests": 10,
+                "totalRequests": 100,
+                "maxRequests": 50
+            },
+            "startOfMonth": "2025-06-01T00:00:00Z"
+        }
+        """.data(using: .utf8)!
+        
+        // Set up responses for different endpoints
+        mockURLSession.nextData = teamsJSON
+        mockURLSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "application/json"])
+    }
+
     override func setUp() {
         super.setUp()
         let suite = UserDefaults(suiteName: testSuiteName)
@@ -40,8 +104,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             mockExchangeRateManager = ExchangeRateManagerMock()
             mockApiClient = CursorAPIClientMock()
             mockNotificationManager = NotificationManagerMock()
-            mockURLSession = MockURLSession()
-            providerFactory = ProviderFactory(settingsManager: mockSettingsManager, urlSession: mockURLSession)
+            providerFactory = ProviderFactory(settingsManager: mockSettingsManager)
             mockLoginManager = MultiProviderLoginManager(providerFactory: providerFactory)
 
             // Initialize data models
@@ -111,14 +174,15 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             month: 5,
             year: 2025)
 
+        // Set up mock API responses
+        setupMockAPIResponses()
+        
         // Simulate existing login state by setting up user session data and auth token
         userSessionData.handleLoginSuccess(
             for: .cursor,
             email: "test@example.com",
             teamName: "Test Team",
             teamId: 123)
-        
-        // Note: Authentication token management is handled internally by the orchestrator
 
         // Create new orchestrator with logged-in state
         orchestrator = MultiProviderDataOrchestrator(
