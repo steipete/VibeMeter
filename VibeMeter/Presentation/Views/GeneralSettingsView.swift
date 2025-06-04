@@ -7,12 +7,12 @@ import SwiftUI
 /// menu bar display options, and dock visibility. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    let settingsManager: any SettingsManagerProtocol
+    let settingsManager: SettingsManager
 
     private let startupManager = StartupManager()
     private let currencyManager = CurrencyManager.shared
 
-    init(settingsManager: any SettingsManagerProtocol) {
+    init(settingsManager: SettingsManager) {
         self.settingsManager = settingsManager
     }
 
@@ -38,10 +38,13 @@ struct GeneralSettingsView: View {
         Section {
             // Launch at Login
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Launch at Login", isOn: $settingsManager.launchAtLoginEnabled)
-                    .onChange(of: settingsManager.launchAtLoginEnabled) { _, newValue in
+                Toggle("Launch at Login", isOn: .init(
+                    get: { settingsManager.launchAtLoginEnabled },
+                    set: { newValue in 
+                        settingsManager.launchAtLoginEnabled = newValue
                         startupManager.setLaunchAtLogin(enabled: newValue)
                     }
+                ))
                 Text("Automatically start VibeMeter when you log into your Mac.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -50,7 +53,10 @@ struct GeneralSettingsView: View {
             // Menu bar display mode
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Menu Bar Display") {
-                    Picker("", selection: $settingsManager.menuBarDisplayMode) {
+                    Picker("", selection: .init(
+                        get: { settingsManager.menuBarDisplayMode },
+                        set: { newValue in settingsManager.menuBarDisplayMode = newValue }
+                    )) {
                         ForEach(MenuBarDisplayMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)
                                 .id("\(mode.rawValue)-\(settingsManager.menuBarDisplayMode.rawValue)")
@@ -67,14 +73,17 @@ struct GeneralSettingsView: View {
 
             // Show in Dock
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Show in Dock", isOn: $settingsManager.showInDock)
-                    .onChange(of: settingsManager.showInDock) { _, newValue in
+                Toggle("Show in Dock", isOn: .init(
+                    get: { settingsManager.showInDock },
+                    set: { newValue in 
+                        settingsManager.showInDock = newValue
                         if newValue {
                             NSApp.setActivationPolicy(.regular)
                         } else {
                             NSApp.setActivationPolicy(.accessory)
                         }
                     }
+                ))
                 Text("Display VibeMeter in the Dock. When disabled, VibeMeter runs as a menu bar app only.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -84,7 +93,10 @@ struct GeneralSettingsView: View {
             // Refresh Interval
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Refresh Interval") {
-                    Picker("", selection: $settingsManager.refreshIntervalMinutes) {
+                    Picker("", selection: .init(
+                        get: { settingsManager.refreshIntervalMinutes },
+                        set: { newValue in settingsManager.refreshIntervalMinutes = newValue }
+                    )) {
                         Text("1 minute").tag(1)
                         Text("2 minutes").tag(2)
                         Text("5 minutes").tag(5)
@@ -130,7 +142,10 @@ struct GeneralSettingsView: View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
                 LabeledContent("Currency") {
-                    Picker("", selection: $settingsManager.selectedCurrencyCode) {
+                    Picker("", selection: .init(
+                        get: { settingsManager.selectedCurrencyCode },
+                        set: { newValue in settingsManager.selectedCurrencyCode = newValue }
+                    )) {
                         ForEach(currencyManager.availableCurrencies, id: \.0) { code, name in
                             Text(name).tag(code)
                                 .id("\(code)-\(settingsManager.selectedCurrencyCode)")
@@ -190,6 +205,6 @@ struct GeneralSettingsView: View {
 // MARK: - Preview
 
 #Preview("General Settings") {
-    GeneralSettingsView(settingsManager: MockSettingsManager())
+    GeneralSettingsView(settingsManager: MockSettingsManager() as! SettingsManager)
         .frame(width: 620, height: 550)
 }

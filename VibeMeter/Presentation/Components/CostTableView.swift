@@ -53,6 +53,11 @@ struct CostTableView: View {
                     .font(.title2.weight(.semibold).monospaced())
                     .foregroundStyle(.primary)
                     .accessibilityLabel("Total spending: \(totalSpending)")
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .animation(.easeOut(duration: 0.3), value: totalSpending)
+            } else if isLoadingData {
+                // Show shimmer while data is loading
+                ShimmerShapes.totalSpending
             } else {
                 Text("No data")
                     .font(.body)
@@ -148,6 +153,16 @@ struct CostTableView: View {
             settingsManager.upperLimitUSD,
             from: "USD",
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
+    }
+
+    /// Determines if any provider is currently loading data
+    private var isLoadingData: Bool {
+        spendingData.providersWithData.contains { provider in
+            if let providerData = spendingData.getSpendingData(for: provider) {
+                return providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing
+            }
+            return false
+        }
     }
 
     /// Hash for total spending state to optimize SwiftUI performance

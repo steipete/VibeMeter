@@ -97,6 +97,7 @@ public struct ShimmerShapes {
     ///   - width: Width of the shimmer rectangle
     ///   - height: Height of the shimmer rectangle  
     ///   - cornerRadius: Corner radius for the rectangle
+    @MainActor
     public static func text(width: CGFloat, height: CGFloat, cornerRadius: CGFloat = 4) -> some View {
         RoundedRectangle(cornerRadius: cornerRadius)
             .fill(Color.secondary.opacity(0.2))
@@ -106,6 +107,7 @@ public struct ShimmerShapes {
     
     /// Shimmer circle for avatar placeholders
     /// - Parameter diameter: Diameter of the shimmer circle
+    @MainActor
     public static func circle(diameter: CGFloat) -> some View {
         Circle()
             .fill(Color.secondary.opacity(0.2))
@@ -114,12 +116,14 @@ public struct ShimmerShapes {
     }
     
     /// Shimmer rectangle for spending amount placeholders
+    @MainActor
     public static var spendingAmount: some View {
         text(width: 60, height: 20, cornerRadius: 4)
             .accessibilityLabel("Loading spending data")
     }
     
     /// Shimmer rectangle for usage text placeholders
+    @MainActor
     public static var usageText: some View {
         text(width: 45, height: 12, cornerRadius: 3)
             .accessibilityLabel("Loading usage data")
@@ -127,12 +131,14 @@ public struct ShimmerShapes {
     
     /// Shimmer rectangle for progress bar placeholders
     /// - Parameter width: Width of the progress bar
+    @MainActor
     public static func progressBar(width: CGFloat) -> some View {
         text(width: width, height: 3, cornerRadius: 1.5)
             .accessibilityLabel("Loading progress data")
     }
     
     /// Shimmer rectangle for total spending display
+    @MainActor
     public static var totalSpending: some View {
         text(width: 100, height: 28, cornerRadius: 6)
             .accessibilityLabel("Loading total spending")

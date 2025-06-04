@@ -35,13 +35,13 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
 
 // MARK: - Modern Settings Manager
 
-/// Manages persistent application settings using UserDefaults.
+/// Manages persistent application settings using focused component managers.
 ///
-/// SettingsManager handles:
-/// - User session data (team ID, team name, email)
-/// - Display preferences (currency, refresh interval)
+/// SettingsManager coordinates between specialized managers for:
+/// - Session management (provider sessions and authentication state)
+/// - Display preferences (currency, refresh interval, menu bar mode)
 /// - Spending limits (warning and upper thresholds in USD)
-/// - Application behavior settings (launch at login)
+/// - App behavior (launch at login, dock visibility)
 ///
 /// All properties are observable to enable reactive UI updates.
 /// The manager follows the singleton pattern and is accessible via `SettingsManager.shared`.
@@ -50,116 +50,67 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
 public final class SettingsManager: SettingsManagerProtocol {
     // MARK: - Constants
 
-    public static let refreshIntervalOptions = [1, 2, 5, 10, 15, 30, 60]
+    public static let refreshIntervalOptions = DisplaySettingsManager.refreshIntervalOptions
 
-    // Made internal for testing
-    enum Keys {
-        // Multi-provider keys
-        static let providerSessions = "providerSessions"
-        static let enabledProviders = "enabledProviders"
-
-        // App settings
-        static let selectedCurrencyCode = "selectedCurrencyCode"
-        static let refreshIntervalMinutes = "refreshIntervalMinutes"
-        static let warningLimitUSD = "warningLimitUSD"
-        static let upperLimitUSD = "upperLimitUSD"
-        static let launchAtLoginEnabled = "launchAtLoginEnabled"
-        static let menuBarDisplayMode = "menuBarDisplayMode"
-        static let showInDock = "showInDock"
-    }
-
-    // MARK: - Properties
-
-    private let userDefaults: UserDefaults
+    // MARK: - Component Managers
+    
+    private let sessionManager: SessionSettingsManager
+    private let displayManager: DisplaySettingsManager
+    private let limitsManager: SpendingLimitsManager
+    private let behaviorManager: AppBehaviorSettingsManager
+    
     private let logger = Logger(subsystem: "com.vibemeter", category: "Settings")
-    private let startupManager: StartupControlling
+
+    // MARK: - Delegated Properties
 
     // Multi-provider sessions
     public var providerSessions: [ServiceProvider: ProviderSession] {
-        didSet {
-            saveProviderSessions()
-            logger.info("Provider sessions updated: \(self.providerSessions.count) sessions")
-            for (provider, session) in self.providerSessions {
-                logger
-                    .debug(
-                        "  \(provider.displayName): email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
-            }
-        }
+        get { sessionManager.providerSessions }
+        set { sessionManager.providerSessions = newValue }
     }
 
     // Enabled providers
     public var enabledProviders: Set<ServiceProvider> {
-        didSet {
-            let enabledArray = Array(enabledProviders).map(\.rawValue)
-            userDefaults.set(enabledArray, forKey: Keys.enabledProviders)
-            logger
-                .debug("Enabled providers updated: \(self.enabledProviders.map(\.displayName).joined(separator: ", "))")
-        }
+        get { sessionManager.enabledProviders }
+        set { sessionManager.enabledProviders = newValue }
     }
 
     // Display preferences
     public var selectedCurrencyCode: String {
-        didSet {
-            userDefaults.set(selectedCurrencyCode, forKey: Keys.selectedCurrencyCode)
-            logger.debug("Currency updated: \(self.selectedCurrencyCode)")
-        }
+        get { displayManager.selectedCurrencyCode }
+        set { displayManager.selectedCurrencyCode = newValue }
     }
 
     public var refreshIntervalMinutes: Int {
-        didSet {
-            userDefaults.set(refreshIntervalMinutes, forKey: Keys.refreshIntervalMinutes)
-            logger.debug("Refresh interval updated: \(self.refreshIntervalMinutes) minutes")
-        }
+        get { displayManager.refreshIntervalMinutes }
+        set { displayManager.refreshIntervalMinutes = newValue }
+    }
+
+    public var menuBarDisplayMode: MenuBarDisplayMode {
+        get { displayManager.menuBarDisplayMode }
+        set { displayManager.menuBarDisplayMode = newValue }
     }
 
     // Spending limits
     public var warningLimitUSD: Double {
-        didSet {
-            userDefaults.set(warningLimitUSD, forKey: Keys.warningLimitUSD)
-            logger.debug("Warning limit updated: $\(self.warningLimitUSD)")
-        }
+        get { limitsManager.warningLimitUSD }
+        set { limitsManager.warningLimitUSD = newValue }
     }
 
     public var upperLimitUSD: Double {
-        didSet {
-            userDefaults.set(upperLimitUSD, forKey: Keys.upperLimitUSD)
-            logger.debug("Upper limit updated: $\(self.upperLimitUSD)")
-        }
+        get { limitsManager.upperLimitUSD }
+        set { limitsManager.upperLimitUSD = newValue }
     }
 
     // App behavior
     public var launchAtLoginEnabled: Bool {
-        didSet {
-            guard launchAtLoginEnabled != oldValue else { return }
-            userDefaults.set(launchAtLoginEnabled, forKey: Keys.launchAtLoginEnabled)
-
-            startupManager.setLaunchAtLogin(enabled: launchAtLoginEnabled)
-
-            logger.debug("Launch at login: \(self.launchAtLoginEnabled)")
-        }
-    }
-
-    public var menuBarDisplayMode: MenuBarDisplayMode {
-        didSet {
-            userDefaults.set(menuBarDisplayMode.rawValue, forKey: Keys.menuBarDisplayMode)
-            logger.debug("Menu bar display mode: \(self.menuBarDisplayMode.displayName)")
-        }
+        get { behaviorManager.launchAtLoginEnabled }
+        set { behaviorManager.launchAtLoginEnabled = newValue }
     }
 
     public var showInDock: Bool {
-        didSet {
-            guard showInDock != oldValue else { return }
-            userDefaults.set(showInDock, forKey: Keys.showInDock)
-
-            // Apply the dock visibility change
-            if showInDock {
-                NSApp.setActivationPolicy(.regular)
-            } else {
-                NSApp.setActivationPolicy(.accessory)
-            }
-
-            logger.debug("Show in dock: \(self.showInDock)")
-        }
+        get { behaviorManager.showInDock }
+        set { behaviorManager.showInDock = newValue }
     }
 
     // MARK: - Singleton
@@ -181,43 +132,10 @@ public final class SettingsManager: SettingsManagerProtocol {
     // MARK: - Initialization
 
     private init(userDefaults: UserDefaults = .standard) {
-        self.userDefaults = userDefaults
-        startupManager = StartupManager()
-
-        // Load provider sessions
-        if let sessionsData = userDefaults.data(forKey: Keys.providerSessions),
-           let sessions = try? JSONDecoder().decode([ServiceProvider: ProviderSession].self, from: sessionsData) {
-            self.providerSessions = sessions
-        } else {
-            self.providerSessions = [:]
-        }
-
-        // Load enabled providers
-        if let enabledArray = userDefaults.array(forKey: Keys.enabledProviders) as? [String] {
-            self.enabledProviders = Set(enabledArray.compactMap(ServiceProvider.init))
-        } else {
-            self.enabledProviders = [.cursor] // Default to Cursor enabled
-        }
-
-        // Load app settings with defaults
-        selectedCurrencyCode = userDefaults.string(forKey: Keys.selectedCurrencyCode) ?? "USD"
-        refreshIntervalMinutes = userDefaults.object(forKey: Keys.refreshIntervalMinutes) as? Int ?? 5
-        warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
-        upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
-        launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
-        // Initialize menu bar display mode
-        if let displayModeString = userDefaults.object(forKey: Keys.menuBarDisplayMode) as? String,
-           let displayMode = MenuBarDisplayMode(rawValue: displayModeString) {
-            menuBarDisplayMode = displayMode
-        } else {
-            menuBarDisplayMode = .both // Default to "both" (icon + money)
-        }
-        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
-
-        // Validate refresh interval
-        if !Self.refreshIntervalOptions.contains(refreshIntervalMinutes) {
-            refreshIntervalMinutes = 5
-        }
+        self.sessionManager = SessionSettingsManager(userDefaults: userDefaults)
+        self.displayManager = DisplaySettingsManager(userDefaults: userDefaults)
+        self.limitsManager = SpendingLimitsManager(userDefaults: userDefaults)
+        self.behaviorManager = AppBehaviorSettingsManager(userDefaults: userDefaults)
 
         logger.info("SettingsManager initialized with \(self.providerSessions.count) provider sessions")
         for (provider, session) in providerSessions {
@@ -229,94 +147,44 @@ public final class SettingsManager: SettingsManagerProtocol {
 
     // For testing
     init(userDefaults: UserDefaults, startupManager: StartupControlling) {
-        self.userDefaults = userDefaults
-        self.startupManager = startupManager
-
-        // Load provider sessions
-        if let sessionsData = userDefaults.data(forKey: Keys.providerSessions),
-           let sessions = try? JSONDecoder().decode([ServiceProvider: ProviderSession].self, from: sessionsData) {
-            self.providerSessions = sessions
-        } else {
-            self.providerSessions = [:]
-        }
-
-        // Load enabled providers
-        if let enabledArray = userDefaults.array(forKey: Keys.enabledProviders) as? [String] {
-            self.enabledProviders = Set(enabledArray.compactMap(ServiceProvider.init))
-        } else {
-            self.enabledProviders = [.cursor] // Default to Cursor enabled
-        }
-
-        // Load app settings with defaults
-        selectedCurrencyCode = userDefaults.string(forKey: Keys.selectedCurrencyCode) ?? "USD"
-        refreshIntervalMinutes = userDefaults.object(forKey: Keys.refreshIntervalMinutes) as? Int ?? 5
-        warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
-        upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
-        launchAtLoginEnabled = userDefaults.bool(forKey: Keys.launchAtLoginEnabled)
-        // Initialize menu bar display mode
-        if let displayModeString = userDefaults.object(forKey: Keys.menuBarDisplayMode) as? String,
-           let displayMode = MenuBarDisplayMode(rawValue: displayModeString) {
-            menuBarDisplayMode = displayMode
-        } else {
-            menuBarDisplayMode = .both // Default to "both" (icon + money)
-        }
-        showInDock = userDefaults.object(forKey: Keys.showInDock) as? Bool ?? false // Default to false (menu bar only)
+        self.sessionManager = SessionSettingsManager(userDefaults: userDefaults)
+        self.displayManager = DisplaySettingsManager(userDefaults: userDefaults)
+        self.limitsManager = SpendingLimitsManager(userDefaults: userDefaults)
+        self.behaviorManager = AppBehaviorSettingsManager(userDefaults: userDefaults, startupManager: startupManager)
     }
 
     // MARK: - Public Methods
 
     public func clearUserSessionData() {
-        logger.info("clearUserSessionData called - clearing all \(self.providerSessions.count) sessions")
-
-        // Clear all provider sessions
-        providerSessions.removeAll()
-        saveProviderSessions()
-
+        logger.info("clearUserSessionData called - delegating to session manager")
+        sessionManager.clearAllSessions()
         logger.info("All user session data cleared")
     }
 
     public func clearUserSessionData(for provider: ServiceProvider) {
-        logger.info("clearUserSessionData called for \(provider.displayName)")
-
-        if let session = providerSessions[provider] {
-            logger
-                .info(
-                    "  Clearing session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none")")
-        } else {
-            logger.info("  No existing session found for \(provider.displayName)")
-        }
-
-        providerSessions.removeValue(forKey: provider)
-        saveProviderSessions()
-
+        logger.info("clearUserSessionData called for \(provider.displayName) - delegating to session manager")
+        sessionManager.clearSession(for: provider)
         logger.info("User session data cleared for \(provider.displayName)")
     }
 
     public func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
+        return sessionManager.getSession(for: provider)
     }
 
     public func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        logger.info("updateSession called for \(provider.displayName)")
-        logger
-            .info(
-                "  New session: email=\(session.userEmail ?? "none"), teamId=\(session.teamId?.description ?? "none"), active=\(session.isActive)")
-
-        providerSessions[provider] = session
-        saveProviderSessions()
-
+        logger.info("updateSession called for \(provider.displayName) - delegating to session manager")
+        sessionManager.updateSession(for: provider, session: session)
         logger.info("Session successfully updated for \(provider.displayName)")
     }
 
-    // MARK: - Private Methods
-
-    private func saveProviderSessions() {
-        logger.debug("saveProviderSessions called")
-        if let sessionsData = try? JSONEncoder().encode(providerSessions) {
-            userDefaults.set(sessionsData, forKey: Keys.providerSessions)
-            logger.debug("Provider sessions saved to UserDefaults (\(sessionsData.count) bytes)")
-        } else {
-            logger.error("Failed to encode provider sessions")
+    // MARK: - Validation and Utility Methods
+    
+    /// Validates all settings across all managers
+    public func validateAllSettings() {
+        displayManager.validateSettings()
+        
+        if !limitsManager.validateLimits() {
+            logger.warning("Invalid spending limits detected, consider resetting to defaults")
         }
     }
 

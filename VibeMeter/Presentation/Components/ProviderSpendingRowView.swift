@@ -41,11 +41,10 @@ struct ProviderSpendingRowView: View {
                     .frame(width: 20)
 
                 // Usage data badge with extended progress bar
-                if let providerData = spendingData.getSpendingData(for: provider),
-                   let usage = providerData.usageData,
-                   let maxRequests = usage.maxRequests, maxRequests > 0 {
-                    usageDataBadge(usage: usage, maxRequests: maxRequests)
-                }
+                ProviderUsageBadgeView(
+                    provider: provider,
+                    spendingData: spendingData,
+                    showTimestamp: showTimestamp)
 
                 Spacer()
 
@@ -74,7 +73,9 @@ struct ProviderSpendingRowView: View {
             }
         }
         .onTapGesture {
-            openProviderDashboard()
+            ProviderInteractionHandler.openProviderDashboard(
+                for: provider,
+                loginManager: loginManager)
         }
         .id(providerRowId)
         .accessibilityElement(children: .combine)
@@ -86,31 +87,7 @@ struct ProviderSpendingRowView: View {
     private var mainProviderRow: some View {
         HStack(spacing: 8) {
             // Provider icon with status badge overlay
-            ZStack(alignment: .topTrailing) {
-                Group {
-                    if provider.iconName.contains(".") {
-                        // System symbol - use font sizing
-                        Image(systemName: provider.iconName)
-                            .font(.body)
-                    } else {
-                        // Custom asset - use resizable with explicit sizing
-                        Image(provider.iconName)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    }
-                }
-                .foregroundStyle(provider.accentColor)
-                .frame(width: 16, height: 16)
-
-                // Status badge overlay
-                if let providerData = spendingData.getSpendingData(for: provider) {
-                    ProviderStatusBadge(
-                        status: providerData.connectionStatus,
-                        size: 10)
-                        .offset(x: 4, y: -4)
-                }
-            }
-            .frame(width: 20, height: 16) // Reduce height while keeping width for alignment
+            ProviderIconView(provider: provider, spendingData: spendingData)
 
             // Provider name
             Text(provider.displayName)
@@ -121,77 +98,10 @@ struct ProviderSpendingRowView: View {
             Spacer()
 
             // Amount with consistent number formatting
-            Group {
-                if let providerData = spendingData.getSpendingData(for: provider),
-                   let spendingUSD = providerData.currentSpendingUSD {
-                    // Convert using current rates for consistency with total
-                    let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
-                        ExchangeRateManager.shared.convert(
-                            spendingUSD,
-                            from: "USD",
-                            to: currencyData.selectedCode,
-                            rates: currencyData.effectiveRates) ?? spendingUSD
-
-                    Text(
-                        "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .font(.body.weight(.semibold).monospaced())
-                        .foregroundStyle(.primary)
-                        .accessibilityLabel(
-                            "Spending: \(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))")
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                        .animation(.easeOut(duration: 0.3), value: spendingUSD)
-                } else {
-                    Text("--")
-                        .font(.body)
-                        .foregroundStyle(.tertiary)
-                        .accessibilityLabel("No spending data")
-                }
-            }
-        }
-    }
-
-    private func usageDataBadge(usage: ProviderUsageData, maxRequests: Int) -> some View {
-        let progress = min(max(Double(usage.currentRequests) / Double(maxRequests), 0.0), 1.0)
-        let progressPercentage = Int((progress * 100).rounded())
-        return HStack(spacing: 6) {
-            Text("\(usage.currentRequests)/\(maxRequests)")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("Usage: \(usage.currentRequests) of \(maxRequests) requests")
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                .animation(.easeOut(duration: 0.3), value: usage.currentRequests)
-
-            CustomProgressBar(
-                progress: progress,
-                progressColor: Color.progressColor(for: progress, colorScheme: colorScheme),
-                backgroundColor: Color.gaugeBackground(for: colorScheme))
-                .frame(width: showTimestamp ? 60 : 80, height: 3) // Extended width, larger when no timestamp
-                .accessibilityLabel("Usage progress: \(progressPercentage) percent")
-                .accessibilityValue("\(usage.currentRequests) requests used out of \(maxRequests) allowed")
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                .animation(.easeOut(duration: 0.3), value: progress)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    // Progress color logic moved to ProgressColorHelper
-
-    private func openProviderDashboard() {
-        guard let loginManager,
-              let authToken = loginManager.getAuthToken(for: provider) else {
-            // Fallback to opening without auth
-            BrowserAuthenticationHelper.openURL(provider.dashboardURL)
-            return
-        }
-
-        // For providers that support authenticated browser sessions,
-        // we can create a URL with the session token
-        switch provider {
-        case .cursor:
-            if !BrowserAuthenticationHelper.openCursorDashboardWithAuth(authToken: authToken) {
-                // Fallback to opening dashboard without auth
-                BrowserAuthenticationHelper.openURL(provider.dashboardURL)
-            }
+            ProviderSpendingAmountView(
+                provider: provider,
+                spendingData: spendingData,
+                currencyData: currencyData)
         }
     }
 
@@ -228,59 +138,6 @@ struct ProviderSpendingRowView: View {
         }
 
         return components.joined(separator: ", ")
-    }
-}
-
-/// Custom progress bar that works with drawingGroup() by using Canvas instead of NSProgressIndicator
-private struct CustomProgressBar: View {
-    let progress: Double
-    let progressColor: Color
-    let backgroundColor: Color
-    
-    @State private var animatedProgress: Double = 0
-    
-    var body: some View {
-        Canvas { context, size in
-            let cornerRadius: CGFloat = 1.5
-            let backgroundRect = CGRect(origin: .zero, size: size)
-            let progressWidth = size.width * animatedProgress
-            let progressRect = CGRect(x: 0, y: 0, width: progressWidth, height: size.height)
-            
-            // Draw background
-            context.fill(
-                Path(roundedRect: backgroundRect, cornerRadius: cornerRadius),
-                with: .color(backgroundColor))
-            
-            // Draw progress fill
-            if animatedProgress > 0 {
-                context.fill(
-                    Path(roundedRect: progressRect, cornerRadius: cornerRadius),
-                    with: .color(progressColor))
-            }
-        }
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.4)) {
-                animatedProgress = progress
-            }
-        }
-        .onChange(of: progress) { _, newValue in
-            withAnimation(.easeOut(duration: 0.3)) {
-                animatedProgress = newValue
-            }
-        }
-    }
-}
-
-/// ServiceProvider extension defining accent colors for UI theming.
-///
-/// This private extension provides the accent color for each service provider,
-/// used for visual consistency in icons and highlights throughout the UI.
-private extension ServiceProvider {
-    var accentColor: Color {
-        switch self {
-        case .cursor:
-            .blue
-        }
     }
 }
 
