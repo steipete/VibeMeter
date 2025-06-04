@@ -323,7 +323,7 @@ final class ProgressColorTests: XCTestCase {
         let nanProgress = Double.nan
 
         // When
-        let warningLevel = ProgressColorHelper.warningLevel(for: nanProgress)
+        let warningLevel = Color.ProgressWarningLevel.level(for: nanProgress)
 
         // Then
         XCTAssertNotNil(warningLevel, "Should handle NaN value")
@@ -394,7 +394,7 @@ final class ProgressColorTests: XCTestCase {
         // When
         let startTime = Date()
         for _ in 0 ..< iterations {
-            _ = ProgressColorHelper.color(for: testProgress)
+            _ = Color.progressColor(for: testProgress)
         }
         let duration = Date().timeIntervalSince(startTime)
 
@@ -410,7 +410,7 @@ final class ProgressColorTests: XCTestCase {
         // When
         let startTime = Date()
         for _ in 0 ..< iterations {
-            _ = ProgressColorHelper.warningLevel(for: testProgress)
+            _ = Color.ProgressWarningLevel.level(for: testProgress)
         }
         let duration = Date().timeIntervalSince(startTime)
 
@@ -427,8 +427,8 @@ final class ProgressColorTests: XCTestCase {
 
         while currentProgress <= 2.0 {
             // When
-            let color = ProgressColorHelper.color(for: currentProgress)
-            let warningLevel = ProgressColorHelper.warningLevel(for: currentProgress)
+            let color = Color.progressColor(for: currentProgress)
+            let warningLevel = Color.ProgressWarningLevel.level(for: currentProgress)
 
             // Then - Should always return valid values
             XCTAssertNotNil(color, "Should return valid color for progress \(currentProgress)")
