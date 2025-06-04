@@ -114,12 +114,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !isRunningInPreview, !isRunningInTests, !isRunningInDebug {
             let runningApps = NSRunningApplication
                 .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            
+            // Log all running applications for debugging
+            logger.info("All running applications:")
+            for app in runningApps {
+                if let bundleId = app.bundleIdentifier {
+                    logger.info("  - \(app.localizedName ?? "Unknown") (\(bundleId))")
+                } else {
+                    logger.info("  - \(app.localizedName ?? "Unknown") (no bundle ID)")
+                }
+            }
+            
             if runningApps.count > 1 {
                 // Show user notification about existing instance
                 Task {
                     await notificationManager.showInstanceAlreadyRunningNotification()
                 }
-
+                
                 DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
                 NSApp.terminate(nil)
                 return
