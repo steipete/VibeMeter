@@ -184,7 +184,7 @@ private final class TestableNotificationManager: NSObject, NotificationManagerPr
     }
 
     func requestAuthorization() async -> Bool {
-        return await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                 continuation.resume(returning: granted)
             }
@@ -265,7 +265,9 @@ private final class TestableNotificationManager: NSObject, NotificationManagerPr
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
         content.title = "Vibe Meter Already Running"
-        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 

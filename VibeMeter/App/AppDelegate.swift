@@ -42,74 +42,97 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_: Notification) {
-        // Detect runtime environment
         let processInfo = ProcessInfo.processInfo
+        let isRunningInTests = processInfo.isRunningInTests
+
+        configureSingleInstanceAndNotifications(processInfo: processInfo)
+        setupApplicationAndServices()
+        initializeDataOrchestrator()
+
+        guard let orchestrator = multiProviderOrchestrator else {
+            logger.error("Failed to initialize MultiProviderDataOrchestrator")
+            return
+        }
+
+        setupStatusBarController(orchestrator: orchestrator, isRunningInTests: isRunningInTests)
+        checkApplicationLocation(processInfo: processInfo)
+
+        logger.info("VibeMeter launched successfully")
+    }
+
+    private func configureSingleInstanceAndNotifications(processInfo: ProcessInfo) {
         let isRunningInPreview = processInfo.isRunningInPreview
         let isRunningInTests = processInfo.isRunningInTests
         let isRunningInDebug = processInfo.isRunningInDebug
 
-        // Ensure only a single instance of VibeMeter is running. If another instance is
-        // already active, notify it to display the Settings window and terminate this
-        // process early. Skip this entirely when running tests or in debug mode.
         if !isRunningInPreview, !isRunningInTests, !isRunningInDebug {
-            let runningApps = NSRunningApplication
-                .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
-
-            // Log all running applications for debugging
-            logger.info("All running applications:")
-            for app in runningApps {
-                if let bundleId = app.bundleIdentifier {
-                    logger.info("  - \(app.localizedName ?? "Unknown") (\(bundleId))")
-                } else {
-                    logger.info("  - \(app.localizedName ?? "Unknown") (no bundle ID)")
-                }
-            }
-
-            if runningApps.count > 1 {
-                // Show user notification about existing instance
-                Task {
-                    await notificationManager.showInstanceAlreadyRunningNotification()
-                }
-
-                DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
-                NSApp.terminate(nil)
-                return
-            }
-
-            // Register to listen for the settings-window request from any subsequent launches.
-            DistributedNotificationCenter.default().addObserver(
-                self,
-                selector: #selector(handleShowSettingsNotification),
-                name: Self.showSettingsNotification,
-                object: nil)
+            handleSingleInstanceCheck()
+            registerForNotifications()
         }
 
-        // Listen for update check requests from settings
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleCheckForUpdatesNotification),
             name: Notification.Name("checkForUpdates"),
             object: nil)
+    }
 
+    private func handleSingleInstanceCheck() {
+        let runningApps = NSRunningApplication
+            .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+
+        logRunningApplications(runningApps)
+
+        if runningApps.count > 1 {
+            Task {
+                await notificationManager.showInstanceAlreadyRunningNotification()
+            }
+
+            DistributedNotificationCenter.default().post(name: Self.showSettingsNotification, object: nil)
+            NSApp.terminate(nil)
+            return
+        }
+    }
+
+    private func logRunningApplications(_ apps: [NSRunningApplication]) {
+        logger.info("All running applications:")
+        for app in apps {
+            if let bundleId = app.bundleIdentifier {
+                logger.info("  - \(app.localizedName ?? "Unknown") (\(bundleId))")
+            } else {
+                logger.info("  - \(app.localizedName ?? "Unknown") (no bundle ID)")
+            }
+        }
+    }
+
+    private func registerForNotifications() {
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(handleShowSettingsNotification),
+            name: Self.showSettingsNotification,
+            object: nil)
+    }
+
+    private func setupApplicationAndServices() {
         logger.info("VibeMeter launching...")
 
-        // Set activation policy based on user preference
+        configureActivationPolicy()
+        sparkleUpdaterManager = SparkleUpdaterManager()
+        loginManager.refreshLoginStatesFromKeychain()
+    }
+
+    private func configureActivationPolicy() {
         if settingsManager.showInDock {
             NSApp.setActivationPolicy(.regular)
         } else {
             NSApp.setActivationPolicy(.accessory)
         }
-        logger
-            .info(
-                "Activation policy set to: \(self.settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)")")
 
-        // Initialize auto-updater
-        sparkleUpdaterManager = SparkleUpdaterManager()
+        let policyDescription = settingsManager.showInDock ? "regular (show in dock)" : "accessory (menu bar only)"
+        logger.info("Activation policy set to: \(policyDescription)")
+    }
 
-        // Ensure login states are properly synchronized with keychain
-        loginManager.refreshLoginStatesFromKeychain()
-
-        // Initialize the data orchestrator first
+    private func initializeDataOrchestrator() {
         multiProviderOrchestrator = MultiProviderDataOrchestrator(
             providerFactory: providerFactory,
             settingsManager: settingsManager,
@@ -119,14 +142,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             spendingData: spendingData,
             userSessionData: userSession,
             currencyData: currencyData)
+    }
 
-        // Set up the status bar controller with orchestrator access (skip in tests)
-        guard let orchestrator = multiProviderOrchestrator else {
-            logger.error("Failed to initialize MultiProviderDataOrchestrator")
-            return
-        }
-
-        // Only create status bar controller if not running in tests
+    private func setupStatusBarController(orchestrator: MultiProviderDataOrchestrator, isRunningInTests: Bool) {
         if !isRunningInTests {
             statusBarController = StatusBarController(
                 settingsManager: settingsManager,
@@ -136,26 +154,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 currencyData: currencyData,
                 orchestrator: orchestrator)
 
-            // Show popover on startup if user is not logged in to any provider
-            Task { @MainActor in
-                // Add a short delay to ensure the UI is fully initialized
-                try? await Task.sleep(for: .milliseconds(500))
-
-                if !userSession.isLoggedInToAnyProvider {
-                    statusBarController?.showCustomWindow()
-                }
-            }
+            scheduleStartupUIDisplay()
         } else {
             logger.info("Running in test environment - skipping StatusBarController initialization")
         }
+    }
 
-        // Check if app should be moved to Applications (skip in tests and previews)
-        if !isRunningInTests, !isRunningInPreview {
+    private func scheduleStartupUIDisplay() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+
+            if !userSession.isLoggedInToAnyProvider {
+                statusBarController?.showCustomWindow()
+            }
+        }
+    }
+
+    private func checkApplicationLocation(processInfo: ProcessInfo) {
+        if !processInfo.isRunningInTests, !processInfo.isRunningInPreview {
             let applicationMover = ApplicationMover()
             applicationMover.checkAndOfferToMoveToApplications()
         }
-
-        logger.info("VibeMeter launched successfully")
     }
 
     func applicationWillTerminate(_: Notification) {

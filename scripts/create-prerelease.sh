@@ -111,7 +111,7 @@ gh release create "v$PRERELEASE_VERSION" "$DMG_PATH" \
 
 # Update pre-release appcast.xml
 echo "📡 Updating appcast-prerelease.xml..."
-./scripts/update-prerelease-appcast.sh "$PRERELEASE_VERSION" "$PRERELEASE_BUILD_NUMBER" "$DMG_PATH"
+./scripts/generate-appcast.sh
 
 echo "✅ Pre-release created successfully!"
 echo "📡 Don't forget to commit and push the updated appcast-prerelease.xml"

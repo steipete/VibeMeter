@@ -57,7 +57,7 @@ gh release create "v$VERSION" "$DMG_PATH" \
 
 # Update appcast.xml
 echo "📡 Updating appcast.xml..."
-./scripts/update-appcast.sh "$VERSION" "$BUILD_NUMBER" "$DMG_PATH"
+./scripts/generate-appcast.sh
 
 echo "✅ GitHub release created successfully!"
 echo "📡 Don't forget to commit and push the updated appcast.xml"
