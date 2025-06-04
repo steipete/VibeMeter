@@ -174,4 +174,3 @@ private struct ExchangeRatesResponse: Codable {
     let date: String
     let rates: [String: Double]
 }
-

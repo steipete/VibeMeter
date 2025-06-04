@@ -15,7 +15,7 @@ struct LoggedInContentView: View {
     private var spendingData
     @Environment(\.colorScheme)
     private var colorScheme
-    
+
     // Computed property for most recent refresh
     private var mostRecentRefresh: Date? {
         spendingData.providersWithData
@@ -83,7 +83,6 @@ struct LoggedInContentView: View {
             }
         }
     }
-
 }
 
 // MARK: - Preview

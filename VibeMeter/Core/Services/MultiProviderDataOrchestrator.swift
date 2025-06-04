@@ -197,14 +197,14 @@ public final class MultiProviderDataOrchestrator {
 
     private func performRefreshOperation(for provider: ServiceProvider, authToken: String) async {
         startRefresh(for: provider)
-        
+
         do {
             let result = try await fetchProviderData(for: provider, authToken: authToken)
             await processSuccessfulRefresh(for: provider, result: result)
         } catch {
             handleRefreshError(for: provider, error: error)
         }
-        
+
         finishRefresh(for: provider)
     }
 
@@ -215,9 +215,10 @@ public final class MultiProviderDataOrchestrator {
         logger.info("Set isRefreshing=true for \(provider.displayName)")
     }
 
-    private func fetchProviderData(for provider: ServiceProvider, authToken: String) async throws -> ProviderDataResult {
+    private func fetchProviderData(for provider: ServiceProvider,
+                                   authToken: String) async throws -> ProviderDataResult {
         let providerClient = providerFactory.createProvider(for: provider)
-        
+
         return try await backgroundProcessor.processProviderData(
             provider: provider,
             authToken: authToken,
@@ -235,18 +236,30 @@ public final class MultiProviderDataOrchestrator {
         await updateCurrencyAndSpending(for: provider, invoice: invoice)
         updateGravatarIfNeeded(for: provider, userEmail: userInfo.email)
         logSuccessAndSpending(for: provider)
-        
+
         spendingData.updateConnectionStatus(for: provider, status: .connected)
     }
 
-    private func logFetchedData(for provider: ServiceProvider, userInfo: ProviderUserInfo, teamInfo: ProviderTeamInfo, invoice: ProviderMonthlyInvoice, usage: ProviderUsageData) {
+    private func logFetchedData(
+        for provider: ServiceProvider,
+        userInfo: ProviderUserInfo,
+        teamInfo: ProviderTeamInfo,
+        invoice: ProviderMonthlyInvoice,
+        usage: ProviderUsageData) {
         logger.info("Fetched user info for \(provider.displayName): email=\(userInfo.email)")
         logger.info("Fetched team info for \(provider.displayName): name=\(teamInfo.name), id=\(teamInfo.id)")
         logger.info("Fetched invoice for \(provider.displayName): total cents=\(invoice.totalSpendingCents)")
-        logger.info("Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
+        logger
+            .info(
+                "Fetched usage for \(provider.displayName): \(usage.currentRequests)/\(usage.maxRequests ?? 0) requests")
     }
 
-    private func updateDataStores(for provider: ServiceProvider, userInfo: ProviderUserInfo, teamInfo: ProviderTeamInfo, invoice: ProviderMonthlyInvoice, usage: ProviderUsageData) {
+    private func updateDataStores(
+        for provider: ServiceProvider,
+        userInfo: ProviderUserInfo,
+        teamInfo: ProviderTeamInfo,
+        invoice _: ProviderMonthlyInvoice,
+        usage: ProviderUsageData) {
         sessionStateManager.updateSessionAfterDataFetch(
             for: provider,
             userInfo: userInfo.email,

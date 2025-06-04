@@ -7,10 +7,10 @@ extension CostTableView {
         case empty
         case loaded(providers: [ServiceProvider])
         case error(String)
-        
+
         init(from spendingData: MultiProviderSpendingData) {
             let providers = spendingData.providersWithData
-            
+
             if providers.isEmpty {
                 self = .empty
             } else if providers.contains(where: { provider in
@@ -35,11 +35,11 @@ struct EmptyStateView: View {
             Image(systemName: "chart.bar.doc.horizontal")
                 .font(.largeTitle)
                 .foregroundStyle(.tertiary)
-            
+
             Text("No Spending Data")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            
+
             Text("Connect to a provider to see spending")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -55,7 +55,7 @@ struct LoadingStateView: View {
             ProgressView()
                 .progressViewStyle(.circular)
                 .controlSize(.small)
-            
+
             Text("Loading spending data...")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -67,17 +67,17 @@ struct LoadingStateView: View {
 
 struct ErrorStateView: View {
     let message: String
-    
+
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundStyle(.orange)
-            
+
             Text("Unable to Load Data")
                 .font(.headline)
                 .foregroundStyle(.primary)
-            
+
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
