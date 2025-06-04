@@ -52,7 +52,7 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
 
     func testSparkleUpdaterManager_ConformsToSPUUpdaterDelegate() {
         // Then
-        XCTAssertNotNil(sut as? NSObjectProtocol, "Should inherit from NSObject for Objective-C protocols")
+        XCTAssertNotNil(sut as NSObjectProtocol?, "Should inherit from NSObject for Objective-C protocols")
 
         // Verify that the manager can handle delegate methods without crashing
         // Note: We can't easily test the actual Sparkle delegate methods without mocking Sparkle

@@ -396,11 +396,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
     func testProcessProviderData_MultipleConcurrentCalls() async throws {
         // Given
         let callCount = 5
-        var results: [(
-            userInfo: ProviderUserInfo,
-            teamInfo: ProviderTeamInfo,
-            invoice: ProviderMonthlyInvoice,
-            usage: ProviderUsageData)] = []
+        var results: [ProviderDataResult] = []
 
         // When - Make multiple concurrent calls to the actor
         await withTaskGroup(of: ProviderDataResult?.self) { group in
@@ -425,12 +421,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
 
                 for await result in group {
                     if let result {
-                        results.append((
-                            userInfo: result.userInfo,
-                            teamInfo: result.teamInfo,
-                            invoice: result.invoice,
-                            usage: result.usage
-                        ))
+                        results.append(result)
                     }
                 }
             }
@@ -475,7 +466,7 @@ final class BackgroundDataProcessorTests: XCTestCase {
         XCTAssertEqual(result.teamInfo.id, 0)
         XCTAssertEqual(result.teamInfo.name, "Individual Account")
         XCTAssertEqual(result.teamInfo.provider, .cursor)
-        
+
         // Other data should still be fetched successfully
         XCTAssertEqual(result.userInfo.email, "test@example.com")
         XCTAssertEqual(result.invoice.totalSpendingCents, 1000)

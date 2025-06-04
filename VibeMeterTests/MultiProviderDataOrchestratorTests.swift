@@ -272,7 +272,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
 
         // Change currency
         orchestrator.updateCurrency(to: "EUR")
-        
+
         // Wait a bit for the async Task to complete
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
 
