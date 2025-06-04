@@ -195,20 +195,10 @@ struct GeneralSettingsView: View {
     }
 
     private func checkForUpdates() {
-        if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
-           let sparkleManager = appDelegate.sparkleUpdaterManager {
-            sparkleManager.updaterController.updater.checkForUpdates()
-        } else {
-            // Show alert if Sparkle is not available
-            let alert = NSAlert()
-            alert.messageText = "Unable to Check for Updates"
-            alert
-                .informativeText =
-                "The update system is not available. This may be because you're running a debug build or Sparkle failed to initialize."
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: "OK")
-            alert.runModal()
-        }
+        // Send notification to trigger update check from AppDelegate
+        NotificationCenter.default.post(
+            name: Notification.Name("checkForUpdates"),
+            object: nil)
     }
 
     private func setupInitialState() {
