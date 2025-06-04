@@ -244,7 +244,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = string.truncated(to: length)
 
         // Then
-        XCTAssertEqual(result, "Hello 🌍 Wo...")
+        XCTAssertEqual(result, "Hello 🌍 Worl...")
         XCTAssertEqual(result.count, 15)
     }
 
@@ -344,7 +344,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = email.truncated(to: maxLength)
 
         // Then
-        XCTAssertEqual(result, "user.with.very.long.e...")
+        XCTAssertEqual(result, "user.with.very.long.em...")
         XCTAssertEqual(result.count, 25)
         XCTAssertTrue(result.hasSuffix("..."))
     }
@@ -434,7 +434,7 @@ final class StringExtensionsTests: XCTestCase {
         let result = string.truncated(to: length)
 
         // Then
-        XCTAssertEqual(result, "   Hel...")
+        XCTAssertEqual(result, "   Hell...")
         XCTAssertEqual(result.count, 10)
     }
 

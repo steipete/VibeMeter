@@ -105,7 +105,7 @@ final class URLQueryItemsTests: XCTestCase {
         // Then
         // URLQueryItem automatically handles encoding
         XCTAssertTrue(result.absoluteString.contains("message=hello%20world"))
-        XCTAssertTrue(result.absoluteString.contains("special=a%2Bb%3Dc%26d"))
+        XCTAssertTrue(result.absoluteString.contains("special=a+b%3Dc%26d")) // + is not encoded in query strings
         XCTAssertTrue(result.absoluteString.contains("unicode=caf%C3%A9%20%C3%B1o%C3%B1o%20%F0%9F%9A%80"))
     }
 
