@@ -112,6 +112,11 @@ actor CursorAPIClient {
         case 200 ... 299:
             // Handle 204 No Content responses
             if httpResponse.statusCode == 204 {
+                // 204 from auth endpoints means the session is invalid
+                if request.url?.path.contains("/auth/") == true {
+                    logger.warning("Received 204 from auth endpoint - session expired or invalid")
+                    throw ProviderError.unauthorized
+                }
                 // For 204 responses, check if we're expecting an optional type
                 if T.self == Any?.self {
                     return Any?.none as! T

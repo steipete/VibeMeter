@@ -47,16 +47,9 @@ public actor CursorProvider: ProviderProtocol {
     public func fetchUserInfo(authToken: String) async throws -> ProviderUserInfo {
         logger.debug("Fetching Cursor user info")
 
-        do {
-            return try await resilienceManager.executeWithResilience {
-                let response = try await self.apiClient.fetchUserInfo(authToken: authToken)
-                return CursorDataTransformer.transformUserInfo(from: response)
-            }
-        } catch let ProviderError.decodingError(message, statusCode) where statusCode == 204 {
-            // 204 No Content from /auth/me means the session/cookie is invalid or expired
-            logger.warning("Received 204 from auth endpoint - session expired or invalid")
-            logger.warning("Decoding error message: \(message)")
-            throw ProviderError.unauthorized
+        return try await resilienceManager.executeWithResilience {
+            let response = try await self.apiClient.fetchUserInfo(authToken: authToken)
+            return CursorDataTransformer.transformUserInfo(from: response)
         }
     }
 

@@ -81,6 +81,11 @@ actor CursorResilienceManager {
                code >= 400, code < 500 {
                 return false
             }
+            // Don't retry decoding errors with 204 status (indicates expired session)
+            if case let .decodingError(_, statusCode) = providerError,
+               statusCode == 204 {
+                return false
+            }
             return true
         case is NetworkRetryHandler.RetryableError:
             return true
