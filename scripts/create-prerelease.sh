@@ -169,10 +169,28 @@ plutil -replace CFBundleShortVersionString -string "$PRERELEASE_VERSION" "$PLIST
 echo "🔐 Signing and notarizing..."
 ./scripts/sign-and-notarize.sh --app-path "$APP_PATH" --sign-and-notarize
 
+# Verify the signed and notarized app
+echo "🔍 Verifying signed app..."
+if ./scripts/verify-app.sh "$APP_PATH"; then
+    echo "✅ App verification passed"
+else
+    echo "❌ App verification failed!"
+    exit 1
+fi
+
 # Create DMG
 echo "📀 Creating DMG..."
 DMG_PATH="$PROJECT_ROOT/build/VibeMeter-$PRERELEASE_VERSION.dmg"
 ./scripts/create-dmg.sh "$APP_PATH" "$DMG_PATH"
+
+# Verify the DMG
+echo "🔍 Verifying DMG..."
+if ./scripts/verify-app.sh "$DMG_PATH"; then
+    echo "✅ DMG verification passed"
+else
+    echo "❌ DMG verification failed!"
+    exit 1
+fi
 
 # Generate pre-release notes
 RELEASE_NOTES="Pre-release version of VibeMeter v$PRERELEASE_VERSION
@@ -207,7 +225,30 @@ gh release create "v$PRERELEASE_VERSION" "$DMG_PATH" \
 echo "📡 Updating appcast-prerelease.xml..."
 ./scripts/generate-appcast.sh
 
+# Verify appcast files
+echo "🔍 Verifying appcast files..."
+if ./scripts/verify-appcast.sh; then
+    echo "✅ Appcast verification passed"
+else
+    echo "⚠️  Appcast verification found issues - please review"
+fi
+
+# Final verification summary
+echo ""
+echo "📊 Release Verification Summary:"
+echo "================================"
+echo "✅ Build verified: $BUILD_NUMBER"
+echo "✅ Version verified: $PRERELEASE_VERSION"
+echo "✅ App signed and notarized"
+echo "✅ DMG created and verified"
+echo "✅ GitHub release created"
+echo ""
+
 echo "✅ Pre-release created successfully!"
-echo "📡 Don't forget to commit and push the updated appcast-prerelease.xml"
+echo ""
+echo "📋 Next Steps:"
+echo "1. Review appcast verification results above"
+echo "2. Commit and push the updated appcast-prerelease.xml"
+echo "3. Test update on a machine with the previous version"
 echo ""
 echo "🔗 Release URL: https://github.com/steipete/VibeMeter/releases/tag/v$PRERELEASE_VERSION"

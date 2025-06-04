@@ -99,10 +99,28 @@ echo "✅ Built app verified with build number: $BUILT_BUILD_NUMBER"
 echo "🔐 Signing and notarizing..."
 ./scripts/sign-and-notarize.sh --app-path "$APP_PATH" --sign-and-notarize
 
+# Verify the signed and notarized app
+echo "🔍 Verifying signed app..."
+if ./scripts/verify-app.sh "$APP_PATH"; then
+    echo "✅ App verification passed"
+else
+    echo "❌ App verification failed!"
+    exit 1
+fi
+
 # Create DMG
 echo "📀 Creating DMG..."
 DMG_PATH="$PROJECT_ROOT/build/VibeMeter-$VERSION.dmg"
 ./scripts/create-dmg.sh "$APP_PATH"
+
+# Verify the DMG
+echo "🔍 Verifying DMG..."
+if ./scripts/verify-app.sh "$DMG_PATH"; then
+    echo "✅ DMG verification passed"
+else
+    echo "❌ DMG verification failed!"
+    exit 1
+fi
 
 # Generate release notes
 RELEASE_NOTES="Release notes for VibeMeter v$VERSION
@@ -130,5 +148,28 @@ gh release create "v$VERSION" "$DMG_PATH" \
 echo "📡 Updating appcast.xml..."
 ./scripts/update-appcast.sh "$VERSION" "$BUILD_NUMBER" "$DMG_PATH"
 
+# Verify appcast files
+echo "🔍 Verifying appcast files..."
+if ./scripts/verify-appcast.sh; then
+    echo "✅ Appcast verification passed"
+else
+    echo "⚠️  Appcast verification found issues - please review"
+fi
+
+# Final verification summary
+echo ""
+echo "📊 Release Verification Summary:"
+echo "================================"
+echo "✅ Build verified: $BUILD_NUMBER"
+echo "✅ Version verified: $VERSION"
+echo "✅ App signed and notarized"
+echo "✅ DMG created and verified"
+echo "✅ GitHub release created"
+echo ""
+
 echo "✅ GitHub release created successfully!"
-echo "📡 Don't forget to commit and push the updated appcast.xml"
+echo ""
+echo "📋 Next Steps:"
+echo "1. Review appcast verification results above"
+echo "2. Commit and push the updated appcast.xml"
+echo "3. Test update on a machine with the previous version"
