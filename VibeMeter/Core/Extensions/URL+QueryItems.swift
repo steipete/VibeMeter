@@ -9,6 +9,10 @@ extension URL {
     /// - Parameter items: Array of URLQueryItem to append
     /// - Returns: URL with appended query items, or original URL if components couldn't be created
     func appendingQueryItems(_ items: [URLQueryItem]) -> URL {
+        guard !items.isEmpty else {
+            return self
+        }
+        
         guard var components = URLComponents(url: self, resolvingAgainstBaseURL: false) else {
             return self
         }
