@@ -1,15 +1,6 @@
 import Foundation
 import os.log
 
-// MARK: - Exchange Rate Manager Protocol
-
-/// Protocol defining the interface for currency exchange rate operations.
-public protocol ExchangeRateManagerProtocol: Sendable {
-    func getExchangeRates() async -> [String: Double]
-    func convert(_ amount: Double, from: String, to: String, rates: [String: Double]) -> Double?
-    var fallbackRates: [String: Double] { get }
-}
-
 // MARK: - Modern Exchange Rate Manager using Actor
 
 /// Manages currency exchange rates with caching and fallback support.
@@ -184,23 +175,3 @@ private struct ExchangeRatesResponse: Codable {
     let rates: [String: Double]
 }
 
-/// Errors that can occur during exchange rate operations.
-///
-/// Provides specific error cases for API failures including network issues,
-/// invalid responses, and HTTP errors with descriptive error messages.
-enum ExchangeRateError: LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case httpError(statusCode: Int)
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL:
-            "Invalid API URL"
-        case .invalidResponse:
-            "Invalid response from exchange rate API"
-        case let .httpError(statusCode):
-            "HTTP error: \(statusCode)"
-        }
-    }
-}
