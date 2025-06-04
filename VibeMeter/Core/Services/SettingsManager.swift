@@ -190,6 +190,27 @@ public final class SettingsManager: SettingsManagerProtocol {
 
     // MARK: - Testing Support
 
+    /// Keys used by SettingsManager for UserDefaults storage.
+    /// These are exposed for testing purposes to ensure consistent key usage.
+    public enum Keys {
+        // Display settings keys
+        public static let selectedCurrencyCode = "selectedCurrencyCode"
+        public static let refreshIntervalMinutes = "refreshIntervalMinutes"
+        public static let menuBarDisplayMode = "menuBarDisplayMode"
+        
+        // Spending limits keys
+        public static let warningLimitUSD = "warningLimitUSD"
+        public static let upperLimitUSD = "upperLimitUSD"
+        
+        // App behavior keys
+        public static let launchAtLoginEnabled = "launchAtLoginEnabled"
+        public static let showInDock = "showInDock"
+        
+        // Session keys
+        public static let enabledProviders = "enabledProviders"
+        public static let providerSessions = "providerSessions"
+    }
+
     private static var testInstance: SettingsManager?
 
     static func _test_setSharedInstance(userDefaults: UserDefaults, startupManager: StartupControlling) {
