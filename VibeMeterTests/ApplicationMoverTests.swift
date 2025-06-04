@@ -6,7 +6,6 @@ final class ApplicationMoverTests: XCTestCase {
     
     var applicationMover: ApplicationMover!
     
-    @MainActor
     override func setUp() {
         super.setUp()
         applicationMover = ApplicationMover()
