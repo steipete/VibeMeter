@@ -7,18 +7,18 @@ extension ProcessInfo {
     var isRunningInPreview: Bool {
         environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     }
-    
+
     /// Detects if the app is running in test environment
     var isRunningInTests: Bool {
         environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTestCase") != nil
     }
-    
+
     /// Detects if running in debug mode (using DEBUG compilation condition)
     var isRunningInDebug: Bool {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 }

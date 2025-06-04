@@ -35,7 +35,7 @@ final class StatusBarDisplayManager {
                 lhs.valuesEqual(to: rhs) &&
                 lhs.animatedValuesEqual(to: rhs)
         }
-        
+
         private func basicPropertiesEqual(to other: DisplayState) -> Bool {
             isLoggedIn == other.isLoggedIn &&
                 hasData == other.hasData &&
@@ -44,17 +44,17 @@ final class StatusBarDisplayManager {
                 hasProviderIssues == other.hasProviderIssues &&
                 connectionStatus == other.connectionStatus
         }
-        
+
         private func currencyPropertiesEqual(to other: DisplayState) -> Bool {
             currencyCode == other.currencyCode &&
                 currencySymbol == other.currencySymbol
         }
-        
+
         private func valuesEqual(to other: DisplayState) -> Bool {
             abs(gaugeValue - other.gaugeValue) < 0.001 &&
                 abs(totalSpending - other.totalSpending) < 0.01
         }
-        
+
         private func animatedValuesEqual(to other: DisplayState) -> Bool {
             abs(animatedGaugeValue - other.animatedGaugeValue) < 0.001 &&
                 abs(animatedCostValue - other.animatedCostValue) < 0.01

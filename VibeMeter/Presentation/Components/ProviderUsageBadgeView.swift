@@ -22,24 +22,24 @@ struct ProviderUsageBadgeView: View {
             EmptyView()
         }
     }
-    
+
     // MARK: - Helper Properties
-    
+
     private var providerUsageData: ProviderUsageData? {
         spendingData.getSpendingData(for: provider)?.usageData
     }
-    
+
     private var isLoadingUsageData: Bool {
         guard let providerData = spendingData.getSpendingData(for: provider) else { return false }
         return providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing
     }
-    
+
     // MARK: - Helper Views
-    
+
     private func usageDisplayView(usageData: ProviderUsageData, maxRequests: Int) -> some View {
         let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
         let percentUsed = Int(progress * 100)
-        
+
         return HStack(spacing: 6) {
             progressBar(progress: progress)
             usageText(current: usageData.currentRequests, max: maxRequests)
@@ -49,7 +49,7 @@ struct ProviderUsageBadgeView: View {
         .accessibilityLabel("Usage: \(usageData.currentRequests) of \(maxRequests) requests")
         .accessibilityValue("\(percentUsed)% used")
     }
-    
+
     private func progressBar(progress: Double) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
@@ -65,14 +65,14 @@ struct ProviderUsageBadgeView: View {
         }
         .frame(width: 60, height: 4)
     }
-    
+
     private func usageText(current: Int, max: Int) -> some View {
         Text("\(current)/\(max)")
             .font(.caption.monospaced())
             .foregroundStyle(.secondary)
             .accessibilityLabel("\(current) of \(max) requests used")
     }
-    
+
     private var loadingView: some View {
         HStack(spacing: 6) {
             ProgressView()

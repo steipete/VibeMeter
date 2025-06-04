@@ -22,11 +22,11 @@ import os.log
 /// <!-- Required for accessing Downloads folder -->
 /// <key>com.apple.security.files.downloads.read-write</key>
 /// <true/>
-/// 
+///
 /// <!-- Required for automatic relaunch functionality -->
 /// <key>com.apple.security.automation.apple-events</key>
 /// <true/>
-/// 
+///
 /// <!-- Basic sandbox requirement -->
 /// <key>com.apple.security.app-sandbox</key>
 /// <true/>

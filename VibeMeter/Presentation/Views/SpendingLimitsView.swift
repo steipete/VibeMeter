@@ -18,33 +18,31 @@ struct SpendingLimitsView: View {
     }
 
     // MARK: - Helper Views
-    
+
     private var warningLimitSection: some View {
         Section {
             limitContent(
                 amountUSD: settingsManager.warningLimitUSD,
                 convertedAmount: convertedWarningLimit,
-                description: "You'll receive a notification when spending exceeds this amount."
-            )
+                description: "You'll receive a notification when spending exceeds this amount.")
         } header: {
             Text("Warning Limit").font(.headline)
         }
     }
-    
+
     private var upperLimitSection: some View {
         Section {
             limitContent(
                 amountUSD: settingsManager.upperLimitUSD,
                 convertedAmount: convertedUpperLimit,
-                description: "You'll receive a critical notification when spending exceeds this amount."
-            )
+                description: "You'll receive a critical notification when spending exceeds this amount.")
         } header: {
             Text("Upper Limit").font(.headline)
         } footer: {
             footerContent
         }
     }
-    
+
     private func limitContent(amountUSD: Double, convertedAmount: Double, description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             LabeledContent("Amount") {
@@ -68,7 +66,7 @@ struct SpendingLimitsView: View {
             }
         }
     }
-    
+
     private func currencyApproximation(convertedAmount: Double) -> some View {
         HStack {
             Text("Approximately")
@@ -79,11 +77,12 @@ struct SpendingLimitsView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
     }
-    
+
     private var footerContent: some View {
         HStack {
             Spacer()
-            Text("Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor.")
+            Text(
+                "Limits are stored in USD and will be displayed in your selected currency (\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

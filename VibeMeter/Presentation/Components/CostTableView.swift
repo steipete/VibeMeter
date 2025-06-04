@@ -109,13 +109,13 @@ struct CostTableView: View {
         .accessibilityValue("Warning at \(formattedWarningLimit), upper limit at \(formattedUpperLimit)")
         .accessibilityHint("Configure these limits in settings")
     }
-    
+
     private var limitsLabel: some View {
         Text("Limits")
             .font(.body.weight(.medium))
             .foregroundStyle(.primary.opacity(0.8))
     }
-    
+
     private var limitsValues: some View {
         HStack(spacing: 12) {
             warningLimitText
@@ -123,39 +123,39 @@ struct CostTableView: View {
             upperLimitText
         }
     }
-    
+
     private var warningLimitText: some View {
         Text(formattedWarningLimit)
             .font(.body.weight(.medium))
             .foregroundStyle(.orange)
             .accessibilityLabel("Warning limit: \(formattedWarningLimit)")
     }
-    
+
     private var limitsSeparator: some View {
         Text("•")
             .font(.body)
             .foregroundStyle(.secondary)
             .accessibilityHidden(true)
     }
-    
+
     private var upperLimitText: some View {
         Text(formattedUpperLimit)
             .font(.body.weight(.medium))
             .foregroundStyle(.red)
             .accessibilityLabel("Upper limit: \(formattedUpperLimit)")
     }
-    
+
     private var limitsBackground: some View {
         RoundedRectangle(cornerRadius: 10)
             .fill(Color.primary.opacity(0.03))
     }
 
     // MARK: - Helper Properties
-    
+
     private var formattedWarningLimit: String {
         "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))"
     }
-    
+
     private var formattedUpperLimit: String {
         "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))"
     }
@@ -212,8 +212,9 @@ struct CostTableView: View {
         hasher.combine(providers.count)
         return hasher.finalize()
     }
+
     // MARK: - Helper Views
-    
+
     @ViewBuilder
     private func providerRowContent(for provider: ServiceProvider) -> some View {
         VStack(spacing: 8) {
@@ -230,10 +231,9 @@ struct CostTableView: View {
                 for: provider,
                 loginManager: loginManager)
         }
-        .id(
-            "\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
+        .id("\(provider.rawValue)-\(spendingData.getSpendingData(for: provider)?.lastSuccessfulRefresh?.timeIntervalSince1970 ?? 0)-\(currencyData.selectedCode)")
     }
-    
+
     @ViewBuilder
     private func providerHeaderRow(for provider: ServiceProvider) -> some View {
         HStack(spacing: 12) {
@@ -253,7 +253,7 @@ struct CostTableView: View {
                 .font(.body.weight(.medium))
         }
     }
-    
+
     @ViewBuilder
     private func providerUsageBar(for provider: ServiceProvider) -> some View {
         if let providerData = spendingData.getSpendingData(for: provider),

@@ -20,18 +20,18 @@ struct ProviderSpendingAmountView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Views
-    
+
     private var providerSpendingUSD: Double? {
         spendingData.getSpendingData(for: provider)?.currentSpendingUSD
     }
-    
+
     private var isLoadingData: Bool {
         guard let providerData = spendingData.getSpendingData(for: provider) else { return false }
         return providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing
     }
-    
+
     private func spendingText(for spendingUSD: Double) -> some View {
         let convertedSpending = currencyData.selectedCode == "USD" ? spendingUSD :
             ExchangeRateManager.shared.convert(
@@ -39,9 +39,10 @@ struct ProviderSpendingAmountView: View {
                 from: "USD",
                 to: currencyData.selectedCode,
                 rates: currencyData.effectiveRates) ?? spendingUSD
-        
-        let formattedAmount = "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))"
-        
+
+        let formattedAmount =
+            "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))"
+
         return Text(formattedAmount)
             .font(.body.weight(.semibold).monospaced())
             .foregroundStyle(.primary)
@@ -49,7 +50,7 @@ struct ProviderSpendingAmountView: View {
             .transition(.opacity.combined(with: .scale(scale: 0.95)))
             .animation(.easeOut(duration: 0.3), value: spendingUSD)
     }
-    
+
     private var loadingShimmer: some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(Color.secondary.opacity(0.2))
@@ -57,7 +58,7 @@ struct ProviderSpendingAmountView: View {
             .shimmer()
             .accessibilityLabel("Loading spending data")
     }
-    
+
     private var noDataPlaceholder: some View {
         Text("--")
             .font(.body)
