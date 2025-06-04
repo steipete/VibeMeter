@@ -123,7 +123,7 @@ echo "------------------------"
 if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
     run_test "Pre-release appcast is valid XML" "xmllint --noout '$PROJECT_ROOT/appcast-prerelease.xml' 2>/dev/null"
     run_test "Pre-release appcast contains items" "grep -q '<item>' '$PROJECT_ROOT/appcast-prerelease.xml'"
-    run_test "Pre-release appcast has sparkle:version" "grep -q 'sparkle:version=' '$PROJECT_ROOT/appcast-prerelease.xml'"
+    run_test "Pre-release appcast has sparkle:version" "grep -q 'sparkle:version=\"' '$PROJECT_ROOT/appcast-prerelease.xml'"
 fi
 
 if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then

@@ -2,6 +2,32 @@
 
 This document describes the process for creating and publishing a new release of VibeMeter.
 
+## 🚀 Quick Start
+
+### Creating a Stable Release
+```bash
+./scripts/validate-release.sh              # Check readiness
+./scripts/version.sh --patch               # Bump version
+git add Project.swift && git commit -m "Bump version"
+./scripts/release.sh --stable              # Create release
+git add appcast.xml && git commit -m "Update appcast" && git push
+```
+
+### Creating a Pre-Release
+```bash
+./scripts/validate-release.sh              # Check readiness
+# Edit Project.swift: increment build number
+./scripts/release.sh --prerelease beta 2   # Create beta.2
+git add appcast-prerelease.xml && git commit -m "Update appcast" && git push
+```
+
+### Verification Tools
+```bash
+./scripts/verify-app.sh <app-or-dmg>       # Verify signing, notarization, entitlements
+./scripts/verify-appcast.sh                # Validate appcast files
+./scripts/test-release-workflow.sh         # Test entire workflow
+```
+
 ## ⚠️ CRITICAL: Common Release Pitfalls
 
 ### 1. Build Number Rules (MOST IMPORTANT)
@@ -554,6 +580,192 @@ generate_keys -f sparkle_private_key_backup
 generate_keys -p
 ```
 
+## Complete Release Workflow with Verification
+
+### 🔍 Pre-Release Verification
+
+Before starting any release, run:
+```bash
+./scripts/validate-release.sh
+```
+
+This will check:
+- Git working directory status
+- Current version and build numbers
+- Existing releases and build numbers
+- Build directory state
+- Release readiness
+
+### 🚀 Creating a Release (Recommended Workflow)
+
+#### Option 1: Using the Universal Release Script (Recommended)
+
+**For Stable Release:**
+```bash
+# 1. Validate release readiness
+./scripts/validate-release.sh
+
+# 2. Update version if needed
+./scripts/version.sh --patch  # or --minor, --major
+
+# 3. Commit changes
+git add Project.swift
+git commit -m "Bump version to X.X.X"
+
+# 4. Create release (handles everything automatically)
+./scripts/release.sh --stable
+
+# 5. Commit and push appcast
+git add appcast.xml
+git commit -m "Update appcast for vX.X.X"
+git push origin main
+```
+
+**For Pre-Release:**
+```bash
+# 1. Ensure MARKETING_VERSION is base version (e.g., "1.0.0")
+grep MARKETING_VERSION Project.swift
+# If it shows pre-release suffix, edit to remove it
+
+# 2. Increment build number
+# Edit Project.swift: "CURRENT_PROJECT_VERSION": "201" -> "202"
+
+# 3. Create pre-release
+./scripts/release.sh --prerelease beta 2
+
+# 4. Commit and push appcast
+git add appcast-prerelease.xml
+git commit -m "Update pre-release appcast for v1.0.0-beta.2"
+git push origin main
+```
+
+### 📋 What Happens During Release
+
+The release scripts perform these steps automatically:
+
+1. **Pre-Build Validation**
+   - ✅ Clean build directory (`rm -rf build/`)
+   - ✅ Validate build number is unique
+   - ✅ Validate build number is higher than all existing
+   - ✅ Show pre-flight summary and get confirmation
+
+2. **Build Phase**
+   - ✅ Generate Xcode project
+   - ✅ Build in Release configuration
+   - ✅ Verify built app has correct build number
+
+3. **Signing & Notarization**
+   - ✅ Code sign with Developer ID
+   - ✅ Submit for notarization
+   - ✅ Wait for notarization completion
+   - ✅ Staple notarization ticket
+
+4. **App Verification** (`verify-app.sh`)
+   - ✅ Verify Developer ID signature
+   - ✅ Check Gatekeeper acceptance
+   - ✅ Validate all entitlements
+   - ✅ Verify Sparkle XPC services
+   - ✅ Check XPC network entitlements
+
+5. **DMG Creation & Verification**
+   - ✅ Create styled DMG
+   - ✅ Verify DMG mounts correctly
+   - ✅ Run full verification on DMG contents
+
+6. **GitHub Release**
+   - ✅ Create git tag
+   - ✅ Upload DMG to GitHub
+   - ✅ Generate release notes
+
+7. **Appcast Update & Validation**
+   - ✅ Generate EdDSA signature
+   - ✅ Update appcast XML
+   - ✅ Validate XML syntax
+   - ✅ Check build numbers
+   - ✅ Verify GitHub URLs
+   - ✅ Cross-validate appcasts
+
+8. **Final Summary**
+   - ✅ Show verification results
+   - ✅ Display next steps
+   - ✅ Provide release URL
+
+### 🧪 Testing the Release Workflow
+
+To test the entire workflow without creating releases:
+```bash
+./scripts/test-release-workflow.sh
+```
+
+This tests:
+- All scripts exist and are executable
+- Dependencies are installed
+- Version parsing works
+- Build validation logic
+- Appcast parsing
+- Verification scripts
+
+### 🔍 Manual Verification Commands
+
+**Verify a built app or DMG:**
+```bash
+./scripts/verify-app.sh /path/to/VibeMeter.app
+./scripts/verify-app.sh /path/to/VibeMeter-1.0.0.dmg
+```
+
+**Validate appcast files:**
+```bash
+./scripts/verify-appcast.sh
+```
+
+**Check specific entitlements:**
+```bash
+codesign -d --entitlements :- /path/to/VibeMeter.app
+```
+
+**Check notarization status:**
+```bash
+spctl -a -vvv /path/to/VibeMeter.app
+```
+
+**Verify XPC services:**
+```bash
+codesign --verify --deep /path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc
+```
+
+### ⚠️ Common Verification Failures and Solutions
+
+1. **"Build number already exists"**
+   - Solution: Increment CURRENT_PROJECT_VERSION in Project.swift
+
+2. **"App verification failed - missing network entitlement"**
+   - Solution: Check VibeMeter.entitlements file
+   - Ensure: `com.apple.security.network.client = true`
+
+3. **"XPC service missing network access"**
+   - Solution: Run `./scripts/notarize-app.sh` which applies correct entitlements
+
+4. **"Appcast validation failed - duplicate builds"**
+   - Solution: Check both appcast.xml and appcast-prerelease.xml
+   - Remove duplicate entries
+
+5. **"Not accepted by Gatekeeper"**
+   - Solution: Ensure notarization completed successfully
+   - Check: `xcrun notarytool log <submission-id>`
+
+### 📊 Release Verification Matrix
+
+| Step | What's Verified | Script | When |
+|------|----------------|---------|------|
+| Build Numbers | Unique & Increasing | Built into release scripts | Pre-build |
+| App Signing | Developer ID | `verify-app.sh` | Post-sign |
+| Notarization | Gatekeeper | `verify-app.sh` | Post-notarize |
+| Entitlements | Sandbox, Network | `verify-app.sh` | Post-sign |
+| XPC Services | Signing & Network | `verify-app.sh` | Post-sign |
+| DMG Contents | Correct Version | `verify-app.sh` | Post-DMG |
+| Appcast XML | Valid & Consistent | `verify-appcast.sh` | Post-update |
+| GitHub Release | Exists & Accessible | `verify-appcast.sh` | Post-release |
+
 ## Complete Release Checklist for v1.0.0
 
 **IMPORTANT: Always use the provided scripts for releases. Do not use manual workarounds or shortcuts. The scripts ensure consistency and handle all the complex signing, notarization, and packaging steps correctly.**
@@ -635,29 +847,239 @@ generate_keys -p
 
 ## Scripts Overview
 
-### Core Scripts
-- `generate-xcproj.sh` - Generate Xcode project with Tuist
-- `build.sh` - Build the application
-- `sign-and-notarize.sh` - Code sign and notarize
-- `create-dmg.sh` - Create distribution DMG
-- `notarize-app.sh` - Deep notarization with Sparkle support
+### Core Build Scripts
 
-### Release Scripts
-- `version.sh` - Version management and bumping
-- `release.sh` - Universal release script (stable and pre-release)
-- `create-github-release.sh` - Stable release automation
-- `create-prerelease.sh` - Pre-release creation
-- `update-appcast.sh` - Update stable appcast.xml
-- `update-prerelease-appcast.sh` - Update pre-release appcast
-- `setup-sparkle-release.sh` - Initial Sparkle setup
-- `release-local.sh` - Local release for testing
-- `changelog-to-html.sh` - Convert markdown to HTML
+#### `generate-xcproj.sh`
+Generates the Xcode project using Tuist. Must be run after modifying `Project.swift` or `Tuist.swift`.
+
+#### `build.sh`
+Builds the application with specified configuration.
+- Usage: `./scripts/build.sh --configuration Release`
+- Automatically generates Xcode project if needed
+- Supports Debug and Release configurations
+
+#### `sign-and-notarize.sh`
+Signs and notarizes the app for distribution.
+- Usage: `./scripts/sign-and-notarize.sh --app-path <path> --sign-and-notarize`
+- Options:
+  - `--sign-only`: Only code sign, skip notarization
+  - `--sign-and-notarize`: Full signing and notarization
+- Requires Apple Developer credentials
+
+#### `create-dmg.sh`
+Creates a distribution DMG from the signed app.
+- Usage: `./scripts/create-dmg.sh <app-path> [dmg-path]`
+- Automatically generates DMG filename if not specified
+- Creates a styled DMG with background and app icon
+
+### Release Management Scripts
+
+#### `release.sh`
+Universal release script that handles both stable and pre-release versions.
+- Usage:
+  - Stable: `./scripts/release.sh --stable`
+  - Pre-release: `./scripts/release.sh --prerelease beta 1`
+- **Automatic features:**
+  - Cleans build directory
+  - Validates build numbers
+  - Verifies built app
+  - Creates GitHub release
+  - Updates appcast
+
+#### `create-github-release.sh`
+Creates stable releases only.
+- **Process:**
+  1. Cleans build directory
+  2. Validates build number is unique and higher than existing
+  3. Builds app in Release configuration
+  4. Verifies built app has correct build number
+  5. Signs and notarizes
+  6. Verifies signed app (entitlements, notarization)
+  7. Creates DMG
+  8. Verifies DMG
+  9. Creates GitHub release
+  10. Updates appcast.xml
+  11. Validates appcast
+
+#### `create-prerelease.sh`
+Creates pre-release versions (alpha, beta, rc).
+- Usage: `./scripts/create-prerelease.sh beta 1`
+- **Features:**
+  - Extracts base version from marketing version
+  - Prevents double suffix issues
+  - Same verification as stable releases
+  - Updates appcast-prerelease.xml
+
+#### `version.sh`
+Manages version numbers in Project.swift.
+- Usage:
+  - Show current: `./scripts/version.sh --current`
+  - Bump patch: `./scripts/version.sh --patch`
+  - Bump minor: `./scripts/version.sh --minor`
+  - Bump major: `./scripts/version.sh --major`
+  - Set specific: `./scripts/version.sh --set 1.0.0`
+  - Pre-release: `./scripts/version.sh --prerelease beta`
+
+### Verification Scripts
+
+#### `verify-app.sh`
+Comprehensive app verification for signing, notarization, and entitlements.
+- Usage: `./scripts/verify-app.sh <app-or-dmg-path>`
+- **Checks:**
+  - Code signing (Developer ID vs ad-hoc)
+  - Notarization status
+  - Gatekeeper acceptance
+  - All entitlements (sandbox, network, downloads)
+  - Sparkle framework presence
+  - XPC service signing and entitlements
+  - Build number validation
+  - Sparkle public key configuration
+- **Exit codes:**
+  - 0: All critical checks passed
+  - 1: Critical issues found
+
+#### `verify-appcast.sh`
+Validates appcast XML files for correctness and consistency.
+- Usage: `./scripts/verify-appcast.sh`
+- **Validates:**
+  - XML syntax
+  - Build number uniqueness
+  - Build number ordering (newest first)
+  - Download URL validity
+  - GitHub release existence
+  - EdDSA signature presence
+  - File size validity
+  - Cross-validation between stable and pre-release
+- Shows detailed report with pass/fail for each check
+
+#### `validate-release.sh`
+Pre-flight check before creating a release.
+- Usage: `./scripts/validate-release.sh`
+- **Reports on:**
+  - Git working directory status
+  - Current version and build number
+  - Existing build numbers in appcasts
+  - Build number validity
+  - Recent GitHub releases
+  - Build directory state
+- Provides release readiness summary
+
+#### `test-release-workflow.sh`
+Tests the entire release workflow without creating actual releases.
+- Usage: `./scripts/test-release-workflow.sh`
+- **Tests:**
+  - Script availability and permissions
+  - Required dependencies
+  - Version parsing logic
+  - Build number validation
+  - Appcast parsing
+  - Verification scripts
+  - Pre-release suffix extraction
+- Returns success only if all tests pass
+
+### Appcast Management Scripts
+
+#### `update-appcast.sh`
+Updates the stable appcast.xml with new release information.
+- Usage: `./scripts/update-appcast.sh <version> <build> <dmg-path>`
+- Generates EdDSA signature
+- Extracts release notes from CHANGELOG.md
+- Updates appcast with proper formatting
+
+#### `generate-appcast.sh`
+Regenerates appcast files from existing releases.
+- Scans release directory
+- Generates both stable and pre-release appcasts
+- Maintains proper ordering (newest first)
 
 ### Utility Scripts
-- `format.sh` - Format Swift code
-- `lint.sh` - Lint Swift code
-- `fix-trailing-newlines.sh` - Fix file formatting
-- `codesign-app.sh` - Sign app bundle
+
+#### `format.sh`
+Formats Swift code using SwiftFormat.
+- Enforces consistent code style
+- Runs on all Swift files in the project
+
+#### `lint.sh`
+Lints Swift code using SwiftLint.
+- Checks for code quality issues
+- Enforces style guidelines
+
+#### `changelog-to-html.sh`
+Converts CHANGELOG.md entries to HTML for Sparkle.
+- Used by appcast update scripts
+- Maintains proper HTML formatting
+
+## Automatic Verification Features
+
+### Build Directory Cleaning
+All release scripts automatically run `rm -rf build/` before building to ensure:
+- No stale artifacts are packaged
+- Fresh compilation every time
+- Consistent build environment
+
+### Build Number Validation
+Before building, scripts check:
+- Build number doesn't already exist in any appcast
+- Build number is higher than all existing releases
+- Shows highest existing build and suggests next number
+- **Refuses to proceed if validation fails**
+
+### Post-Build Verification
+After building, scripts verify:
+- Built app has the expected build number
+- App bundle exists and is valid
+- **Prevents packaging wrong build**
+
+### Signing and Notarization Verification
+After signing, `verify-app.sh` automatically checks:
+- Valid Developer ID signature
+- Notarization acceptance by Gatekeeper
+- Correct entitlements for:
+  - App sandbox
+  - Network access
+  - Downloads folder access
+  - XPC service communication
+- Sparkle XPC services are properly signed
+- XPC services have network entitlements
+
+### DMG Verification
+Before uploading, scripts verify:
+- DMG mounts successfully
+- Contains correct app version
+- App in DMG passes all verification checks
+
+### Appcast Validation
+After updating appcast, `verify-appcast.sh` checks:
+- Valid XML syntax
+- No duplicate build numbers
+- Proper build number ordering
+- Valid download URLs
+- GitHub releases exist
+- EdDSA signatures present
+- No conflicts between stable and pre-release
+
+### Pre-flight Checks
+Release scripts show summary before building:
+- Current version and build number
+- What will be built
+- Validation status
+- **Requires user confirmation**
+
+## Verification Exit Points
+
+The release process will automatically stop if:
+1. Build number already exists
+2. Build number is not higher than existing
+3. Built app has wrong build number
+4. App signing fails
+5. Notarization fails
+6. App verification fails (entitlements, etc.)
+7. DMG creation fails
+8. DMG verification fails
+9. GitHub release creation fails
+10. Appcast has critical issues
+
+Each failure provides specific error messages to help diagnose the issue.
 
 ## Backup
 
