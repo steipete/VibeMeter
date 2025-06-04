@@ -203,7 +203,7 @@ final class CurrencyConversionHelperTests: XCTestCase {
         let testCases = [
             (Locale(identifier: "en_US"), "€1,234.56"), // US format
             (Locale(identifier: "de_DE"), "€1.234,56"), // German format
-            (Locale(identifier: "fr_FR"), "€1 234,56"), // French format
+            (Locale(identifier: "fr_FR"), "€1\u{202F}234,56"), // French format (narrow no-break space)
         ]
 
         for (locale, expectedFormat) in testCases {

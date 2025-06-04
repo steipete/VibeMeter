@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 final class CurrencyConversionHelper {
     static func convert(amount: Double, rate: Double?) -> Double {
-        guard let rate, rate > 0 else { return amount }
+        guard let rate, rate > 0, rate.isFinite else { return amount }
         return amount * rate
     }
 
