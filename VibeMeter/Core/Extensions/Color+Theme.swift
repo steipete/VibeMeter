@@ -104,6 +104,16 @@ extension Color {
             : .black.opacity(0.06)
     }
 
+    /// Window background color
+    static func windowBackground(for _: ColorScheme) -> Color {
+        Color(NSColor.windowBackgroundColor)
+    }
+
+    /// Control background color
+    static func controlBackground(for _: ColorScheme) -> Color {
+        Color(NSColor.controlBackgroundColor)
+    }
+
     // MARK: - Spending Colors with Theme Awareness
 
     /// Colors for spending amounts based on percentage and theme
