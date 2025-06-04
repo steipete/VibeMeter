@@ -37,10 +37,6 @@ struct VibeMeterMainView: View {
         .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?
             "Shows AI service spending dashboard and controls" :
             "Shows login options for AI service providers")
-        .onAppear {
-            // Enable keyboard navigation for the menu
-            NSApp.keyWindow?.makeFirstResponder(nil)
-        }
         .onKeyPress(.escape) {
             // Modern key handling for ESC to close menu
             if let customMenuWindow = NSApp.windows.first(where: { $0 is CustomMenuWindow }) as? CustomMenuWindow {
