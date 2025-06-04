@@ -5,6 +5,23 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.2] - 2025-06-05
+
+### 🔧 Improvements
+- **Release process refinement** - Streamlined build and distribution workflow
+- **Appcast optimization** - Improved update feed generation and validation
+- **Build number management** - Enhanced version tracking for reliable updates
+
+### 🐛 Bug Fixes
+- Fixed double beta suffix in release naming
+- Corrected build number synchronization in appcast
+- Resolved release script version handling
+
+### 📝 Documentation
+- Updated release process documentation
+- Added comprehensive release checklist
+- Improved troubleshooting guides
+
 ## [1.0.0] - 2025-06-05
 
 ### 🎉 First Stable Release
