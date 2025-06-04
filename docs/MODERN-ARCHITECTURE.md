@@ -1,13 +1,16 @@
 # VibeMeter Modern Architecture (Swift 6)
 
-This document describes the modernized architecture of VibeMeter, updated to use Swift 6 features and modern design patterns.
+This document describes the current architecture of VibeMeter, built with Swift 6 and modern design patterns.
 
 ## Overview
 
-VibeMeter has been restructured to follow modern Swift best practices with:
+VibeMeter follows modern Swift best practices with:
 - **Swift 6 strict concurrency** with actors and async/await
-- **@Observable macro** for reactive state management
+- **@Observable macro** for reactive state management (not Combine)
 - **Modern SwiftUI** patterns and APIs
+- **Multi-provider architecture** ready for multiple AI services
+- **Component-based UI architecture** for modularity
+- **Orchestrator pattern** for coordinating complex operations
 - **Protocol-oriented design** with clear separation of concerns
 - **Structured directory layout** for better organization
 
@@ -16,42 +19,67 @@ VibeMeter has been restructured to follow modern Swift best practices with:
 ```
 VibeMeter/
 ├── App/                        # Application lifecycle
-│   └── VibeMeterApp.swift     # @main entry point and AppDelegate
+│   └── VibeMeterApp.swift     # @main entry point
 ├── Core/                       # Core business logic
-│   ├── Models/                # Data models
-│   ├── Networking/            # API clients
-│   │   └── CursorAPIClient.swift
+│   ├── Models/                # Data models (@Observable)
+│   │   ├── CurrencyData.swift
+│   │   ├── MultiProviderUserSession.swift
+│   │   ├── ProviderConnectionStatus.swift
+│   │   └── ProviderSpendingData.swift
 │   ├── Protocols/             # Protocol definitions
-│   │   ├── CursorAPIClientProtocol.swift
-│   │   ├── ExchangeRateManagerProtocol.swift
-│   │   └── SettingsManagerProtocol.swift
+│   │   ├── KeychainProtocol.swift
+│   │   └── URLSessionProtocol.swift
+│   ├── Providers/             # Provider implementations
+│   │   ├── Cursor/            # Cursor-specific implementation
+│   │   ├── CursorProvider.swift
+│   │   ├── ProviderProtocol.swift
+│   │   └── ServiceProvider.swift
 │   ├── Services/              # Business services
-│   │   ├── DataCoordinator.swift
+│   │   ├── MultiProviderDataOrchestrator.swift
+│   │   ├── SessionStateManager.swift
+│   │   ├── NetworkStateManager.swift
+│   │   ├── CurrencyOrchestrator.swift
+│   │   ├── BackgroundDataProcessor.swift
 │   │   ├── ExchangeRateManager.swift
 │   │   ├── NotificationManager.swift
 │   │   ├── SettingsManager.swift
-│   │   └── SparkleUpdaterManager.swift
+│   │   └── Settings/          # Specialized settings managers
 │   └── Utilities/             # Helper classes and extensions
 ├── Presentation/              # UI layer
-│   ├── Views/                # SwiftUI views
-│   │   └── SettingsView.swift
-│   ├── ViewModels/           # View models (if needed)
-│   └── Components/           # Reusable UI components
-└── Resources/                # Assets, configs, etc.
+│   ├── Components/            # Reusable UI components
+│   │   ├── StatusBarController.swift
+│   │   ├── StatusBarDisplayManager.swift
+│   │   ├── StatusBarMenuManager.swift
+│   │   ├── StatusBarAnimationController.swift
+│   │   └── StatusBarObserver.swift
+│   ├── Views/                 # SwiftUI views
+│   │   ├── LoggedInContentView.swift
+│   │   ├── LoggedOutContentView.swift
+│   │   └── MultiProviderSettingsView.swift
+│   └── PreviewHelpers/        # SwiftUI preview support
+└── Resources/                 # Assets, configs, etc.
 ```
 
-## Key Architectural Changes
+## Key Architectural Components
 
-### 1. Actor-based API Client
+### 1. Multi-Provider Data Orchestrator
 
-The `CursorAPIClient` is now an actor, providing thread-safe API access:
+The `MultiProviderDataOrchestrator` is the central coordinator, delegating to specialized managers:
 
 ```swift
-public actor CursorAPIClient: CursorAPIClientProtocol {
-    // Thread-safe API methods
-    public func fetchTeamInfo(authToken: String) async throws -> TeamInfo
-    public func fetchUserInfo(authToken: String) async throws -> UserInfo
-    public func fetchMonthlyInvoice(authToken: String, month: Int, year: Int) async throws -> MonthlyInvoice
+@MainActor
+@Observable
+public final class MultiProviderDataOrchestrator {
+    // Delegated responsibilities
+    private let sessionStateManager: SessionStateManager
+    private let networkStateManager: NetworkStateManager
+    private let currencyOrchestrator: CurrencyOrchestrator
+    private let backgroundDataProcessor: BackgroundDataProcessor
+    
+    // Coordinated operations
+    public func startMonitoring()
+    public func refreshData(forProvider: ServiceProvider)
+    public func handleNetworkChange()
 }
 ```
 
@@ -70,37 +98,39 @@ public final class SettingsManager: SettingsManagerProtocol {
 }
 ```
 
-### 3. Modern DataCoordinator
+### 3. Component-Based StatusBarController
 
-Centralized state management with clear async patterns:
+Modular UI management with specialized components:
 
 ```swift
 @MainActor
-public final class DataCoordinator: DataCoordinatorProtocol, ObservableObject {
-    // Published state for UI binding
-    @Published public private(set) var isLoggedIn = false
-    @Published public private(set) var currentSpendingUSD: Double?
+public final class StatusBarController {
+    // Component managers
+    private let displayManager: StatusBarDisplayManager
+    private let menuManager: StatusBarMenuManager
+    private let animationController: StatusBarAnimationController
+    private let observer: StatusBarObserver
     
-    // Async data operations
-    public func forceRefreshData(showSyncedMessage: Bool) async
+    // Delegates UI responsibilities to components
+    public func updateDisplay()
+    public func showMenu()
+    public func animateIcon()
 }
 ```
 
-### 4. SwiftUI Settings View
+### 4. Actor-based Provider Implementation
 
-Modern SwiftUI with native macOS patterns:
+Thread-safe provider operations:
 
 ```swift
-struct SettingsView: View {
-    @Bindable var settingsManager: SettingsManager
-    @ObservedObject var dataCoordinator: DataCoordinator
+public actor CursorProvider: ProviderProtocol {
+    private let apiClient: CursorAPIClient
+    private let dataTransformer: CursorDataTransformer
+    private let resilienceManager: CursorResilienceManager
     
-    var body: some View {
-        HSplitView {
-            SettingsSidebar(selectedTab: $selectedTab)
-            // Tab-based content
-        }
-    }
+    // Actor-isolated API methods
+    public func fetchSpendingData() async throws -> ProviderSpendingData
+    public func validateAuthentication() async -> Bool
 }
 ```
 
@@ -123,58 +153,89 @@ struct SettingsView: View {
 - Modern form styles (`.formStyle(.grouped)`)
 - `HSplitView` for sidebar navigation
 
-## Migration Guide
+## Architectural Patterns
 
-To migrate existing code to the modern structure:
+### Orchestrator Pattern
+The `MultiProviderDataOrchestrator` coordinates between multiple specialized managers, each handling specific concerns:
+- **SessionStateManager**: Authentication flows
+- **NetworkStateManager**: Network connectivity monitoring
+- **CurrencyOrchestrator**: Currency conversion operations
+- **BackgroundDataProcessor**: Concurrent API operations
 
-1. **Run the migration script**:
-   ```bash
-   ./scripts/migrate-to-modern-structure.sh
-   ```
+### Component-Based UI Architecture
+The `StatusBarController` delegates UI responsibilities to specialized components:
+- **Display Management**: Icon and text updates
+- **Menu Management**: Popover window handling
+- **Animation Control**: Gauge icon animations
+- **State Observation**: Data change monitoring
 
-2. **Update imports** in moved files to reflect new paths
-
-3. **Replace the Project.swift**:
-   ```bash
-   cp Project-Modern.swift Project.swift
-   ./scripts/generate-xcproj.sh
-   ```
-
-4. **Update references** to use new protocol-based types
+### Multi-Provider Design
+- **Provider Protocol**: Common interface for all AI services
+- **Provider Registry**: Dynamic provider management
+- **Provider Factory**: Service instantiation
+- **Isolated State**: Each provider maintains independent state
 
 ## Testing Approach
 
-The modernized architecture improves testability:
+The architecture is designed for comprehensive testing:
 
 - **Protocol-based dependencies** enable easy mocking
 - **Actor isolation** ensures thread-safe testing
-- **Async testing** with modern Swift concurrency test helpers
+- **Component isolation** allows focused unit tests
+- **Observable state** simplifies UI testing
 
-Example test pattern:
-```swift
-@MainActor
-class DataCoordinatorTests: XCTestCase {
-    func testDataRefresh() async throws {
-        let mockAPI = MockCursorAPIClient()
-        let coordinator = DataCoordinator(apiClient: mockAPI)
-        
-        await coordinator.forceRefreshData(showSyncedMessage: false)
-        
-        XCTAssertEqual(coordinator.currentSpendingUSD, 100.0)
-    }
-}
+Test organization:
+```
+VibeMeterTests/
+├── Core Tests/
+│   ├── MultiProviderDataOrchestratorTests.swift
+│   ├── CursorProviderTests.swift
+│   └── NetworkStateManagerTests.swift
+├── TestUtilities/
+│   ├── MockServices.swift
+│   ├── MockProviders.swift
+│   └── TestHelpers.swift
+└── UI Tests/
+    └── StatusBarControllerTests.swift
 ```
 
-## Performance Improvements
+## Performance Optimizations
 
-- **Reduced memory footprint** with value types and copy-on-write
-- **Better concurrency** with actors preventing data races
-- **Efficient UI updates** with @Observable's fine-grained tracking
-- **Cached network responses** in ExchangeRateManager
+- **Actor isolation** prevents data races and ensures thread safety
+- **Fine-grained updates** with @Observable's property-level tracking
+- **Component-based UI** reduces unnecessary redraws
+- **Background processing** keeps UI responsive
+- **Smart caching**:
+  - Exchange rates cached for 1 hour
+  - Provider data refreshed based on user settings
+  - Connection status prevents unnecessary API calls
+- **Network resilience**:
+  - Automatic retry with exponential backoff
+  - Graceful degradation on network issues
+  - Connection state tracking
 
-## Future Enhancements
+## Data Flow
 
-- Migration to Swift Data for persistence
-- Widget support with WidgetKit
-- CloudKit sync for settings
-- Swift Charts for spending visualization
+1. **User Interaction** → StatusBarController
+2. **StatusBarController** → Component managers handle UI
+3. **Component managers** → MultiProviderDataOrchestrator
+4. **Orchestrator** → Delegates to specialized managers
+5. **Background operations** → Actor-isolated processing
+6. **State updates** → @Observable models notify UI
+7. **UI updates** → Components reflect new state
+
+## Security & Privacy
+
+- **Keychain storage** for authentication tokens
+- **No credential persistence** - uses secure web auth
+- **Provider isolation** - credentials never cross providers
+- **Secure networking** - all API calls over HTTPS
+- **No analytics** - no user tracking or data collection
+
+## Future Extensibility
+
+The architecture supports:
+- **Additional providers** through ProviderProtocol
+- **New UI components** via component architecture
+- **Extended functionality** through orchestrator pattern
+- **Platform expansion** with shared business logic

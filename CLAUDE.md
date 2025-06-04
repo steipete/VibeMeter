@@ -75,37 +75,53 @@ Required environment variables for notarization:
 ### Core Components
 
 1. **MultiProviderDataOrchestrator** (`VibeMeter/Core/Services/MultiProviderDataOrchestrator.swift`)
-   - Central coordination of multi-provider data management
-   - Manages all service dependencies and data flow
-   - Publishes state changes for UI updates via Combine
-   - Handles data fetching, currency conversion, and notification triggers
+   - Central coordinator using orchestrator pattern
+   - Delegates to specialized managers for separation of concerns
+   - @MainActor @Observable class for reactive state management
+   - Coordinates data fetching, currency conversion, and notification triggers
 
 2. **StatusBarController** (`VibeMeter/Presentation/Components/StatusBarController.swift`)
-   - Manages the NSStatusItem and custom menu window
-   - Observes data changes and updates display
-   - Handles animated gauge icon and menu bar text
+   - Component-based architecture with specialized managers:
+     - StatusBarDisplayManager: Menu bar text and icon display
+     - StatusBarMenuManager: Popover window management
+     - StatusBarAnimationController: Gauge icon animations
+     - StatusBarObserver: Data change monitoring
+   - Handles all menu bar UI interactions
 
 3. **Service Layer**
-   - **CursorProvider**: Handles all Cursor AI API interactions (teams, user info, invoices)
-   - **MultiProviderLoginManager**: Manages WebKit-based authentication across providers
-   - **ExchangeRateManager**: Fetches and caches currency exchange rates
-   - **SettingsManager**: Persists user preferences via UserDefaults
-   - **NotificationManager**: Handles macOS user notifications
-   - **StartupManager**: Manages Launch at Login functionality
+   - **Providers**:
+     - CursorProvider: Actor-based Cursor AI API implementation
+     - ProviderFactory: Creates provider instances
+     - ProviderRegistry: Manages enabled/disabled providers
+   - **State Management**:
+     - SessionStateManager: Login/logout flows
+     - NetworkStateManager: Network connectivity monitoring
+     - CurrencyOrchestrator: Currency conversion coordination
+   - **Background Processing**:
+     - BackgroundDataProcessor: Actor for concurrent API operations
+   - **Other Services**:
+     - MultiProviderLoginManager: WebKit-based authentication
+     - ExchangeRateManager: Actor-based currency rate management
+     - SettingsManager: @Observable preferences with specialized sub-managers
+     - NotificationManager: macOS user notifications
+     - StartupManager: Launch at Login functionality
 
 4. **Data Models** (using @Observable)
    - **MultiProviderUserSessionData**: User authentication state across providers
    - **MultiProviderSpendingData**: Spending data aggregation and calculations
    - **CurrencyData**: Currency conversion and exchange rate management
+   - **ProviderConnectionStatus**: Real-time connection state tracking
 
 ### Key Design Patterns
 
+- **Orchestrator Pattern**: MultiProviderDataOrchestrator coordinates between managers
+- **Component-Based Architecture**: StatusBarController delegates to specialized components
+- **Actor Pattern**: Thread-safe background operations (providers, data processor)
 - **Protocol-Oriented Design**: Most services have protocol definitions for testability
-- **Dependency Injection**: Services are injected into DataCoordinator
-- **Combine Framework**: Used for reactive state management
-- **Swift Concurrency**: async/await for network operations
-- **MVVM-like Structure**: MultiProviderDataOrchestrator acts as the coordination layer
-- **Observable Models**: Modern SwiftUI data flow with @Observable macro
+- **Dependency Injection**: Services are injected via initializers
+- **Observable State**: Swift's @Observable macro for reactive updates (not Combine)
+- **Swift Concurrency**: async/await for network operations, actors for thread safety
+- **Delegation Pattern**: Loose coupling between components
 
 ### Testing Strategy
 

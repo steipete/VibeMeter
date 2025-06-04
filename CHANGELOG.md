@@ -17,30 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0] - 2025-06-04
 
-### 🎨 User Interface
-- **Redesigned cost table layout** - Provider icons and spending amounts are now centered with improved visual hierarchy
-- **Enhanced provider display** - Moved provider breakdown to the top with full-width usage progress bars
-- **Professional styling** - Cleaner, less chaotic layout with better spacing and alignment
+### 🎉 Initial Release
 
-### 🐛 Bug Fixes
-- **Fixed authentication loop** - Resolved issue where login would fail despite correct credentials
-- **Fixed progressive disclosure animations** - Smooth transitions when expanding/collapsing cost details
-- **Improved error messages** - More user-friendly authentication error descriptions
-- **Fixed Sparkle auto-update** - Corrected EdDSA public key format to match Sparkle's requirements
+Vibe Meter is a beautiful, native macOS menu bar app that helps you track your monthly AI spending.
 
-### 🏗️ Architecture
-- **Removed circuit breaker pattern** - Simplified error handling by removing unnecessary retry complexity
-- **Enhanced authentication state management** - Replaced boolean flags with proper state enum
-- **Improved loading states** - Better visual feedback during login and data fetching
+### ✨ Features
+- **Real-time spending tracking** for Cursor AI
+- **Multi-currency support** with 20+ currencies
+- **Smart notifications** when approaching spending limits
+- **Animated gauge icon** showing spending progress
+- **Secure authentication** via official web login
+- **Auto-updates** with EdDSA signature verification
 
-### 🔧 Technical Improvements
-- **Swift 6 compliance** - Fixed all concurrency warnings and actor isolation issues
-- **Code organization** - Created dedicated component files for provider icons and usage badges
-- **Build system** - Resolved duplicate file issues and improved project structure
-- **Sparkle compatibility** - Now uses the same key format as the working CodeLooper implementation
-
-### 🔐 Security
-- **Notarized by Apple** - This release is properly signed and notarized for macOS security
+### 🏗️ Built With
+- Swift 6 with strict concurrency
+- Modern SwiftUI and AppKit
+- Multi-provider architecture (ready for future AI services)
+- Notarized by Apple for security
 
 ---
 

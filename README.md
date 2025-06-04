@@ -2,7 +2,6 @@
 
 A beautiful, native macOS menu bar application that helps you track your monthly AI spending with real-time monitoring and smart notifications.
 
-![VibeMeter Menu Bar](assets/menubar-icon.png)
 
 ## ✨ Features
 
@@ -13,8 +12,10 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 - **🎨 Animated Gauge Display** - Beautiful visual indicator showing spending progress
 - **🔐 Secure Authentication** - Safe login via provider's official web authentication
 - **⚡ Lightweight & Native** - Built with Swift 6, optimized for performance and battery life
-- **🔄 Auto-Updates** - Secure automatic updates with cryptographic verification
+- **🔄 Auto-Updates** - Secure automatic updates with EdDSA signature verification
 - **🌓 Dark Mode Support** - Seamlessly adapts to your system appearance
+- **🖱️ Right-Click Menu** - Quick access to settings and actions via context menu
+- **📊 Enhanced UI** - Professional cost table with centered icons and full-width progress bars
 
 ## 🚀 Quick Start
 
@@ -93,7 +94,7 @@ Want to contribute? Vibe Meter is built with modern Swift technologies:
 ./scripts/lint.sh
 
 # Run tests
-xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter test
+xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Debug test
 
 # Build release
 ./scripts/build.sh
@@ -117,12 +118,12 @@ Vibe Meter follows clean architecture principles:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for details on:
+We welcome contributions! When contributing to Vibe Meter:
 
-- Code style and formatting
-- Testing requirements  
-- Pull request process
-- Architecture decisions
+- Follow Swift 6 best practices with strict concurrency
+- Use the provided formatting script: `./scripts/format.sh`
+- Ensure all tests pass before submitting
+- Update documentation for significant changes
 
 ## 📖 Documentation
 
