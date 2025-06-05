@@ -16,9 +16,12 @@ enum CursorDataTransformer {
             logger.warning("Cursor API returned empty teams response - this may indicate API changes")
             // Create a fallback team info since the user is authenticated but no team data is available
             // This allows the app to continue functioning even with the changed API
-            // Note: Using ID -1 to indicate no valid team (0 might be misinterpreted as valid)
+            // Use centralized constants for individual user fallback values
             logger.info("Creating fallback team info due to empty teams response")
-            return ProviderTeamInfo(id: -1, name: "Individual", provider: .cursor)
+            return ProviderTeamInfo(
+                id: CursorAPIConstants.ResponseConstants.individualUserTeamId,
+                name: CursorAPIConstants.ResponseConstants.individualUserTeamName,
+                provider: .cursor)
         }
 
         let firstTeam = teams.first!

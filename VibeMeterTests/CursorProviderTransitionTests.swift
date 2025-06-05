@@ -27,7 +27,8 @@ final class CursorProviderTransitionTests: XCTestCase {
 
     func testUserTransition_FromIndividualToTeam() async throws {
         // Given - Start as individual user (no session)
-        XCTAssertNil(await mockSettingsManager.getSession(for: .cursor))
+        let session = await mockSettingsManager.getSession(for: .cursor)
+        XCTAssertNil(session)
 
         // First fetch as individual
         let individualInvoiceData = Data("""
@@ -36,7 +37,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = individualInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -69,7 +70,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = teamInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -109,7 +110,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -144,7 +145,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -163,7 +164,7 @@ final class CursorProviderTransitionTests: XCTestCase {
         XCTAssertNotEqual(bodyJSON?["teamId"] as? Int, 1111, "Should not use stored teamId")
     }
 
-    func testExplicitZeroTeamIdOverridesStoredValue() async throws {
+    func testExplicitZeroTeamIdFiltered() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -178,7 +179,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -190,10 +191,10 @@ final class CursorProviderTransitionTests: XCTestCase {
             year: 2024,
             teamId: 0)  // Explicitly set to 0
 
-        // Then - Verify 0 was used, not stored value
+        // Then - Verify teamId 0 is filtered out as invalid
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 0, "Should use explicitly provided teamId of 0")
+        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId when it's 0 (filtered as invalid)")
         XCTAssertNotEqual(bodyJSON?["teamId"] as? Int, 2222, "Should not use stored teamId")
     }
 
@@ -257,7 +258,7 @@ final class CursorProviderTransitionTests: XCTestCase {
 
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -289,7 +290,7 @@ final class CursorProviderTransitionTests: XCTestCase {
         """.utf8)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -313,7 +314,7 @@ final class CursorProviderTransitionTests: XCTestCase {
         """.utf8)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -332,7 +333,7 @@ final class CursorProviderTransitionTests: XCTestCase {
         """.utf8)
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -342,36 +343,5 @@ final class CursorProviderTransitionTests: XCTestCase {
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         XCTAssertNil(bodyJSON?["teamId"], "Third request should have no teamId after session cleared")
-    }
-}
-
-// MARK: - Mock Settings Manager
-
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var menuBarDisplayMode: MenuBarDisplayMode = .both
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-    var updateChannel: UpdateChannel = .stable
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
     }
 }

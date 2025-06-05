@@ -39,7 +39,7 @@ final class CursorProviderBasicTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            url: CursorAPIConstants.URLs.teams,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -70,7 +70,7 @@ final class CursorProviderBasicTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            url: CursorAPIConstants.URLs.teams,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -125,7 +125,7 @@ final class CursorProviderBasicTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -158,7 +158,7 @@ final class CursorProviderBasicTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -182,7 +182,7 @@ final class CursorProviderBasicTests: XCTestCase {
         let authURL = cursorProvider.getAuthenticationURL()
 
         // Then
-        XCTAssertEqual(authURL.absoluteString, "https://authenticator.cursor.sh/")
+        XCTAssertEqual(authURL, CursorAPIConstants.authenticationURL)
     }
 
     // MARK: - Token Extraction Tests
@@ -190,7 +190,7 @@ final class CursorProviderBasicTests: XCTestCase {
     func testExtractAuthToken_FromCookies() async {
         // Given
         let cookie = HTTPCookie(properties: [
-            .name: "WorkosCursorSessionToken",
+            .name: CursorAPIConstants.Headers.sessionCookieName,
             .value: "extracted-token-123",
             .domain: ".cursor.com",
             .path: "/",
@@ -236,36 +236,5 @@ final class CursorProviderBasicTests: XCTestCase {
 
         // Then
         XCTAssertNil(extractedToken)
-    }
-}
-
-// MARK: - Mock Settings Manager
-
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var menuBarDisplayMode: MenuBarDisplayMode = .both
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-    var updateChannel: UpdateChannel = .stable
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
     }
 }

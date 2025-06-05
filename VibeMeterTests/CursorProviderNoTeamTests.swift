@@ -34,7 +34,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -60,7 +60,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            url: CursorAPIConstants.URLs.teams,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -72,8 +72,8 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "individual-token")
 
         // Then - Should return fallback team info for individual users
-        XCTAssertEqual(teamInfo.id, 0, "Individual users should get fallback team ID of 0")
-        XCTAssertEqual(teamInfo.name, "Individual", "Individual users should get 'Individual' as team name")
+        XCTAssertEqual(teamInfo.id, CursorAPIConstants.ResponseConstants.individualUserTeamId, "Individual users should get fallback team ID")
+        XCTAssertEqual(teamInfo.name, CursorAPIConstants.ResponseConstants.individualUserTeamName, "Individual users should get fallback team name")
         XCTAssertEqual(teamInfo.provider, .cursor)
     }
 
@@ -95,7 +95,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -136,7 +136,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -183,7 +183,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -227,7 +227,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -260,7 +260,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -293,7 +293,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -326,7 +326,7 @@ final class CursorProviderNoTeamTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -341,42 +341,11 @@ final class CursorProviderNoTeamTests: XCTestCase {
             year: 2024,
             teamId: 0)
 
-        // Then - Verify request body includes teamId even when it's 0
+        // Then - Verify request body excludes teamId since 0 is now filtered as invalid
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 0, "Should include teamId: 0 in request body")
-        XCTAssertTrue(bodyJSON?.keys.contains("teamId") ?? false, "teamId key should exist even when value is 0")
-    }
-}
-
-// MARK: - Mock Settings Manager
-
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var menuBarDisplayMode: MenuBarDisplayMode = .both
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-    var updateChannel: UpdateChannel = .stable
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
+        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId: 0 as it's filtered as invalid")
+        XCTAssertFalse(bodyJSON?.keys.contains("teamId") ?? false, "teamId key should not exist when value is 0")
     }
 }

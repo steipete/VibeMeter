@@ -35,7 +35,7 @@ final class CursorProviderValidationTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -130,7 +130,7 @@ final class CursorProviderValidationTests: XCTestCase {
         let invalidJSON = Data("{ invalid json }".utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -171,7 +171,7 @@ final class CursorProviderValidationTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            url: CursorAPIConstants.URLs.teams,
             statusCode: 400,
             httpVersion: nil,
             headerFields: nil)!
@@ -195,7 +195,7 @@ final class CursorProviderValidationTests: XCTestCase {
         let errorMessage = Data("Team not found in database".utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
+            url: CursorAPIConstants.URLs.teams,
             statusCode: 500,
             httpVersion: nil,
             headerFields: nil)!
@@ -248,7 +248,7 @@ final class CursorProviderValidationTests: XCTestCase {
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/auth/me")!,
+            url: CursorAPIConstants.URLs.userInfo,
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil)!
@@ -263,44 +263,13 @@ final class CursorProviderValidationTests: XCTestCase {
         let request = try XCTUnwrap(mockURLSession.lastRequest)
 
         // Verify headers
-        XCTAssertEqual(request.value(forHTTPHeaderField: "Cookie"), "WorkosCursorSessionToken=test-auth-token")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Cookie"), CursorAPIConstants.cookieHeader(for: "test-auth-token"))
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
 
         // Verify timeout
         XCTAssertEqual(request.timeoutInterval, 30)
 
         // Verify URL
-        XCTAssertEqual(request.url?.absoluteString, "https://www.cursor.com/api/auth/me")
-    }
-}
-
-// MARK: - Mock Settings Manager
-
-private class MockSettingsManager: SettingsManagerProtocol {
-    var providerSessions: [ServiceProvider: ProviderSession] = [:]
-    var selectedCurrencyCode: String = "USD"
-    var warningLimitUSD: Double = 200
-    var upperLimitUSD: Double = 500
-    var refreshIntervalMinutes: Int = 5
-    var launchAtLoginEnabled: Bool = false
-    var menuBarDisplayMode: MenuBarDisplayMode = .both
-    var showInDock: Bool = false
-    var enabledProviders: Set<ServiceProvider> = [.cursor]
-    var updateChannel: UpdateChannel = .stable
-
-    func clearUserSessionData() {
-        providerSessions.removeAll()
-    }
-
-    func clearUserSessionData(for provider: ServiceProvider) {
-        providerSessions.removeValue(forKey: provider)
-    }
-
-    func getSession(for provider: ServiceProvider) -> ProviderSession? {
-        providerSessions[provider]
-    }
-
-    func updateSession(for provider: ServiceProvider, session: ProviderSession) {
-        providerSessions[provider] = session
+        XCTAssertEqual(request.url, CursorAPIConstants.URLs.userInfo)
     }
 }
