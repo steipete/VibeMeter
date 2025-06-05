@@ -97,9 +97,12 @@ fi
 log "Signing main executable..."
 codesign --force --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$APP_BUNDLE/Contents/MacOS/VibeMeter" || true
 
-# Sign the app bundle with deep signing and hardened runtime
-log "Signing complete app bundle..."
-codesign --force --deep --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$APP_BUNDLE"
+# Sign the app bundle WITHOUT deep signing (per Sparkle documentation)
+# "Due to different code signing requirements, please do not add --deep to 
+# OTHER_CODE_SIGN_FLAGS or from custom build scripts when signing your application. 
+# This is a common source of Sandboxing errors."
+log "Signing complete app bundle (without --deep per Sparkle requirements)..."
+codesign --force --options runtime --entitlements "$TMP_ENTITLEMENTS" --sign "$SIGN_IDENTITY" $KEYCHAIN_OPTS "$APP_BUNDLE"
 
 # Verify the signature
 log "Verifying code signature..."

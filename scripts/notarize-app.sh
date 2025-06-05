@@ -177,19 +177,38 @@ else
     log "Warning: fix-sparkle-sandbox.sh not found or not executable"
 fi
 
-# 1. Skip signing XPC services - Sparkle provides them already signed
-# According to Sparkle docs: "Due to different code signing requirements, 
-# please do not add --deep to OTHER_CODE_SIGN_FLAGS or from custom build 
-# scripts when signing your application. This is a common source of Sandboxing errors."
-log "Skipping XPC services (Sparkle provides them pre-signed)..."
+# 1. Sign XPC services manually per Sparkle documentation
+# https://sparkle-project.org/documentation/sandboxing/#code-signing
+log "Signing Sparkle XPC services manually..."
+if [ -f "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc" ]; then
+    codesign -f -s "$SIGN_IDENTITY" -o runtime "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+    log "Signed Installer.xpc"
+fi
+if [ -f "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc" ]; then
+    # For Sparkle versions >= 2.6, preserve entitlements
+    codesign -f -s "$SIGN_IDENTITY" -o runtime --preserve-metadata=entitlements "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+    log "Signed Downloader.xpc"
+fi
+
+# Sign other Sparkle components per documentation
+if [ -f "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate" ]; then
+    codesign -f -s "$SIGN_IDENTITY" -o runtime "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+    log "Signed Autoupdate"
+fi
+if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app" ]; then
+    codesign -f -s "$SIGN_IDENTITY" -o runtime "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+    log "Signed Updater.app"
+fi
+# Finally sign the framework itself
+codesign -f -s "$SIGN_IDENTITY" -o runtime "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+log "Signed Sparkle.framework"
 
 # 2. Handle Sparkle framework with comprehensive signing
 SPARKLE_FRAMEWORK="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 if [ -d "$SPARKLE_FRAMEWORK" ]; then
     log "Found Sparkle framework, performing comprehensive signing..."
     
-    # Skip signing XPC services in Sparkle - they must keep their original signatures
-    log "Not re-signing Sparkle XPC services (keeping original signatures)"
+    # XPC services are already signed above per Sparkle documentation
     
     # Sign standalone executables in Sparkle
     find "$SPARKLE_FRAMEWORK" -type f -perm +111 -not -path "*/MacOS/*" -not -path "*/XPCServices/*" | while read executable; do
