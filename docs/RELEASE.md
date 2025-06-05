@@ -50,11 +50,15 @@ git commit -m "Bump version to X.X.X"
 
 The automated script will:
 - ✅ Run pre-flight checks
+- ✅ Automatically regenerate Xcode project if needed
 - ✅ Build the app (with xcbeautify for clean output)
+- ✅ Commit Xcode project changes if generated
 - ✅ Sign and notarize
 - ✅ Create DMG
+- ✅ Handle existing tags with interactive prompt
 - ✅ Create GitHub release
-- ✅ Update appcast
+- ✅ Update appcast with proper signature
+- ✅ Verify appcast was updated correctly
 - ✅ Commit and push changes
 
 ## 🛠️ Utility Scripts

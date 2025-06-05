@@ -78,6 +78,14 @@ echo "📋 Step 2/7: Generating Xcode project..."
 rm -rf "$PROJECT_ROOT/build"
 "$SCRIPT_DIR/generate-xcproj.sh"
 
+# Check if Xcode project was modified and commit if needed
+if ! git diff --quiet "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"; then
+    echo "📝 Committing Xcode project changes..."
+    git add "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"
+    git commit -m "Update Xcode project for release build"
+    echo "✅ Xcode project changes committed"
+fi
+
 # Step 3: Build the app
 echo ""
 echo "📋 Step 3/7: Building application..."
@@ -122,6 +130,34 @@ echo "✅ DMG created: $DMG_NAME"
 echo ""
 echo "📋 Step 6/7: Creating GitHub release..."
 
+# Check if tag already exists
+if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+    echo "⚠️  Tag $TAG_NAME already exists!"
+    echo ""
+    echo "What would you like to do?"
+    echo "  1) Delete the existing tag and create a new one"
+    echo "  2) Cancel the release"
+    echo ""
+    read -p "Enter your choice (1 or 2): " choice
+    
+    case $choice in
+        1)
+            echo "🗑️  Deleting existing tag..."
+            git tag -d "$TAG_NAME"
+            git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
+            echo "✅ Existing tag deleted"
+            ;;
+        2)
+            echo "❌ Release cancelled"
+            exit 1
+            ;;
+        *)
+            echo "❌ Invalid choice. Release cancelled"
+            exit 1
+            ;;
+    esac
+fi
+
 # Create and push tag
 echo "🏷️  Creating tag $TAG_NAME..."
 git tag -a "$TAG_NAME" -m "Release $RELEASE_VERSION"
@@ -164,17 +200,35 @@ else
     APPCAST_FILE="$PROJECT_ROOT/appcast-prerelease.xml"
 fi
 
-# Use the update-appcast.sh script
-"$SCRIPT_DIR/update-appcast.sh" "$RELEASE_VERSION" "$BUILD_NUMBER" "$DMG_PATH"
+# Generate appcast using the more reliable generate-appcast.sh
+"$SCRIPT_DIR/generate-appcast.sh"
+
+# Verify the appcast was updated
+if [[ "$RELEASE_TYPE" == "stable" ]]; then
+    if ! grep -q "<sparkle:version>$BUILD_NUMBER</sparkle:version>" "$PROJECT_ROOT/appcast.xml"; then
+        echo "⚠️  Appcast may not have been updated correctly. Running manual update..."
+        "$SCRIPT_DIR/update-appcast.sh" "$RELEASE_VERSION" "$BUILD_NUMBER" "$DMG_PATH" || true
+    fi
+else
+    if ! grep -q "<sparkle:version>$BUILD_NUMBER</sparkle:version>" "$PROJECT_ROOT/appcast-prerelease.xml"; then
+        echo "⚠️  Pre-release appcast may not have been updated correctly. Running manual update..."
+        "$SCRIPT_DIR/update-appcast.sh" "$RELEASE_VERSION" "$BUILD_NUMBER" "$DMG_PATH" || true
+    fi
+fi
 
 echo "✅ Appcast updated"
 
-# Commit and push appcast
+# Commit and push appcast files
 echo ""
 echo "📤 Committing and pushing appcast..."
-git add "$APPCAST_FILE"
-git commit -m "Update appcast for $RELEASE_VERSION"
-git push origin main
+git add "$PROJECT_ROOT/appcast.xml" "$PROJECT_ROOT/appcast-prerelease.xml" 2>/dev/null || true
+if ! git diff --cached --quiet; then
+    git commit -m "Update appcast for $RELEASE_VERSION"
+    git push origin main
+    echo "✅ Appcast changes pushed"
+else
+    echo "ℹ️  No appcast changes to commit"
+fi
 
 echo ""
 echo "🎉 Release Complete!"
