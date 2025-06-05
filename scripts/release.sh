@@ -97,23 +97,15 @@ fi
 echo ""
 echo -e "${BLUE}📋 Step 3/7: Building application...${NC}"
 
-# For pre-release builds, add a flag to Info.plist
+# For pre-release builds, set the environment variable
 if [[ "$RELEASE_TYPE" != "stable" ]]; then
     echo "📝 Marking build as pre-release..."
-    # Add IS_PRERELEASE_BUILD to Project.swift temporarily
-    sed -i '' '/MARKETING_VERSION/a\
-            "IS_PRERELEASE_BUILD": true,
-' "$PROJECT_ROOT/Project.swift"
+    export IS_PRERELEASE_BUILD=YES
+else
+    export IS_PRERELEASE_BUILD=NO
 fi
 
 "$SCRIPT_DIR/build.sh" --configuration Release
-
-# Clean up the pre-release flag after building
-if [[ "$RELEASE_TYPE" != "stable" ]]; then
-    echo "📝 Cleaning up pre-release flag..."
-    # Only remove the temporarily added line with "true" value
-    sed -i '' '/IS_PRERELEASE_BUILD.*true/d' "$PROJECT_ROOT/Project.swift"
-fi
 
 # Verify build
 APP_PATH="$PROJECT_ROOT/build/Build/Products/Release/VibeMeter.app"
