@@ -6,6 +6,23 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
+            <title>VibeMeter 1.0.0-beta.9</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.9/VibeMeter-1.0.0-beta.9.dmg</link>
+            <sparkle:version>204</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.9</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 1.0.0-beta.9</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.9 (build 204)</p></p>
+            ]]></description>
+            <pubDate>Thu, 05 Jun 2025 08:43:34 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.9/VibeMeter-1.0.0-beta.9.dmg"
+                length="5623327"
+                type="application/octet-stream"
+                sparkle:edSignature="7tMqniuN56B4LA5YjeC+4/Trovqj9qxVtMcFlLBRYsl4G3n0thWcD1gLSDLaC1mHYgc2cHBxpZnc/lj9BL0VDg=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
             <title>VibeMeter 1.0.0-beta.8</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.8/VibeMeter-1.0.0-beta.8.dmg</link>
             <sparkle:version>203</sparkle:version>
