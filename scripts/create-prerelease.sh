@@ -71,15 +71,8 @@ rm -rf "$PROJECT_ROOT/build"
 
 # Check existing releases for build number conflicts
 echo "🔍 Checking for build number conflicts..."
-EXISTING_BUILDS=$(gh release list --limit 100 2>/dev/null | while read -r line; do
-    RELEASE_TAG=$(echo "$line" | awk '{print $3}')
-    if [[ -n "$RELEASE_TAG" ]]; then
-        # Try to download and check the DMG
-        DMG_URL="https://github.com/steipete/VibeMeter/releases/download/$RELEASE_TAG/VibeMeter-*.dmg"
-        # This is just for display - we'll check appcast for actual build numbers
-        echo "   Checking release: $RELEASE_TAG"
-    fi
-done)
+# Note: gh release list returns empty when no releases exist, which is fine
+EXISTING_BUILDS=""
 
 # Parse appcast files for existing build numbers
 USED_BUILD_NUMBERS=""
