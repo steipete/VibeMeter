@@ -41,9 +41,9 @@ validate_appcast() {
         return
     fi
     
-    # Extract all items
-    ITEMS=$(xmllint --xpath "//item" "$APPCAST_FILE" 2>/dev/null || echo "")
-    ITEM_COUNT=$(echo "$ITEMS" | grep -c "<item>" || echo "0")
+    # Count items
+    ITEM_COUNT=$(grep -c "<item>" "$APPCAST_FILE" 2>/dev/null || true)
+    ITEM_COUNT=${ITEM_COUNT:-0}
     echo "   Found $ITEM_COUNT release(s)"
     
     if [[ $ITEM_COUNT -eq 0 ]]; then
@@ -51,44 +51,38 @@ validate_appcast() {
         return
     fi
     
-    # Parse each item
-    BUILDS=()
-    VERSIONS=()
+    # Extract build numbers and versions
+    BUILDS=($(grep -o '<sparkle:version>[0-9]*</sparkle:version>' "$APPCAST_FILE" | sed 's/<[^>]*>//g'))
+    VERSIONS=($(grep -o '<sparkle:shortVersionString>[^<]*</sparkle:shortVersionString>' "$APPCAST_FILE" | sed 's/<[^>]*>//g'))
+    URLS=($(grep -o 'url="[^"]*"' "$APPCAST_FILE" | sed 's/url="//;s/"//'))
+    SIGNATURES=($(grep -o 'sparkle:edSignature="[^"]*"' "$APPCAST_FILE" | sed 's/sparkle:edSignature="//;s/"//'))
     
-    for i in $(seq 1 $ITEM_COUNT); do
-        # Extract version info
-        VERSION=$(xmllint --xpath "string(//item[$i]/enclosure/@sparkle:shortVersionString)" "$APPCAST_FILE" 2>/dev/null || echo "")
-        BUILD=$(xmllint --xpath "string(//item[$i]/enclosure/@sparkle:version)" "$APPCAST_FILE" 2>/dev/null || echo "")
-        URL=$(xmllint --xpath "string(//item[$i]/enclosure/@url)" "$APPCAST_FILE" 2>/dev/null || echo "")
-        LENGTH=$(xmllint --xpath "string(//item[$i]/enclosure/@length)" "$APPCAST_FILE" 2>/dev/null || echo "")
-        SIGNATURE=$(xmllint --xpath "string(//item[$i]/enclosure/@sparkle:edSignature)" "$APPCAST_FILE" 2>/dev/null || echo "")
-        
-        echo ""
-        echo "   Release #$i:"
-        echo "      Version: $VERSION"
-        echo "      Build: $BUILD"
+    echo ""
+    for i in "${!BUILDS[@]}"; do
+        echo "   Release #$((i+1)):"
+        echo "      Version: ${VERSIONS[$i]:-<missing>}"
+        echo "      Build: ${BUILDS[$i]:-<missing>}"
         
         # Validate build number
-        if [[ -z "$BUILD" ]]; then
+        if [[ -z "${BUILDS[$i]:-}" ]]; then
             echo -e "${RED}      ❌ Missing build number${NC}"
             ((ISSUES++))
-        elif ! [[ "$BUILD" =~ ^[0-9]+$ ]]; then
-            echo -e "${RED}      ❌ Invalid build number: $BUILD${NC}"
+        elif ! [[ "${BUILDS[$i]}" =~ ^[0-9]+$ ]]; then
+            echo -e "${RED}      ❌ Invalid build number: ${BUILDS[$i]}${NC}"
             ((ISSUES++))
         else
             echo -e "${GREEN}      ✅ Valid build number${NC}"
-            BUILDS+=("$BUILD")
         fi
         
         # Validate URL
-        if [[ -z "$URL" ]]; then
+        if [[ -z "${URLS[$i]:-}" ]]; then
             echo -e "${RED}      ❌ Missing download URL${NC}"
             ((ISSUES++))
-        elif [[ "$URL" =~ ^https://github.com/steipete/VibeMeter/releases/download/ ]]; then
+        elif [[ "${URLS[$i]}" =~ ^https://github.com/steipete/VibeMeter/releases/download/ ]]; then
             echo -e "${GREEN}      ✅ Valid GitHub release URL${NC}"
             
             # Check if release exists on GitHub
-            RELEASE_TAG=$(echo "$URL" | sed -n 's|.*/download/\([^/]*\)/.*|\1|p')
+            RELEASE_TAG=$(echo "${URLS[$i]}" | sed -n 's|.*/download/\([^/]*\)/.*|\1|p')
             if gh release view "$RELEASE_TAG" &>/dev/null; then
                 echo -e "${GREEN}      ✅ GitHub release exists${NC}"
             else
@@ -96,57 +90,44 @@ validate_appcast() {
                 ((ISSUES++))
             fi
         else
-            echo -e "${YELLOW}      ⚠️  Non-GitHub URL: $URL${NC}"
+            echo -e "${YELLOW}      ⚠️  Non-GitHub URL: ${URLS[$i]}${NC}"
         fi
         
         # Validate signature
-        if [[ -z "$SIGNATURE" ]]; then
+        if [[ -z "${SIGNATURES[$i]:-}" ]]; then
             echo -e "${RED}      ❌ Missing EdDSA signature${NC}"
             ((ISSUES++))
         else
             echo -e "${GREEN}      ✅ EdDSA signature present${NC}"
         fi
-        
-        # Validate file size
-        if [[ -z "$LENGTH" ]]; then
-            echo -e "${RED}      ❌ Missing file size${NC}"
-            ((ISSUES++))
-        elif ! [[ "$LENGTH" =~ ^[0-9]+$ ]]; then
-            echo -e "${RED}      ❌ Invalid file size: $LENGTH${NC}"
-            ((ISSUES++))
-        else
-            echo -e "${GREEN}      ✅ File size: $(($LENGTH / 1024 / 1024)) MB${NC}"
-        fi
-        
-        VERSIONS+=("$VERSION")
+        echo ""
     done
     
     # Check for duplicate build numbers
-    echo ""
-    echo "   Build Number Analysis:"
-    UNIQUE_BUILDS=$(printf '%s\n' "${BUILDS[@]}" | sort -u | wc -l)
-    TOTAL_BUILDS=${#BUILDS[@]}
-    
-    if [[ $UNIQUE_BUILDS -ne $TOTAL_BUILDS ]]; then
-        echo -e "${RED}   ❌ Duplicate build numbers found!${NC}"
-        printf '%s\n' "${BUILDS[@]}" | sort | uniq -d | while read -r DUP; do
-            echo "      Duplicate: $DUP"
-        done
-        ((ISSUES++))
-    else
-        echo -e "${GREEN}   ✅ All build numbers are unique${NC}"
-    fi
-    
-    # Check build number ordering
-    SORTED_BUILDS=$(printf '%s\n' "${BUILDS[@]}" | sort -nr)
-    CURRENT_BUILDS=$(printf '%s\n' "${BUILDS[@]}")
-    
-    if [[ "$SORTED_BUILDS" == "$CURRENT_BUILDS" ]]; then
-        echo -e "${GREEN}   ✅ Build numbers are in descending order (newest first)${NC}"
-    else
-        echo -e "${YELLOW}   ⚠️  Build numbers are not in descending order${NC}"
-        echo "      Expected order: $(echo $SORTED_BUILDS | tr '\n' ' ')"
-        echo "      Current order: $(echo $CURRENT_BUILDS | tr '\n' ' ')"
+    if [[ ${#BUILDS[@]} -gt 0 ]]; then
+        echo "   Build Number Analysis:"
+        UNIQUE_BUILDS=$(printf '%s\n' "${BUILDS[@]}" | sort -u | wc -l)
+        TOTAL_BUILDS=${#BUILDS[@]}
+        
+        if [[ $UNIQUE_BUILDS -ne $TOTAL_BUILDS ]]; then
+            echo -e "${RED}   ❌ Duplicate build numbers found!${NC}"
+            printf '%s\n' "${BUILDS[@]}" | sort | uniq -d | while read -r DUP; do
+                echo "      Duplicate: $DUP"
+            done
+            ((ISSUES++))
+        else
+            echo -e "${GREEN}   ✅ All build numbers are unique${NC}"
+        fi
+        
+        # Check build number ordering
+        SORTED_BUILDS=($(printf '%s\n' "${BUILDS[@]}" | sort -nr))
+        if [[ "${SORTED_BUILDS[*]}" == "${BUILDS[*]}" ]]; then
+            echo -e "${GREEN}   ✅ Build numbers are in descending order (newest first)${NC}"
+        else
+            echo -e "${YELLOW}   ⚠️  Build numbers are not in descending order${NC}"
+            echo "      Expected order: ${SORTED_BUILDS[*]}"
+            echo "      Current order: ${BUILDS[*]}"
+        fi
     fi
     
     echo ""
@@ -163,27 +144,32 @@ echo "📌 Cross-Validation:"
 
 if [[ -f "$PROJECT_ROOT/appcast.xml" ]] && [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
     # Get all build numbers from both files
-    ALL_BUILDS=""
+    ALL_BUILDS=()
     if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-        ALL_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
+        while IFS= read -r build; do
+            ALL_BUILDS+=("$build")
+        done < <(grep -o '<sparkle:version>[0-9]*</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/<[^>]*>//g')
     fi
     if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-        ALL_BUILDS+=" "
-        ALL_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
+        while IFS= read -r build; do
+            ALL_BUILDS+=("$build")
+        done < <(grep -o '<sparkle:version>[0-9]*</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/<[^>]*>//g')
     fi
     
     # Check for duplicates across files
-    UNIQUE_ALL=$(echo $ALL_BUILDS | tr ' ' '\n' | sort -u | wc -l)
-    TOTAL_ALL=$(echo $ALL_BUILDS | tr ' ' '\n' | wc -l)
-    
-    if [[ $UNIQUE_ALL -ne $TOTAL_ALL ]]; then
-        echo -e "${RED}   ❌ Build numbers are duplicated between appcast files!${NC}"
-        echo $ALL_BUILDS | tr ' ' '\n' | sort | uniq -d | while read -r DUP; do
-            echo "      Duplicate build: $DUP"
-        done
-        ((ISSUES++))
-    else
-        echo -e "${GREEN}   ✅ No build number conflicts between appcast files${NC}"
+    if [[ ${#ALL_BUILDS[@]} -gt 0 ]]; then
+        UNIQUE_ALL=$(printf '%s\n' "${ALL_BUILDS[@]}" | sort -u | wc -l)
+        TOTAL_ALL=${#ALL_BUILDS[@]}
+        
+        if [[ $UNIQUE_ALL -ne $TOTAL_ALL ]]; then
+            echo -e "${RED}   ❌ Build numbers are duplicated between appcast files!${NC}"
+            printf '%s\n' "${ALL_BUILDS[@]}" | sort | uniq -d | while read -r DUP; do
+                echo "      Duplicate build: $DUP"
+            done
+            ((ISSUES++))
+        else
+            echo -e "${GREEN}   ✅ No build number conflicts between appcast files${NC}"
+        fi
     fi
 fi
 

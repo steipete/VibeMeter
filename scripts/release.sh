@@ -7,13 +7,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
 # Parse arguments
 RELEASE_TYPE="${1:-}"
 PRERELEASE_NUMBER="${2:-}"
 
 # Validate arguments
 if [[ -z "$RELEASE_TYPE" ]]; then
-    echo "❌ Error: Release type required"
+    echo -e "${RED}❌ Error: Release type required${NC}"
     echo ""
     echo "Usage:"
     echo "  $0 stable             # Create stable release"
@@ -31,26 +38,26 @@ fi
 # For pre-releases, validate number
 if [[ "$RELEASE_TYPE" != "stable" ]]; then
     if [[ -z "$PRERELEASE_NUMBER" ]]; then
-        echo "❌ Error: Pre-release number required for $RELEASE_TYPE"
+        echo -e "${RED}❌ Error: Pre-release number required for $RELEASE_TYPE${NC}"
         echo "Example: $0 $RELEASE_TYPE 1"
         exit 1
     fi
 fi
 
-echo "🚀 VibeMeter Automated Release"
+echo -e "${BLUE}🚀 VibeMeter Automated Release${NC}"
 echo "=============================="
 echo ""
 
 # Step 1: Run pre-flight check
-echo "📋 Step 1/7: Running pre-flight check..."
+echo -e "${BLUE}📋 Step 1/7: Running pre-flight check...${NC}"
 if ! "$SCRIPT_DIR/preflight-check.sh"; then
     echo ""
-    echo "❌ Pre-flight check failed. Please fix the issues above."
+    echo -e "${RED}❌ Pre-flight check failed. Please fix the issues above.${NC}"
     exit 1
 fi
 
 echo ""
-echo "✅ Pre-flight check passed!"
+echo -e "${GREEN}✅ Pre-flight check passed!${NC}"
 echo ""
 
 # Get version info
@@ -74,7 +81,7 @@ echo "   Tag: $TAG_NAME"
 echo ""
 
 # Step 2: Clean and generate project
-echo "📋 Step 2/7: Generating Xcode project..."
+echo -e "${BLUE}📋 Step 2/7: Generating Xcode project...${NC}"
 rm -rf "$PROJECT_ROOT/build"
 "$SCRIPT_DIR/generate-xcproj.sh"
 
@@ -82,88 +89,97 @@ rm -rf "$PROJECT_ROOT/build"
 if ! git diff --quiet "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"; then
     echo "📝 Committing Xcode project changes..."
     git add "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"
-    git commit -m "Update Xcode project for release build"
-    echo "✅ Xcode project changes committed"
+    git commit -m "Update Xcode project for build $BUILD_NUMBER"
+    echo -e "${GREEN}✅ Xcode project changes committed${NC}"
 fi
 
 # Step 3: Build the app
 echo ""
-echo "📋 Step 3/7: Building application..."
+echo -e "${BLUE}📋 Step 3/7: Building application...${NC}"
 "$SCRIPT_DIR/build.sh" --configuration Release
 
 # Verify build
 APP_PATH="$PROJECT_ROOT/build/Build/Products/Release/VibeMeter.app"
 if [[ ! -d "$APP_PATH" ]]; then
-    echo "❌ Build failed - app not found"
+    echo -e "${RED}❌ Build failed - app not found${NC}"
     exit 1
 fi
 
 # Verify build number
 BUILT_VERSION=$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleVersion)
 if [[ "$BUILT_VERSION" != "$BUILD_NUMBER" ]]; then
-    echo "❌ Build number mismatch! Expected $BUILD_NUMBER but got $BUILT_VERSION"
+    echo -e "${RED}❌ Build number mismatch! Expected $BUILD_NUMBER but got $BUILT_VERSION${NC}"
     exit 1
 fi
 
-echo "✅ Build complete"
-
-# Step 3.5: Sparkle sandbox fix is already applied by build.sh for Release builds
-# Skipping to avoid duplicate application which causes "unsealed contents" errors
+echo -e "${GREEN}✅ Build complete${NC}"
 
 # Step 4: Sign and notarize
 echo ""
-echo "📋 Step 4/7: Signing and notarizing..."
+echo -e "${BLUE}📋 Step 4/7: Signing and notarizing...${NC}"
 "$SCRIPT_DIR/sign-and-notarize.sh" --sign-and-notarize
 
 # Step 5: Create DMG
 echo ""
-echo "📋 Step 5/7: Creating DMG..."
+echo -e "${BLUE}📋 Step 5/7: Creating DMG...${NC}"
 DMG_NAME="VibeMeter-$RELEASE_VERSION.dmg"
 DMG_PATH="$PROJECT_ROOT/build/$DMG_NAME"
 "$SCRIPT_DIR/create-dmg.sh" "$APP_PATH" "$DMG_PATH"
 
 if [[ ! -f "$DMG_PATH" ]]; then
-    echo "❌ DMG creation failed"
+    echo -e "${RED}❌ DMG creation failed${NC}"
     exit 1
 fi
 
-echo "✅ DMG created: $DMG_NAME"
+echo -e "${GREEN}✅ DMG created: $DMG_NAME${NC}"
 
 # Step 6: Create GitHub release
 echo ""
-echo "📋 Step 6/7: Creating GitHub release..."
+echo -e "${BLUE}📋 Step 6/7: Creating GitHub release...${NC}"
 
 # Check if tag already exists
 if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-    echo "⚠️  Tag $TAG_NAME already exists!"
-    echo ""
-    echo "What would you like to do?"
-    echo "  1) Delete the existing tag and create a new one"
-    echo "  2) Cancel the release"
-    echo ""
-    read -p "Enter your choice (1 or 2): " choice
+    echo -e "${YELLOW}⚠️  Tag $TAG_NAME already exists!${NC}"
     
-    case $choice in
-        1)
-            echo "🗑️  Deleting existing tag..."
-            git tag -d "$TAG_NAME"
-            git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
-            echo "✅ Existing tag deleted"
-            ;;
-        2)
-            echo "❌ Release cancelled"
-            exit 1
-            ;;
-        *)
-            echo "❌ Invalid choice. Release cancelled"
-            exit 1
-            ;;
-    esac
+    # Check if a release exists for this tag
+    if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+        echo ""
+        echo "A GitHub release already exists for this tag."
+        echo "What would you like to do?"
+        echo "  1) Delete the existing release and tag, then create new ones"
+        echo "  2) Cancel the release"
+        echo ""
+        read -p "Enter your choice (1 or 2): " choice
+        
+        case $choice in
+            1)
+                echo "🗑️  Deleting existing release and tag..."
+                gh release delete "$TAG_NAME" --yes 2>/dev/null || true
+                git tag -d "$TAG_NAME"
+                git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
+                echo -e "${GREEN}✅ Existing release and tag deleted${NC}"
+                ;;
+            2)
+                echo -e "${RED}❌ Release cancelled${NC}"
+                exit 1
+                ;;
+            *)
+                echo -e "${RED}❌ Invalid choice. Release cancelled${NC}"
+                exit 1
+                ;;
+        esac
+    else
+        # Tag exists but no release - just delete the tag
+        echo "🗑️  Deleting existing tag..."
+        git tag -d "$TAG_NAME"
+        git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
+        echo -e "${GREEN}✅ Existing tag deleted${NC}"
+    fi
 fi
 
 # Create and push tag
 echo "🏷️  Creating tag $TAG_NAME..."
-git tag -a "$TAG_NAME" -m "Release $RELEASE_VERSION"
+git tag -a "$TAG_NAME" -m "Release $RELEASE_VERSION (build $BUILD_NUMBER)"
 git push origin "$TAG_NAME"
 
 # Create release
@@ -183,43 +199,28 @@ else
         "$DMG_PATH"
 fi
 
-echo "✅ GitHub release created"
+echo -e "${GREEN}✅ GitHub release created${NC}"
 
 # Step 7: Update appcast
 echo ""
-echo "📋 Step 7/7: Updating appcast..."
+echo -e "${BLUE}📋 Step 7/7: Updating appcast...${NC}"
 
-# Generate EdDSA signature
-echo "🔐 Generating EdDSA signature..."
-export PATH="$HOME/.local/bin:$PATH"
-SIGNATURE_OUTPUT=$(sign_update "$DMG_PATH" -p)
-ED_SIGNATURE=$(echo "$SIGNATURE_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | sed 's/sparkle:edSignature="//;s/"$//')
-FILE_SIZE=$(stat -f%z "$DMG_PATH")
-
-# Update appropriate appcast
-if [[ "$RELEASE_TYPE" == "stable" ]]; then
-    APPCAST_FILE="$PROJECT_ROOT/appcast.xml"
-else
-    APPCAST_FILE="$PROJECT_ROOT/appcast-prerelease.xml"
-fi
-
-# Generate appcast using the more reliable generate-appcast.sh
+# Generate appcast
+echo "🔐 Generating appcast with EdDSA signatures..."
 "$SCRIPT_DIR/generate-appcast.sh"
 
 # Verify the appcast was updated
 if [[ "$RELEASE_TYPE" == "stable" ]]; then
     if ! grep -q "<sparkle:version>$BUILD_NUMBER</sparkle:version>" "$PROJECT_ROOT/appcast.xml"; then
-        echo "⚠️  Appcast may not have been updated correctly. Running manual update..."
-        "$SCRIPT_DIR/update-appcast.sh" "$RELEASE_VERSION" "$BUILD_NUMBER" "$DMG_PATH" || true
+        echo -e "${YELLOW}⚠️  Appcast may not have been updated. Please check manually.${NC}"
     fi
 else
     if ! grep -q "<sparkle:version>$BUILD_NUMBER</sparkle:version>" "$PROJECT_ROOT/appcast-prerelease.xml"; then
-        echo "⚠️  Pre-release appcast may not have been updated correctly. Running manual update..."
-        "$SCRIPT_DIR/update-appcast.sh" "$RELEASE_VERSION" "$BUILD_NUMBER" "$DMG_PATH" || true
+        echo -e "${YELLOW}⚠️  Pre-release appcast may not have been updated. Please check manually.${NC}"
     fi
 fi
 
-echo "✅ Appcast updated"
+echo -e "${GREEN}✅ Appcast updated${NC}"
 
 # Commit and push appcast files
 echo ""
@@ -228,16 +229,25 @@ git add "$PROJECT_ROOT/appcast.xml" "$PROJECT_ROOT/appcast-prerelease.xml" 2>/de
 if ! git diff --cached --quiet; then
     git commit -m "Update appcast for $RELEASE_VERSION"
     git push origin main
-    echo "✅ Appcast changes pushed"
+    echo -e "${GREEN}✅ Appcast changes pushed${NC}"
 else
     echo "ℹ️  No appcast changes to commit"
 fi
 
+# Optional: Verify appcast
 echo ""
-echo "🎉 Release Complete!"
+echo "🔍 Verifying appcast files..."
+if "$SCRIPT_DIR/verify-appcast.sh" | grep -q "All appcast checks passed"; then
+    echo -e "${GREEN}✅ Appcast verification passed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Some appcast issues detected. Please review the output above.${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}🎉 Release Complete!${NC}"
 echo "=================="
 echo ""
-echo "✅ Successfully released VibeMeter $RELEASE_VERSION"
+echo -e "${GREEN}✅ Successfully released VibeMeter $RELEASE_VERSION${NC}"
 echo ""
 echo "Release details:"
 echo "  - Version: $RELEASE_VERSION"
@@ -252,3 +262,9 @@ if [[ "$RELEASE_TYPE" != "stable" ]]; then
 else
     echo "📝 Note: This is a stable release. All users will receive this update."
 fi
+
+echo ""
+echo "💡 Next steps:"
+echo "  - Test the update from an older version"
+echo "  - Monitor Console.app for any update errors"
+echo "  - Update release notes on GitHub if needed"

@@ -191,11 +191,12 @@ else
     check_fail "Sparkle public key not found in Project.swift"
 fi
 
-# Check private key
-if [[ -f "$PROJECT_ROOT/private/sparkle_private_key" ]]; then
-    check_pass "Sparkle private key found"
+# Check private key in keychain
+export PATH="$HOME/.local/bin:$PATH"
+if command -v generate_keys &> /dev/null && generate_keys -p &>/dev/null; then
+    check_pass "Sparkle private key found in Keychain"
 else
-    check_fail "Sparkle private key not found at private/sparkle_private_key"
+    check_fail "Sparkle private key not found in Keychain - run: generate_keys"
 fi
 
 echo ""
@@ -237,8 +238,8 @@ if [[ "$CHECKS_PASSED" == true ]]; then
     echo "  Build: $BUILD_NUMBER"
     echo ""
     echo "Next steps:"
-    echo "  - For beta: ./scripts/release-auto.sh beta 1"
-    echo "  - For stable: ./scripts/release-auto.sh stable"
+    echo "  - For beta: ./scripts/release.sh beta 1"
+    echo "  - For stable: ./scripts/release.sh stable"
     exit 0
 else
     echo -e "${RED}❌ Some checks failed. Please fix the issues above.${NC}"
