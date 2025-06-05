@@ -8,6 +8,10 @@ set -eo pipefail
 # Configuration
 # ============================================================================
 
+# Get the script and project directories
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 log() {
     echo "[$(date "+%Y-%m-%d %H:%M:%S")] $1"
 }
@@ -97,7 +101,16 @@ EOF
 MAIN_ENTITLEMENTS="/tmp/main_entitlements.plist"
 XPC_ENTITLEMENTS="/tmp/xpc_entitlements.plist"
 
-create_entitlements "$MAIN_ENTITLEMENTS" "false"
+# Use actual VibeMeter entitlements for the main app
+if [ -f "VibeMeter/VibeMeter.entitlements" ]; then
+    cp "VibeMeter/VibeMeter.entitlements" "$MAIN_ENTITLEMENTS"
+elif [ -f "$PROJECT_ROOT/VibeMeter/VibeMeter.entitlements" ]; then
+    cp "$PROJECT_ROOT/VibeMeter/VibeMeter.entitlements" "$MAIN_ENTITLEMENTS"
+else
+    log "Warning: VibeMeter.entitlements not found, using default entitlements"
+    create_entitlements "$MAIN_ENTITLEMENTS" "false"
+fi
+
 create_entitlements "$XPC_ENTITLEMENTS" "true"
 
 # ============================================================================
