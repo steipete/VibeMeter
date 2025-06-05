@@ -22,21 +22,23 @@ This validates your environment is ready for release.
 ### Step 2: Create the Release
 ```bash
 # For stable releases:
-./scripts/release-auto.sh stable
+./scripts/release.sh stable
 
 # For pre-releases (beta, alpha, rc):
-./scripts/release-auto.sh beta 1    # Creates version-beta.1
-./scripts/release-auto.sh alpha 2   # Creates version-alpha.2
-./scripts/release-auto.sh rc 1      # Creates version-rc.1
+./scripts/release.sh beta 1    # Creates version-beta.1
+./scripts/release.sh alpha 2   # Creates version-alpha.2
+./scripts/release.sh rc 1      # Creates version-rc.1
 ```
 
+**IMPORTANT**: The release script does NOT automatically increment build numbers. You must manually update the build number in Project.swift before running the script, or it will fail the pre-flight check.
+
 The script will:
-1. Automatically increment the build number
-2. Update Project.swift
+1. Validate build number is unique and incrementing
+2. Generate Xcode project
 3. Build, sign, and notarize the app
 4. Create a DMG
 5. Publish to GitHub
-6. Update the appcast files
+6. Update the appcast files with EdDSA signatures
 7. Commit and push all changes
 
 ### Step 3: Verify Success
