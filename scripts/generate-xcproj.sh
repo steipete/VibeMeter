@@ -12,10 +12,9 @@
 #   ./scripts/generate-xcproj.sh
 #
 # FEATURES:
-#   - Quits Xcode before generation (to avoid conflicts)
-#   - Runs Tuist project generation
+#   - Runs Tuist project generation silently (no Xcode restart)
 #   - Applies Swift 6 Sendable compliance patches
-#   - Opens the generated workspace in Xcode
+#   - Allows regeneration while Xcode is open
 #
 # DEPENDENCIES:
 #   - Tuist (project generation tool)
@@ -41,10 +40,7 @@ set -e
 # Change to the project directory
 cd "$(dirname "$0")/.."
 
-if [[ "${CI:-}" != "true" ]]; then
-    echo "Quitting Xcode..."
-    osascript -e 'tell application "Xcode" to quit' 2>/dev/null || true
-fi
+# Skip Xcode quit/restart to allow silent regeneration while Xcode is open
 
 echo "Generating Xcode project with Tuist..."
 tuist generate --no-open
@@ -78,9 +74,6 @@ find . -path "*/Derived/InfoPlists+*" -name "*.swift" | while read -r file; do
     patch_info_plist_accessors "$file"
 done
 
-if [[ "${CI:-}" != "true" ]]; then
-    echo "Opening Xcode workspace..."
-    open VibeMeter.xcworkspace
-fi
+# Skip opening workspace to allow silent regeneration
 
 echo "✅ Xcode project generated and patched successfully!"
