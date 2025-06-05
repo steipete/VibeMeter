@@ -14,7 +14,10 @@ actor CursorAPIClient {
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .useDefaultKeys
+        // Automatically convert keys like `num_requests` to `numRequests` so the
+        // models can seamlessly decode both snake_case and camelCase formats
+        // returned by the Cursor API.
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
 

@@ -35,13 +35,25 @@ enum CursorDataTransformer {
         logger.info("Transforming invoice response for \(month)/\(year)")
         logger.debug("Invoice response items count: \(response.items?.count ?? 0)")
 
-        let genericItems: [ProviderInvoiceItem] = response.items?.map { item in
-            logger.debug("Processing invoice item: \(item.description) - \(item.cents) cents")
-            return ProviderInvoiceItem(
-                cents: item.cents,
-                description: item.description,
-                provider: .cursor)
-        } ?? []
+        // Filter out negative amounts (e.g. "Mid-month usage paid" credit lines) so
+        // current-month spending reflects *actual* cost rather than cost minus
+        // payments already captured on a separate invoice.
+
+        let genericItems: [ProviderInvoiceItem] = response.items?
+            .filter { item in
+                if item.cents < 0 {
+                    logger.info("Skipping credit/negative invoice line: \(item.description) – \(item.cents) cents")
+                    return false
+                }
+                return true
+            }
+            .map { item in
+                logger.debug("Processing invoice item: \(item.description) - \(item.cents) cents")
+                return ProviderInvoiceItem(
+                    cents: item.cents,
+                    description: item.description,
+                    provider: .cursor)
+            } ?? []
 
         let genericPricing = response.pricingDescription.map { pricing in
             ProviderPricingDescription(

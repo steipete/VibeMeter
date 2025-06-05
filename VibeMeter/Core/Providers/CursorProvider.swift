@@ -57,13 +57,24 @@ public actor CursorProvider: ProviderProtocol {
                                     teamId: Int?) async throws -> ProviderMonthlyInvoice {
         logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
-        // Determine the team ID to use - either provided or stored
-        let effectiveTeamId: Int? = if let providedTeamId = teamId {
-            providedTeamId
-        } else {
-            await getTeamId()
-        }
+        // Determine the team ID to use. Treat `0` (fallback individual) as `nil`
+        // because the Cursor billing endpoint expects *no* teamId field for
+        // personal accounts. Supplying 0 triggers a 500 "Team not found".
 
+      let effectiveTeamId: Int? = await {
+            // Prefer the explicitly supplied teamId if it is a positive value
+            if let provided = teamId, provided > 0 {
+                return provided
+            }
+
+            // Otherwise fall back to the stored teamId, but ignore 0 / negative
+            if let stored = await getTeamId(), stored > 0 {
+                return stored
+            }
+
+            // Personal account – no team id
+            return nil
+        }()
 
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchInvoice(
