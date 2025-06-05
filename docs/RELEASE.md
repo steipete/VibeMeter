@@ -108,6 +108,7 @@ Through extensive beta testing, we discovered that getting Sparkle to work in a 
    - To: `VibeMeter.app/Contents/XPCServices/`
    - Update their Info.plist bundle identifiers
    - Re-sign with sandbox entitlements
+   - **CRITICAL**: Remove original XPC services from Sparkle.framework to avoid conflicts
 
 3. **SparkleUpdaterManager Requirements**
    - Implement all delegate methods, especially `standardUserDriverWillHandleShowingUpdate`

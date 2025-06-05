@@ -100,6 +100,11 @@ fi
 # Clean up
 rm -f "$XPC_ENTITLEMENTS"
 
+# Remove XPC services from Sparkle framework to avoid conflicts
+echo "🗑️  Removing XPC services from Sparkle framework..."
+rm -rf "$SPARKLE_XPCSERVICES/Downloader.xpc"
+rm -rf "$SPARKLE_XPCSERVICES/Installer.xpc"
+
 echo ""
 echo "🎉 Sparkle XPC services fixed for sandboxed operation!"
 echo ""
@@ -107,5 +112,6 @@ echo "The XPC services have been:"
 echo "  - Copied to the app bundle's XPCServices directory"
 echo "  - Renamed with proper bundle identifiers"
 echo "  - Signed with sandbox entitlements"
+echo "  - Removed from Sparkle.framework to avoid conflicts"
 echo ""
 echo "⚠️  You'll need to re-sign the entire app bundle after this fix"
