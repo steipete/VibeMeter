@@ -1,0 +1,53 @@
+name: Tests
+  
+macos_instance:
+  image: ghcr.io/cirruslabs/macos-runner:sequoia-xcode16.2-xxl
+
+task:
+  name: Build and Test VibeMeter
+  timeout_in: 30m
+  
+  env:
+    CI: true
+  
+  install_tools_script:
+    - echo "Installing Tuist via Homebrew..."
+    - brew install tuist
+    - echo "Installing build tools via Homebrew..."
+    - brew install xcbeautify swiftlint swiftformat
+    - echo "All tools installed successfully"
+  
+  generate_project_script:
+    - ./scripts/generate-xcproj.sh
+  
+  lint_script:
+    - ./scripts/lint.sh
+  
+  build_script:
+    - echo "Building VibeMeter..."
+    - ./scripts/build.sh --configuration Release
+    - |
+      APP_PATH="build/Build/Products/Release/VibeMeter.app"
+      if [ ! -d "$APP_PATH" ]; then
+        echo "Error: VibeMeter.app not found at expected path"
+        find build -name "VibeMeter.app" -type d || echo "No VibeMeter.app found"
+        exit 1
+      fi
+      VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
+      BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP_PATH/Contents/Info.plist")
+      echo "✅ Build successful: $APP_PATH (v$VERSION build $BUILD)"
+  
+  test_script:
+    - |
+      xcodebuild test \
+        -workspace VibeMeter.xcworkspace \
+        -scheme VibeMeter \
+        -destination 'platform=macOS,arch=arm64' \
+        -configuration Debug \
+        -test-iterations 1 \
+        -maximum-parallel-testing-workers 1 \
+        | xcbeautify
+  
+  always:
+    artifacts_artifacts:
+      path: "build/**/*.app"
