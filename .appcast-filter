@@ -1,0 +1,19 @@
+# Appcast Filter Configuration
+# This file controls which releases are included in the appcast files
+# Format: <version> <include|exclude>
+# Only beta 11 and 12 have working Sparkle updates
+
+1.0.0-beta.1 exclude
+1.0.0-beta.2 exclude
+1.0.0-beta.3 exclude
+1.0.0-beta.4 exclude
+1.0.0-beta.5 exclude
+1.0.0-beta.6 exclude
+1.0.0-beta.7 exclude
+1.0.0-beta.8 exclude
+1.0.0-beta.9 exclude
+1.0.0-beta.10 exclude
+1.0.0-beta.11 include
+1.0.0-beta.12 include
+
+# All future releases should be included by default

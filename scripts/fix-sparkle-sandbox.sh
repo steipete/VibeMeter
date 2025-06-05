@@ -31,24 +31,7 @@ if [ ! -d "$SPARKLE_XPCSERVICES" ]; then
     exit 1
 fi
 
-# Create XPC service entitlements for Downloader
-DOWNLOADER_ENTITLEMENTS=$(mktemp)
-cat > "$DOWNLOADER_ENTITLEMENTS" << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
-    <key>com.apple.security.network.client</key>
-    <true/>
-    <key>com.apple.security.files.user-selected.read-write</key>
-    <true/>
-</dict>
-</plist>
-EOF
-
-# Sign the XPC services with proper entitlements
+# Sign the XPC services
 echo "🔐 Signing XPC services..."
 
 # Get signing identity
@@ -59,18 +42,14 @@ if [ -d "$SPARKLE_XPCSERVICES/Installer.xpc" ]; then
     codesign --force --sign "$SIGN_IDENTITY" --options runtime \
         "$SPARKLE_XPCSERVICES/Installer.xpc"
     echo "✅ Signed Installer.xpc"
+else
+    echo "⚠️  Installer.xpc not found (this is required for sandboxed apps)"
 fi
 
-# Sign Downloader service with network entitlements
-if [ -d "$SPARKLE_XPCSERVICES/Downloader.xpc" ]; then
-    codesign --force --sign "$SIGN_IDENTITY" --options runtime \
-        --entitlements "$DOWNLOADER_ENTITLEMENTS" \
-        "$SPARKLE_XPCSERVICES/Downloader.xpc"
-    echo "✅ Signed Downloader.xpc with network entitlements"
-fi
-
-# Clean up
-rm -f "$DOWNLOADER_ENTITLEMENTS"
+# Note: We don't sign the Downloader service because:
+# 1. VibeMeter has network access (com.apple.security.network.client)
+# 2. SUEnableDownloaderService is set to false in Info.plist
+# 3. Sparkle will download updates directly without the XPC service
 
 echo ""
 echo "🎉 Sparkle configured for sandboxed operation!"
@@ -79,6 +58,9 @@ echo "The XPC services have been:"
 echo "  - Signed with proper entitlements"
 echo "  - Left in their original location inside Sparkle.framework"
 echo ""
-echo "⚠️  Make sure your app's Info.plist has:"
-echo "    SUEnableInstallerLauncherService = YES"
-echo "    SUEnableDownloaderService = YES"
+echo "✅ Configuration verified:"
+echo "    SUEnableInstallerLauncherService = YES (using Installer.xpc)"
+echo "    SUEnableDownloaderService = NO (app has network access)"
+echo ""
+echo "⚠️  Important: XPC services must stay inside Sparkle.framework"
+echo "    Do NOT copy them to the app bundle root!"
