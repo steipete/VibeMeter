@@ -66,9 +66,7 @@ final class CursorProviderBasicTests: XCTestCase {
     func testFetchTeamInfo_NoTeamsFound_UsesFallback() async {
         // Given
         let mockEmptyTeamsData = Data("""
-        {
-            "teams": []
-        }
+        {}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
