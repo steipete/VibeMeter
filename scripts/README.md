@@ -30,6 +30,8 @@ This directory contains all automation scripts for VibeMeter development, buildi
 | [`notarize-app.sh`](./notarize-app.sh) | Notarize signed app bundle | `./scripts/notarize-app.sh <app-path>` |
 | [`create-dmg.sh`](./create-dmg.sh) | Create and sign DMG files | `./scripts/create-dmg.sh <app-path> [dmg-path]` |
 
+> **Note**: For a detailed guide on the challenges and solutions for code signing, notarization, and Sparkle integration, see [Code Signing and Notarization: Sparkle and Tears](https://steipete.me/posts/2025/code-signing-and-notarization-sparkle-and-tears).
+
 ### 📡 **Update System Scripts**
 
 | Script | Purpose | Usage |
