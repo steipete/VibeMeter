@@ -1076,7 +1076,7 @@ The notarize-app.sh script automatically applies these entitlements to XPC servi
 <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 <array>
     <string>com.steipete.vibemeter-spks</string>
-    <string>com.steipete.vibemeter-spkd</string>
+    <string>com.steipete.vibemeter-spki</string>
 </array>
 ```
 
@@ -1127,7 +1127,7 @@ This script:
 1. Copies XPC services from Sparkle.framework to app's XPCServices directory
 2. Renames them to match entitlements:
    - `Downloader.xpc` → `com.steipete.vibemeter-spks.xpc`
-   - `Installer.xpc` → `com.steipete.vibemeter-spkd.xpc`
+   - `Installer.xpc` → `com.steipete.vibemeter-spki.xpc`
 3. Updates their Info.plist bundle identifiers
 4. Signs them with sandbox entitlements
 
@@ -1137,7 +1137,7 @@ The main app's entitlements must include:
 <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 <array>
     <string>com.steipete.vibemeter-spks</string>
-    <string>com.steipete.vibemeter-spkd</string>
+    <string>com.steipete.vibemeter-spki</string>
 </array>
 ```
 

@@ -155,18 +155,33 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         // Optionally check for updates after changing the channel
         // This ensures users get immediate feedback when switching to pre-release
         if channel == .prerelease {
+            guard !isCheckingForUpdates else {
+                Self.staticLogger.info("Update check already in progress, skipping channel switch check")
+                return
+            }
             Self.staticLogger.info("Checking for updates after switching to pre-release channel")
+            isCheckingForUpdates = true
             updaterController.updater.checkForUpdatesInBackground()
         }
     }
 
     // MARK: Private
 
+    private var isCheckingForUpdates = false
+    
     private func scheduleStartupUpdateCheck() {
         Task { @MainActor in
             // Wait a moment for the app to finish launching before checking
             try? await Task.sleep(for: .seconds(2))
+            
+            // Avoid multiple simultaneous update checks
+            guard !isCheckingForUpdates else {
+                Self.staticLogger.info("Update check already in progress, skipping startup check")
+                return
+            }
+            
             Self.staticLogger.info("Checking for updates on startup")
+            isCheckingForUpdates = true
             self.updaterController.updater.checkForUpdatesInBackground()
         }
     }
@@ -175,6 +190,11 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
     // Handle when no update is found or when there's an error checking for updates
     public nonisolated func updater(_: SPUUpdater, didFinishUpdateCycleFor _: SPUUpdateCheck, error: Error?) {
+        // Reset the update check flag
+        Task { @MainActor in
+            self.isCheckingForUpdates = false
+        }
+        
         if let error = error as NSError? {
             Self.staticLogger
                 .error(
@@ -259,6 +279,11 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     // Called after showing any modal alert
     public nonisolated func standardUserDriverDidShowModalAlert() {
         Self.staticLogger.debug("Sparkle did show modal alert")
+    }
+    
+    // Called when about to show update
+    public nonisolated func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
+        Self.staticLogger.info("Will handle showing update: \(handleShowingUpdate) for version \(update.displayVersionString)")
     }
 
     // MARK: - Gentle Reminders Implementation

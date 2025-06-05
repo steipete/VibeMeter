@@ -102,6 +102,7 @@ generate_appcast /path/to/releases/
 - Private key stored in macOS Keychain (account: "ed25519")
 - Public key: `oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=` (in Info.plist)
 - EdDSA signatures provide cryptographic verification of updates
+- XPC services use bundle ID suffixes: `-spks` (Downloader) and `-spki` (Installer)
 
 ### Code Signing & Notarization Setup
 

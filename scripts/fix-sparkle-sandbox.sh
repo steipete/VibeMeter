@@ -44,11 +44,11 @@ fi
 # Copy Installer service
 if [ -d "$SPARKLE_XPCSERVICES/Installer.xpc" ]; then
     echo "📋 Copying Installer.xpc..."
-    cp -R "$SPARKLE_XPCSERVICES/Installer.xpc" "$XPCSERVICES_DIR/com.steipete.vibemeter-spkd.xpc"
+    cp -R "$SPARKLE_XPCSERVICES/Installer.xpc" "$XPCSERVICES_DIR/com.steipete.vibemeter-spki.xpc"
     
     # Update Info.plist bundle identifier
-    /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.steipete.vibemeter-spkd" \
-        "$XPCSERVICES_DIR/com.steipete.vibemeter-spkd.xpc/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.steipete.vibemeter-spki" \
+        "$XPCSERVICES_DIR/com.steipete.vibemeter-spki.xpc/Contents/Info.plist"
 fi
 
 echo "✅ XPC services copied and configured"
@@ -69,7 +69,7 @@ cat > "$XPC_ENTITLEMENTS" << 'EOF'
     <key>com.apple.security.temporary-exception.mach-register.global-name</key>
     <array>
         <string>com.steipete.vibemeter-spks</string>
-        <string>com.steipete.vibemeter-spkd</string>
+        <string>com.steipete.vibemeter-spki</string>
     </array>
 </dict>
 </plist>
@@ -90,11 +90,11 @@ if [ -d "$XPCSERVICES_DIR/com.steipete.vibemeter-spks.xpc" ]; then
 fi
 
 # Sign installer service
-if [ -d "$XPCSERVICES_DIR/com.steipete.vibemeter-spkd.xpc" ]; then
+if [ -d "$XPCSERVICES_DIR/com.steipete.vibemeter-spki.xpc" ]; then
     codesign --force --sign "$SIGN_IDENTITY" --options runtime \
         --entitlements "$XPC_ENTITLEMENTS" \
-        "$XPCSERVICES_DIR/com.steipete.vibemeter-spkd.xpc"
-    echo "✅ Signed com.steipete.vibemeter-spkd.xpc"
+        "$XPCSERVICES_DIR/com.steipete.vibemeter-spki.xpc"
+    echo "✅ Signed com.steipete.vibemeter-spki.xpc"
 fi
 
 # Clean up
