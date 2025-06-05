@@ -28,22 +28,7 @@ final class CursorProviderDataTests: XCTestCase {
     func testFetchMonthlyInvoice_WithProvidedTeamId() async throws {
         // Given
         let mockInvoiceData = Data("""
-        {
-            "items": [
-                {
-                    "cents": 2500,
-                    "description": "GPT-4 Usage"
-                },
-                {
-                    "cents": 1000,
-                    "description": "GPT-3.5 Usage"
-                }
-            ],
-            "pricing_description": {
-                "description": "Pro Plan",
-                "id": "pro-plan-123"
-            }
-        }
+             {"items":[{"description":"112 discounted claude-4-sonnet-thinking requests","cents":336},{"description":"97 extra fast premium requests beyond 500/month * 4 cents per such request","cents":388},{"description":"59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65","cents":465},{"description":"12 token-based usage calls to o3, totalling: $2.10","cents":210}],"pricingDescription":{"description":"1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.","id":"392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"}}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -63,19 +48,17 @@ final class CursorProviderDataTests: XCTestCase {
             teamId: 789)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 2)
-        XCTAssertEqual(invoice.items[0].cents, 2500)
-        XCTAssertEqual(invoice.items[0].description, "GPT-4 Usage")
-        XCTAssertEqual(invoice.items[1].cents, 1000)
-        XCTAssertEqual(invoice.items[1].description, "GPT-3.5 Usage")
-        XCTAssertEqual(invoice.totalSpendingCents, 3500)
+        XCTAssertEqual(invoice.items.count, 4)
+        XCTAssertEqual(invoice.items[0].cents, 336)
+        XCTAssertEqual(invoice.items[0].description, "112 discounted claude-4-sonnet-thinking requests")
+        XCTAssertEqual(invoice.items[1].cents, 388)
+        XCTAssertEqual(invoice.items[1].description, "97 extra fast premium requests beyond 500/month * 4 cents per such request")
+        XCTAssertEqual(invoice.totalSpendingCents, 1399)
         XCTAssertEqual(invoice.month, 11)
         XCTAssertEqual(invoice.year, 2023)
         XCTAssertEqual(invoice.provider, .cursor)
 
-        XCTAssertNotNil(invoice.pricingDescription)
-        XCTAssertEqual(invoice.pricingDescription?.description, "Pro Plan")
-        XCTAssertEqual(invoice.pricingDescription?.id, "pro-plan-123")
+        XCTAssertNil(invoice.pricingDescription)
 
         // Verify request body
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
@@ -96,10 +79,7 @@ final class CursorProviderDataTests: XCTestCase {
             isActive: true))
 
         let mockInvoiceData = Data("""
-        {
-            "items": [],
-            "pricing_description": null
-        }
+             {"items":[{"description":"112 discounted claude-4-sonnet-thinking requests","cents":336},{"description":"97 extra fast premium requests beyond 500/month * 4 cents per such request","cents":388},{"description":"59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65","cents":465},{"description":"12 token-based usage calls to o3, totalling: $2.10","cents":210}],"pricingDescription":{"description":"1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.","id":"392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"}}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -119,8 +99,8 @@ final class CursorProviderDataTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 0)
-        XCTAssertEqual(invoice.totalSpendingCents, 0)
+        XCTAssertEqual(invoice.items.count, 4)
+        XCTAssertEqual(invoice.totalSpendingCents, 1399)
         XCTAssertNil(invoice.pricingDescription)
 
         // Verify stored team ID was used
@@ -135,10 +115,7 @@ final class CursorProviderDataTests: XCTestCase {
     func testFetchMonthlyInvoice_NoTeamIdAvailable() async throws {
         // Given - no stored team ID and none provided
         let mockInvoiceData = Data("""
-        {
-            "items": [],
-            "pricing_description": null
-        }
+             {"items":[{"description":"112 discounted claude-4-sonnet-thinking requests","cents":336},{"description":"97 extra fast premium requests beyond 500/month * 4 cents per such request","cents":388},{"description":"59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65","cents":465},{"description":"12 token-based usage calls to o3, totalling: $2.10","cents":210}],"pricingDescription":{"description":"1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.","id":"392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"}}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -158,8 +135,8 @@ final class CursorProviderDataTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 0)
-        XCTAssertEqual(invoice.totalSpendingCents, 0)
+        XCTAssertEqual(invoice.items.count, 4)
+        XCTAssertEqual(invoice.totalSpendingCents, 1399)
         XCTAssertNil(invoice.pricingDescription)
 
         // Verify no team ID was sent in the request body
