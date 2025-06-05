@@ -97,18 +97,28 @@ The automated script will:
 
 Through extensive beta testing, we discovered that getting Sparkle to work in a sandboxed macOS app requires precise configuration:
 
-1. **XPC Service Bundle Identifiers Must Match Convention**
-   ```
-   com.steipete.vibemeter-spks  # Downloader service (NOT -spkd!)
-   com.steipete.vibemeter-spki  # Installer service
+1. **Enable XPC Services in Info.plist**
+   ```xml
+   <key>SUEnableInstallerLauncherService</key>
+   <true/>
+   <key>SUEnableDownloaderService</key>
+   <true/>
    ```
 
-2. **XPC Services Must Be Relocated**
-   - Copy from: `Sparkle.framework/Versions/B/XPCServices/`
-   - To: `VibeMeter.app/Contents/XPCServices/`
-   - Update their Info.plist bundle identifiers
-   - Re-sign with sandbox entitlements
-   - **CRITICAL**: Remove original XPC services from Sparkle.framework to avoid conflicts
+2. **Add Entitlements for XPC Communication**
+   ```xml
+   <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+   <array>
+       <string>com.steipete.vibemeter-spks</string>
+       <string>com.steipete.vibemeter-spki</string>
+   </array>
+   ```
+
+3. **XPC Services Stay Inside Sparkle.framework**
+   - Location: `Sparkle.framework/Versions/B/XPCServices/`
+   - Sparkle automatically manages the services based on bundle ID
+   - Services must be properly signed with entitlements
+   - DO NOT copy services to app bundle (this was our mistake in early betas)
 
 3. **SparkleUpdaterManager Requirements**
    - Implement all delegate methods, especially `standardUserDriverWillHandleShowingUpdate`
