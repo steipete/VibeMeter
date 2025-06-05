@@ -70,10 +70,11 @@ if [[ ! -d "$APP_PATH" ]]; then
     exit 1
 fi
 
-# Apply Sparkle sandbox fix for Release builds
+# Sparkle sandbox fix is no longer needed - we use default XPC services
+# The fix-sparkle-sandbox.sh script now just verifies configuration
 if [[ "$CONFIGURATION" == "Release" ]]; then
     if [ -x "$SCRIPT_DIR/fix-sparkle-sandbox.sh" ]; then
-        echo "Applying Sparkle sandbox fix..."
+        echo "Verifying Sparkle configuration..."
         "$SCRIPT_DIR/fix-sparkle-sandbox.sh" "$APP_PATH"
     fi
 fi

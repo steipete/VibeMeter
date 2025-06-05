@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Fix Sparkle for Sandboxed App
-# This script ensures Sparkle's XPC services are properly signed for sandboxed operation
+# This script is now simplified - we use Sparkle's default XPC services as-is
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -15,7 +15,7 @@ fi
 
 APP_PATH="$1"
 
-echo "🔧 Configuring Sparkle for sandboxed operation..."
+echo "🔧 Verifying Sparkle configuration for sandboxed operation..."
 
 # Find Sparkle framework
 SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
@@ -31,36 +31,45 @@ if [ ! -d "$SPARKLE_XPCSERVICES" ]; then
     exit 1
 fi
 
-# Sign the XPC services
-echo "🔐 Signing XPC services..."
+echo ""
+echo "📋 Sparkle XPC Services Status:"
+echo "================================"
 
-# Get signing identity
-SIGN_IDENTITY="Developer ID Application"
-
-# Sign Installer service (no special entitlements needed)
+# Check Installer service
 if [ -d "$SPARKLE_XPCSERVICES/Installer.xpc" ]; then
-    codesign --force --sign "$SIGN_IDENTITY" --options runtime \
-        "$SPARKLE_XPCSERVICES/Installer.xpc"
-    echo "✅ Signed Installer.xpc"
+    echo "✅ Installer.xpc found"
+    # Check bundle ID
+    INSTALLER_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$SPARKLE_XPCSERVICES/Installer.xpc/Contents/Info.plist" 2>/dev/null || echo "Not found")
+    echo "   Bundle ID: $INSTALLER_BUNDLE_ID"
+    if [[ "$INSTALLER_BUNDLE_ID" == "org.sparkle-project.InstallerLauncher" ]]; then
+        echo "   ✅ Using Sparkle default bundle ID (correct)"
+    else
+        echo "   ⚠️  Custom bundle ID detected"
+    fi
 else
-    echo "⚠️  Installer.xpc not found (this is required for sandboxed apps)"
+    echo "❌ Installer.xpc not found (required for sandboxed apps)"
 fi
 
-# Note: We don't sign the Downloader service because:
-# 1. VibeMeter has network access (com.apple.security.network.client)
-# 2. SUEnableDownloaderService is set to false in Info.plist
-# 3. Sparkle will download updates directly without the XPC service
+# Check Downloader service
+if [ -d "$SPARKLE_XPCSERVICES/Downloader.xpc" ]; then
+    echo "✅ Downloader.xpc found (not used when app has network access)"
+fi
 
 echo ""
-echo "🎉 Sparkle configured for sandboxed operation!"
+echo "📝 Required App Configuration:"
+echo "=============================="
 echo ""
-echo "The XPC services have been:"
-echo "  - Signed with proper entitlements"
-echo "  - Left in their original location inside Sparkle.framework"
+echo "1. Info.plist must have:"
+echo "   SUEnableInstallerLauncherService = YES"
+echo "   SUEnableDownloaderService = NO"
 echo ""
-echo "✅ Configuration verified:"
-echo "    SUEnableInstallerLauncherService = YES (using Installer.xpc)"
-echo "    SUEnableDownloaderService = NO (app has network access)"
+echo "2. Entitlements must include:"
+echo "   <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>"
+echo "   <array>"
+echo "       <string>com.steipete.vibemeter-spki</string>"
+echo "   </array>"
 echo ""
-echo "⚠️  Important: XPC services must stay inside Sparkle.framework"
-echo "    Do NOT copy them to the app bundle root!"
+echo "3. XPC services should NOT be modified or re-signed"
+echo "   (Sparkle handles this automatically)"
+echo ""
+echo "✅ Sparkle sandbox check complete!"
