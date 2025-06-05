@@ -95,3 +95,17 @@ echo "Build complete: $APP_PATH"
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")
 BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP_PATH/Contents/Info.plist")
 echo "Version: $VERSION ($BUILD)"
+
+# Verify IS_PRERELEASE_BUILD flag
+PRERELEASE_FLAG=$(/usr/libexec/PlistBuddy -c "Print IS_PRERELEASE_BUILD" "$APP_PATH/Contents/Info.plist" 2>/dev/null || echo "not found")
+if [[ "$PRERELEASE_FLAG" != "not found" ]]; then
+    if [[ "$PRERELEASE_FLAG" == "YES" ]]; then
+        echo "✓ IS_PRERELEASE_BUILD: YES (pre-release build)"
+    elif [[ "$PRERELEASE_FLAG" == "NO" ]]; then
+        echo "✓ IS_PRERELEASE_BUILD: NO (stable build)"
+    else
+        echo "⚠ IS_PRERELEASE_BUILD: '$PRERELEASE_FLAG' (unexpected value)"
+    fi
+else
+    echo "⚠ IS_PRERELEASE_BUILD: not set (will use version string fallback)"
+fi

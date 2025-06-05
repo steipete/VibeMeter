@@ -196,6 +196,24 @@ VibeMeter supports two update channels via Sparkle:
 
 Users can switch channels in **Settings → General → Update Channel**.
 
+#### Automatic Channel Detection
+
+VibeMeter automatically detects the appropriate update channel based on the build type:
+
+- **Beta Downloads**: When users download a beta version (e.g., v1.0.0-beta.5), the app automatically defaults to the "Include Pre-releases" channel
+- **Stable Downloads**: When users download a stable version (e.g., v1.0.0), the app defaults to the "Stable Only" channel
+
+This is implemented via the `IS_PRERELEASE_BUILD` flag system:
+
+1. **Build-time Flag**: The release script sets `IS_PRERELEASE_BUILD=YES` for beta builds during compilation
+2. **Runtime Detection**: The app checks this flag in its Info.plist to determine the default update channel
+3. **Fallback Logic**: If the flag is missing, it falls back to parsing the version string for keywords like "beta", "alpha", "rc"
+
+**Technical Implementation:**
+- Flag is set in `Project.swift`: `"IS_PRERELEASE_BUILD": "$(IS_PRERELEASE_BUILD)"`
+- Checked in `UpdateChannel.defaultChannel()` method
+- Release script automatically sets the environment variable during build
+
 ### Pre-release Testing
 
 Pre-releases are perfect for:

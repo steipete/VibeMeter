@@ -226,7 +226,40 @@ fi
 
 echo ""
 
-# 8. Summary
+# 8. Check IS_PRERELEASE_BUILD Configuration
+echo "📌 IS_PRERELEASE_BUILD System:"
+
+# Check if IS_PRERELEASE_BUILD is configured in Project.swift
+if grep -q '"IS_PRERELEASE_BUILD".*"\$(IS_PRERELEASE_BUILD)"' "$PROJECT_ROOT/Project.swift"; then
+    check_pass "IS_PRERELEASE_BUILD flag configured in Project.swift"
+else
+    check_fail "IS_PRERELEASE_BUILD flag missing from Project.swift Info.plist section"
+fi
+
+# Check if UpdateChannel.swift has the flag detection logic
+if grep -q "Bundle.main.object.*IS_PRERELEASE_BUILD" "$PROJECT_ROOT/VibeMeter/Core/Models/UpdateChannel.swift"; then
+    check_pass "UpdateChannel has IS_PRERELEASE_BUILD detection logic"
+else
+    check_fail "UpdateChannel.swift missing IS_PRERELEASE_BUILD flag detection"
+fi
+
+# Check if release script sets the environment variable
+if grep -q "export IS_PRERELEASE_BUILD=" "$PROJECT_ROOT/scripts/release.sh"; then
+    check_pass "Release script sets IS_PRERELEASE_BUILD environment variable"
+else
+    check_fail "Release script missing IS_PRERELEASE_BUILD environment variable setup"
+fi
+
+# Check if AppBehaviorSettingsManager uses defaultChannel
+if grep -q "UpdateChannel.defaultChannel" "$PROJECT_ROOT/VibeMeter/Core/Services/Settings/AppBehaviorSettingsManager.swift"; then
+    check_pass "AppBehaviorSettingsManager uses UpdateChannel.defaultChannel()"
+else
+    check_fail "AppBehaviorSettingsManager not using UpdateChannel.defaultChannel() for auto-detection"
+fi
+
+echo ""
+
+# 9. Summary
 echo "📊 Pre-flight Summary:"
 echo "===================="
 
