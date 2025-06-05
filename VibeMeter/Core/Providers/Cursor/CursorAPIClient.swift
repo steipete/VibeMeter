@@ -246,6 +246,7 @@ actor CursorAPIClient {
         // Handle status code specific errors
         if statusCode == 500, message.contains("Team not found") {
             logger.warning("Team not found error detected from 500 response")
+            logger.info("This may occur if your account doesn't have team access or if using a fallback team ID")
             throw ProviderError.noTeamFound
         }
 
