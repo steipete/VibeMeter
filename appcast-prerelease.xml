@@ -6,6 +6,27 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
+            <title>VibeMeter 1.0.0-beta.4</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.4/VibeMeter-1.0.0-beta.4.dmg</link>
+            <sparkle:version>103</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.4</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 1.0.0-beta.4</h2><p><strong>Pre-release version</strong></p><p><p>## VibeMeter 1.0.0-beta.4</p>
+<p></p>
+<p>### 🚀 Critical Fix for Sandboxed Sparkle Updates</p>
+<p></p>
+<p>This release fixes the "Failed to gain authorization" error that prevented updates from installing in the sandboxed app.</p></p>
+            ]]></description>
+            <pubDate>Thu, 05 Jun 2025 01:07:14 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.4/VibeMeter-1.0.0-beta.4.dmg"
+                length="5714925"
+                type="application/octet-stream"
+                sparkle:edSignature="PFP+9rhnek/ffo8tLmOd6jkc4t48w48jjryJxXiOqNMvdkynp40JWbG3hNRBqLV49P0O9mZ+SHzNlL/eBE5TAg=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
             <title>VibeMeter 1.0.0-beta.3</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.3/VibeMeter-1.0.0-beta.3.dmg</link>
             <sparkle:version>102</sparkle:version>
