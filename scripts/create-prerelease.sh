@@ -124,12 +124,7 @@ echo "   Pre-release Version: $PRERELEASE_VERSION"
 echo "   Build Number: $BUILD_NUMBER"
 echo "   Highest Existing Build: $HIGHEST_BUILD"
 echo ""
-read -p "Continue with build? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ Aborted by user"
-    exit 1
-fi
+echo "✅ All checks passed. Starting build..."
 
 # Build the app
 echo "🔨 Building application..."

@@ -80,13 +80,9 @@ echo ""
 
 # Check for uncommitted changes
 if ! git diff-index --quiet HEAD --; then
-    echo "⚠️  Warning: You have uncommitted changes"
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "❌ Aborted"
-        exit 1
-    fi
+    echo "❌ Error: You have uncommitted changes"
+    echo "   Please commit or stash your changes before releasing"
+    exit 1
 fi
 
 # Perform the appropriate release

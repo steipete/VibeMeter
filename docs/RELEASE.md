@@ -2,7 +2,62 @@
 
 This document describes the process for creating and publishing a new release of VibeMeter.
 
-## 🚀 Quick Start
+## 🚀 Automated Release (Recommended)
+
+The simplest way to create a release is using the automated scripts:
+
+### 1. Pre-flight Check
+```bash
+./scripts/preflight-check.sh
+```
+This validates everything is ready for release. Fix any issues before proceeding.
+
+### 2. Update Version
+```bash
+# For patch release (1.0.0 -> 1.0.1)
+./scripts/version.sh --patch
+
+# For minor release (1.0.0 -> 1.1.0)
+./scripts/version.sh --minor
+
+# For major release (1.0.0 -> 2.0.0)
+./scripts/version.sh --major
+
+# Always increment build number in Project.swift
+# Edit: "CURRENT_PROJECT_VERSION": "201" -> "202"
+```
+
+### 3. Commit Changes
+```bash
+git add Project.swift
+git commit -m "Bump version to X.X.X"
+```
+
+### 4. Create Release
+```bash
+# For stable release
+./scripts/release-auto.sh stable
+
+# For beta release
+./scripts/release-auto.sh beta 1
+
+# For alpha release
+./scripts/release-auto.sh alpha 1
+
+# For release candidate
+./scripts/release-auto.sh rc 1
+```
+
+The automated script will:
+- ✅ Run pre-flight checks
+- ✅ Build the app (with xcbeautify for clean output)
+- ✅ Sign and notarize
+- ✅ Create DMG
+- ✅ Create GitHub release
+- ✅ Update appcast
+- ✅ Commit and push changes
+
+## 🚀 Quick Start (Manual)
 
 ### Creating a Stable Release
 ```bash

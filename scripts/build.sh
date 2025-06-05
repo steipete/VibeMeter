@@ -36,19 +36,32 @@ echo "Building VibeMeter..."
 echo "Configuration: $CONFIGURATION"
 echo "Code signing: $SIGN_APP"
 
-# Clean build directory
-rm -rf "$BUILD_DIR"
+# Clean build directory only if it doesn't exist
 mkdir -p "$BUILD_DIR"
 
 # Build the app
 cd "$PROJECT_DIR"
-xcodebuild \
-    -workspace VibeMeter.xcworkspace \
-    -scheme VibeMeter \
-    -configuration "$CONFIGURATION" \
-    -derivedDataPath "$BUILD_DIR" \
-    -destination "platform=macOS" \
-    build
+
+# Check if xcbeautify is available
+if command -v xcbeautify &> /dev/null; then
+    echo "🔨 Building with xcbeautify..."
+    xcodebuild \
+        -workspace VibeMeter.xcworkspace \
+        -scheme VibeMeter \
+        -configuration "$CONFIGURATION" \
+        -derivedDataPath "$BUILD_DIR" \
+        -destination "platform=macOS" \
+        build | xcbeautify
+else
+    echo "🔨 Building (install xcbeautify for cleaner output)..."
+    xcodebuild \
+        -workspace VibeMeter.xcworkspace \
+        -scheme VibeMeter \
+        -configuration "$CONFIGURATION" \
+        -derivedDataPath "$BUILD_DIR" \
+        -destination "platform=macOS" \
+        build
+fi
 
 APP_PATH="$BUILD_DIR/Build/Products/$CONFIGURATION/VibeMeter.app"
 
