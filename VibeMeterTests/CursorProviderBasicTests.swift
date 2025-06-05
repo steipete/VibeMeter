@@ -85,7 +85,7 @@ final class CursorProviderBasicTests: XCTestCase {
             let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
 
             // Then - Should return fallback team info instead of throwing
-            XCTAssertEqual(teamInfo.id, 0, "Should use fallback team ID")
+            XCTAssertEqual(teamInfo.id, -1, "Should use fallback team ID")
             XCTAssertEqual(teamInfo.name, "Individual", "Should use fallback team name")
             XCTAssertEqual(teamInfo.provider, .cursor, "Should maintain correct provider")
         } catch {
