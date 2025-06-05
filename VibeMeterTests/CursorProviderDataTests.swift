@@ -176,30 +176,7 @@ final class CursorProviderDataTests: XCTestCase {
     func testFetchUsageData_Success() async throws {
         // Given
         let mockUsageData = Data("""
-        {
-            "gpt-3.5-turbo": {
-                "num_requests": 50,
-                "num_requests_total": 100,
-                "max_token_usage": 1000,
-                "num_tokens": 500,
-                "max_request_usage": 200
-            },
-            "gpt-4": {
-                "num_requests": 25,
-                "num_requests_total": 50,
-                "max_token_usage": 2000,
-                "num_tokens": 750,
-                "max_request_usage": 100
-            },
-            "gpt-4-32k": {
-                "num_requests": 5,
-                "num_requests_total": 10,
-                "max_token_usage": 5000,
-                "num_tokens": 1000,
-                "max_request_usage": 20
-            },
-            "start_of_month": "2023-12-01T00:00:00Z"
-        }
+        {"gpt-4":{"numRequests":518,"numRequestsTotal":731,"numTokens":13637151,"maxRequestUsage":500,"maxTokenUsage":null},"gpt-3.5-turbo":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":null,"maxTokenUsage":null},"gpt-4-32k":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":50,"maxTokenUsage":null},"startOfMonth":"2025-05-28T15:57:12.000Z"}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -213,50 +190,27 @@ final class CursorProviderDataTests: XCTestCase {
 
         // When
         let usageData = try await cursorProvider.fetchUsageData(authToken: "user123::jwt-token")
-
+        
         // Then
-        XCTAssertEqual(usageData.currentRequests, 25) // Uses GPT-4 as primary
+        XCTAssertEqual(usageData.currentRequests, 518) // Uses GPT-4 as primary
 
         // Verify the user parameter was extracted and used
         XCTAssertNotNil(mockURLSession.lastRequest?.url)
         let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
         XCTAssertEqual(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value, "user123")
-        XCTAssertEqual(usageData.totalRequests, 50)
-        XCTAssertEqual(usageData.maxRequests, 100)
+        XCTAssertEqual(usageData.totalRequests, 731)
+        XCTAssertEqual(usageData.maxRequests, 500)
         XCTAssertEqual(usageData.provider, .cursor)
 
         // Verify date parsing
-        let expectedDate = ISO8601DateFormatter().date(from: "2023-12-01T00:00:00Z")!
+        let expectedDate = ISO8601DateFormatter().date(from: "2025-05-28T15:57:12Z")
         XCTAssertEqual(usageData.startOfMonth, expectedDate)
     }
 
     func testFetchUsageData_InvalidDateFormat() async throws {
         // Given
         let mockUsageData = Data("""
-        {
-            "gpt-3.5-turbo": {
-                "num_requests": 50,
-                "num_requests_total": 100,
-                "max_token_usage": 1000,
-                "num_tokens": 500,
-                "max_request_usage": 200
-            },
-            "gpt-4": {
-                "num_requests": 25,
-                "num_requests_total": 50,
-                "max_token_usage": 2000,
-                "num_tokens": 750,
-                "max_request_usage": 100
-            },
-            "gpt-4-32k": {
-                "num_requests": 5,
-                "num_requests_total": 10,
-                "max_token_usage": 5000,
-                "num_tokens": 1000,
-                "max_request_usage": 20
-            },
-            "start_of_month": "invalid-date"
-        }
+                {"gpt-4":{"numRequests":518,"numRequestsTotal":731,"numTokens":13637151,"maxRequestUsage":500,"maxTokenUsage":null},"gpt-3.5-turbo":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":null,"maxTokenUsage":null},"gpt-4-32k":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":50,"maxTokenUsage":null},"startOfMonth":"invalid-date"}
         """.utf8)
 
         let mockResponse = HTTPURLResponse(

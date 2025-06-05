@@ -69,6 +69,7 @@ enum CursorDataTransformer {
         let primaryUsage = response.gpt4
 
         let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let startOfMonth = dateFormatter.date(from: response.startOfMonth) ?? Date()
 
         let usageInfo = "Successfully transformed Cursor usage: " +
