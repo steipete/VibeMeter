@@ -72,7 +72,7 @@ echo "   Marketing Version: $MARKETING_VERSION"
 echo "   Build Number: $BUILD_NUMBER"
 
 # Check for Info.plist overrides
-if grep -q "CFBundleShortVersionString" "$PROJECT_ROOT/Project.swift" | grep -v "MARKETING_VERSION"; then
+if grep "CFBundleShortVersionString" "$PROJECT_ROOT/Project.swift" | grep -v "MARKETING_VERSION" | grep -q .; then
     check_fail "Info.plist has version overrides - remove them"
 else
     check_pass "No Info.plist version overrides"
@@ -84,10 +84,12 @@ echo ""
 echo "📌 Build Number Validation:"
 USED_BUILD_NUMBERS=""
 if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-    USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
+    APPCAST_BUILDS=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" 2>/dev/null | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ' || true)
+    USED_BUILD_NUMBERS+="$APPCAST_BUILDS"
 fi
 if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-    USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
+    PRERELEASE_BUILDS=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" 2>/dev/null | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ' || true)
+    USED_BUILD_NUMBERS+="$PRERELEASE_BUILDS"
 fi
 
 # Find highest build number
