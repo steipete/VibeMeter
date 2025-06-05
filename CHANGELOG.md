@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0-beta.3] - 2025-06-05
+## [1.0.0-beta.7] - 2025-06-05
 
 ### 🐛 Bug Fixes
 - Fixed invoice fetching for Cursor users without teams - teamId is now optional in API requests
