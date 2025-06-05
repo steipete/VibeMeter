@@ -49,5 +49,5 @@ task:
         | xcbeautify
   
   always:
-    artifacts_artifacts:
+    artifacts:
       path: "build/**/*.app"
