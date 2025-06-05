@@ -10,7 +10,6 @@ actor CursorAPIClient {
 
     private let urlSession: URLSessionProtocol
     private let logger = Logger(subsystem: "com.vibemeter", category: "CursorAPIClient")
-    private let baseURL = URL(string: "https://www.cursor.com/api")!
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -29,10 +28,10 @@ actor CursorAPIClient {
     func fetchTeams(authToken: String) async throws -> CursorTeamsResponse {
         logger.debug("Fetching Cursor teams")
 
-        let endpoint = baseURL.appendingPathComponent("dashboard/teams")
+        let endpoint = CursorAPIConstants.URLs.teams
         var request = createRequest(for: endpoint, authToken: authToken)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(CursorAPIConstants.Headers.contentTypeJSON, forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONSerialization.data(withJSONObject: [String: Any]())
 
         return try await performRequest(request)
@@ -41,7 +40,7 @@ actor CursorAPIClient {
     func fetchUserInfo(authToken: String) async throws -> CursorUserResponse {
         logger.debug("Fetching Cursor user info")
 
-        let endpoint = baseURL.appendingPathComponent("auth/me")
+        let endpoint = CursorAPIConstants.URLs.userInfo
         logger.debug("User info endpoint: \(endpoint.absoluteString)")
 
         let request = createRequest(for: endpoint, authToken: authToken)
@@ -55,10 +54,10 @@ actor CursorAPIClient {
                       teamId: Int?) async throws -> CursorInvoiceResponse {
         logger.debug("Fetching Cursor invoice for \(month)/\(year)")
 
-        let endpoint = baseURL.appendingPathComponent("dashboard/get-monthly-invoice")
+        let endpoint = CursorAPIConstants.URLs.monthlyInvoice
         var request = createRequest(for: endpoint, authToken: authToken)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(CursorAPIConstants.Headers.contentTypeJSON, forHTTPHeaderField: "Content-Type")
 
         // Include team ID in the request body as expected by tests
         var body = [
@@ -91,11 +90,11 @@ actor CursorAPIClient {
         logger.debug("Extracted user ID: \(userId)")
 
         // Create URL with user query parameter
-        var urlComponents = URLComponents(url: baseURL.appendingPathComponent("usage"), resolvingAgainstBaseURL: false)!
+        var urlComponents = URLComponents(url: CursorAPIConstants.URLs.usage, resolvingAgainstBaseURL: false)!
         urlComponents.queryItems = [URLQueryItem(name: "user", value: userId)]
 
         guard let endpoint = urlComponents.url else {
-            throw ProviderError.networkError(message: "Failed to construct usage URL", statusCode: nil)
+            throw ProviderError.networkError(message: CursorAPIConstants.ErrorMessages.failedToConstructURL, statusCode: nil)
         }
 
         logger.debug("Usage endpoint URL with user parameter: \(endpoint.absoluteString)")
@@ -120,12 +119,12 @@ actor CursorAPIClient {
     private func createRequest(for url: URL, authToken: String) -> URLRequest {
         var request = URLRequest(url: url)
         // Set the session cookie instead of Bearer token
-        request.setValue("WorkosCursorSessionToken=\(authToken)", forHTTPHeaderField: "Cookie")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("VibeMeter/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue(CursorAPIConstants.cookieHeader(for: authToken), forHTTPHeaderField: "Cookie")
+        request.setValue(CursorAPIConstants.Headers.acceptJSON, forHTTPHeaderField: "Accept")
+        request.setValue(CursorAPIConstants.Headers.userAgent, forHTTPHeaderField: "User-Agent")
         // Add referer header as some APIs require it
-        request.setValue("https://www.cursor.com", forHTTPHeaderField: "Referer")
-        request.timeoutInterval = 30.0
+        request.setValue(CursorAPIConstants.Headers.referer, forHTTPHeaderField: "Referer")
+        request.timeoutInterval = CursorAPIConstants.Headers.defaultTimeout
         return request
     }
 
@@ -146,7 +145,7 @@ actor CursorAPIClient {
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProviderError.networkError(message: "Invalid response type", statusCode: nil)
+            throw ProviderError.networkError(message: CursorAPIConstants.ErrorMessages.invalidResponseType, statusCode: nil)
         }
 
         return (data, httpResponse)
@@ -169,7 +168,7 @@ actor CursorAPIClient {
             logger.error("404 Not Found - API endpoint may have changed. URL: \(request.url?.absoluteString ?? "nil")")
             logger.error("404 Response body: \(message)")
             throw ProviderError.networkError(
-                message: "API endpoint not found - the endpoint may have been moved or deprecated",
+                message: CursorAPIConstants.ErrorMessages.apiEndpointNotFound,
                 statusCode: 404)
 
         case 429:
@@ -217,7 +216,7 @@ actor CursorAPIClient {
             logger.error("Received empty data for successful response")
             logger.debug("Request URL was: \(request.url?.absoluteString ?? "nil")")
             throw ProviderError.decodingError(
-                message: "Received empty response data",
+                message: CursorAPIConstants.ErrorMessages.emptyResponseData,
                 statusCode: statusCode)
         }
 
@@ -244,7 +243,7 @@ actor CursorAPIClient {
         try checkForSpecificErrors(in: data)
 
         // Handle status code specific errors
-        if statusCode == 500, message.contains("Team not found") {
+        if statusCode == 500, message.contains(CursorAPIConstants.ErrorMessages.teamNotFound) {
             logger.warning("Team not found error detected from 500 response")
             logger.info("This may occur if your account doesn't have team access or if using a fallback team ID")
             throw ProviderError.noTeamFound
@@ -274,7 +273,7 @@ actor CursorAPIClient {
                 // Check for unauthorized/team not found errors
                 if errorCode == "ERROR_UNAUTHORIZED" {
                     if let errorDetail = errorDetails["detail"] as? String,
-                       errorDetail.contains("Team not found") {
+                       errorDetail.contains(CursorAPIConstants.ErrorMessages.teamNotFound) {
                         logger.warning("Team not found error detected")
                         throw ProviderError.noTeamFound
                     } else {

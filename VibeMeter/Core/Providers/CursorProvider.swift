@@ -64,12 +64,8 @@ public actor CursorProvider: ProviderProtocol {
             await getTeamId()
         }
 
-        // If we have a fallback team ID of 0 or -1, don't send it as it's likely invalid
-        let validTeamId: Int? = if let teamId = effectiveTeamId, teamId > 0 {
-            teamId
-        } else {
-            nil
-        }
+        // Filter out invalid team IDs using the centralized validation
+        let validTeamId: Int? = CursorAPIConstants.isValidTeamId(effectiveTeamId) ? effectiveTeamId : nil
 
         logger.debug("Using team ID for invoice request: \(validTeamId?.description ?? "nil")")
 
@@ -97,7 +93,7 @@ public actor CursorProvider: ProviderProtocol {
     }
 
     public nonisolated func getAuthenticationURL() -> URL {
-        URL(string: "https://authenticator.cursor.sh/")!
+        CursorAPIConstants.authenticationURL
     }
 
     public nonisolated func extractAuthToken(from callbackData: [String: Any]) -> String? {
