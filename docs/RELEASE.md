@@ -1,85 +1,62 @@
 # VibeMeter Release Process
 
-This guide explains how to create and publish releases for VibeMeter, a sandboxed macOS menu bar application using Sparkle for automatic updates.
+This guide explains how to create and publish releases for VibeMeter, a sandboxed macOS menu bar application using Sparkle 2.x for automatic updates.
 
-## 🚀 Quick Start Guide
+## 🎯 Release Process Overview
 
-### Prerequisites Checklist
-- [ ] Xcode 16.4+ installed
-- [ ] GitHub CLI (`gh`) authenticated: `gh auth status`
-- [ ] Tuist installed: `curl -Ls https://install.tuist.io | bash`
-- [ ] Apple Developer ID certificate in Keychain
-- [ ] Notarization credentials set as environment variables
-- [ ] Sparkle tools installed in `~/.local/bin/`
+VibeMeter uses an automated release process that handles all the complexity of:
+- Building and code signing
+- Notarization with Apple
+- Creating DMG disk images
+- Publishing to GitHub
+- Updating Sparkle appcast files
 
-### Creating a Release in 5 Steps
+## 🚀 Creating a Release
 
-1. **Pre-flight Check**
-   ```bash
-   ./scripts/preflight-check.sh
-   ```
+### Step 1: Pre-flight Check
+```bash
+./scripts/preflight-check.sh
+```
+This validates your environment is ready for release.
 
-2. **Update Version & Build Number**
-   ```bash
-   # Increment build number in Project.swift (REQUIRED for every release!)
-   # Edit: "CURRENT_PROJECT_VERSION": "207" -> "208"
-   
-   # For version changes:
-   ./scripts/version.sh --patch  # 1.0.0 -> 1.0.1
-   ./scripts/version.sh --minor  # 1.0.0 -> 1.1.0
-   ./scripts/version.sh --major  # 1.0.0 -> 2.0.0
-   ```
+### Step 2: Create the Release
+```bash
+# For stable releases:
+./scripts/release-auto.sh stable
 
-3. **Commit Changes**
-   ```bash
-   git add Project.swift
-   git commit -m "Bump version to X.X.X build YYY"
-   git push
-   ```
+# For pre-releases (beta, alpha, rc):
+./scripts/release-auto.sh beta 1    # Creates version-beta.1
+./scripts/release-auto.sh alpha 2   # Creates version-alpha.2
+./scripts/release-auto.sh rc 1      # Creates version-rc.1
+```
 
-4. **Create Release**
-   ```bash
-   # Stable release
-   ./scripts/release.sh stable
-   
-   # Pre-release (beta, alpha, rc)
-   ./scripts/release.sh beta 1
-   ./scripts/release.sh alpha 1
-   ./scripts/release.sh rc 1
-   ```
+The script will:
+1. Automatically increment the build number
+2. Update Project.swift
+3. Build, sign, and notarize the app
+4. Create a DMG
+5. Publish to GitHub
+6. Update the appcast files
+7. Commit and push all changes
 
-5. **Verify Success**
-   - Check GitHub releases page
-   - Test update from previous version
-   - Monitor Console.app for any errors
-
-## 📋 What the Release Script Does
-
-The `release.sh` script automates the entire release process:
-
-1. ✅ Validates build numbers are unique and incrementing
-2. ✅ Cleans build directory for fresh compilation
-3. ✅ Generates Xcode project if needed
-4. ✅ Builds the app in Release configuration
-5. ✅ Signs and notarizes with Apple Developer ID
-6. ✅ Creates and signs DMG disk image
-7. ✅ Creates GitHub release with proper tagging
-8. ✅ Generates appcast with EdDSA signatures
-9. ✅ Commits and pushes all changes
+### Step 3: Verify Success
+- Check the GitHub releases page
+- Verify the appcast was updated correctly
+- Test updating from a previous version
 
 ## ⚠️ Critical Requirements
 
-### Build Numbers Are Everything
-**Sparkle uses build numbers (CFBundleVersion) to determine updates, NOT version strings!**
+### 1. Build Numbers MUST Increment
+Sparkle uses build numbers (CFBundleVersion) to determine updates, NOT version strings!
 
-| Example | Build | Result |
+| Version | Build | Result |
 |---------|-------|--------|
-| 1.0.0-beta.1 | 200 | ✅ |
-| 1.0.0-beta.2 | 201 | ✅ |
-| 1.0.0-beta.3 | 199 | ❌ Build number went backwards |
-| 1.0.0 | 201 | ❌ Duplicate build number |
+| 1.0.0-beta.1 | 100 | ✅ |
+| 1.0.0-beta.2 | 101 | ✅ |
+| 1.0.0-beta.3 | 99  | ❌ Build went backwards |
+| 1.0.0 | 101 | ❌ Duplicate build number |
 
-### Required Environment Variables
+### 2. Required Environment Variables
 ```bash
 export APP_STORE_CONNECT_KEY_ID="YOUR_KEY_ID"
 export APP_STORE_CONNECT_ISSUER_ID="YOUR_ISSUER_ID"
@@ -88,225 +65,173 @@ YOUR_PRIVATE_KEY_CONTENT
 -----END PRIVATE KEY-----"
 ```
 
-## 🔧 Sparkle Configuration for Sandboxed Apps
+### 3. Prerequisites
+- Xcode 16.4+ installed
+- GitHub CLI authenticated: `gh auth status`
+- Apple Developer ID certificate in Keychain
+- Sparkle tools in `~/.local/bin/` (sign_update, generate_appcast)
 
-### The Challenge
-VibeMeter is a sandboxed app, which requires special configuration for Sparkle's automatic updates to work properly.
+## 🔐 Sparkle Sandboxing Configuration
 
-### Current Configuration (Working)
+### Critical Sparkle Requirements for Sandboxed Apps
 
-1. **Info.plist Keys** (in Project.swift)
-   ```swift
-   "SUEnableInstallerLauncherService": true,
-   "SUEnableDownloaderService": false,  // False because we have network access
-   ```
+VibeMeter is sandboxed, which requires specific configuration for Sparkle updates to work:
 
-2. **Entitlements** (VibeMeter.entitlements)
-   ```xml
-   <key>com.apple.security.app-sandbox</key>
-   <true/>
-   <key>com.apple.security.network.client</key>
-   <true/>
-   <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
-   <array>
-       <string>com.steipete.vibemeter-spki</string>
-   </array>
-   ```
+#### 1. Entitlements (VibeMeter.entitlements)
+```xml
+<!-- Required for sandbox -->
+<key>com.apple.security.app-sandbox</key>
+<true/>
 
-3. **XPC Services - CRITICAL**
-   - Must remain inside: `Sparkle.framework/Versions/B/XPCServices/`
-   - Do NOT copy to app bundle
-   - Do NOT modify XPC service bundle IDs
-   - Do NOT re-sign XPC services during build
-   - Notarization will handle proper signing
+<!-- Required for downloading updates -->
+<key>com.apple.security.network.client</key>
+<true/>
 
-### 🚨 Critical Sparkle Learnings
-
-After extensive debugging, here are the key findings:
-
-1. **XPC Service Bundle IDs Must Match**
-   - Sparkle's Installer.xpc uses: `org.sparkle-project.InstallerLauncher`
-   - Your app tries to connect to this exact bundle ID
-   - Do NOT change the XPC service bundle IDs!
-
-2. **Mach Lookup Entitlements**
-   - The `-spki` suffix in entitlements is a Sparkle convention
-   - Sparkle internally maps this to the correct XPC service
-   - Only the main app needs this entitlement, NOT the XPC services
-
-3. **Build Process Must Not Modify XPC Services**
-   - Don't re-sign XPC services during build
-   - Don't copy them out of Sparkle.framework
-   - Don't modify their Info.plist files
-   - Let the notarization process handle signing
-
-4. **Downloader Service Not Needed**
-   - Since VibeMeter has `com.apple.security.network.client`
-   - Set `SUEnableDownloaderService` to `false`
-   - This simplifies the sandbox configuration
-
-### Important Sparkle Documentation Links
-- [Sandboxing Guide](https://sparkle-project.org/documentation/sandboxing/)
-- [XPC Services](https://sparkle-project.org/documentation/api/protocols/spuupdaterdelegate#updater:willextractupdate:)
-
-## 🛠️ Utility Scripts
-
-### Version Management
-```bash
-./scripts/version.sh --current   # Show current version
-./scripts/version.sh --patch     # Increment patch version
-./scripts/version.sh --minor     # Increment minor version
-./scripts/version.sh --major     # Increment major version
+<!-- CRITICAL: Mach lookup exceptions for XPC communication -->
+<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+<array>
+    <string>com.steipete.vibemeter-spks</string>
+    <string>com.steipete.vibemeter-spki</string>
+</array>
 ```
 
-### Verification Tools
-```bash
-./scripts/verify-app.sh <app-or-dmg>    # Verify signing and notarization
-./scripts/verify-appcast.sh             # Validate appcast XML files
-./scripts/preflight-check.sh            # Pre-release validation
+**Note**: Both `-spks` and `-spki` are required! Missing either will cause "Failed to gain authorization" errors.
+
+#### 2. Info.plist Configuration (in Project.swift)
+```swift
+"SUEnableInstallerLauncherService": true,   // Required for sandboxed apps
+"SUEnableDownloaderService": false,         // False since we have network access
 ```
 
-### Build and Sign
+#### 3. Code Signing Requirements
+
+The notarization script handles all signing correctly:
+1. **Do NOT use --deep flag** when signing the app
+2. **Do NOT modify XPC service bundle IDs** (keep as `org.sparkle-project.*`)
+3. **Do NOT move XPC services** out of Sparkle.framework
+4. **DO re-sign XPC services** with your Developer ID during notarization
+
+The `notarize-app.sh` script follows Sparkle's official documentation:
 ```bash
-./scripts/build.sh --configuration Release      # Build the app
-./scripts/sign-and-notarize.sh --sign-and-notarize  # Sign and notarize
-./scripts/create-dmg.sh                         # Create DMG
+# Sign XPC services with our Developer ID (per Sparkle docs)
+codesign -f -s "Developer ID Application" -o runtime "Sparkle.framework/.../Installer.xpc"
+codesign -f -s "Developer ID Application" -o runtime --preserve-metadata=entitlements "Sparkle.framework/.../Downloader.xpc"
+
+# Sign the app WITHOUT --deep flag
+codesign --force --sign "Developer ID Application" --entitlements VibeMeter.entitlements --options runtime VibeMeter.app
 ```
 
-## 📝 Release Channels
+### Common Sparkle Errors and Solutions
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "Failed to gain authorization required to update target" | Missing mach-lookup entitlements | Ensure BOTH `-spks` and `-spki` are in entitlements |
+| "You're up to date!" when update exists | Build number not incrementing | Check build numbers in appcast are correct |
+| "Error launching installer" | XPC service signing issues | Ensure notarize script is re-signing XPC services |
+| "XPC connection interrupted" | Bundle ID mismatch | Do NOT change XPC service bundle IDs |
+
+## 📋 Update Channels
 
 VibeMeter supports two update channels:
 
 1. **Stable Channel** (`appcast.xml`)
-   - Production-ready releases only
+   - Production releases only
    - Default for all users
 
 2. **Pre-release Channel** (`appcast-prerelease.xml`)
    - Includes beta, alpha, and RC versions
-   - Users opt-in via Settings → General
+   - Users opt-in via Settings
+
+## 🛠️ Manual Process (If Needed)
+
+If the automated script fails, here's the manual process:
+
+### 1. Update Build Number
+Edit `Project.swift`:
+```swift
+"CURRENT_PROJECT_VERSION": "100",  // Increment this!
+```
+
+### 2. Clean and Build
+```bash
+rm -rf build DerivedData .build
+./scripts/generate-xcproj.sh
+./scripts/build.sh --configuration Release
+```
+
+### 3. Sign and Notarize
+```bash
+./scripts/notarize-app.sh build/Build/Products/Release/VibeMeter.app
+```
+
+### 4. Create DMG
+```bash
+./scripts/create-dmg.sh
+```
+
+### 5. Sign DMG for Sparkle
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+sign_update build/VibeMeter-X.X.X.dmg
+# Copy the sparkle:edSignature value
+```
+
+### 6. Create GitHub Release
+```bash
+gh release create "v1.0.0-beta.1" \
+  --title "VibeMeter 1.0.0-beta.1" \
+  --notes "Beta release 1" \
+  --prerelease \
+  build/VibeMeter-1.0.0-beta.1.dmg
+```
+
+### 7. Update Appcast
+```bash
+./scripts/update-appcast.sh
+git add appcast*.xml
+git commit -m "Update appcast for v1.0.0-beta.1"
+git push
+```
 
 ## 🔍 Troubleshooting
 
-### Common Issues
-
-1. **"You're up to date!" when update exists**
-   - Check build numbers are incrementing
-   - Verify appcast was pushed to GitHub
-   - Ensure appcast has correct build number (not "1")
-
-2. **Update Error: Failed to gain authorization**
-   - Check XPC services are unmodified
-   - Verify entitlements match exactly
-   - Ensure Sparkle framework wasn't re-signed during build
-   - Check Console.app for XPC connection errors
-
-3. **"An error occurred while launching the installer"**
-   - XPC service bundle ID mismatch
-   - Missing or incorrect mach-lookup entitlements
-   - XPC services were modified during build
-
-4. **Notarization fails**
-   - Check environment variables are set
-   - Verify Developer ID certificate is valid
-   - Ensure all embedded binaries are signed
-
-### Console Debugging
+### Debug Sparkle Updates
 ```bash
 # Monitor VibeMeter logs
 log stream --predicate 'process == "VibeMeter"' --level debug
 
-# Check for Sparkle errors
+# Check XPC errors
 log stream --predicate 'process == "VibeMeter"' | grep -i -E "(sparkle|xpc|installer)"
 
-# Look for specific errors
-log stream --predicate 'subsystem == "com.apple.security"'
+# Verify XPC services
+codesign -dvv "VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
 ```
 
-### Verifying XPC Services
+### Verify Signing and Notarization
 ```bash
-# Check XPC service bundle IDs
+# Check app signature
+./scripts/verify-app.sh build/VibeMeter-1.0.0.dmg
+
+# Verify XPC bundle IDs (should be org.sparkle-project.*)
 /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" \
-  "/path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist"
-# Should output: org.sparkle-project.InstallerLauncher
-
-# Verify XPC services are signed
-codesign -dvv "/path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+  "VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist"
 ```
 
-## 🔐 Security and Backup
-
-### Critical Files to Backup
-- Sparkle EdDSA private key (in Keychain)
-- Developer ID certificate (.p12)
-- App Store Connect API key (.p8)
-- `.github-config` file
-
-### Verify Sparkle Keys
+### Appcast Issues
 ```bash
-# Check public key matches
-grep "SUPublicEDKey" Project.swift
+# Verify appcast has correct build numbers
+./scripts/verify-appcast.sh
 
-# Verify private key in Keychain
-export PATH="$HOME/.local/bin:$PATH"
-generate_keys -p
+# Check if build number is "1" (common bug)
+grep '<sparkle:version>' appcast-prerelease.xml
 ```
 
-## 📋 Manual Release Process
+## 📚 Important Links
 
-If you need to perform steps manually (not recommended):
-
-1. **Update Project.swift**
-   - Increment `CURRENT_PROJECT_VERSION`
-   - Update `MARKETING_VERSION` if needed
-
-2. **Clean Build**
-   ```bash
-   rm -rf build DerivedData .build
-   rm -rf build/SourcePackages  # Clean SPM cache
-   ```
-
-3. **Generate and Build**
-   ```bash
-   ./scripts/generate-xcproj.sh
-   ./scripts/build.sh --configuration Release
-   ```
-
-4. **Sign and Notarize**
-   ```bash
-   ./scripts/sign-and-notarize.sh --sign-and-notarize
-   ```
-
-5. **Create DMG**
-   ```bash
-   ./scripts/create-dmg.sh
-   ```
-
-6. **Generate Signature**
-   ```bash
-   sign_update build/VibeMeter-X.X.X.dmg
-   ```
-
-7. **Create GitHub Release**
-   ```bash
-   git tag -a "vX.X.X" -m "Release X.X.X"
-   git push origin "vX.X.X"
-   gh release create "vX.X.X" --title "VibeMeter X.X.X" build/VibeMeter-X.X.X.dmg
-   ```
-
-8. **Update Appcast**
-   ```bash
-   ./scripts/generate-appcast.sh
-   git add appcast*.xml
-   git commit -m "Update appcast for vX.X.X"
-   git push
-   ```
-
-## 📚 Additional Documentation
-
-- **Sparkle Sandboxing**: https://sparkle-project.org/documentation/sandboxing/
-- **Apple Notarization**: https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution
-- **Project Architecture**: See CLAUDE.md for codebase details
+- [Sparkle Sandboxing Guide](https://sparkle-project.org/documentation/sandboxing/)
+- [Sparkle Code Signing](https://sparkle-project.org/documentation/sandboxing/#code-signing)
+- [Apple Notarization](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
 
 ---
 
-**Remember**: Always increment build numbers, use the automated scripts, and test updates before announcing releases!
+**Remember**: Always use the automated release script, ensure build numbers increment, and test updates before announcing!
