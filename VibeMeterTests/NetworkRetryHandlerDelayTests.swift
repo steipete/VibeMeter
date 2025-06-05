@@ -1,10 +1,13 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class NetworkRetryHandlerDelayTests: XCTestCase {
+@Suite("NetworkRetryHandlerDelayTests")
+struct NetworkRetryHandlerDelayTests {
     // MARK: - Delay Calculation Tests
 
-    func testExponentialBackoffDelays() async {
+    @Test("exponential backoff delays")
+
+    func exponentialBackoffDelays() async {
         // Given
         let config = NetworkRetryHandler.Configuration(
             maxRetries: 3,
@@ -14,14 +17,14 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
             jitterFactor: 0.0 // No jitter for predictable testing
         )
         let handler = NetworkRetryHandler(configuration: config)
-        var delays: [TimeInterval] = []
+        let delays: [TimeInterval] = []
         let startTimes: [Date] = []
 
         // When
         do {
             _ = try await handler.execute {
                 let now = Date()
-                if !startTimes.isEmpty {
+                if startTimes.isEmpty {
                     delays.append(now.timeIntervalSince(startTimes.last!))
                 }
                 throw NetworkRetryHandler.RetryableError.connectionError
@@ -35,7 +38,9 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
         // Can't test exact values due to async timing
     }
 
-    func testMaxDelayRespected() async {
+    @Test("max delay respected")
+
+    func maxDelayRespected() async {
         // Given
         let config = NetworkRetryHandler.Configuration(
             maxRetries: 5,
@@ -57,29 +62,16 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
             // Then
             let totalTime = Date().timeIntervalSince(startTime)
             // Should be capped at maxDelay * maxRetries = 2.0 * 5 = 10.0
-            XCTAssertLessThan(totalTime, 12.0) // Allow some margin
-        }
-    }
+            #expect(totalTime < 12.0)
 
-    // MARK: - Error Conversion Tests
-
-    func testAsRetryableErrorConversion() {
+    func asRetryableErrorConversion() {
         // Test timeout error
         let timeoutError = URLError(.timedOut)
-        XCTAssertEqual(timeoutError.asRetryableError, .networkTimeout)
+        #expect(timeoutError.asRetryableError == .networkTimeout)
+        #expect(connectionError.asRetryableError == .connectionError)
+        #expect(badURLError.asRetryableError == nil)
 
-        // Test connection errors
-        let connectionError = URLError(.cannotConnectToHost)
-        XCTAssertEqual(connectionError.asRetryableError, .connectionError)
-
-        // Test non-retryable error
-        let badURLError = URLError(.badURL)
-        XCTAssertNil(badURLError.asRetryableError)
-    }
-
-    // MARK: - Concurrent Operation Tests
-
-    func testConcurrentRetryOperations() async {
+    func concurrentRetryOperations() async {
         // Given
         let handler = NetworkRetryHandler()
         let operationCount = 5
@@ -112,7 +104,7 @@ final class NetworkRetryHandlerDelayTests: XCTestCase {
             }
 
             // Then
-            XCTAssertEqual(results.count, operationCount)
+            #expect(results.count == operationCount)
         }
     }
 }

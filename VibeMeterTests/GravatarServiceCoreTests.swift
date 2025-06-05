@@ -1,42 +1,41 @@
 import CryptoKit
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("GravatarServiceCoreTests")
 @MainActor
-final class GravatarServiceCoreTests: XCTestCase {
-    var sut: GravatarService!
+struct GravatarServiceCoreTests {
+    let sut: GravatarService
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         sut = GravatarService.shared
         sut.clearAvatar() // Reset state
     }
 
-    override func tearDown() async throws {
+     async throws {
         sut.clearAvatar()
         sut = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - Initialization Tests
 
-    func testSharedInstance_IsSingleton() {
+    @Test("shared instance  is singleton")
+
+    func sharedInstance_IsSingleton() {
         // Given
         let instance1 = GravatarService.shared
         let instance2 = GravatarService.shared
 
         // Then
-        XCTAssertTrue(instance1 === instance2, "GravatarService.shared should return the same instance")
-    }
+        #expect(instance1 === instance2 == true)
 
-    func testInitialState_NoCurrentAvatarURL() {
+    func initialState_NoCurrentAvatarURL() {
         // Then
-        XCTAssertNil(sut.currentAvatarURL, "Initial state should have no current avatar URL")
-    }
+        #expect(sut.currentAvatarURL == nil)
 
-    // MARK: - Gravatar URL Generation Tests
-
-    func testGravatarURL_ValidEmail_GeneratesCorrectURL() {
+    func gravatarURL_ValidEmail_GeneratesCorrectURL() {
         // Given
         let email = "test@example.com"
         let expectedHash =
@@ -47,11 +46,12 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result = sut.gravatarURL(for: email)
 
         // Then
-        XCTAssertNotNil(result, "Should generate URL for valid email")
-        XCTAssertEqual(result?.absoluteString, expectedURL, "Should generate correct Gravatar URL")
+        #expect(result != nil)
     }
 
-    func testGravatarURL_EmailWithWhitespace_TrimsAndLowercases() {
+    @Test("gravatar url  email with whitespace  trims and lowercases")
+
+    func gravatarURL_EmailWithWhitespace_TrimsAndLowercases() {
         // Given
         let emailWithWhitespace = "  TEST@EXAMPLE.COM  "
         let cleanEmail = "test@example.com"
@@ -61,15 +61,11 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result2 = sut.gravatarURL(for: cleanEmail)
 
         // Then
-        XCTAssertNotNil(result1)
-        XCTAssertNotNil(result2)
-        XCTAssertEqual(
-            result1?.absoluteString,
-            result2?.absoluteString,
-            "Should trim whitespace and convert to lowercase")
-    }
+        #expect(result1 != nil)
+        #expect(
+            result1?.absoluteString == result2?.absoluteString)
 
-    func testGravatarURL_EmptyEmail_GeneratesURL() {
+    func gravatarURL_EmptyEmail_GeneratesURL() {
         // Given
         let emptyEmail = ""
 
@@ -77,11 +73,12 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result = sut.gravatarURL(for: emptyEmail)
 
         // Then
-        XCTAssertNotNil(result, "Should handle empty email gracefully")
-        XCTAssertTrue(result?.absoluteString.contains("gravatar.com") ?? false, "Should still generate Gravatar URL")
+        #expect(result != nil) ?? false, "Should still generate Gravatar URL")
     }
 
-    func testGravatarURL_CustomSize_DoublesForRetina() {
+    @Test("gravatar url  custom size  doubles for retina")
+
+    func gravatarURL_CustomSize_DoublesForRetina() {
         // Given
         let email = "user@domain.com"
         let size = 50
@@ -91,13 +88,13 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(
-            result?.absoluteString.contains("s=\(expectedRetinaSize)") ?? false,
+        #expect(result != nil) ?? false,
             "Should double size for retina display")
     }
 
-    func testGravatarURL_DefaultSize_Uses40Points() {
+    @Test("gravatar url  default size  uses40 points")
+
+    func gravatarURL_DefaultSize_Uses40Points() {
         // Given
         let email = "default@size.com"
         let expectedRetinaSize = 80 // 40 * 2
@@ -106,13 +103,13 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result = sut.gravatarURL(for: email)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(
-            result?.absoluteString.contains("s=\(expectedRetinaSize)") ?? false,
+        #expect(result != nil) ?? false,
             "Should use default size of 40 points (80 retina)")
     }
 
-    func testGravatarURL_ContainsMysteryPersonFallback() {
+    @Test("gravatar url  contains mystery person fallback")
+
+    func gravatarURL_ContainsMysteryPersonFallback() {
         // Given
         let email = "fallback@test.com"
 
@@ -120,40 +117,34 @@ final class GravatarServiceCoreTests: XCTestCase {
         let result = sut.gravatarURL(for: email)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result?.absoluteString.contains("d=mp") ?? false, "Should include mystery person fallback")
+        #expect(result != nil) ?? false, "Should include mystery person fallback")
     }
 
     // MARK: - Update Avatar Tests
 
-    func testUpdateAvatar_WithValidEmail_SetsCurrentAvatarURL() {
+    @Test("update avatar  with valid email  sets current avatar url")
+
+    func updateAvatar_WithValidEmail_SetsCurrentAvatarURL() {
         // Given
         let email = "avatar@test.com"
-        XCTAssertNil(sut.currentAvatarURL) // Precondition
-
-        // When
-        sut.updateAvatar(for: email)
+        #expect(sut.currentAvatarURL == nil)
 
         // Then
-        XCTAssertNotNil(sut.currentAvatarURL, "Should set current avatar URL")
-        XCTAssertTrue(
-            sut.currentAvatarURL?.absoluteString.contains("gravatar.com") ?? false,
+        #expect(sut.currentAvatarURL != nil) ?? false,
             "Should be a Gravatar URL")
     }
 
-    func testUpdateAvatar_WithNilEmail_ClearsCurrentAvatarURL() {
+    @Test("update avatar  with nil email  clears current avatar url")
+
+    func updateAvatar_WithNilEmail_ClearsCurrentAvatarURL() {
         // Given
         sut.updateAvatar(for: "setup@test.com") // Set initial URL
-        XCTAssertNotNil(sut.currentAvatarURL) // Precondition
-
-        // When
-        sut.updateAvatar(for: nil)
+        #expect(sut.currentAvatarURL != nil)
 
         // Then
-        XCTAssertNil(sut.currentAvatarURL, "Should clear current avatar URL when email is nil")
-    }
+        #expect(sut.currentAvatarURL == nil)
 
-    func testUpdateAvatar_MultipleUpdates_UpdatesCurrentURL() {
+    func updateAvatar_MultipleUpdates_UpdatesCurrentURL() {
         // Given
         let email1 = "first@user.com"
         let email2 = "second@user.com"
@@ -166,50 +157,38 @@ final class GravatarServiceCoreTests: XCTestCase {
         let secondURL = sut.currentAvatarURL
 
         // Then
-        XCTAssertNotNil(firstURL)
-        XCTAssertNotNil(secondURL)
-        XCTAssertNotEqual(firstURL?.absoluteString, secondURL?.absoluteString, "Should update to new avatar URL")
-    }
+        #expect(firstURL != nil)
+        #expect(firstURL?.absoluteString != secondURL?.absoluteString)
 
-    // MARK: - Clear Avatar Tests
-
-    func testClearAvatar_WithCurrentURL_ClearsIt() {
+    func clearAvatar_WithCurrentURL_ClearsIt() {
         // Given
         sut.updateAvatar(for: "clear@test.com")
-        XCTAssertNotNil(sut.currentAvatarURL) // Precondition
-
-        // When
-        sut.clearAvatar()
+        #expect(sut.currentAvatarURL != nil)
 
         // Then
-        XCTAssertNil(sut.currentAvatarURL, "Should clear current avatar URL")
-    }
+        #expect(sut.currentAvatarURL == nil)
 
-    func testClearAvatar_WithNoCurrentURL_HandlesGracefully() {
+    func clearAvatar_WithNoCurrentURL_HandlesGracefully() {
         // Given
-        XCTAssertNil(sut.currentAvatarURL) // Precondition
-
-        // When
-        sut.clearAvatar()
+        #expect(sut.currentAvatarURL == nil)
 
         // Then
-        XCTAssertNil(sut.currentAvatarURL, "Should remain nil")
-    }
+        #expect(sut.currentAvatarURL == nil)
 
-    // MARK: - Observable Pattern Tests
-
-    func testGravatarService_IsObservable() {
+    func gravatarService_IsObservable() {
         // Then
         // GravatarService should be marked with @Observable macro
         // We can verify this by checking if it conforms to Observable protocol
-        XCTAssertNotNil(sut as (any Observable)?, "GravatarService should be Observable")
+        #expect(sut as (any Observable != nil)
     }
 
-    func testCurrentAvatarURL_IsReadable() {
+    @Test("current avatar url  is readable")
+
+    func currentAvatarURL_IsReadable() {
         // Given
         sut.updateAvatar(for: "observable@test.com")
 
         // Then
-        XCTAssertNotNil(sut.currentAvatarURL, "currentAvatarURL should be publicly readable")
+        #expect(sut.currentAvatarURL != nil)
     }
 }

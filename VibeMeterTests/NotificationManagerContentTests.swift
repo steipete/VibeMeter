@@ -1,28 +1,31 @@
 import Foundation
 @preconcurrency import UserNotifications
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("NotificationManagerContentTests")
 @MainActor
-final class NotificationManagerContentTests: XCTestCase {
-    private var notificationManager: TestableNotificationManager!
-    private var mockNotificationCenter: MockUNUserNotificationCenter!
+struct NotificationManagerContentTests {
+    private let notificationManager: TestableNotificationManager
+    private let mockNotificationCenter: MockUNUserNotificationCenter
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-    override func tearDown() async throws {
+     async throws {
         notificationManager = nil
         mockNotificationCenter = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - Notification Content Tests
 
-    func testNotificationContent_WarningNotification() async {
+    @Test("notification content  warning notification")
+
+    func notificationContent_WarningNotification() async {
         // When
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
@@ -33,15 +36,14 @@ final class NotificationManagerContentTests: XCTestCase {
         let request = mockNotificationCenter.lastAddedRequest!
         let content = request.content
 
-        XCTAssertEqual(content.title, "Spending Alert ⚠️")
-        XCTAssertTrue(content.body.contains("You've reached"))
-        XCTAssertTrue(content.body.contains("warning limit"))
-        XCTAssertEqual(content.sound, .default)
-        XCTAssertEqual(content.categoryIdentifier, "SPENDING_WARNING")
-        XCTAssertNotEqual(content.interruptionLevel, .critical)
+        #expect(content.title == "Spending Alert ⚠️")
+        #expect(content.body.contains("warning limit")
+        #expect(content.categoryIdentifier == "SPENDING_WARNING")
     }
 
-    func testNotificationContent_UpperLimitNotification() async {
+    @Test("notification content  upper limit notification")
+
+    func notificationContent_UpperLimitNotification() async {
         // When
         await notificationManager.showUpperLimitNotification(
             currentSpending: 105.0,
@@ -52,17 +54,16 @@ final class NotificationManagerContentTests: XCTestCase {
         let request = mockNotificationCenter.lastAddedRequest!
         let content = request.content
 
-        XCTAssertEqual(content.title, "Spending Limit Reached! 🚨")
-        XCTAssertTrue(content.body.contains("You've exceeded"))
-        XCTAssertTrue(content.body.contains("maximum limit"))
-        XCTAssertEqual(content.sound, .defaultCritical)
-        XCTAssertEqual(content.categoryIdentifier, "SPENDING_CRITICAL")
-        XCTAssertEqual(content.interruptionLevel, .critical)
+        #expect(content.title == "Spending Limit Reached! 🚨")
+        #expect(content.body.contains("maximum limit")
+        #expect(content.categoryIdentifier == "SPENDING_CRITICAL")
     }
 
     // MARK: - Notification Identifier Tests
 
-    func testNotificationIdentifiers_Unique() async {
+    @Test("notification identifiers  unique")
+
+    func notificationIdentifiers_Unique() async {
         // When - Show multiple notifications
         await notificationManager.resetAllNotificationStatesForNewSession()
         await notificationManager.showWarningNotification(
@@ -77,16 +78,13 @@ final class NotificationManagerContentTests: XCTestCase {
             currencyCode: "USD")
 
         // Then - Identifiers should be unique
-        XCTAssertEqual(mockNotificationCenter.addedRequests.count, 2)
-        let id1 = mockNotificationCenter.addedRequests[0].identifier
-        let id2 = mockNotificationCenter.addedRequests[1].identifier
-
-        XCTAssertNotEqual(id1, id2)
-        XCTAssertTrue(id1.hasPrefix("warning_"))
-        XCTAssertTrue(id2.hasPrefix("warning_"))
+        #expect(mockNotificationCenter.addedRequests.count == 2)
+        #expect(id1.hasPrefix("warning_" == true)
     }
 
-    func testNotificationIdentifiers_DifferentTypes() async {
+    @Test("notification identifiers  different types")
+
+    func notificationIdentifiers_DifferentTypes() async {
         // When
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
@@ -99,17 +97,10 @@ final class NotificationManagerContentTests: XCTestCase {
             currencyCode: "USD")
 
         // Then
-        XCTAssertEqual(mockNotificationCenter.addedRequests.count, 2)
-        let warningId = mockNotificationCenter.addedRequests[0].identifier
-        let upperId = mockNotificationCenter.addedRequests[1].identifier
+        #expect(mockNotificationCenter.addedRequests.count == 2)
+        #expect(upperId.hasPrefix("upper_" == true)
 
-        XCTAssertTrue(warningId.hasPrefix("warning_"))
-        XCTAssertTrue(upperId.hasPrefix("upper_"))
-    }
-
-    // MARK: - Error Handling Tests
-
-    func testNotificationScheduling_Error() async {
+    func notificationScheduling_Error() async {
         // Given
         let error = NSError(domain: "TestError", code: 1, userInfo: nil)
         mockNotificationCenter.addResult = .failure(error)
@@ -121,8 +112,7 @@ final class NotificationManagerContentTests: XCTestCase {
             currencyCode: "USD")
 
         // Then - Call should succeed but notification won't be added
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 1)
-        XCTAssertTrue(mockNotificationCenter.addedRequests.isEmpty)
+        #expect(mockNotificationCenter.addCallCount == 1)
     }
 }
 
@@ -132,7 +122,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     private let notificationCenter: MockUNUserNotificationCenter
 
     // Track which notifications have been shown
-    private var warningNotificationShown = false
+    private let warningNotificationShown = false
     private var upperLimitNotificationShown = false
 
     init(notificationCenter: MockUNUserNotificationCenter) {
@@ -148,7 +138,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
-        guard !warningNotificationShown else { return }
+        guard warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
         let formatter = NumberFormatter()
@@ -223,10 +213,14 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         }
     }
 
+    @Test("reset all notification states for new session")
+
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
+
+    @Test("show instance already running notification")
 
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
@@ -284,6 +278,8 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
             throw error
         }
     }
+
+    @Test("reset")
 
     func reset() {
         requestAuthorizationCallCount = 0

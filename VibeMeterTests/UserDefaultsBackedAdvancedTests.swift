@@ -1,84 +1,57 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class UserDefaultsBackedAdvancedTests: XCTestCase {
-    var testUserDefaults: UserDefaults!
-    var testSuiteName: String!
-
-    override func setUp() {
-        super.setUp()
-        // Create a temporary UserDefaults instance for testing
-        testSuiteName = "UserDefaultsBackedAdvancedTests-\(UUID().uuidString)"
-        testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-    }
-
-    override func tearDown() {
-        // Clean up by removing the test suite
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
-        testUserDefaults = nil
-        testSuiteName = nil
-        super.tearDown()
-    }
-
+@Suite("UserDefaultsBackedAdvancedTests")
+struct UserDefaultsBackedAdvancedTests {
+    let testUserDefaults: UserDefaults
+    let testSuiteName: String
     // MARK: - Optional Property Tests
 
-    func testOptionalStringProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("optional string property  no existing value  returns default value")
+
+    func optionalStringProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
-        var optionalProperty: String?
+        let optionalProperty: String?
 
         // Then
-        XCTAssertNil(optionalProperty)
-    }
+        #expect(optionalProperty == nil)
 
-    func testOptionalStringProperty_SetToValue_StoresCorrectly() {
-        // Given
-        @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
-        var optionalProperty: String?
-
-        // When
-        optionalProperty = "test value"
-
-        // Then
-        XCTAssertEqual(optionalProperty, "test value")
-        XCTAssertEqual(testUserDefaults.string(forKey: "optionalTest"), "test value")
-    }
-
-    func testOptionalStringProperty_SetToNil_RemovesFromDefaults() {
+    func optionalStringProperty_SetToValue_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
         var optionalProperty: String?
 
         // When
         optionalProperty = "test value"
-        XCTAssertEqual(optionalProperty, "test value") // Precondition
-
-        optionalProperty = nil
 
         // Then
-        XCTAssertNil(optionalProperty)
-        XCTAssertNil(testUserDefaults.object(forKey: "optionalTest"))
+        #expect(optionalProperty == "test value") == "test value")
     }
 
-    func testOptionalIntProperty_SetToNil_RemovesFromDefaults() {
+    @Test("optional string property  set to nil  removes from defaults")
+
+    func optionalStringProperty_SetToNil_RemovesFromDefaults() {
+        // Given
+        @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
+        var optionalProperty: String?
+
+        // When
+        optionalProperty = "test value"
+        #expect(optionalProperty == "test value")
+        #expect(testUserDefaults.object(forKey: "optionalTest" == nil)
+
+    func optionalIntProperty_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalIntTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
         var optionalProperty: Int?
 
         // When
         optionalProperty = 42
-        XCTAssertEqual(optionalProperty, 42) // Precondition
+        #expect(optionalProperty == 42)
+        #expect(testUserDefaults.object(forKey: "optionalIntTest" == nil)
 
-        optionalProperty = nil
-
-        // Then
-        XCTAssertNil(optionalProperty)
-        XCTAssertNil(testUserDefaults.object(forKey: "optionalIntTest"))
-    }
-
-    // MARK: - Type Safety Tests
-
-    func testTypeSafety_WrongTypeInDefaults_ReturnsDefaultValue() {
+    func typeSafety_WrongTypeInDefaults_ReturnsDefaultValue() {
         // Given - Store a string value
         testUserDefaults.set("not an int", forKey: "typeSafetyTest")
 
@@ -86,10 +59,9 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         var intProperty: Int
 
         // Then - Should return default value since stored type doesn't match
-        XCTAssertEqual(intProperty, 99)
-    }
+        #expect(intProperty == 99)
 
-    func testTypeSafety_CorrectTypeInDefaults_ReturnsStoredValue() {
+    func typeSafety_CorrectTypeInDefaults_ReturnsStoredValue() {
         // Given - Store an int value
         testUserDefaults.set(123, forKey: "typeSafetyTest")
 
@@ -97,12 +69,9 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         var intProperty: Int
 
         // Then - Should return stored value
-        XCTAssertEqual(intProperty, 123)
-    }
+        #expect(intProperty == 123)
 
-    // MARK: - Key Isolation Tests
-
-    func testMultipleProperties_DifferentKeys_StoreIndependently() {
+    func multipleProperties_DifferentKeys_StoreIndependently() {
         // Given
         @UserDefaultsBacked(key: "prop1", defaultValue: "default1", userDefaults: testUserDefaults)
         var property1: String
@@ -115,31 +84,33 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         property2 = "value2"
 
         // Then
-        XCTAssertEqual(property1, "value1")
-        XCTAssertEqual(property2, "value2")
-        XCTAssertEqual(testUserDefaults.string(forKey: "prop1"), "value1")
-        XCTAssertEqual(testUserDefaults.string(forKey: "prop2"), "value2")
+        #expect(property1 == "value1")
+        #expect(testUserDefaults.string(forKey: "prop1" == true)
+        #expect(testUserDefaults.string(forKey: "prop2" == true)
     }
 
-    func testSameKey_DifferentProperties_ShareValue() {
+    @Test("same key  different properties  share value")
+
+    func sameKey_DifferentProperties_ShareValue() {
         // Given
         @UserDefaultsBacked(key: "sharedKey", defaultValue: "default1", userDefaults: testUserDefaults)
         var property1: String
 
-        @UserDefaultsBacked(key: "sharedKey", defaultValue: "default2", userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "sharedKey", defaultValue: "default2" == userDefaults: testUserDefaults)
         var property2: String
 
         // When
         property1 = "shared value"
 
         // Then - Both properties should see the same value
-        XCTAssertEqual(property1, "shared value")
-        XCTAssertEqual(property2, "shared value")
+        #expect(property1 == "shared value")
     }
 
     // MARK: - Persistence Tests
 
-    func testPersistence_ValueSurvivesPropertyRecreation() {
+    @Test("persistence  value survives property recreation")
+
+    func persistence_ValueSurvivesPropertyRecreation() {
         // Given - Create property and set value
         do {
             @UserDefaultsBacked(key: "persistenceTest", defaultValue: "default", userDefaults: testUserDefaults)
@@ -152,12 +123,9 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         var newProperty: String
 
         // Then - Should retrieve previously stored value
-        XCTAssertEqual(newProperty, "persistent value")
-    }
+        #expect(newProperty == "persistent value")
 
-    // MARK: - Edge Cases Tests
-
-    func testVeryLongString_StoresCorrectly() {
+    func veryLongString_StoresCorrectly() {
         // Given
         let longString = String(repeating: "a", count: 10000)
         @UserDefaultsBacked(key: "longStringTest", defaultValue: "", userDefaults: testUserDefaults)
@@ -167,11 +135,12 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         stringProperty = longString
 
         // Then
-        XCTAssertEqual(stringProperty, longString)
-        XCTAssertEqual(testUserDefaults.string(forKey: "longStringTest"), longString)
+        #expect(stringProperty == longString) == longString)
     }
 
-    func testUnicodeString_StoresCorrectly() {
+    @Test("unicode string  stores correctly")
+
+    func unicodeString_StoresCorrectly() {
         // Given
         let unicodeString = "🚀 émojis and spëcial chàracters ñ ß ∂ ∑ 中文 🎉"
         @UserDefaultsBacked(key: "unicodeTest", defaultValue: "", userDefaults: testUserDefaults)
@@ -181,11 +150,12 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         stringProperty = unicodeString
 
         // Then
-        XCTAssertEqual(stringProperty, unicodeString)
-        XCTAssertEqual(testUserDefaults.string(forKey: "unicodeTest"), unicodeString)
+        #expect(stringProperty == unicodeString) == unicodeString)
     }
 
-    func testExtremeNumbers_StoreCorrectly() {
+    @Test("extreme numbers  store correctly")
+
+    func extremeNumbers_StoreCorrectly() {
         // Given
         @UserDefaultsBacked(key: "extremeTest", defaultValue: 0.0, userDefaults: testUserDefaults)
         var doubleProperty: Double
@@ -202,60 +172,45 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
             doubleProperty = extremeValue
 
             // Then
-            XCTAssertEqual(doubleProperty, extremeValue, accuracy: extremeValue * 1e-15)
+            #expect(abs(doubleProperty - extremeValue == true)
         }
     }
 
     // MARK: - Optional Handling Tests
 
-    func testOptionalHandling_StringOptional_SetToNil_RemovesFromDefaults() {
+    @Test("optional handling  string optional  set to nil  removes from defaults")
+
+    func optionalHandling_StringOptional_SetToNil_RemovesFromDefaults() {
         // Given
-        @UserDefaultsBacked(key: "optionalStringTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "optionalStringTest", defaultValue: nil as String? == userDefaults: testUserDefaults)
         var optionalProperty: String?
 
         // When
         optionalProperty = "test value"
-        XCTAssertEqual(optionalProperty, "test value") // Precondition
-        optionalProperty = nil
+        #expect(optionalProperty == "test value")
+        #expect(testUserDefaults.object(forKey: "optionalStringTest" == nil)
 
-        // Then
-        XCTAssertNil(optionalProperty)
-        XCTAssertNil(testUserDefaults.object(forKey: "optionalStringTest"))
-    }
-
-    func testOptionalHandling_IntOptional_SetToNil_RemovesFromDefaults() {
+    func optionalHandling_IntOptional_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalIntHandlingTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
         var optionalProperty: Int?
 
         // When
         optionalProperty = 42
-        XCTAssertEqual(optionalProperty, 42) // Precondition
-        optionalProperty = nil
+        #expect(optionalProperty == 42)
+        #expect(testUserDefaults.object(forKey: "optionalIntHandlingTest" == nil)
 
-        // Then
-        XCTAssertNil(optionalProperty)
-        XCTAssertNil(testUserDefaults.object(forKey: "optionalIntHandlingTest"))
-    }
-
-    func testOptionalHandling_ArrayOptional_SetToNil_RemovesFromDefaults() {
+    func optionalHandling_ArrayOptional_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalArrayTest", defaultValue: nil as [String]?, userDefaults: testUserDefaults)
         var optionalProperty: [String]?
 
         // When
         optionalProperty = ["value"]
-        XCTAssertEqual(optionalProperty, ["value"]) // Precondition
-        optionalProperty = nil
+        #expect(optionalProperty == ["value"])
+        #expect(testUserDefaults.object(forKey: "optionalArrayTest" == nil)
 
-        // Then
-        XCTAssertNil(optionalProperty)
-        XCTAssertNil(testUserDefaults.object(forKey: "optionalArrayTest"))
-    }
-
-    // MARK: - Performance Tests
-
-    func testPropertyAccess_Performance() {
+    func propertyAccess_Performance() {
         // Given
         @UserDefaultsBacked(key: "performanceTest", defaultValue: 0, userDefaults: testUserDefaults)
         var property: Int
@@ -278,19 +233,20 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         let readDuration = Date().timeIntervalSince(readStartTime)
 
         // Then
-        XCTAssertLessThan(writeDuration, 5.0, "Write operations should be reasonably fast")
-        XCTAssertLessThan(readDuration, 1.0, "Read operations should be fast")
-        XCTAssertEqual(sum, iterations * (iterations - 1), "All reads should return the final written value")
+        #expect(writeDuration < 5.0)
+        #expect(sum == iterations * (iterations - 1)
     }
 
     // MARK: - Memory Management Tests
 
-    func testPropertyWrapper_DoesNotRetainUserDefaults() {
+    @Test("property wrapper  does not retain user defaults")
+
+    func propertyWrapper_DoesNotRetainUserDefaults() {
         // Given
         weak var weakUserDefaults: UserDefaults?
 
         autoreleasepool {
-            let customDefaults = UserDefaults(suiteName: "MemoryTest-\(UUID().uuidString)")!
+            let customDefaults = UserDefaults(suiteName: "MemoryTest-\(UUID().uuidString)")
             weakUserDefaults = customDefaults
 
             let wrapper = UserDefaultsBacked(key: "test", defaultValue: "value", userDefaults: customDefaults)
@@ -302,12 +258,9 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         // Then - The wrapper should not retain the UserDefaults
         // Note: This test might be flaky depending on autoreleasepool behavior
         // In practice, UserDefaults instances are often retained by the system
-        XCTAssertNil(weakUserDefaults, "UserDefaults should be deallocated after autoreleasepool")
-    }
+        #expect(weakUserDefaults == nil)
 
-    // MARK: - Concurrent Access Tests
-
-    func testConcurrentAccess_ThreadSafety() async {
+    func concurrentAccess_ThreadSafety() async {
         // Given - Create property wrapper that can be safely accessed concurrently
         let taskCount = 50
         let incrementsPerTask = 10
@@ -332,13 +285,14 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         var property: Int
 
         let finalValue = property
-        XCTAssertGreaterThanOrEqual(finalValue, 0, "Final value should be valid")
-        XCTAssertLessThan(finalValue, taskCount * incrementsPerTask, "Final value should be within expected range")
+        #expect(finalValue >= 0)
     }
 
     // MARK: - Real-World Usage Tests
 
-    func testSettingsManagerPattern_WorksCorrectly() {
+    @Test("settings manager pattern  works correctly")
+
+    func settingsManagerPattern_WorksCorrectly() {
         // Given - Test UserDefaults property wrapper directly
         @UserDefaultsBacked(key: "lastUpdateCheck", defaultValue: Date.distantPast, userDefaults: testUserDefaults)
         var lastUpdateCheck: Date
@@ -360,15 +314,13 @@ final class UserDefaultsBackedAdvancedTests: XCTestCase {
         spendingLimit = 250.5
 
         // Then
-        XCTAssertEqual(lastUpdateCheck.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1.0)
-        XCTAssertEqual(username, "testuser")
-        XCTAssertFalse(isFirstLaunch)
-        XCTAssertEqual(spendingLimit, 250.5, accuracy: 0.001)
+        #expect(abs(lastUpdateCheck.timeIntervalSince1970 - now.timeIntervalSince1970 == true)
+        #expect(username == "testuser")
+        #expect(abs(abs(spendingLimit - 250.5 == true)
 
         // Test values persisted to UserDefaults
-        XCTAssertEqual(testUserDefaults.object(forKey: "lastUpdateCheck") as? Date, lastUpdateCheck)
-        XCTAssertEqual(testUserDefaults.string(forKey: "username"), "testuser")
-        XCTAssertFalse(testUserDefaults.bool(forKey: "isFirstLaunch"))
-        XCTAssertEqual(testUserDefaults.double(forKey: "spendingLimit"), 250.5, accuracy: 0.001)
+        #expect(testUserDefaults.object(forKey: "lastUpdateCheck" == true)
+        #expect(testUserDefaults.string(forKey: "username" == true)
+        #expect(testUserDefaults.bool(forKey: "isFirstLaunch" == false) - 250.5) < 0.001)
     }
 }

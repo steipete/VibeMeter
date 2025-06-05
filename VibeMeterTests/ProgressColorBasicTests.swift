@@ -1,11 +1,14 @@
 import SwiftUI
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ProgressColorBasicTests: XCTestCase {
+@Suite("ProgressColorBasicTests")
+struct ProgressColorBasicTests {
     // MARK: - Color Threshold Tests
 
-    func testColor_BelowHalfway_ReturnsHealthy() {
+    @Test("color  below halfway  returns healthy")
+
+    func color_BelowHalfway_ReturnsHealthy() {
         // Given
         let testValues = [0.0, 0.1, 0.25, 0.4, 0.49, 0.499]
 
@@ -14,11 +17,13 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressSafe, "Progress \(progress) should return healthy gauge color")
+            #expect(color == .progressSafe)
         }
     }
 
-    func testColor_AtExactHalfway_ReturnsModerate() {
+    @Test("color  at exact halfway  returns moderate")
+
+    func color_AtExactHalfway_ReturnsModerate() {
         // Given
         let progress = 0.5
 
@@ -26,10 +31,9 @@ final class ProgressColorBasicTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .progressCaution, "Progress 0.5 should return moderate gauge color")
-    }
+        #expect(color == .progressCaution)
 
-    func testColor_BetweenHalfAndThreeQuarters_ReturnsModerate() {
+    func color_BetweenHalfAndThreeQuarters_ReturnsModerate() {
         // Given
         let testValues = [0.5, 0.6, 0.65, 0.7, 0.74, 0.749]
 
@@ -38,11 +42,13 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressCaution, "Progress \(progress) should return moderate gauge color")
+            #expect(color == .progressCaution)
         }
     }
 
-    func testColor_AtThreeQuarters_ReturnsWarning() {
+    @Test("color  at three quarters  returns warning")
+
+    func color_AtThreeQuarters_ReturnsWarning() {
         // Given
         let progress = 0.75
 
@@ -50,10 +56,9 @@ final class ProgressColorBasicTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .progressWarning, "Progress 0.75 should return warning gauge color")
-    }
+        #expect(color == .progressWarning)
 
-    func testColor_BetweenThreeQuartersAndNinetyPercent_ReturnsWarning() {
+    func color_BetweenThreeQuartersAndNinetyPercent_ReturnsWarning() {
         // Given
         let testValues = [0.75, 0.8, 0.85, 0.89, 0.899]
 
@@ -62,11 +67,13 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressWarning, "Progress \(progress) should return warning gauge color")
+            #expect(color == .progressWarning)
         }
     }
 
-    func testColor_AtNinetyPercent_ReturnsDanger() {
+    @Test("color  at ninety percent  returns danger")
+
+    func color_AtNinetyPercent_ReturnsDanger() {
         // Given
         let progress = 0.9
 
@@ -74,10 +81,9 @@ final class ProgressColorBasicTests: XCTestCase {
         let color = Color.progressColor(for: progress)
 
         // Then
-        XCTAssertEqual(color, .progressDanger, "Progress 0.9 should return danger gauge color")
-    }
+        #expect(color == .progressDanger)
 
-    func testColor_AboveNinetyPercent_ReturnsDanger() {
+    func color_AboveNinetyPercent_ReturnsDanger() {
         // Given
         let testValues = [0.9, 0.95, 1.0, 1.1, 1.5, 2.0]
 
@@ -86,13 +92,15 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressDanger, "Progress \(progress) should return danger gauge color")
+            #expect(color == .progressDanger)
         }
     }
 
     // MARK: - Boundary Value Tests for Colors
 
-    func testColor_ExactBoundaryValues() {
+    @Test("color  exact boundary values")
+
+    func color_ExactBoundaryValues() {
         // Test exact boundary values to ensure correct thresholds
         let testCases = [
             (0.499999, Color.progressSafe),
@@ -108,13 +116,15 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, expectedColor, "Progress \(progress) should return \(expectedColor)")
+            #expect(color == expectedColor)")
         }
     }
 
     // MARK: - Real-World Scenario Tests
 
-    func testColor_TypicalSpendingScenarios() {
+    @Test("color  typical spending scenarios")
+
+    func color_TypicalSpendingScenarios() {
         // Test realistic spending progress scenarios
         let scenarios = [
             (0.1, "10% of budget", Color.progressSafe),
@@ -132,7 +142,7 @@ final class ProgressColorBasicTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, expectedColor, "Scenario '\(scenario)' should have correct color")
+            #expect(color == expectedColor)
         }
     }
 }

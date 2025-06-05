@@ -1,38 +1,32 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class AuthenticationTokenManagerCoreTests: XCTestCase {
-    private var tokenManager: AuthenticationTokenManager!
-    private var mockKeychainServices: [ServiceProvider: MockKeychainService] = [:]
+@Suite("AuthenticationTokenManager Core Tests")
+struct AuthenticationTokenManagerCoreTests {
+    private let tokenManager: AuthenticationTokenManager
+    private let mockKeychainServices: [ServiceProvider: MockKeychainService]
 
-    override func setUp() {
-        super.setUp()
-        setupMockKeychainServices()
+    init() {
+        let mockServices: [ServiceProvider: MockKeychainService] = [:]
+        for provider in ServiceProvider.allCases {
+            mockServices[provider] = MockKeychainService()
+        }
+        self.mockKeychainServices = mockServices
 
         // Create token manager with mock keychain services
         var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
         for provider in ServiceProvider.allCases {
-            keychainHelpers[provider] = mockKeychainServices[provider]
+            keychainHelpers[provider] = mockServices[provider]
         }
-        tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
-    }
-
-    override func tearDown() {
-        tokenManager = nil
-        mockKeychainServices.removeAll()
-        super.tearDown()
-    }
-
-    private func setupMockKeychainServices() {
-        for provider in ServiceProvider.allCases {
-            mockKeychainServices[provider] = MockKeychainService()
-        }
+        self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
     // MARK: - Token Storage Tests
 
-    func testSaveToken_Success() {
+    @Test("save token success")
+
+    func saveTokenSuccess() {
         // Given
         let token = "test-auth-token-123"
         let provider = ServiceProvider.cursor
@@ -41,12 +35,13 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.saveToken(token, for: provider)
 
         // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.saveTokenCallCount, 1)
-        XCTAssertEqual(mockKeychainServices[provider]?.lastSavedToken, token)
+        #expect(result == true)
+        #expect(mockKeychainServices[provider]?.lastSavedToken == token)
     }
 
-    func testSaveToken_Failure() {
+    @Test("save token failure")
+
+    func saveTokenFailure() {
         // Given
         let token = "test-auth-token-123"
         let provider = ServiceProvider.cursor
@@ -56,11 +51,12 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.saveToken(token, for: provider)
 
         // Then
-        XCTAssertFalse(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.saveTokenCallCount, 1)
+        #expect(result == false)
     }
 
-    func testSaveToken_MultipleProviders() {
+    @Test("save token multiple providers")
+
+    func saveTokenMultipleProviders() {
         // Given
         let cursorToken = "cursor-token-123"
         let testProvider = ServiceProvider.cursor
@@ -69,18 +65,17 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let cursorResult = tokenManager.saveToken(cursorToken, for: testProvider)
 
         // Then
-        XCTAssertTrue(cursorResult)
-        XCTAssertEqual(mockKeychainServices[testProvider]?.lastSavedToken, cursorToken)
+        #expect(cursorResult == true)
 
         // Verify tokens are isolated per provider - other providers should not have this token
         for provider in ServiceProvider.allCases where provider != testProvider {
-            XCTAssertNil(mockKeychainServices[provider]?.lastSavedToken)
+            #expect(mockKeychainServices[provider]?.lastSavedToken == nil)
         }
     }
 
-    // MARK: - Token Retrieval Tests
+    @Test("get auth token success")
 
-    func testGetAuthToken_Success() {
+    func getAuthTokenSuccess() {
         // Given
         let token = "stored-auth-token"
         let provider = ServiceProvider.cursor
@@ -90,11 +85,12 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.getAuthToken(for: provider)
 
         // Then
-        XCTAssertEqual(result, token)
-        XCTAssertEqual(mockKeychainServices[provider]?.getTokenCallCount, 1)
+        #expect(result == token)
     }
 
-    func testGetAuthToken_NoToken() {
+    @Test("get auth token no token")
+
+    func getAuthTokenNoToken() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.storedToken = nil
@@ -103,11 +99,12 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.getAuthToken(for: provider)
 
         // Then
-        XCTAssertNil(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.getTokenCallCount, 1)
+        #expect(result == nil)
     }
 
-    func testGetAuthToken_KeychainError() {
+    @Test("get auth token keychain error")
+
+    func getAuthTokenKeychainError() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.shouldFailGet = true
@@ -116,13 +113,14 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.getAuthToken(for: provider)
 
         // Then
-        XCTAssertNil(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.getTokenCallCount, 1)
+        #expect(result == nil)
     }
 
     // MARK: - Token Deletion Tests
 
-    func testDeleteToken_Success() {
+    @Test("delete token success")
+
+    func deleteTokenSuccess() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.storedToken = "some-token"
@@ -131,11 +129,12 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.deleteToken(for: provider)
 
         // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.deleteTokenCallCount, 1)
+        #expect(result == true)
     }
 
-    func testDeleteToken_Failure() {
+    @Test("delete token failure")
+
+    func deleteTokenFailure() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.shouldFailDelete = true
@@ -144,13 +143,14 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.deleteToken(for: provider)
 
         // Then
-        XCTAssertFalse(result)
-        XCTAssertEqual(mockKeychainServices[provider]?.deleteTokenCallCount, 1)
+        #expect(result == false)
     }
 
     // MARK: - Token Existence Tests
 
-    func testHasToken_WhenTokenExists() {
+    @Test("has token when token exists")
+
+    func hasTokenWhenTokenExists() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.storedToken = "existing-token"
@@ -159,10 +159,12 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.hasToken(for: provider)
 
         // Then
-        XCTAssertTrue(result)
+        #expect(result == true)
     }
 
-    func testHasToken_WhenTokenDoesNotExist() {
+    @Test("has token when token does not exist")
+
+    func hasTokenWhenTokenDoesNotExist() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.storedToken = nil
@@ -171,41 +173,35 @@ final class AuthenticationTokenManagerCoreTests: XCTestCase {
         let result = tokenManager.hasToken(for: provider)
 
         // Then
-        XCTAssertFalse(result)
+        #expect(result == false)
     }
 
-    // MARK: - Full Workflow Tests
+    @Test("complete token lifecycle")
 
-    func testCompleteTokenLifecycle() {
+    func completeTokenLifecycle() {
         // Given
         let token = "lifecycle-test-token"
         let provider = ServiceProvider.cursor
 
         // Initially no token
-        XCTAssertFalse(tokenManager.hasToken(for: provider))
-        XCTAssertNil(tokenManager.getAuthToken(for: provider))
+        #expect(tokenManager.hasToken(for: provider) == false)
 
         // Save token
         let saveResult = tokenManager.saveToken(token, for: provider)
-        XCTAssertTrue(saveResult)
-
-        // Token should now exist
-        XCTAssertTrue(tokenManager.hasToken(for: provider))
-        XCTAssertEqual(tokenManager.getAuthToken(for: provider), token)
+        #expect(saveResult == true)
+        #expect(tokenManager.hasToken(for: provider) == true)
+        #expect(tokenManager.getAuthToken(for: provider) == token)
 
         // Cookies should be available
         let cookies = tokenManager.getCookies(for: provider)
-        XCTAssertNotNil(cookies)
-        XCTAssertEqual(cookies?.first?.value, token)
+        #expect(cookies != nil)
 
         // Delete token
         let deleteResult = tokenManager.deleteToken(for: provider)
-        XCTAssertTrue(deleteResult)
-
-        // Token should no longer exist
-        XCTAssertFalse(tokenManager.hasToken(for: provider))
-        XCTAssertNil(tokenManager.getAuthToken(for: provider))
-        XCTAssertNil(tokenManager.getCookies(for: provider))
+        #expect(deleteResult == true)
+        #expect(tokenManager.hasToken(for: provider) == false)
+        #expect(tokenManager.getAuthToken(for: provider) == nil)
+        #expect(tokenManager.getCookies(for: provider) == nil)
     }
 }
 

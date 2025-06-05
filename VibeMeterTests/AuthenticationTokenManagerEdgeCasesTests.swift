@@ -1,38 +1,32 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class AuthenticationTokenManagerEdgeCasesTests: XCTestCase {
-    private var tokenManager: AuthenticationTokenManager!
-    private var mockKeychainServices: [ServiceProvider: MockKeychainService] = [:]
+@Suite("AuthenticationTokenManager Edge Cases Tests")
+struct AuthenticationTokenManagerEdgeCasesTests {
+    private let tokenManager: AuthenticationTokenManager
+    private let mockKeychainServices: [ServiceProvider: MockKeychainService]
 
-    override func setUp() {
-        super.setUp()
-        setupMockKeychainServices()
+    init() {
+        let services: [ServiceProvider: MockKeychainService] = [:]
+        for provider in ServiceProvider.allCases {
+            services[provider] = MockKeychainService()
+        }
+        self.mockKeychainServices = services
 
         // Create token manager with mock keychain services
         var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
         for provider in ServiceProvider.allCases {
-            keychainHelpers[provider] = mockKeychainServices[provider]
+            keychainHelpers[provider] = services[provider]
         }
-        tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
-    }
-
-    override func tearDown() {
-        tokenManager = nil
-        mockKeychainServices.removeAll()
-        super.tearDown()
-    }
-
-    private func setupMockKeychainServices() {
-        for provider in ServiceProvider.allCases {
-            mockKeychainServices[provider] = MockKeychainService()
-        }
+        self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
     // MARK: - Provider Isolation Tests
 
-    func testProviderIsolation() {
+    @Test("provider isolation")
+
+    func providerIsolation() {
         // Given
         let cursorToken = "cursor-token"
         let cursorProvider = ServiceProvider.cursor
@@ -41,20 +35,20 @@ final class AuthenticationTokenManagerEdgeCasesTests: XCTestCase {
         let cursorSaved = tokenManager.saveToken(cursorToken, for: cursorProvider)
 
         // Then
-        XCTAssertTrue(cursorSaved)
-
-        // Verify tokens are isolated
-        XCTAssertEqual(tokenManager.getAuthToken(for: cursorProvider), cursorToken)
+        #expect(cursorSaved == true)
+        #expect(tokenManager.getAuthToken(for: cursorProvider) == cursorToken)
 
         // Other providers should not have this token
         for provider in ServiceProvider.allCases where provider != cursorProvider {
-            XCTAssertNil(tokenManager.getAuthToken(for: provider))
+            #expect(tokenManager.getAuthToken(for: provider) == nil)
         }
     }
 
     // MARK: - Edge Cases
 
-    func testSaveEmptyToken() {
+    @Test("save empty token")
+
+    func saveEmptyToken() {
         // Given
         let emptyToken = ""
         let provider = ServiceProvider.cursor
@@ -63,11 +57,13 @@ final class AuthenticationTokenManagerEdgeCasesTests: XCTestCase {
         let result = tokenManager.saveToken(emptyToken, for: provider)
 
         // Then
-        XCTAssertTrue(result) // Should succeed (empty string is valid)
-        XCTAssertEqual(tokenManager.getAuthToken(for: provider), emptyToken)
+        #expect(result == true)
+        #expect(tokenManager.getAuthToken(for: provider == true)
     }
 
-    func testSaveVeryLongToken() {
+    @Test("save very long token")
+
+    func saveVeryLongToken() {
         // Given
         let longToken = String(repeating: "a", count: 10000)
         let provider = ServiceProvider.cursor
@@ -76,56 +72,54 @@ final class AuthenticationTokenManagerEdgeCasesTests: XCTestCase {
         let result = tokenManager.saveToken(longToken, for: provider)
 
         // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(tokenManager.getAuthToken(for: provider), longToken)
+        #expect(result == true)
+        #expect(tokenManager.getAuthToken(for: provider) == longToken)
     }
 
-    func testMultipleOperationsOnSameProvider() {
+    @Test("multiple operations on same provider")
+
+    func multipleOperationsOnSameProvider() {
         // Given
         let provider = ServiceProvider.cursor
         let token1 = "first-token"
         let token2 = "second-token"
 
         // When/Then
-        XCTAssertTrue(tokenManager.saveToken(token1, for: provider))
-        XCTAssertEqual(tokenManager.getAuthToken(for: provider), token1)
+        #expect(tokenManager.saveToken(token1, for: provider) == true)
+        #expect(tokenManager.getAuthToken(for: provider) == token1)
 
         // Overwrite with second token
-        XCTAssertTrue(tokenManager.saveToken(token2, for: provider))
-        XCTAssertEqual(tokenManager.getAuthToken(for: provider), token2)
+        #expect(tokenManager.saveToken(token2, for: provider) == true)
+        #expect(tokenManager.getAuthToken(for: provider) == token2)
 
         // Delete
-        XCTAssertTrue(tokenManager.deleteToken(for: provider))
-        XCTAssertNil(tokenManager.getAuthToken(for: provider))
+        #expect(tokenManager.deleteToken(for: provider) == true)
+        #expect(tokenManager.getAuthToken(for: provider) == nil)
     }
 
     // MARK: - Security Tests
 
-    func testTokensAreProviderSpecific() {
+    @Test("tokens are provider specific")
+
+    func tokensAreProviderSpecific() {
         // Given
         let sharedToken = "shared-token-value"
 
         // When - Save same token value for all providers
         for provider in ServiceProvider.allCases {
             let result = tokenManager.saveToken(sharedToken, for: provider)
-            XCTAssertTrue(result)
-        }
-
-        // Then - Each provider should maintain its own token independently
-        for provider in ServiceProvider.allCases {
-            XCTAssertEqual(tokenManager.getAuthToken(for: provider), sharedToken)
+            #expect(result == true)
+            #expect(tokenManager.getAuthToken(for: provider) == sharedToken)
         }
 
         // Delete token for one provider
         let testProvider = ServiceProvider.cursor
-        XCTAssertTrue(tokenManager.deleteToken(for: testProvider))
-
-        // Only that provider should lose its token
-        XCTAssertNil(tokenManager.getAuthToken(for: testProvider))
+        #expect(tokenManager.deleteToken(for: testProvider) == true)
+        #expect(tokenManager.getAuthToken(for: testProvider) == nil)
 
         // Other providers should still have their tokens
         for provider in ServiceProvider.allCases where provider != testProvider {
-            XCTAssertEqual(tokenManager.getAuthToken(for: provider), sharedToken)
+            #expect(tokenManager.getAuthToken(for: provider) == sharedToken)
         }
     }
 }

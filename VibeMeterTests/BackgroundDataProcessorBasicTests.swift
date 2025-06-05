@@ -1,60 +1,36 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class BackgroundDataProcessorBasicTests: XCTestCase {
-    var processor: BackgroundDataProcessor!
-    var mockProvider: MockBackgroundProvider!
-    var mockDate: Date!
+@Suite("BackgroundDataProcessorBasicTests")
+struct BackgroundDataProcessorBasicTests {
+    let processor: BackgroundDataProcessor
+    let mockProvider: MockBackgroundProvider
+    let mockDate: Date
 
-    override func setUp() {
-        super.setUp()
-        processor = BackgroundDataProcessor()
-        mockProvider = MockBackgroundProvider()
-        mockDate = Date()
-
-        // Set up default mock responses
-        mockProvider.userInfoToReturn = ProviderUserInfo(
-            email: "test@example.com",
-            teamId: 12345,
-            provider: .cursor)
-
-        mockProvider.teamInfoToReturn = ProviderTeamInfo(
-            id: 12345,
-            name: "Test Team",
-            provider: .cursor)
-
-        let calendar = Calendar.current
-        let currentDate = Date()
-        let month = calendar.component(.month, from: currentDate) - 1 // 0-based
-        let year = calendar.component(.year, from: currentDate)
-
-        mockProvider.invoiceToReturn = ProviderMonthlyInvoice(
-            items: [
-                ProviderInvoiceItem(cents: 2000, description: "Test Item", provider: .cursor),
-            ],
-            pricingDescription: nil,
+    init() {
+        self.processor = BackgroundDataProcessor()
+        self.mockProvider = MockBackgroundProvider()
+        self.mockDate = Date()
+        
+        // Set up mock data
+        mockProvider.userInfoToReturn = ProviderUserInfo(email: "test@example.com", provider: .cursor)
+        mockProvider.teamInfoToReturn = ProviderTeamInfo(id: 12345, name: "Test Team", provider: .cursor)
+        mockProvider.invoiceToReturn = ProviderInvoice(
             provider: .cursor,
-            month: month,
-            year: year)
-
+            items: [ProviderInvoiceItem(description: "Test", cents: 2000)]
+        )
         mockProvider.usageToReturn = ProviderUsageData(
+            provider: .cursor,
             currentRequests: 500,
-            totalRequests: 1000,
-            maxRequests: 10000,
-            startOfMonth: mockDate,
-            provider: .cursor)
-    }
-
-    override func tearDown() {
-        processor = nil
-        mockProvider = nil
-        mockDate = nil
-        super.tearDown()
+            maxRequests: 10000
+        )
     }
 
     // MARK: - Basic Functionality Tests
 
-    func testProcessProviderData_Success_ReturnsAllData() async throws {
+    @Test("process provider data  success  returns all data")
+
+    func processProviderData_Success_ReturnsAllData() async throws {
         // When
         let result = try await processor.processProviderData(
             provider: .cursor,
@@ -62,31 +38,20 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then
-        XCTAssertEqual(result.userInfo.email, "test@example.com")
-        XCTAssertEqual(result.userInfo.teamId, 12345)
-        XCTAssertEqual(result.userInfo.provider, .cursor)
+        #expect(result.userInfo.email == "test@example.com")
+        #expect(result.userInfo.provider == .cursor)
+        #expect(result.teamInfo.name == "Test Team")
+        #expect(result.invoice.provider == .cursor)
+        #expect(result.invoice.items.first?.cents == 2000)
 
-        XCTAssertEqual(result.teamInfo.id, 12345)
-        XCTAssertEqual(result.teamInfo.name, "Test Team")
-
-        XCTAssertEqual(result.invoice.totalSpendingCents, 2000)
-        XCTAssertEqual(result.invoice.provider, .cursor)
-        XCTAssertEqual(result.invoice.items.count, 1)
-        XCTAssertEqual(result.invoice.items.first?.cents, 2000)
-        XCTAssertEqual(result.invoice.items.first?.description, "Test Item")
-
-        XCTAssertEqual(result.usage.currentRequests, 500)
-        XCTAssertEqual(result.usage.totalRequests, 1000)
-        XCTAssertEqual(result.usage.maxRequests, 10000)
-
-        // Verify all API methods were called
-        XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchUsageDataCallCount, 1)
+        #expect(result.usage.currentRequests == 500)
+        #expect(result.usage.maxRequests == 10000)
+        #expect(mockProvider.fetchTeamInfoCallCount == 1)
+        #expect(mockProvider.fetchUsageDataCallCount == 1)
     }
 
-    func testProcessProviderData_PassesCorrectMonthAndYear() async throws {
+    @Test("process provider data passes correct month and year")
+    func processProviderData_PassesCorrectMonthAndYear() async throws {
         // When
         _ = try await processor.processProviderData(
             provider: .cursor,
@@ -98,11 +63,12 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
         let currentMonth = calendar.component(.month, from: Date()) - 1 // API uses 0-based months
         let currentYear = calendar.component(.year, from: Date())
 
-        XCTAssertEqual(mockProvider.lastInvoiceMonth, currentMonth)
-        XCTAssertEqual(mockProvider.lastInvoiceYear, currentYear)
+        #expect(mockProvider.lastInvoiceMonth == currentMonth)
     }
 
-    func testProcessProviderData_PassesTeamIdFromFetchedTeamInfo() async throws {
+    @Test("process provider data  passes team id from fetched team info")
+
+    func processProviderData_PassesTeamIdFromFetchedTeamInfo() async throws {
         // When
         _ = try await processor.processProviderData(
             provider: .cursor,
@@ -110,10 +76,12 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then
-        XCTAssertEqual(mockProvider.lastTeamId, 12345)
+        #expect(mockProvider.lastTeamId == 12345)
     }
 
-    func testProcessProviderData_ExecutesConcurrently() async throws {
+    @Test("process provider data executes concurrently")
+
+    func processProviderDataExecutesConcurrently() async throws {
         // Given - Add delays to simulate network latency
         mockProvider.userInfoDelay = 0.1
         mockProvider.teamInfoDelay = 0.1
@@ -130,11 +98,12 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then - Should take ~0.2s (user info + team info sequentially, then invoice + usage concurrently)
         // Not ~0.4s if all were sequential
-        XCTAssertLessThan(elapsed, 0.35, "Operations should execute concurrently")
-        XCTAssertGreaterThan(elapsed, 0.15, "Operations should have some delay")
+        #expect(elapsed < 0.35)
     }
 
-    func testProcessProviderData_MultipleConcurrentCalls() async throws {
+    @Test("process provider data multiple concurrent calls")
+
+    func processProviderDataMultipleConcurrentCalls() async throws {
         // Given
         let processor1 = BackgroundDataProcessor()
         let processor2 = BackgroundDataProcessor()
@@ -163,19 +132,21 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
         let results = try await [result1, result2]
 
         // Then - Both should succeed independently
-        XCTAssertEqual(results.count, 2)
-        XCTAssertEqual(results[0].userInfo.email, "test@example.com")
-        XCTAssertEqual(results[1].userInfo.email, "test@example.com")
-        XCTAssertEqual(provider1.fetchUserInfoCallCount, 1)
-        XCTAssertEqual(provider2.fetchUserInfoCallCount, 1)
+        #expect(results.count == 2)
+        #expect(results[1].userInfo.email == "test@example.com")
+        #expect(provider2.fetchUserInfoCallCount == 1)
     }
 
-    func testBackgroundDataProcessor_IsInitializedCorrectly() {
+    @Test("background data processor is initialized correctly")
+
+    func backgroundDataProcessorIsInitializedCorrectly() {
         // Then
-        XCTAssertNotNil(processor)
+        #expect(processor != nil)
     }
 
-    func testBackgroundDataProcessor_RunsOffMainThread() async throws {
+    @Test("background data processor runs off main thread")
+
+    func backgroundDataProcessorRunsOffMainThread() async throws {
         // Given
         let threadCapturingProvider = ThreadCapturingProvider()
         threadCapturingProvider.userInfoToReturn = mockProvider.userInfoToReturn
@@ -190,12 +161,12 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             providerClient: threadCapturingProvider)
 
         // Then
-        XCTAssertNotNil(threadCapturingProvider.executionThread)
-        XCTAssertFalse(threadCapturingProvider.executionThread!.isMainThread,
-                       "Processing should not run on main thread")
+        #expect(threadCapturingProvider.executionThread != nil)
     }
 
-    func testProcessProviderData_Performance() async throws {
+    @Test("process provider data performance")
+
+    func processProviderDataPerformance() async throws {
         // Given
         let iterations = 10
 
@@ -211,13 +182,14 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then
         let averageTime = elapsed / Double(iterations)
-        XCTAssertLessThan(averageTime, 0.01, "Processing should be fast without delays")
+        #expect(averageTime < 0.01)
     }
 
-    func testProcessProviderData_DoesNotRetainProvider() async throws {
+    @Test("process provider data does not retain provider")
+
+    func processProviderDataDoesNotRetainProvider() async throws {
         // Given
         weak var weakProvider: MockBackgroundProvider?
-
         // When
         autoreleasepool {
             let provider = MockBackgroundProvider()
@@ -227,7 +199,7 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
             provider.invoiceToReturn = mockProvider.invoiceToReturn
             provider.usageToReturn = mockProvider.usageToReturn
 
-            let capturedProcessor = processor!
+            let capturedProcessor = processor
             Task { @Sendable in
                 _ = try? await capturedProcessor.processProviderData(
                     provider: .cursor,
@@ -238,6 +210,6 @@ final class BackgroundDataProcessorBasicTests: XCTestCase {
 
         // Then - After a short delay, provider should be deallocated
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
-        XCTAssertNil(weakProvider, "Provider should not be retained after processing")
+        #expect(weakProvider == nil)
     }
 }

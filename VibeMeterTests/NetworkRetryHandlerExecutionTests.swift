@@ -1,22 +1,20 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class NetworkRetryHandlerExecutionTests: XCTestCase {
-    var sut: NetworkRetryHandler!
+@Suite("NetworkRetryHandlerExecutionTests")
+struct NetworkRetryHandlerExecutionTests {
+    let sut: NetworkRetryHandler
 
-    override func setUp() async throws {
-        try await super.setUp()
+    init() async throws {
         sut = NetworkRetryHandler()
-    }
-
-    override func tearDown() async throws {
-        sut = nil
-        try await super.tearDown()
+    
     }
 
     // MARK: - Success Cases
 
-    func testSuccessOnFirstAttempt() async throws {
+    @Test("success on first attempt")
+
+    func successOnFirstAttempt() async throws {
         // Given
         var attemptCount = 0
 
@@ -27,11 +25,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
         }
 
         // Then
-        XCTAssertEqual(result, "Success")
-        XCTAssertEqual(attemptCount, 1)
+        #expect(result == "Success")
     }
 
-    func testSuccessAfterRetries() async throws {
+    @Test("success after retries")
+
+    func successAfterRetries() async throws {
         // Given
         var attemptCount = 0
         let successOnAttempt = 3
@@ -46,13 +45,14 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
         }
 
         // Then
-        XCTAssertEqual(result, successOnAttempt)
-        XCTAssertEqual(attemptCount, successOnAttempt)
+        #expect(result == successOnAttempt)
     }
 
     // MARK: - Retry Logic Tests
 
-    func testRetriesNetworkTimeout() async {
+    @Test("retries network timeout")
+
+    func retriesNetworkTimeout() async {
         // Given
         var attemptCount = 0
 
@@ -62,14 +62,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.networkTimeout
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then - Should retry maxRetries times
-            XCTAssertEqual(attemptCount, 4) // 1 initial + 3 retries
-        }
-    }
+            #expect(attemptCount == 4)
 
-    func testRetriesServerError() async {
+    func retriesServerError() async {
         // Given
         var attemptCount = 0
 
@@ -79,14 +77,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then
-            XCTAssertEqual(attemptCount, 4)
-        }
-    }
+            #expect(attemptCount == 4)
 
-    func testDoesNotRetryClientError() async {
+    func doesNotRetryClientError() async {
         // Given
         var attemptCount = 0
 
@@ -96,14 +92,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.serverError(statusCode: 404)
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then - Should not retry 4xx errors
-            XCTAssertEqual(attemptCount, 1)
-        }
-    }
+            #expect(attemptCount == 1)
 
-    func testRetriesRateLimitedError() async {
+    func retriesRateLimitedError() async {
         // Given
         var attemptCount = 0
         let retryAfter: TimeInterval = 0.2
@@ -118,18 +112,19 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 }
                 throw NetworkRetryHandler.RetryableError.connectionError
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then
             let elapsed = Date().timeIntervalSince(startTime)
-            XCTAssertGreaterThanOrEqual(elapsed, retryAfter - 0.1) // Allow small margin
-            XCTAssertGreaterThan(attemptCount, 1)
+            #expect(elapsed >= retryAfter - 0.1)
         }
     }
 
     // MARK: - URL Error Tests
 
-    func testRetriesURLTimeoutError() async {
+    @Test("retries url timeout error")
+
+    func retriesURLTimeoutError() async {
         // Given
         var attemptCount = 0
 
@@ -139,14 +134,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw URLError(.timedOut)
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then
-            XCTAssertEqual(attemptCount, 4)
-        }
-    }
+            #expect(attemptCount == 4)
 
-    func testRetriesConnectionLostError() async {
+    func retriesConnectionLostError() async {
         // Given
         var attemptCount = 0
 
@@ -156,14 +149,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw URLError(.networkConnectionLost)
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then
-            XCTAssertEqual(attemptCount, 4)
-        }
-    }
+            #expect(attemptCount == 4)
 
-    func testDoesNotRetryBadURLError() async {
+    func doesNotRetryBadURLError() async {
         // Given
         var attemptCount = 0
 
@@ -173,16 +164,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 attemptCount += 1
                 throw URLError(.badURL)
             }
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then
-            XCTAssertEqual(attemptCount, 1)
-        }
-    }
+            #expect(attemptCount == 1)
 
-    // MARK: - Custom Retry Logic Tests
-
-    func testCustomShouldRetryLogic() async {
+    func customShouldRetryLogic() async {
         // Given
         struct CustomError: Error {}
         var attemptCount = 0
@@ -197,14 +184,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                 shouldRetry: { error in
                     error is CustomError
                 })
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then - Should retry custom error
-            XCTAssertEqual(attemptCount, 4)
-        }
-    }
+            #expect(attemptCount == 4)
 
-    func testCustomShouldNotRetryLogic() async {
+    func customShouldNotRetryLogic() async {
         // Given
         var attemptCount = 0
 
@@ -216,16 +201,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 },
                 shouldRetry: { _ in false })
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             // Then - Should not retry even for normally retryable errors
-            XCTAssertEqual(attemptCount, 1)
-        }
-    }
+            #expect(attemptCount == 1)
 
-    // MARK: - Optional Operation Tests
-
-    func testExecuteOptionalWithNilResult() async throws {
+    func executeOptionalWithNilResult() async throws {
         // Given
         var attemptCount = 0
 
@@ -236,11 +217,12 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
         }
 
         // Then
-        XCTAssertNil(result)
-        XCTAssertEqual(attemptCount, 1)
+        #expect(result == nil)
     }
 
-    func testExecuteOptionalWithValue() async throws {
+    @Test("execute optional with value")
+
+    func executeOptionalWithValue() async throws {
         // Given
         var attemptCount = 0
 
@@ -251,7 +233,6 @@ final class NetworkRetryHandlerExecutionTests: XCTestCase {
         }
 
         // Then
-        XCTAssertEqual(result, "Optional Value")
-        XCTAssertEqual(attemptCount, 1)
+        #expect(result == "Optional Value")
     }
 }

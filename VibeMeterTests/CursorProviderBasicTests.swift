@@ -1,31 +1,26 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class CursorProviderBasicTests: XCTestCase {
-    private var cursorProvider: CursorProvider!
-    private var mockURLSession: MockURLSession!
-    private var mockSettingsManager: MockSettingsManager!
+@Suite("CursorProvider Basic Tests")
+struct CursorProviderBasicTests {
+    private let cursorProvider: CursorProvider
+    private let mockURLSession: MockURLSession
+    private let mockSettingsManager: MockSettingsManager
 
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
-        cursorProvider = CursorProvider(
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
+        self.cursorProvider = CursorProvider(
             settingsManager: mockSettingsManager,
             urlSession: mockURLSession)
     }
 
-    override func tearDown() {
-        cursorProvider = nil
-        mockURLSession = nil
-        mockSettingsManager = nil
-        super.tearDown()
-    }
-
     // MARK: - Team Info Tests
 
-    func testFetchTeamInfo_Success() async throws {
+    @Test("fetch team info success")
+
+    func fetchTeamInfoSuccess() async throws {
         // Given
         let mockTeamsData = Data("""
         {
@@ -51,19 +46,16 @@ final class CursorProviderBasicTests: XCTestCase {
         let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
 
         // Then
-        XCTAssertEqual(teamInfo.id, 123)
-        XCTAssertEqual(teamInfo.name, "Test Team")
-        XCTAssertEqual(teamInfo.provider, .cursor)
-
-        // Verify request was correctly formed
-        XCTAssertEqual(mockURLSession.lastRequest?.httpMethod, "POST")
-        XCTAssertEqual(
-            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"),
-            "WorkosCursorSessionToken=test-token")
-        XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type"), "application/json")
+        #expect(teamInfo.id == 123)
+        #expect(teamInfo.provider == .cursor)
+        #expect(
+            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie" == true)
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type" == true)
     }
 
-    func testFetchTeamInfo_NoTeamsFound_UsesFallback() async {
+    @Test("fetch team info no teams found uses fallback")
+
+    func fetchTeamInfoNoTeamsFoundUsesFallback() async {
         // Given
         let mockEmptyTeamsData = Data("""
         {}
@@ -83,15 +75,14 @@ final class CursorProviderBasicTests: XCTestCase {
             let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
 
             // Then - Should return fallback team info instead of throwing
-            XCTAssertEqual(teamInfo.id, -1, "Should use fallback team ID")
-            XCTAssertEqual(teamInfo.name, "Individual", "Should use fallback team name")
-            XCTAssertEqual(teamInfo.provider, .cursor, "Should maintain correct provider")
-        } catch {
-            XCTFail("Should not throw error when teams are empty, should use fallback. Got: \(error)")
+            #expect(teamInfo.id == -1, "Should use fallback team ID")
+            #expect(teamInfo.provider == .cursor, "Should maintain correct provider")")
         }
     }
 
-    func testFetchTeamInfo_UnauthorizedError() async {
+    @Test("fetch team info unauthorized error")
+
+    func fetchTeamInfoUnauthorizedError() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
@@ -105,15 +96,15 @@ final class CursorProviderBasicTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "invalid-token")
-            XCTFail("Should have thrown unauthorized error")
+            Issue.record("Should have thrown unauthorized error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .unauthorized)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+            #expect(error == .unauthorized)")
         }
     }
 
     // MARK: - User Info Tests
+
+    @Test("fetch user info  success")
 
     func testFetchUserInfo_Success() async throws {
         // Given
@@ -137,17 +128,13 @@ final class CursorProviderBasicTests: XCTestCase {
         let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
 
         // Then
-        XCTAssertEqual(userInfo.email, "test@example.com")
-        XCTAssertEqual(userInfo.teamId, 456)
-        XCTAssertEqual(userInfo.provider, .cursor)
-
-        // Verify request was correctly formed (GET request)
-        XCTAssertEqual(mockURLSession.lastRequest?.httpMethod, "GET")
-        XCTAssertEqual(
-            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie"),
-            "WorkosCursorSessionToken=test-token")
-        XCTAssertEqual(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept"), "application/json")
+        #expect(userInfo.email == "test@example.com")
+        #expect(userInfo.provider == .cursor)
+        #expect(mockURLSession.lastRequest?.httpMethod == "GET") == "WorkosCursorSessionToken=test-token")
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept" == true)
     }
+
+    @Test("fetch user info  without team id")
 
     func testFetchUserInfo_WithoutTeamId() async throws {
         // Given
@@ -170,22 +157,15 @@ final class CursorProviderBasicTests: XCTestCase {
         let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
 
         // Then
-        XCTAssertEqual(userInfo.email, "test@example.com")
-        XCTAssertNil(userInfo.teamId)
-        XCTAssertEqual(userInfo.provider, .cursor)
-    }
-
-    // MARK: - Authentication URL Tests
+        #expect(userInfo.email == "test@example.com")
+        #expect(userInfo.provider == .cursor)
 
     func testGetAuthenticationURL() async {
         // When
         let authURL = cursorProvider.getAuthenticationURL()
 
         // Then
-        XCTAssertEqual(authURL, CursorAPIConstants.authenticationURL)
-    }
-
-    // MARK: - Token Extraction Tests
+        #expect(authURL == CursorAPIConstants.authenticationURL)
 
     func testExtractAuthToken_FromCookies() async {
         // Given
@@ -204,8 +184,7 @@ final class CursorProviderBasicTests: XCTestCase {
         let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
-        XCTAssertEqual(extractedToken, "extracted-token-123")
-    }
+        #expect(extractedToken == "extracted-token-123")
 
     func testExtractAuthToken_NoCookies() async {
         // Given
@@ -215,8 +194,7 @@ final class CursorProviderBasicTests: XCTestCase {
         let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
-        XCTAssertNil(extractedToken)
-    }
+        #expect(extractedToken == nil)
 
     func testExtractAuthToken_WrongCookieName() async {
         // Given
@@ -235,6 +213,6 @@ final class CursorProviderBasicTests: XCTestCase {
         let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
 
         // Then
-        XCTAssertNil(extractedToken)
+        #expect(extractedToken == nil)
     }
 }

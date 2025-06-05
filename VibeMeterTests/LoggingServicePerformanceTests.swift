@@ -1,18 +1,23 @@
 import os.log
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class LoggingServicePerformanceTests: XCTestCase {
+@Suite("LoggingServicePerformanceTests")
+struct LoggingServicePerformanceTests {
     // MARK: - Edge Cases Tests
 
-    func testLog_EmptyMessage_HandlesGracefully() {
+    @Test("log  empty message  handles gracefully")
+
+    func log_EmptyMessage_HandlesGracefully() {
         // When/Then - Should handle empty message gracefully
         LoggingService.log("")
 
         // Test passes if no exception is thrown
     }
 
-    func testLog_VeryLongMessage_HandlesGracefully() {
+    @Test("log  very long message  handles gracefully")
+
+    func log_VeryLongMessage_HandlesGracefully() {
         // Given
         let longMessage = String(repeating: "a", count: 10000)
 
@@ -22,7 +27,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_MessageWithSpecialCharacters_HandlesGracefully() {
+    @Test("log  message with special characters  handles gracefully")
+
+    func log_MessageWithSpecialCharacters_HandlesGracefully() {
         // Given
         let specialMessage = "Test 🚀 with émojis and spëcıal chàracters ñ ß ∂ ∑"
 
@@ -32,7 +39,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_MessageWithNewlines_HandlesGracefully() {
+    @Test("log  message with newlines  handles gracefully")
+
+    func log_MessageWithNewlines_HandlesGracefully() {
         // Given
         let multilineMessage = "First line\nSecond line\nThird line"
 
@@ -44,7 +53,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
 
     // MARK: - Bundle Identifier Tests
 
-    func testGetLogger_WithDefaultSubsystem_UsesMainBundle() {
+    @Test("get logger  with default subsystem  uses main bundle")
+
+    func getLogger_WithDefaultSubsystem_UsesMainBundle() {
         // The private getLogger method should use main bundle identifier
         // We can't test this directly, but we can verify logging doesn't crash
 
@@ -54,7 +65,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testGetLogger_WithNilBundleIdentifier_UsesFallback() {
+    @Test("get logger  with nil bundle identifier  uses fallback")
+
+    func getLogger_WithNilBundleIdentifier_UsesFallback() {
         // If bundle identifier is nil, should use fallback
         // This is hard to test directly, but the logging should still work
 
@@ -66,7 +79,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
 
     // MARK: - Performance Tests
 
-    func testLogging_Performance() {
+    @Test("logging  performance")
+
+    func logging_Performance() {
         // Given
         let iterations = 1000
         let testMessage = "Performance test message"
@@ -79,10 +94,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 5.0, "Logging should be reasonably fast")
-    }
+        #expect(duration < 5.0)
 
-    func testLoggingWithErrors_Performance() {
+    func loggingWithErrors_Performance() {
         // Given
         let iterations = 500
         let testError = NSError(domain: "PerformanceDomain", code: 123, userInfo: [
@@ -97,12 +111,9 @@ final class LoggingServicePerformanceTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 3.0, "Error logging should be reasonably fast")
-    }
+        #expect(duration < 3.0)
 
-    // MARK: - Thread Safety Tests
-
-    func testConcurrentLogging_ThreadSafety() async {
+    func concurrentLogging_ThreadSafety() async {
         // Given
         let taskCount = 50
 
@@ -118,6 +129,6 @@ final class LoggingServicePerformanceTests: XCTestCase {
         }
 
         // Then - Should complete without crashes or deadlocks
-        XCTAssertTrue(true, "Concurrent logging should be thread-safe")
+        #expect(true == true)
     }
 }

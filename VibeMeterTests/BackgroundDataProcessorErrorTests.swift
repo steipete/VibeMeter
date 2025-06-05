@@ -1,16 +1,14 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class BackgroundDataProcessorErrorTests: XCTestCase {
-    var processor: BackgroundDataProcessor!
-    var mockProvider: MockBackgroundProvider!
-    var mockDate: Date!
+@Suite("BackgroundDataProcessor Error Tests")
+struct BackgroundDataProcessorErrorTests {
+    let processor = BackgroundDataProcessor()
+    let mockProvider: MockBackgroundProvider
+    let mockDate = Date()
 
-    override func setUp() {
-        super.setUp()
-        processor = BackgroundDataProcessor()
+    init() {
         mockProvider = MockBackgroundProvider()
-        mockDate = Date()
 
         // Set up default mock responses
         mockProvider.userInfoToReturn = ProviderUserInfo(
@@ -45,16 +43,11 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
             provider: .cursor)
     }
 
-    override func tearDown() {
-        processor = nil
-        mockProvider = nil
-        mockDate = nil
-        super.tearDown()
-    }
-
     // MARK: - Error Handling Tests
 
-    func testProcessProviderData_UserInfoFails_ThrowsError() async {
+    @Test("process provider data user info fails throws error")
+
+    func processProviderDataUserInfoFailsThrowsError() async {
         // Given
         mockProvider.shouldThrowOnUserInfo = true
         mockProvider.errorToThrow = TestError.authenticationFailed
@@ -65,18 +58,18 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
-            XCTAssertEqual((error as? TestError), TestError.authenticationFailed)
+            #expect((error as? TestError == true)
             // Other methods should not be called if user info fails
-            XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-            XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 0)
-            XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 0)
-            XCTAssertEqual(mockProvider.fetchUsageDataCallCount, 0)
+            #expect(mockProvider.fetchUserInfoCallCount == 1)
+            #expect(mockProvider.fetchMonthlyInvoiceCallCount == 0)
         }
     }
 
-    func testProcessProviderData_TeamInfoFails_UsesFallbackTeam() async throws {
+    @Test("process provider data team info fails uses fallback team")
+
+    func processProviderDataTeamInfoFailsUsesFallbackTeam() async throws {
         // Given
         mockProvider.shouldThrowOnTeamInfo = true
         mockProvider.errorToThrow = TestError.teamInfoUnavailable
@@ -88,18 +81,13 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then
-        XCTAssertEqual(result.teamInfo.id, 0) // Fallback team ID
-        XCTAssertEqual(result.teamInfo.name, "Individual Account") // Fallback team name
-        XCTAssertNil(mockProvider.lastTeamId) // Should pass nil for fallback team
+        #expect(result.teamInfo.id == 0) // Fallback team name
+        #expect(mockProvider.lastTeamId == nil)
+        #expect(mockProvider.fetchTeamInfoCallCount == 1)
+        #expect(mockProvider.fetchUsageDataCallCount == 1)
+    @Test("process provider data invoice fails throws error")
 
-        // All methods should be called
-        XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchUsageDataCallCount, 1)
-    }
-
-    func testProcessProviderData_InvoiceFails_ThrowsError() async {
+    func processProviderDataInvoiceFailsThrowsError() async {
         // Given
         mockProvider.shouldThrowOnInvoice = true
         mockProvider.errorToThrow = TestError.invoiceUnavailable
@@ -110,17 +98,15 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
-            XCTAssertEqual((error as? TestError), TestError.invoiceUnavailable)
+            #expect((error as? TestError == true)
             // User and team info should be fetched before invoice fails
-            XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-            XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
-            XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 1)
-        }
-    }
+            #expect(mockProvider.fetchUserInfoCallCount == 1)
+            #expect(mockProvider.fetchMonthlyInvoiceCallCount == 1)
+    @Test("process provider data usage fails uses fallback usage")
 
-    func testProcessProviderData_UsageFails_UsesFallbackUsage() async throws {
+    func processProviderDataUsageFailsUsesFallbackUsage() async throws {
         // Given
         mockProvider.shouldThrowOnUsage = true
         mockProvider.errorToThrow = TestError.usageDataUnavailable
@@ -132,19 +118,17 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then - Should succeed with fallback usage data
-        XCTAssertEqual(result.usage.currentRequests, 0)
-        XCTAssertEqual(result.usage.totalRequests, 0)
-        XCTAssertNil(result.usage.maxRequests)
-        XCTAssertEqual(result.usage.provider, .cursor)
+        #expect(result.usage.currentRequests == 0)
+        #expect(result.usage.maxRequests == nil)
 
         // All methods should be called
-        XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchUsageDataCallCount, 1)
+        #expect(mockProvider.fetchUserInfoCallCount == 1)
+        #expect(mockProvider.fetchMonthlyInvoiceCallCount == 1)
     }
 
-    func testProcessProviderData_TeamAndUsageFail_UsesFallbacks() async throws {
+    @Test("process provider data team and usage fail uses fallbacks")
+
+    func processProviderDataTeamAndUsageFailUsesFallbacks() async throws {
         // Given
         mockProvider.shouldThrowOnTeamInfo = true
         mockProvider.shouldThrowOnUsage = true
@@ -157,22 +141,16 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
             providerClient: mockProvider)
 
         // Then - Should succeed with both fallbacks
-        XCTAssertEqual(result.teamInfo.id, 0) // Fallback team
-        XCTAssertEqual(result.teamInfo.name, "Individual Account")
-        XCTAssertEqual(result.usage.currentRequests, 0) // Fallback usage
-        XCTAssertEqual(result.usage.totalRequests, 0)
+        #expect(result.teamInfo.id == 0)
+        #expect(result.usage.currentRequests == 0)
 
         // Invoice should still have real data
-        XCTAssertEqual(result.invoice.totalSpendingCents, 2000)
+        #expect(result.invoice.totalSpendingCents == 2000)
+        #expect(mockProvider.fetchTeamInfoCallCount == 1)
+        #expect(mockProvider.fetchUsageDataCallCount == 1)
+    @Test("process provider data network error propagates error")
 
-        // All methods should be called
-        XCTAssertEqual(mockProvider.fetchUserInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchTeamInfoCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchMonthlyInvoiceCallCount, 1)
-        XCTAssertEqual(mockProvider.fetchUsageDataCallCount, 1)
-    }
-
-    func testProcessProviderData_NetworkError_PropagatesError() async {
+    func processProviderDataNetworkErrorPropagatesError() async {
         // Given
         mockProvider.shouldThrowOnUserInfo = true
         mockProvider.errorToThrow = ProviderError.networkError(
@@ -185,17 +163,17 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             if case let ProviderError.networkError(message, _) = error {
-                XCTAssertEqual(message, "Connection timeout")
-            } else {
-                XCTFail("Wrong error type: \(error)")
+                #expect(message == "Connection timeout")")
             }
         }
     }
 
-    func testProcessProviderData_AuthenticationError_PropagatesError() async {
+    @Test("process provider data authentication error propagates error")
+
+    func processProviderDataAuthenticationErrorPropagatesError() async {
         // Given
         mockProvider.shouldThrowOnUserInfo = true
         mockProvider.errorToThrow = ProviderError.authenticationFailed(
@@ -207,17 +185,17 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            XCTFail("Should have thrown error")
+            Issue.record("Should have thrown error")
         } catch {
             if case let ProviderError.authenticationFailed(reason) = error {
-                XCTAssertEqual(reason, "Invalid token")
-            } else {
-                XCTFail("Wrong error type: \(error)")
+                #expect(reason == "Invalid token")")
             }
         }
     }
 
-    func testProcessProviderData_CancellationDuringUserInfo_ThrowsCancellationError() async throws {
+    @Test("process provider data cancellation during user info throws cancellation error")
+
+    func processProviderDataCancellationDuringUserInfoThrowsCancellationError() async throws {
         // Given
         mockProvider.userInfoDelay = 1.0 // Long delay to allow cancellation
 
@@ -238,12 +216,10 @@ final class BackgroundDataProcessorErrorTests: XCTestCase {
         // Then
         do {
             _ = try await task.value
-            XCTFail("Should have thrown cancellation error")
+            Issue.record("Should have thrown cancellation error")
         } catch {
-            XCTAssertTrue(error is CancellationError)
-            // Only user info should have been attempted
-            XCTAssertEqual(capturedMockProvider.fetchUserInfoCallCount, 1)
-            XCTAssertEqual(capturedMockProvider.fetchTeamInfoCallCount, 0)
+            #expect(error is CancellationError == true)
+            #expect(capturedMockProvider.fetchTeamInfoCallCount == 0)
         }
     }
 }

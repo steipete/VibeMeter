@@ -1,11 +1,14 @@
 import os.log
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class LoggingServiceErrorTests: XCTestCase {
+@Suite("LoggingServiceErrorTests")
+struct LoggingServiceErrorTests {
     // MARK: - Error Handling Tests
 
-    func testLog_WithLocalizedError_HandlesErrorDescription() {
+    @Test("log  with localized error  handles error description")
+
+    func log_WithLocalizedError_HandlesErrorDescription() {
         // Given
         struct TestLocalizedError: LocalizedError {
             let errorDescription: String? = "Localized error description"
@@ -19,7 +22,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithNSError_HandlesDescription() {
+    @Test("log  with ns error  handles description")
+
+    func log_WithNSError_HandlesDescription() {
         // Given
         let nsError = NSError(domain: "TestDomain", code: 100, userInfo: [
             NSLocalizedDescriptionKey: "NSError description",
@@ -32,7 +37,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithGenericError_HandlesDescription() {
+    @Test("log  with generic error  handles description")
+
+    func log_WithGenericError_HandlesDescription() {
         // Given
         struct GenericError: Error {
             let description = "Generic error"
@@ -45,7 +52,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithNilError_HandlesGracefully() {
+    @Test("log  with nil error  handles gracefully")
+
+    func log_WithNilError_HandlesGracefully() {
         // When/Then - Should handle nil error gracefully
         LoggingService.log("Test with nil error", error: nil)
 
@@ -54,7 +63,9 @@ final class LoggingServiceErrorTests: XCTestCase {
 
     // MARK: - API Category Enhanced Error Tests
 
-    func testLog_APICategory_AddsErrorDetails() {
+    @Test("log api category  adds error details")
+
+    func log_APICategory_AddsErrorDetails() {
         // Given
         let apiError = NSError(domain: "APIErrorDomain", code: 500, userInfo: [
             NSLocalizedDescriptionKey: "Server error",
@@ -67,7 +78,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_ExchangeRateCategory_AddsErrorDetails() {
+    @Test("log  exchange rate category  adds error details")
+
+    func log_ExchangeRateCategory_AddsErrorDetails() {
         // Given
         let exchangeRateError = NSError(domain: "ExchangeRateDomain", code: 404, userInfo: [
             NSLocalizedDescriptionKey: "Currency not found",
@@ -80,7 +93,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testLog_NonAPICategory_DoesNotAddExtraDetails() {
+    @Test("log  non api category  does not add extra details")
+
+    func log_NonAPICategory_DoesNotAddExtraDetails() {
         // Given
         let uiError = NSError(domain: "UIDomain", code: 200, userInfo: [
             NSLocalizedDescriptionKey: "UI error",
@@ -95,7 +110,9 @@ final class LoggingServiceErrorTests: XCTestCase {
 
     // MARK: - Error Detail Enhancement Tests
 
-    func testErrorDetailEnhancement_LocalizedError() {
+    @Test("error detail enhancement  localized error")
+
+    func errorDetailEnhancement_LocalizedError() {
         // Given
         struct DetailedLocalizedError: LocalizedError {
             let errorDescription: String? = "Main error description"
@@ -110,7 +127,9 @@ final class LoggingServiceErrorTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testErrorDetailEnhancement_NonLocalizedError() {
+    @Test("error detail enhancement  non localized error")
+
+    func errorDetailEnhancement_NonLocalizedError() {
         // Given
         struct SimpleError: Error {
             // No custom description

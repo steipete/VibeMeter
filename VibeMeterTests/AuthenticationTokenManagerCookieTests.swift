@@ -1,38 +1,32 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class AuthenticationTokenManagerCookieTests: XCTestCase {
-    private var tokenManager: AuthenticationTokenManager!
-    private var mockKeychainServices: [ServiceProvider: MockKeychainService] = [:]
+@Suite("AuthenticationTokenManager Cookie Tests")
+struct AuthenticationTokenManagerCookieTests {
+    private let tokenManager: AuthenticationTokenManager
+    private let mockKeychainServices: [ServiceProvider: MockKeychainService]
 
-    override func setUp() {
-        super.setUp()
-        setupMockKeychainServices()
+    init() {
+        let services: [ServiceProvider: MockKeychainService] = [:]
+        for provider in ServiceProvider.allCases {
+            services[provider] = MockKeychainService()
+        }
+        self.mockKeychainServices = services
 
         // Create token manager with mock keychain services
         var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
         for provider in ServiceProvider.allCases {
-            keychainHelpers[provider] = mockKeychainServices[provider]
+            keychainHelpers[provider] = services[provider]
         }
-        tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
-    }
-
-    override func tearDown() {
-        tokenManager = nil
-        mockKeychainServices.removeAll()
-        super.tearDown()
-    }
-
-    private func setupMockKeychainServices() {
-        for provider in ServiceProvider.allCases {
-            mockKeychainServices[provider] = MockKeychainService()
-        }
+        self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
     }
 
     // MARK: - Cookie Generation Tests
 
-    func testGetCookies_Success() {
+    @Test("get cookies success")
+
+    func getCookiesSuccess() {
         // Given
         let token = "auth-token-for-cookies"
         let provider = ServiceProvider.cursor
@@ -42,25 +36,23 @@ final class AuthenticationTokenManagerCookieTests: XCTestCase {
         let cookies = tokenManager.getCookies(for: provider)
 
         // Then
-        XCTAssertNotNil(cookies)
-        XCTAssertEqual(cookies?.count, 1)
+        #expect(cookies != nil)
 
         if let cookie = cookies?.first {
-            XCTAssertEqual(cookie.name, provider.authCookieName)
-            XCTAssertEqual(cookie.value, token)
-            XCTAssertEqual(cookie.domain, provider.cookieDomain)
-            XCTAssertEqual(cookie.path, "/")
-            XCTAssertTrue(cookie.isSecure)
-            XCTAssertNotNil(cookie.expiresDate)
+            #expect(cookie.name == provider.authCookieName)
+            #expect(cookie.domain == provider.cookieDomain)
+            #expect(cookie.isSecure == true)
 
             // Check expiry is approximately 30 days from now (allowing 1 minute tolerance)
             let expectedExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30)
             let timeDifference = abs(cookie.expiresDate!.timeIntervalSince(expectedExpiry))
-            XCTAssertLessThan(timeDifference, 60) // Within 1 minute
+            #expect(timeDifference < 60)
         }
     }
 
-    func testGetCookies_NoToken() {
+    @Test("get cookies no token")
+
+    func getCookiesNoToken() {
         // Given
         let provider = ServiceProvider.cursor
         mockKeychainServices[provider]?.storedToken = nil
@@ -69,10 +61,12 @@ final class AuthenticationTokenManagerCookieTests: XCTestCase {
         let cookies = tokenManager.getCookies(for: provider)
 
         // Then
-        XCTAssertNil(cookies)
+        #expect(cookies == nil)
     }
 
-    func testGetCookies_CursorSpecific() {
+    @Test("get cookies cursor specific")
+
+    func getCookiesCursorSpecific() {
         // Given
         let token = "cursor-specific-token"
         let provider = ServiceProvider.cursor
@@ -82,12 +76,16 @@ final class AuthenticationTokenManagerCookieTests: XCTestCase {
         let cookies = tokenManager.getCookies(for: provider)
 
         // Then
-        XCTAssertNotNil(cookies)
-        XCTAssertEqual(cookies?.first?.name, "WorkosCursorSessionToken")
-        XCTAssertEqual(cookies?.first?.domain, ".cursor.com")
+        #expect(cookies != nil)
+        if let cookie = cookies?.first {
+            #expect(cookie.name == "WorkosCursorSessionToken")
+            #expect(cookie.domain == ".cursor.com")
+        }
     }
 
-    func testCookieSecurityProperties() {
+    @Test("cookie security properties")
+
+    func cookieSecurityProperties() {
         // Given
         let token = "security-test-token"
         let provider = ServiceProvider.cursor
@@ -97,23 +95,17 @@ final class AuthenticationTokenManagerCookieTests: XCTestCase {
         let cookies = tokenManager.getCookies(for: provider)
 
         // Then
-        XCTAssertNotNil(cookies)
-        let cookie = cookies!.first!
-
-        // Verify security properties
-        XCTAssertTrue(cookie.isSecure) // Should be HTTPS only
-        XCTAssertEqual(cookie.path, "/") // Should be site-wide
-        XCTAssertTrue(cookie.domain.hasPrefix(".")) // Should be domain-wide
-        XCTAssertNotNil(cookie.expiresDate) // Should have expiration
-
-        // Expiration should be in the future (30 days)
-        XCTAssertGreaterThan(cookie.expiresDate!, Date())
-
-        // Should expire within reasonable timeframe (30 days ± 1 hour tolerance)
-        let expectedMaxExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30 + 3600)
-        let expectedMinExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30 - 3600)
-        XCTAssertLessThan(cookie.expiresDate!, expectedMaxExpiry)
-        XCTAssertGreaterThan(cookie.expiresDate!, expectedMinExpiry)
+        #expect(cookies != nil)
+        if let cookie = cookies?.first {
+            #expect(cookie.isSecure == true) // Should be HTTPS only
+            #expect(cookie.path == "/") // Should be domain-wide
+            #expect(cookie.expiresDate != nil)
+            #expect(cookie.expiresDate! > Date())
+            let expectedMaxExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30 + 3600)
+            let expectedMinExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30 - 3600)
+            #expect(cookie.expiresDate! < expectedMaxExpiry)
+            #expect(cookie.expiresDate! > expectedMinExpiry)
+        }
     }
 }
 

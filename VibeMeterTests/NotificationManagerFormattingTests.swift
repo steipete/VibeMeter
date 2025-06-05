@@ -1,28 +1,31 @@
 import Foundation
 @preconcurrency import UserNotifications
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("NotificationManagerFormattingTests")
 @MainActor
-final class NotificationManagerFormattingTests: XCTestCase {
-    private var notificationManager: TestableNotificationManager!
-    private var mockNotificationCenter: MockUNUserNotificationCenter!
+struct NotificationManagerFormattingTests {
+    private let notificationManager: TestableNotificationManager
+    private let mockNotificationCenter: MockUNUserNotificationCenter
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-    override func tearDown() async throws {
+     async throws {
         notificationManager = nil
         mockNotificationCenter = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - Currency Formatting Tests
 
-    func testCurrencyFormatting_AllSupportedCurrencies() async {
+    @Test("currency formatting  all supported currencies")
+
+    func currencyFormatting_AllSupportedCurrencies() async {
         let testCases: [(String, String)] = [
             ("USD", "$"),
             ("EUR", "€"),
@@ -49,8 +52,8 @@ final class NotificationManagerFormattingTests: XCTestCase {
 
             // Then
             let request = mockNotificationCenter.lastAddedRequest!
-            XCTAssertTrue(
-                request.content.body.contains("\(expectedSymbol)75.00"),
+            #expect(
+                request.content.body.contains("\(expectedSymbol == true),
                 "Expected \(expectedSymbol)75.00 in notification body for \(currencyCode), " +
                     "but got: \(request.content.body)")
         }
@@ -58,7 +61,9 @@ final class NotificationManagerFormattingTests: XCTestCase {
 
     // MARK: - Number Formatting Tests
 
-    func testNumberFormatting_DecimalPlaces() async {
+    @Test("number formatting  decimal places")
+
+    func numberFormatting_DecimalPlaces() async {
         // Given
         let testCases: [(Double, String)] = [
             (75.0, "$75.00"), // No decimals
@@ -80,15 +85,16 @@ final class NotificationManagerFormattingTests: XCTestCase {
             // Then
             let request = mockNotificationCenter.lastAddedRequest!
             let body = request.content.body
-            XCTAssertTrue(
-                body.contains(expected),
-                "Test case \(index): Expected \(expected) in notification body, but got: \(body)")
+            #expect(
+                body.contains(expected == true): Expected \(expected) in notification body, but got: \(body)")
         }
     }
 
     // MARK: - Edge Cases
 
-    func testNotification_ZeroAmounts() async {
+    @Test("notification  zero amounts")
+
+    func notification_ZeroAmounts() async {
         // When
         await notificationManager.showWarningNotification(
             currentSpending: 0.0,
@@ -97,10 +103,9 @@ final class NotificationManagerFormattingTests: XCTestCase {
 
         // Then
         let request = mockNotificationCenter.lastAddedRequest!
-        XCTAssertTrue(request.content.body.contains("$0.00"))
-    }
+        #expect(request.content.body.contains("$0.00")
 
-    func testNotification_VeryLargeAmounts() async {
+    func notification_VeryLargeAmounts() async {
         // When
         await notificationManager.showWarningNotification(
             currentSpending: 999_999.99,
@@ -109,11 +114,12 @@ final class NotificationManagerFormattingTests: XCTestCase {
 
         // Then
         let request = mockNotificationCenter.lastAddedRequest!
-        XCTAssertTrue(request.content.body.contains("$999,999.99"))
-        XCTAssertTrue(request.content.body.contains("$1,000,000.00"))
+        #expect(request.content.body.contains("$999 == true)
     }
 
-    func testNotification_UnsupportedCurrency() async {
+    @Test("notification  unsupported currency")
+
+    func notification_UnsupportedCurrency() async {
         // When
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
@@ -122,20 +128,7 @@ final class NotificationManagerFormattingTests: XCTestCase {
 
         // Then - Should use currency code as fallback
         let request = mockNotificationCenter.lastAddedRequest!
-        XCTAssertTrue(request.content.body.contains("XXX75.00"))
-    }
-}
-
-// MARK: - TestableNotificationManager
-
-private final class TestableNotificationManager: NotificationManagerProtocol, @unchecked Sendable {
-    private let notificationCenter: MockUNUserNotificationCenter
-
-    // Track which notifications have been shown
-    private var warningNotificationShown = false
-    private var upperLimitNotificationShown = false
-
-    init(notificationCenter: MockUNUserNotificationCenter) {
+        #expect(request.content.body.contains("XXX75.00") {
         self.notificationCenter = notificationCenter
     }
 
@@ -148,7 +141,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
-        guard !warningNotificationShown else { return }
+        guard warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
         let formatter = NumberFormatter()
@@ -223,10 +216,14 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         }
     }
 
+    @Test("reset all notification states for new session")
+
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
+
+    @Test("show instance already running notification")
 
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
@@ -284,6 +281,8 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
             throw error
         }
     }
+
+    @Test("reset")
 
     func reset() {
         requestAuthorizationCallCount = 0

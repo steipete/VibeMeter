@@ -1,10 +1,13 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class StringExtensionsTruncateTests: XCTestCase {
+@Suite("StringExtensionsTruncateTests")
+struct StringExtensionsTruncateTests {
     // MARK: - truncate(length:trailing:) Tests
 
-    func testTruncate_ShorterThanLength_ReturnsOriginal() {
+    @Test("truncate  shorter than length  returns original")
+
+    func truncate_ShorterThanLength_ReturnsOriginal() {
         // Given
         let string = "Short"
         let length = 10
@@ -13,10 +16,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "Short")
-    }
+        #expect(result == "Short")
 
-    func testTruncate_ExactLength_ReturnsOriginal() {
+    func truncate_ExactLength_ReturnsOriginal() {
         // Given
         let string = "Exact"
         let length = 5
@@ -25,10 +27,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "Exact")
-    }
+        #expect(result == "Exact")
 
-    func testTruncate_LongerThanLength_TruncatesWithDefaultTrailing() {
+    func truncate_LongerThanLength_TruncatesWithDefaultTrailing() {
         // Given
         let string = "This is a very long string"
         let length = 10
@@ -37,11 +38,12 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "This is a ...")
-        XCTAssertEqual(result.count, 13) // 10 + 3 for "..."
+        #expect(result == "This is a ...") // 10 + 3 for "..."
     }
 
-    func testTruncate_LongerThanLength_TruncatesWithCustomTrailing() {
+    @Test("truncate  longer than length  truncates with custom trailing")
+
+    func truncate_LongerThanLength_TruncatesWithCustomTrailing() {
         // Given
         let string = "This is a very long string"
         let length = 10
@@ -51,11 +53,12 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length, trailing: trailing)
 
         // Then
-        XCTAssertEqual(result, "This is a —")
-        XCTAssertEqual(result.count, 11) // 10 + 1 for "—"
+        #expect(result == "This is a —") // 10 + 1 for "—"
     }
 
-    func testTruncate_EmptyString_ReturnsEmpty() {
+    @Test("truncate  empty string  returns empty")
+
+    func truncate_EmptyString_ReturnsEmpty() {
         // Given
         let string = ""
         let length = 5
@@ -64,10 +67,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "")
-    }
+        #expect(result == "")
 
-    func testTruncate_ZeroLength_ReturnsOnlyTrailing() {
+    func truncate_ZeroLength_ReturnsOnlyTrailing() {
         // Given
         let string = "Hello"
         let length = 0
@@ -76,10 +78,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "...")
-    }
+        #expect(result == "...")
 
-    func testTruncate_SingleCharacter_TruncatesCorrectly() {
+    func truncate_SingleCharacter_TruncatesCorrectly() {
         // Given
         let string = "Hello"
         let length = 1
@@ -88,10 +89,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "H...")
-    }
+        #expect(result == "H...")
 
-    func testTruncate_UnicodeCharacters_HandlesCorrectly() {
+    func truncate_UnicodeCharacters_HandlesCorrectly() {
         // Given
         let string = "Hello 🌍 World 🚀"
         let length = 8
@@ -100,10 +100,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length)
 
         // Then
-        XCTAssertEqual(result, "Hello 🌍 ...")
-    }
+        #expect(result == "Hello 🌍 ...")
 
-    func testTruncate_EmptyTrailing_WorksCorrectly() {
+    func truncate_EmptyTrailing_WorksCorrectly() {
         // Given
         let string = "Hello World"
         let length = 5
@@ -113,10 +112,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length, trailing: trailing)
 
         // Then
-        XCTAssertEqual(result, "Hello")
-    }
+        #expect(result == "Hello")
 
-    func testTruncate_LongTrailing_WorksCorrectly() {
+    func truncate_LongTrailing_WorksCorrectly() {
         // Given
         let string = "Hello World"
         let length = 5
@@ -126,12 +124,9 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = string.truncate(length: length, trailing: trailing)
 
         // Then
-        XCTAssertEqual(result, "Hello [truncated]")
-    }
+        #expect(result == "Hello [truncated]")
 
-    // MARK: - Real-World Usage Tests
-
-    func testTruncate_LongUserEmail_ForMenuBarDisplay() {
+    func truncate_LongUserEmail_ForMenuBarDisplay() {
         // Given
         let email = "user.with.very.long.email.address@verylongdomainname.example.com"
         let maxLength = 25
@@ -140,12 +135,10 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = email.truncate(length: maxLength)
 
         // Then
-        XCTAssertEqual(result, "user.with.very.long.email...")
-        XCTAssertEqual(result.count, 28) // 25 + 3
-        XCTAssertTrue(result.hasSuffix("..."))
-    }
+        #expect(result == "user.with.very.long.email...") // 25 + 3
+        #expect(result.hasSuffix("..." == true)
 
-    func testTruncate_APIEndpointName_ForDisplay() {
+    func truncate_APIEndpointName_ForDisplay() {
         // Given
         let endpoint = "/api/v1/users/123456789/profile/settings/advanced/preferences"
         let maxLength = 30
@@ -154,7 +147,6 @@ final class StringExtensionsTruncateTests: XCTestCase {
         let result = endpoint.truncate(length: maxLength)
 
         // Then
-        XCTAssertEqual(result, "/api/v1/users/123456789/profil...")
-        XCTAssertTrue(result.count <= 33) // 30 + 3
+        #expect(result == "/api/v1/users/123456789/profil...") // 30 + 3
     }
 }

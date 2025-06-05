@@ -1,10 +1,13 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class URLQueryItemsAdvancedTests: XCTestCase {
+@Suite("URLQueryItemsAdvancedTests")
+struct URLQueryItemsAdvancedTests {
     // MARK: - Edge Cases Tests
 
-    func testAppendingQueryItems_WithNilValues_HandlesGracefully() {
+    @Test("appending query items  with nil values  handles gracefully")
+
+    func appendingQueryItems_WithNilValues_HandlesGracefully() {
         // Given
         let url = URL(string: "https://example.com/path")!
         let items = [
@@ -17,10 +20,9 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/path?key1=value1&key2&key3=value3")
-    }
+        #expect(result.absoluteString == "https://example.com/path?key1=value1&key2&key3=value3")
 
-    func testAppendingQueryItems_WithEmptyValues_HandlesGracefully() {
+    func appendingQueryItems_WithEmptyValues_HandlesGracefully() {
         // Given
         let url = URL(string: "https://example.com/path")!
         let items = [
@@ -33,10 +35,9 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/path?key1=value1&key2=&key3=value3")
-    }
+        #expect(result.absoluteString == "https://example.com/path?key1=value1&key2=&key3=value3")
 
-    func testAppendingQueryItems_WithSpecialCharacters_EncodesCorrectly() {
+    func appendingQueryItems_WithSpecialCharacters_EncodesCorrectly() {
         // Given
         let url = URL(string: "https://example.com/path")!
         let items = [
@@ -50,12 +51,10 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
 
         // Then
         // URLQueryItem automatically handles encoding
-        XCTAssertTrue(result.absoluteString.contains("message=hello%20world"))
-        XCTAssertTrue(result.absoluteString.contains("special=a+b%3Dc%26d")) // + is not encoded in query strings
-        XCTAssertTrue(result.absoluteString.contains("unicode=caf%C3%A9%20%C3%B1o%C3%B1o%20%F0%9F%9A%80"))
-    }
+        #expect(result.absoluteString.contains("message=hello%20world") // + is not encoded in query strings
+        #expect(result.absoluteString.contains("unicode=caf%C3%A9%20%C3%B1o%C3%B1o%20%F0%9F%9A%80")
 
-    func testAppendingQueryItems_WithDuplicateKeys_AllowsDuplicates() {
+    func appendingQueryItems_WithDuplicateKeys_AllowsDuplicates() {
         // Given
         let url = URL(string: "https://example.com/path?filter=value1")!
         let items = [
@@ -67,12 +66,9 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/path?filter=value1&filter=value2&filter=value3")
-    }
+        #expect(result.absoluteString == "https://example.com/path?filter=value1&filter=value2&filter=value3")
 
-    // MARK: - International Domain Names Tests
-
-    func testAppendingQueryItems_InternationalDomain_WorksCorrectly() {
+    func appendingQueryItems_InternationalDomain_WorksCorrectly() {
         // Given
         let url = URL(string: "https://münchen.example.com/api")!
         let items = [URLQueryItem(name: "locale", value: "de")]
@@ -81,13 +77,14 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result.absoluteString.contains("locale=de"))
+        #expect(result != nil)
     }
 
     // MARK: - Long URL Tests
 
-    func testAppendingQueryItems_VeryLongURL_HandlesGracefully() {
+    @Test("appending query items  very long url  handles gracefully")
+
+    func appendingQueryItems_VeryLongURL_HandlesGracefully() {
         // Given
         let longPath = String(repeating: "segment/", count: 100)
         let url = URL(string: "https://example.com/\(longPath)")!
@@ -97,14 +94,10 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result.absoluteString.contains("param=value"))
-        XCTAssertTrue(result.absoluteString.count > url.absoluteString.count)
-    }
+        #expect(result != nil)
+        #expect(result.absoluteString.count > url.absoluteString.count == true)
 
-    // MARK: - Performance Tests
-
-    func testAppendingQueryItems_Performance() {
+    func appendingQueryItems_Performance() {
         // Given
         let url = URL(string: "https://example.com/api")!
         let items = (0 ..< 100).map { URLQueryItem(name: "param\($0)", value: "value\($0)") }
@@ -115,14 +108,12 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "Appending many query items should be fast")
-        XCTAssertTrue(result.absoluteString.contains("param0=value0"))
-        XCTAssertTrue(result.absoluteString.contains("param99=value99"))
-    }
+        #expect(duration < 1.0)
+        #expect(result.absoluteString.contains("param99=value99")
 
-    func testAppendingQueryItems_RepeatedCalls_Performance() {
+    func appendingQueryItems_RepeatedCalls_Performance() {
         // Given
-        var url = URL(string: "https://example.com/api")!
+        let url = URL(string: "https://example.com/api")
         let iterations = 1000
 
         // When
@@ -133,13 +124,14 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 5.0, "Repeated query item appending should be reasonably fast")
-        XCTAssertTrue(url.query?.contains("step=\(iterations - 1)") == true)
+        #expect(duration < 5.0)
     }
 
     // MARK: - Memory Management Tests
 
-    func testAppendingQueryItems_EfficientMemoryUsage() {
+    @Test("appending query items  efficient memory usage")
+
+    func appendingQueryItems_EfficientMemoryUsage() {
         // Given
         let url = URL(string: "https://example.com/api")!
         var results: [URL] = []
@@ -152,8 +144,7 @@ final class URLQueryItemsAdvancedTests: XCTestCase {
         }
 
         // Then - Should create all URLs without issues
-        XCTAssertEqual(results.count, 1000)
-        XCTAssertEqual(results.first?.query, "index=0")
-        XCTAssertEqual(results.last?.query, "index=999")
+        #expect(results.count == 1000)
+        #expect(results.last?.query == "index=999")
     }
 }

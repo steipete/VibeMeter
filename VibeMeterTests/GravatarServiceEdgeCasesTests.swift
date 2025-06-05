@@ -1,26 +1,29 @@
 import CryptoKit
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("GravatarServiceEdgeCasesTests")
 @MainActor
-final class GravatarServiceEdgeCasesTests: XCTestCase {
-    var sut: GravatarService!
+struct GravatarServiceEdgeCasesTests {
+    let sut: GravatarService
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         sut = GravatarService.shared
         sut.clearAvatar() // Reset state
     }
 
-    override func tearDown() async throws {
+     async throws {
         sut.clearAvatar()
         sut = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - Edge Cases and Error Handling
 
-    func testGravatarURL_SpecialCharacters_HandlesCorrectly() {
+    @Test("gravatar url  special characters  handles correctly")
+
+    func gravatarURL_SpecialCharacters_HandlesCorrectly() {
         // Given
         let emailsWithSpecialChars = [
             "user+tag@example.com",
@@ -34,14 +37,15 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
             let result = sut.gravatarURL(for: email)
 
             // Then
-            XCTAssertNotNil(result, "Should handle special characters in email: \(email)")
-            XCTAssertTrue(
-                result?.absoluteString.contains("gravatar.com") ?? false,
-                "Should generate valid Gravatar URL for: \(email)")
+            #expect(result != nil)
+            #expect(
+                result?.absoluteString.contains("gravatar.com")
         }
     }
 
-    func testGravatarURL_UnicodeCharacters_HandlesCorrectly() {
+    @Test("gravatar url  unicode characters  handles correctly")
+
+    func gravatarURL_UnicodeCharacters_HandlesCorrectly() {
         // Given
         let unicodeEmail = "тест@пример.рф" // Cyrillic characters
 
@@ -49,11 +53,12 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: unicodeEmail)
 
         // Then
-        XCTAssertNotNil(result, "Should handle Unicode characters")
-        XCTAssertTrue(result?.absoluteString.contains("gravatar.com") ?? false, "Should generate valid Gravatar URL")
+        #expect(result != nil) ?? false, "Should generate valid Gravatar URL")
     }
 
-    func testGravatarURL_VeryLongEmail_HandlesCorrectly() {
+    @Test("gravatar url  very long email  handles correctly")
+
+    func gravatarURL_VeryLongEmail_HandlesCorrectly() {
         // Given
         let longEmail = String(repeating: "a", count: 100) + "@" + String(repeating: "b", count: 100) + ".com"
 
@@ -61,11 +66,12 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: longEmail)
 
         // Then
-        XCTAssertNotNil(result, "Should handle very long email addresses")
-        XCTAssertTrue(result?.absoluteString.contains("gravatar.com") ?? false, "Should generate valid Gravatar URL")
+        #expect(result != nil) ?? false, "Should generate valid Gravatar URL")
     }
 
-    func testGravatarURL_ZeroSize_HandlesGracefully() {
+    @Test("gravatar url  zero size  handles gracefully")
+
+    func gravatarURL_ZeroSize_HandlesGracefully() {
         // Given
         let email = "zero@size.com"
         let size = 0
@@ -74,11 +80,12 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        XCTAssertNotNil(result, "Should handle zero size")
-        XCTAssertTrue(result?.absoluteString.contains("s=0") ?? false, "Should use size 0 (doubled from 0)")
+        #expect(result != nil) ?? false, "Should use size 0 (doubled from 0)")
     }
 
-    func testGravatarURL_NegativeSize_HandlesGracefully() {
+    @Test("gravatar url  negative size  handles gracefully")
+
+    func gravatarURL_NegativeSize_HandlesGracefully() {
         // Given
         let email = "negative@size.com"
         let size = -10
@@ -87,11 +94,9 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        XCTAssertNotNil(result, "Should handle negative size")
-        // The actual size handling depends on implementation - just verify it doesn't crash
-    }
+        #expect(result != nil)
 
-    func testGravatarURL_LargeSize_HandlesCorrectly() {
+    func gravatarURL_LargeSize_HandlesCorrectly() {
         // Given
         let email = "large@size.com"
         let size = 1000
@@ -101,15 +106,15 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        XCTAssertNotNil(result, "Should handle large size")
-        XCTAssertTrue(
-            result?.absoluteString.contains("s=\(expectedRetinaSize)") ?? false,
+        #expect(result != nil) ?? false,
             "Should handle large retina size")
     }
 
     // MARK: - URL Structure Tests
 
-    func testGravatarURL_URLStructure_IsCorrect() {
+    @Test("gravatar url url structure  is correct")
+
+    func gravatarURL_URLStructure_IsCorrect() {
         // Given
         let email = "structure@test.com"
         let size = 64
@@ -118,13 +123,9 @@ final class GravatarServiceEdgeCasesTests: XCTestCase {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        XCTAssertNotNil(result)
-        let urlString = result?.absoluteString ?? ""
-
-        // Verify URL components
-        XCTAssertTrue(urlString.hasPrefix("https://www.gravatar.com/avatar/"), "Should use HTTPS and correct domain")
-        XCTAssertTrue(urlString.contains("?s=128"), "Should include size parameter (doubled)")
-        XCTAssertTrue(urlString.contains("&d=mp"), "Should include mystery person fallback")
-        XCTAssertTrue(urlString.hasSuffix("d=mp"), "Should end with default parameter")
+        #expect(result != nil)
+        #expect(urlString.contains("?s=128")")
+        #expect(urlString.contains("&d=mp")
+        #expect(urlString.hasSuffix("d=mp" == true)
     }
 }

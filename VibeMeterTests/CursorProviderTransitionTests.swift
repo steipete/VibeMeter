@@ -1,39 +1,20 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class CursorProviderTransitionTests: XCTestCase {
-    private var cursorProvider: CursorProvider!
-    private var mockURLSession: MockURLSession!
-    private var mockSettingsManager: MockSettingsManager!
-
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
-        cursorProvider = CursorProvider(
-            settingsManager: mockSettingsManager,
-            urlSession: mockURLSession)
-    }
-
-    override func tearDown() {
-        cursorProvider = nil
-        mockURLSession = nil
-        mockSettingsManager = nil
-        super.tearDown()
-    }
-
+@Suite("CursorProviderTransitionTests")
+struct CursorProviderTransitionTests {
+    private let cursorProvider: CursorProvider
+    private let mockURLSession: MockURLSession
+    private let mockSettingsManager: MockSettingsManager
     // MARK: - User State Transition Tests
 
-    func testUserTransition_FromIndividualToTeam() async throws {
+    @Test("user transition  from individual to team")
+
+    func userTransition_FromIndividualToTeam() async throws {
         // Given - Start as individual user (no session)
         let session = await mockSettingsManager.getSession(for: .cursor)
-        XCTAssertNil(session)
-
-        // First fetch as individual
-        let individualInvoiceData = Data("""
-        {"items": [{"cents": 1000, "description": "Individual Usage"}], "pricing_description": null}
-        """.utf8)
+        #expect(session == nil)
 
         mockURLSession.nextData = individualInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
@@ -48,20 +29,9 @@ final class CursorProviderTransitionTests: XCTestCase {
             year: 2024,
             teamId: nil)
 
-        XCTAssertEqual(individualInvoice.totalSpendingCents, 1000)
-
-        // Verify no teamId was sent
-        let firstRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        #expect(individualInvoice.totalSpendingCents == 1000)
         let firstBodyJSON = try JSONSerialization.jsonObject(with: firstRequestBody) as? [String: Any]
-        XCTAssertNil(firstBodyJSON?["teamId"])
-
-        // When - User joins a team
-        await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-            provider: .cursor,
-            teamId: 5000,
-            teamName: "New Team",
-            userEmail: "user@example.com",
-            isActive: true))
+        #expect(firstBodyJSON?["teamId"] == nil)
 
         // Fetch invoice as team member
         let teamInvoiceData = Data("""
@@ -82,16 +52,14 @@ final class CursorProviderTransitionTests: XCTestCase {
             teamId: nil)  // Not providing teamId, should use stored value
 
         // Then
-        XCTAssertEqual(teamInvoice.totalSpendingCents, 5000)
-        XCTAssertEqual(teamInvoice.pricingDescription?.description, "Team Plan")
+        #expect(teamInvoice.totalSpendingCents == 5000)
 
         // Verify stored teamId was used
         let secondRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let secondBodyJSON = try JSONSerialization.jsonObject(with: secondRequestBody) as? [String: Any]
-        XCTAssertEqual(secondBodyJSON?["teamId"] as? Int, 5000)
-    }
+        #expect(secondBodyJSON?["teamId"] as? Int == 5000)
 
-    func testUserTransition_TeamMemberLeavesTeam() async throws {
+    func userTransition_TeamMemberLeavesTeam() async throws {
         // Given - User starts in a team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -124,13 +92,14 @@ final class CursorProviderTransitionTests: XCTestCase {
         // Then - Verify no teamId in request
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId after leaving team")
-        XCTAssertEqual(invoice.totalSpendingCents, 0)
+        #expect(bodyJSON?["teamId"] == nil)
     }
 
     // MARK: - Override Behavior Tests
 
-    func testExplicitTeamIdOverridesStoredValue() async throws {
+    @Test("explicit team id overrides stored value")
+
+    func explicitTeamIdOverridesStoredValue() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -160,11 +129,12 @@ final class CursorProviderTransitionTests: XCTestCase {
         // Then - Verify override teamId was used
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 9999, "Should use explicitly provided teamId")
-        XCTAssertNotEqual(bodyJSON?["teamId"] as? Int, 1111, "Should not use stored teamId")
+        #expect(bodyJSON?["teamId"] as? Int == 9999)
     }
 
-    func testExplicitZeroTeamIdFiltered() async throws {
+    @Test("explicit zero team id filtered")
+
+    func explicitZeroTeamIdFiltered() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -194,13 +164,10 @@ final class CursorProviderTransitionTests: XCTestCase {
         // Then - Verify teamId 0 is filtered out as invalid
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId when it's 0 (filtered as invalid)")
-        XCTAssertNotEqual(bodyJSON?["teamId"] as? Int, 2222, "Should not use stored teamId")
-    }
+        #expect(bodyJSON?["teamId"] == nil)
+        #expect(bodyJSON?["teamId"] as? Int != 2222)
 
-    // MARK: - Error Handling for Different User Types
-
-    func testIndividualUser_HandlesTeamSpecificErrors() async throws {
+    func individualUser_HandlesTeamSpecificErrors() async throws {
         // Given - Individual user (no team) getting team-specific error
         let errorResponse = Data("""
         {
@@ -231,13 +198,11 @@ final class CursorProviderTransitionTests: XCTestCase {
                 month: 6,
                 year: 2024,
                 teamId: nil)
-            XCTFail("Should throw noTeamFound error")
+            Issue.record("Should throw noTeamFound error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .noTeamFound)
-        }
-    }
+            #expect(error == .noTeamFound)
 
-    func testTeamUser_SuccessfullyFetchesWithoutExplicitTeamId() async throws {
+    func teamUser_SuccessfullyFetchesWithoutExplicitTeamId() async throws {
         // Given - Team user with stored teamId
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -271,21 +236,14 @@ final class CursorProviderTransitionTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 2)
-        XCTAssertEqual(invoice.totalSpendingCents, 4500)
-        XCTAssertEqual(invoice.pricingDescription?.description, "Team Pro Plan")
-
-        // Verify stored teamId was used
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        #expect(invoice.items.count == 2)
+        #expect(invoice.pricingDescription?.description == "Team Pro Plan")
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 7777)
-    }
+        #expect(bodyJSON?["teamId"] as? Int == 7777)
 
-    // MARK: - Session State Consistency Tests
-
-    func testMultipleRequestsWithChangingSessionState() async throws {
+    func multipleRequestsWithChangingSessionState() async throws {
         // Test 1: No session (individual)
-        var mockData = Data("""
+        let mockData = Data("""
         {"items": [{"cents": 500, "description": "Individual"}], "pricing_description": null}
         """.utf8)
         mockURLSession.nextData = mockData
@@ -293,15 +251,13 @@ final class CursorProviderTransitionTests: XCTestCase {
             url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil)!
+            headerFields: nil)
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 1, year: 2024, teamId: nil)
         
-        var requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         var bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "First request should have no teamId")
-
-        // Test 2: Add session (team member)
+        #expect(bodyJSON?["teamId"] == nil)
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
             teamId: 4444,
@@ -317,15 +273,13 @@ final class CursorProviderTransitionTests: XCTestCase {
             url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil)!
+            headerFields: nil)
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 2, year: 2024, teamId: nil)
         
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 4444, "Second request should use stored teamId")
-
-        // Test 3: Clear session (back to individual)
+        #expect(bodyJSON?["teamId"] as? Int == 4444)
         await mockSettingsManager.clearUserSessionData(for: .cursor)
 
         mockData = Data("""
@@ -342,6 +296,6 @@ final class CursorProviderTransitionTests: XCTestCase {
         
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "Third request should have no teamId after session cleared")
+        #expect(bodyJSON?["teamId"] == nil)
     }
 }

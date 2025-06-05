@@ -1,26 +1,16 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ExchangeRateManagerEdgeCasesTests: XCTestCase {
-    private var mockURLSession: MockURLSession!
-    private var exchangeRateManager: ExchangeRateManager!
-
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
-    }
-
-    override func tearDown() {
-        mockURLSession = nil
-        exchangeRateManager = nil
-        super.tearDown()
-    }
-
+@Suite("ExchangeRateManagerEdgeCasesTests")
+struct ExchangeRateManagerEdgeCasesTests {
+    private let mockURLSession: MockURLSession
+    private let exchangeRateManager: ExchangeRateManager
     // MARK: - Edge Cases and Error Scenarios
 
-    func testGetExchangeRates_EmptyRatesResponse() async {
+    @Test("get exchange rates  empty rates response")
+
+    func getExchangeRates_EmptyRatesResponse() async {
         // Given
         let mockRatesData = Data("""
         {
@@ -43,10 +33,9 @@ final class ExchangeRateManagerEdgeCasesTests: XCTestCase {
         let rates = await exchangeRateManager.getExchangeRates()
 
         // Then
-        XCTAssertTrue(rates.isEmpty)
-    }
+        #expect(rates.isEmpty == true)
 
-    func testGetExchangeRates_MalformedHTTPResponse() async {
+    func getExchangeRates_MalformedHTTPResponse() async {
         // Given
         let mockRatesData = Data()
         mockURLSession.nextData = mockRatesData
@@ -56,6 +45,6 @@ final class ExchangeRateManagerEdgeCasesTests: XCTestCase {
         let rates = await exchangeRateManager.getExchangeRates()
 
         // Then
-        XCTAssertEqual(rates, exchangeRateManager.fallbackRates)
+        #expect(rates == exchangeRateManager.fallbackRates)
     }
 }

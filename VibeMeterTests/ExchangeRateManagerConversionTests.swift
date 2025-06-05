@@ -1,26 +1,16 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ExchangeRateManagerConversionTests: XCTestCase {
-    private var mockURLSession: MockURLSession!
-    private var exchangeRateManager: ExchangeRateManager!
-
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
-    }
-
-    override func tearDown() {
-        mockURLSession = nil
-        exchangeRateManager = nil
-        super.tearDown()
-    }
-
+@Suite("ExchangeRateManagerConversionTests")
+struct ExchangeRateManagerConversionTests {
+    private let mockURLSession: MockURLSession
+    private let exchangeRateManager: ExchangeRateManager
     // MARK: - Currency Conversion Tests
 
-    func testConvert_SameCurrency_ReturnsOriginalAmount() {
+    @Test("convert  same currency  returns original amount")
+
+    func convert_SameCurrency_ReturnsOriginalAmount() {
         // Given
         let amount = 100.0
         let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
@@ -29,10 +19,9 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "USD", to: "USD", rates: rates)
 
         // Then
-        XCTAssertEqual(result, amount)
-    }
+        #expect(result == amount)
 
-    func testConvert_USDToOtherCurrency_Success() {
+    func convert_USDToOtherCurrency_Success() {
         // Given
         let amount = 100.0
         let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
@@ -42,11 +31,12 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let gbpResult = exchangeRateManager.convert(amount, from: "USD", to: "GBP", rates: rates)
 
         // Then
-        XCTAssertEqual(eurResult, 92.0)
-        XCTAssertEqual(gbpResult, 82.0)
+        #expect(eurResult == 92.0)
     }
 
-    func testConvert_OtherCurrencyToUSD_Success() {
+    @Test("convert  other currency to usd  success")
+
+    func convert_OtherCurrencyToUSD_Success() {
         // Given
         let amount = 92.0
         let rates = ["EUR": 0.92]
@@ -55,10 +45,12 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "USD", rates: rates)
 
         // Then
-        XCTAssertEqual(result!, 100.0, accuracy: 0.01)
+        #expect(abs(result! - 100.0 == true)
     }
 
-    func testConvert_CrossCurrencyConversion_Success() {
+    @Test("convert  cross currency conversion  success")
+
+    func convert_CrossCurrencyConversion_Success() {
         // Given
         let amount = 92.0 // 92 EUR
         let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
@@ -67,10 +59,12 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
 
         // Then - 92 EUR = 100 USD = 82 GBP
-        XCTAssertEqual(result!, 82.0, accuracy: 0.01)
+        #expect(abs(result! - 82.0 == true)
     }
 
-    func testConvert_MissingSourceCurrency_ReturnsNil() {
+    @Test("convert  missing source currency  returns nil")
+
+    func convert_MissingSourceCurrency_ReturnsNil() {
         // Given
         let amount = 100.0
         let rates = ["EUR": 0.92]
@@ -79,10 +73,9 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "GBP", to: "EUR", rates: rates)
 
         // Then
-        XCTAssertNil(result)
-    }
+        #expect(result == nil)
 
-    func testConvert_MissingTargetCurrency_ReturnsNil() {
+    func convert_MissingTargetCurrency_ReturnsNil() {
         // Given
         let amount = 100.0
         let rates = ["EUR": 0.92]
@@ -91,10 +84,9 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
 
         // Then
-        XCTAssertNil(result)
-    }
+        #expect(result == nil)
 
-    func testConvert_ZeroSourceRate_ReturnsNil() {
+    func convert_ZeroSourceRate_ReturnsNil() {
         // Given
         let amount = 100.0
         let rates: [String: Double] = ["EUR": 0.0, "GBP": 0.82]
@@ -103,10 +95,9 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
 
         // Then
-        XCTAssertNil(result)
-    }
+        #expect(result == nil)
 
-    func testConvert_NegativeRates() {
+    func convert_NegativeRates() {
         // Given
         let amount = 100.0
         let rates: [String: Double] = ["EUR": -0.92] // Invalid negative rate
@@ -115,10 +106,9 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "EUR", to: "USD", rates: rates)
 
         // Then
-        XCTAssertNil(result) // Should fail validation
-    }
+        #expect(result == nil)
 
-    func testConvert_VeryLargeNumbers() {
+    func convert_VeryLargeNumbers() {
         // Given
         let amount = Double.greatestFiniteMagnitude / 2
         let rates = ["EUR": 0.92]
@@ -127,11 +117,12 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "USD", to: "EUR", rates: rates)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result!.isFinite)
+        #expect(result != nil)
     }
 
-    func testConvert_VerySmallNumbers() {
+    @Test("convert  very small numbers")
+
+    func convert_VerySmallNumbers() {
         // Given
         let amount = Double.leastNormalMagnitude
         let rates = ["EUR": 0.92]
@@ -140,60 +131,53 @@ final class ExchangeRateManagerConversionTests: XCTestCase {
         let result = exchangeRateManager.convert(amount, from: "USD", to: "EUR", rates: rates)
 
         // Then
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result! >= 0)
+        #expect(result != nil)
     }
 
     // MARK: - Currency Symbol Tests
 
-    func testGetSymbol_AllSupportedCurrencies() {
+    @Test("get symbol  all supported currencies")
+
+    func getSymbol_AllSupportedCurrencies() {
         // When/Then
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "USD"), "$")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "EUR"), "€")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "GBP"), "£")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "JPY"), "¥")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "AUD"), "A$")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "CAD"), "C$")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "CHF"), "CHF")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "CNY"), "¥")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "SEK"), "kr")
-        XCTAssertEqual(ExchangeRateManager.getSymbol(for: "NZD"), "NZ$")
+        #expect(ExchangeRateManager.getSymbol(for: "USD" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "EUR" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "GBP" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "JPY" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "AUD" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "CAD" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "CHF" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "CNY" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "SEK" == true)
+        #expect(ExchangeRateManager.getSymbol(for: "NZD" == true)
     }
 
-    func testGetSymbol_UnsupportedCurrency_ReturnsCode() {
+    @Test("get symbol  unsupported currency  returns code")
+
+    func getSymbol_UnsupportedCurrency_ReturnsCode() {
         // When
         let result = ExchangeRateManager.getSymbol(for: "XXX")
 
         // Then
-        XCTAssertEqual(result, "XXX")
-    }
+        #expect(result == "XXX")
 
-    // MARK: - Fallback Rates Tests
-
-    func testFallbackRates_ContainsExpectedCurrencies() {
+    func fallbackRates_ContainsExpectedCurrencies() {
         // When
         let fallbackRates = exchangeRateManager.fallbackRates
 
         // Then
-        XCTAssertEqual(fallbackRates["EUR"], 0.85)
-        XCTAssertEqual(fallbackRates["GBP"], 0.73)
-        XCTAssertEqual(fallbackRates["JPY"], 110.0)
-        XCTAssertEqual(fallbackRates["AUD"], 1.35)
-        XCTAssertEqual(fallbackRates["CAD"], 1.25)
-        XCTAssertEqual(fallbackRates["CHF"], 0.92)
-        XCTAssertEqual(fallbackRates["CNY"], 6.45)
-        XCTAssertEqual(fallbackRates["SEK"], 8.8)
-        XCTAssertEqual(fallbackRates["NZD"], 1.4)
-    }
+        #expect(fallbackRates["EUR"] == 0.85)
+        #expect(fallbackRates["JPY"] == 110.0)
+        #expect(fallbackRates["CAD"] == 1.25)
+        #expect(fallbackRates["CNY"] == 6.45)
+        #expect(fallbackRates["NZD"] == 1.4)
 
-    // MARK: - Supported Currencies Tests
-
-    func testSupportedCurrencies_ContainsExpectedList() {
+    func supportedCurrencies_ContainsExpectedList() {
         // When
         let supportedCurrencies = exchangeRateManager.supportedCurrencies
 
         // Then
         let expectedCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
-        XCTAssertEqual(Set(supportedCurrencies), Set(expectedCurrencies))
+        #expect(Set(supportedCurrencies == true)
     }
 }

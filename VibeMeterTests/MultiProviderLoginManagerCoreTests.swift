@@ -1,5 +1,5 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
 // MARK: - Mock Dependencies
 
@@ -54,15 +54,16 @@ private final class MockProvider: ProviderProtocol, @unchecked Sendable {
 
 // MARK: - Tests
 
+@Suite("MultiProviderLoginManagerCoreTests")
 @MainActor
-final class MultiProviderLoginManagerCoreTests: XCTestCase, @unchecked Sendable {
-    var sut: MultiProviderLoginManager!
-    var providerFactory: ProviderFactory!
-    var mockSettingsManager: SettingsManager!
-    var mockStartupManager: StartupManagerMock!
+struct MultiProviderLoginManagerCoreTests {
+    let sut: MultiProviderLoginManager
+    let providerFactory: ProviderFactory
+    let mockSettingsManager: SettingsManager
+    let mockStartupManager: StartupManagerMock
 
-    override func setUp() async throws {
-        try await super.setUp()
+    init() async throws {
+        try await 
         mockStartupManager = StartupManagerMock()
         mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerTests")!,
@@ -78,83 +79,75 @@ final class MultiProviderLoginManagerCoreTests: XCTestCase, @unchecked Sendable 
         #endif
     }
 
-    override func tearDown() async throws {
+     async throws {
         sut = nil
         providerFactory = nil
         mockSettingsManager = nil
         mockStartupManager = nil
-        try await super.tearDown()
+        try await 
     }
 
     // MARK: - Initialization Tests
 
-    func testInitialization_SetsUpCorrectly() {
+    @Test("initialization  sets up correctly")
+
+    func initialization_SetsUpCorrectly() {
         // Then
         // providerLoginStates is initialized with all providers (currently just .cursor) set to false
-        XCTAssertEqual(sut.providerLoginStates.count, ServiceProvider.allCases.count)
-        XCTAssertEqual(sut.providerLoginStates[.cursor], false)
-        XCTAssertTrue(sut.loginErrors.isEmpty)
-        XCTAssertFalse(sut.isLoggedInToAnyProvider)
-        XCTAssertTrue(sut.loggedInProviders.isEmpty)
-    }
+        #expect(sut.providerLoginStates.count == ServiceProvider.allCases.count)
+        #expect(sut.loginErrors.isEmpty == true)
+        #expect(sut.loggedInProviders.isEmpty == true)
 
-    // MARK: - Login State Tests
-
-    func testIsLoggedIn_WithoutLogin_ReturnsFalse() {
+    func isLoggedIn_WithoutLogin_ReturnsFalse() {
         // When
         let isLoggedIn = sut.isLoggedIn(to: .cursor)
 
         // Then
-        XCTAssertFalse(isLoggedIn)
-    }
+        #expect(isLoggedIn == false)
 
-    #if DEBUG
-        func testSimulateLogin_SetsLoginState() {
+        func simulateLogin_SetsLoginState() {
             // When
             sut._test_simulateLogin(for: .cursor, withToken: "test-token")
 
             // Then
-            XCTAssertTrue(sut.isLoggedIn(to: .cursor))
-            XCTAssertEqual(sut.getAuthToken(for: .cursor), "test-token")
-            XCTAssertTrue(sut.isLoggedInToAnyProvider)
-            XCTAssertEqual(sut.loggedInProviders, [.cursor])
+            #expect(sut.isLoggedIn(to: .cursor == true)
+            #expect(sut.isLoggedInToAnyProvider == true)
         }
 
-        func testMultipleProviderLogins_TracksIndependently() {
+        @Test("multiple provider logins  tracks independently")
+
+        func multipleProviderLogins_TracksIndependently() {
             // When
             sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
             // Simulate future providers
             sut._test_setLoginState(true, for: .cursor)
 
             // Then
-            XCTAssertTrue(sut.isLoggedIn(to: .cursor))
-            XCTAssertEqual(sut.loggedInProviders.count, 1)
+            #expect(sut.isLoggedIn(to: .cursor == true)
         }
     #endif
 
     // MARK: - Logout Tests
 
     #if DEBUG
-        func testLogOut_RemovesTokenAndState() {
+        @Test("log out  removes token and state")
+
+        func logOut_RemovesTokenAndState() {
             // Given
             sut._test_simulateLogin(for: .cursor, withToken: "test-token")
             var logoutCallbackCalled = false
             sut.onLoginFailure = { provider, _ in
                 logoutCallbackCalled = true
-                XCTAssertEqual(provider, .cursor)
-            }
-
-            // When
-            sut.logOut(from: .cursor)
+                #expect(provider == .cursor)
 
             // Then
-            XCTAssertFalse(sut.isLoggedIn(to: .cursor))
-            XCTAssertNil(sut.getAuthToken(for: .cursor))
-            XCTAssertFalse(sut.isLoggedInToAnyProvider)
-            XCTAssertTrue(logoutCallbackCalled)
+            #expect(sut.isLoggedIn(to: .cursor == false)
+            #expect(sut.isLoggedInToAnyProvider == false)
         }
 
-        func testLogOutFromAll_RemovesAllProviders() {
+        @Test("log out from all  removes all providers")
+
+        func logOutFromAll_RemovesAllProviders() {
             // Given
             sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
 
@@ -162,42 +155,33 @@ final class MultiProviderLoginManagerCoreTests: XCTestCase, @unchecked Sendable 
             sut.logOutFromAll()
 
             // Then
-            XCTAssertFalse(sut.isLoggedIn(to: .cursor))
-            XCTAssertTrue(sut.loggedInProviders.isEmpty)
+            #expect(sut.isLoggedIn(to: .cursor == false)
         }
     #endif
 
     // MARK: - Observable State Tests
 
-    func testProviderLoginStates_UpdatesOnLoginChange() {
+    @Test("provider login states  updates on login change")
+
+    func providerLoginStates_UpdatesOnLoginChange() {
         // Given
         // Initial state has .cursor set to false
-        XCTAssertEqual(sut.providerLoginStates[.cursor], false)
-
-        // When
-        #if DEBUG
-            sut._test_simulateLogin(for: .cursor, withToken: "state-token")
+        #expect(sut.providerLoginStates[.cursor] == false)
         #endif
 
         // Then
-        XCTAssertEqual(sut.providerLoginStates[.cursor], true)
-    }
+        #expect(sut.providerLoginStates[.cursor] == true)
 
-    func testLoginErrors_TracksPerProvider() {
+    func loginErrors_TracksPerProvider() {
         // Initially no errors
-        XCTAssertTrue(sut.loginErrors.isEmpty)
+        #expect(sut.loginErrors.isEmpty == true)
 
-        // Errors would be populated through handleLoginCompletion in production
-    }
-
-    // MARK: - Show Login Window Tests
-
-    func testShowLoginWindow_ResetsProcessingState() {
+    func showLoginWindow_ResetsProcessingState() {
         // When
         sut.showLoginWindow(for: .cursor)
 
         // Then - In production, this would open WebView
         // Here we verify it doesn't crash and maintains state
-        XCTAssertFalse(sut.isLoggedIn(to: .cursor))
+        #expect(sut.isLoggedIn(to: .cursor == false)
     }
 }

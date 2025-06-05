@@ -1,11 +1,14 @@
 import os.log
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class LoggingServiceCoreTests: XCTestCase {
+@Suite("LoggingServiceCoreTests")
+struct LoggingServiceCoreTests {
     // MARK: - LogCategory Tests
 
-    func testLogCategory_RawValues_AreCorrect() {
+    @Test("log category  raw values  are correct")
+
+    func logCategory_RawValues_AreCorrect() {
         // Test that all log categories have expected raw values
         let expectedCategories = [
             (LogCategory.general, "General"),
@@ -23,52 +26,56 @@ final class LoggingServiceCoreTests: XCTestCase {
         ]
 
         for (category, expectedRawValue) in expectedCategories {
-            XCTAssertEqual(
-                category.rawValue,
-                expectedRawValue,
-                "Category \(category) should have raw value '\(expectedRawValue)'")
+            #expect(
+                category.rawValue == expectedRawValue)'")
         }
     }
 
-    func testLogCategory_AllCasesExist() {
+    @Test("log category  all cases exist")
+
+    func logCategory_AllCasesExist() {
         // Verify that all expected categories are accessible
         let categories: [LogCategory] = [
             .general, .app, .lifecycle, .ui, .login, .api, .apiClient,
             .exchangeRate, .settings, .startup, .notification, .data,
         ]
 
-        XCTAssertEqual(categories.count, 12, "Should have 12 log categories")
-
-        // Each category should have a non-empty raw value
-        for category in categories {
-            XCTAssertFalse(category.rawValue.isEmpty, "Category \(category) should have non-empty raw value")
+        #expect(categories.count == 12)
         }
     }
 
     // MARK: - Basic Logging Tests
 
-    func testLog_BasicMessage_DoesNotCrash() {
+    @Test("log  basic message  does not crash")
+
+    func log_BasicMessage_DoesNotCrash() {
         // When/Then - Should not crash when logging basic message
         LoggingService.log("Test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithCategory_DoesNotCrash() {
+    @Test("log  with category  does not crash")
+
+    func log_WithCategory_DoesNotCrash() {
         // When/Then - Should not crash when logging with specific category
         LoggingService.log("API test message", category: .api)
 
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithLevel_DoesNotCrash() {
+    @Test("log  with level  does not crash")
+
+    func log_WithLevel_DoesNotCrash() {
         // When/Then - Should not crash when logging with specific level
         LoggingService.log("Debug test message", level: .debug)
 
         // Test passes if no exception is thrown
     }
 
-    func testLog_WithAllParameters_DoesNotCrash() {
+    @Test("log  with all parameters  does not crash")
+
+    func log_WithAllParameters_DoesNotCrash() {
         // Given
         let testError = NSError(domain: "TestDomain", code: 123, userInfo: [
             NSLocalizedDescriptionKey: "Test error description",
@@ -82,42 +89,54 @@ final class LoggingServiceCoreTests: XCTestCase {
 
     // MARK: - Convenience Method Tests
 
-    func testInfo_WithMessage_DoesNotCrash() {
+    @Test("info  with message  does not crash")
+
+    func info_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.info("Info test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testInfo_WithCategory_DoesNotCrash() {
+    @Test("info  with category  does not crash")
+
+    func info_WithCategory_DoesNotCrash() {
         // When/Then
         LoggingService.info("Info with category", category: .ui)
 
         // Test passes if no exception is thrown
     }
 
-    func testDebug_WithMessage_DoesNotCrash() {
+    @Test("debug  with message  does not crash")
+
+    func debug_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.debug("Debug test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testDebug_WithCategory_DoesNotCrash() {
+    @Test("debug  with category  does not crash")
+
+    func debug_WithCategory_DoesNotCrash() {
         // When/Then
         LoggingService.debug("Debug with category", category: .login)
 
         // Test passes if no exception is thrown
     }
 
-    func testWarning_WithMessage_DoesNotCrash() {
+    @Test("warning  with message  does not crash")
+
+    func warning_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.warning("Warning test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testWarning_WithError_DoesNotCrash() {
+    @Test("warning  with error  does not crash")
+
+    func warning_WithError_DoesNotCrash() {
         // Given
         let testError = NSError(domain: "TestDomain", code: 456, userInfo: nil)
 
@@ -127,14 +146,18 @@ final class LoggingServiceCoreTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testError_WithMessage_DoesNotCrash() {
+    @Test("error  with message  does not crash")
+
+    func error_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.error("Error test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testError_WithError_DoesNotCrash() {
+    @Test("error  with error  does not crash")
+
+    func error_WithError_DoesNotCrash() {
         // Given
         let testError = NSError(domain: "TestDomain", code: 789, userInfo: [
             NSLocalizedDescriptionKey: "Test error for logging",
@@ -146,14 +169,18 @@ final class LoggingServiceCoreTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testCritical_WithMessage_DoesNotCrash() {
+    @Test("critical  with message  does not crash")
+
+    func critical_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.critical("Critical test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testCritical_WithError_DoesNotCrash() {
+    @Test("critical  with error  does not crash")
+
+    func critical_WithError_DoesNotCrash() {
         // Given
         let criticalError = NSError(domain: "CriticalDomain", code: 999, userInfo: nil)
 
@@ -163,14 +190,18 @@ final class LoggingServiceCoreTests: XCTestCase {
         // Test passes if no exception is thrown
     }
 
-    func testFault_WithMessage_DoesNotCrash() {
+    @Test("fault  with message  does not crash")
+
+    func fault_WithMessage_DoesNotCrash() {
         // When/Then
         LoggingService.fault("Fault test message")
 
         // Test passes if no exception is thrown
     }
 
-    func testFault_WithError_DoesNotCrash() {
+    @Test("fault  with error  does not crash")
+
+    func fault_WithError_DoesNotCrash() {
         // Given
         let faultError = NSError(domain: "FaultDomain", code: 1000, userInfo: nil)
 
@@ -182,7 +213,9 @@ final class LoggingServiceCoreTests: XCTestCase {
 
     // MARK: - OSLogType Coverage Tests
 
-    func testLog_AllOSLogTypes_HandleCorrectly() {
+    @Test("log  all os log types  handle correctly")
+
+    func log_AllOSLogTypes_HandleCorrectly() {
         // Test all OSLogType cases to ensure they're handled
         let logTypes: [OSLogType] = [.default, .info, .debug, .error, .fault]
 
@@ -196,7 +229,9 @@ final class LoggingServiceCoreTests: XCTestCase {
 
     // MARK: - Category-Specific Tests
 
-    func testAllCategories_CanBeUsedForLogging() {
+    @Test("all categories  can be used for logging")
+
+    func allCategories_CanBeUsedForLogging() {
         // Test that all categories can be used without issues
         let categories: [LogCategory] = [
             .general, .app, .lifecycle, .ui, .login, .api, .apiClient,

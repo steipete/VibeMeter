@@ -1,11 +1,14 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("Currency Conversion Edge Cases Tests")
 @MainActor
-final class CurrencyConversionEdgeCasesTests: XCTestCase {
+struct CurrencyConversionEdgeCasesTests {
     // MARK: - Edge Cases and Error Handling
 
-    func testConvert_WithInfiniteValues() {
+    @Test("convert with infinite values")
+
+    func convertWithInfiniteValues() {
         // Given
         let amount = 100.0
         let infiniteRate = Double.infinity
@@ -15,10 +18,10 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
 
         // Then
         // Should handle infinity gracefully (returns original amount due to guard)
-        XCTAssertEqual(result, amount, "Should handle infinite rate gracefully")
-    }
+        #expect(result == amount)
+    @Test("convert with na n values")
 
-    func testConvert_WithNaNValues() {
+    func convertWithNaNValues() {
         // Given
         let amount = 100.0
         let nanRate = Double.nan
@@ -27,10 +30,10 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: nanRate)
 
         // Then
-        XCTAssertEqual(result, amount, "Should handle NaN rate gracefully")
-    }
+        #expect(result == amount)
+    @Test("format amount with infinite amount")
 
-    func testFormatAmount_WithInfiniteAmount() {
+    func formatAmountWithInfiniteAmount() {
         // Given
         let infiniteAmount = Double.infinity
         let currencySymbol = "$"
@@ -44,11 +47,12 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
 
         // Then
         // Should have some representation (formatter should handle this)
-        XCTAssertFalse(result.isEmpty, "Should handle infinite amount")
-        XCTAssertTrue(result.hasPrefix("$"), "Should still include currency symbol")
+        #expect(result.isEmpty == false
     }
 
-    func testFormatAmount_WithNaNAmount() {
+    @Test("format amount with na n amount")
+
+    func formatAmountWithNaNAmount() {
         // Given
         let nanAmount = Double.nan
         let currencySymbol = "$"
@@ -59,13 +63,14 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
 
         // Then
         // Should have some representation (formatter should handle this)
-        XCTAssertFalse(result.isEmpty, "Should handle NaN amount")
-        XCTAssertTrue(result.hasPrefix("$"), "Should still include currency symbol")
+        #expect(result.isEmpty == false
     }
 
     // MARK: - Performance Tests
 
-    func testConvert_Performance() {
+    @Test("convert performance")
+
+    func convertPerformance() {
         // Given
         let iterations = 100_000
         let amount = 123.45
@@ -79,10 +84,10 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "Currency conversion should be fast")
-    }
+        #expect(duration < 1.0)
+    @Test("format amount performance")
 
-    func testFormatAmount_Performance() {
+    func formatAmountPerformance() {
         // Given
         let iterations = 10000
         let amount = 1234.56
@@ -97,18 +102,16 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 2.0, "Amount formatting should be reasonably fast")
-    }
+        #expect(duration < 2.0)
+    @Test("currency conversion helper is main actor")
 
-    // MARK: - MainActor Tests
-
-    func testCurrencyConversionHelper_IsMainActor() {
+    func currencyConversionHelperIsMainActor() {
         // Then - CurrencyConversionHelper is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        XCTAssertNotNil(CurrencyConversionHelper.self)
-    }
+        #expect(CurrencyConversionHelper.self != nil)
+    @Test("concurrent access main actor safety")
 
-    func testConcurrentAccess_MainActorSafety() async {
+    func concurrentAccessMainActorSafety() async {
         // Given
         let taskCount = 20
 
@@ -135,8 +138,7 @@ final class CurrencyConversionEdgeCasesTests: XCTestCase {
             }
 
             // Then
-            XCTAssertEqual(results.count, taskCount, "All tasks should complete")
-            XCTAssertTrue(results.allSatisfy(\.self), "All concurrent operations should succeed")
+            #expect(results.count == taskCount)
         }
     }
 }

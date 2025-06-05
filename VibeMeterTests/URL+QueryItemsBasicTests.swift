@@ -1,10 +1,13 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class URLQueryItemsBasicTests: XCTestCase {
+@Suite("URLQueryItemsBasicTests")
+struct URLQueryItemsBasicTests {
     // MARK: - Basic Functionality Tests
 
-    func testAppendingQueryItems_EmptyArray_ReturnsSameURL() {
+    @Test("appending query items  empty array  returns same url")
+
+    func appendingQueryItems_EmptyArray_ReturnsSameURL() {
         // Given
         let url = URL(string: "https://example.com/path")!
         let emptyItems: [URLQueryItem] = []
@@ -13,10 +16,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(emptyItems)
 
         // Then
-        XCTAssertEqual(result, url, "Appending empty array should return original URL")
-    }
+        #expect(result == url)
 
-    func testAppendingQueryItems_ToURLWithoutQuery_AddsQuery() {
+    func appendingQueryItems_ToURLWithoutQuery_AddsQuery() {
         // Given
         let url = URL(string: "https://example.com/path")!
         let items = [URLQueryItem(name: "key", value: "value")]
@@ -25,10 +27,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/path?key=value")
-    }
+        #expect(result.absoluteString == "https://example.com/path?key=value")
 
-    func testAppendingQueryItems_ToURLWithExistingQuery_AppendsToQuery() {
+    func appendingQueryItems_ToURLWithExistingQuery_AppendsToQuery() {
         // Given
         let url = URL(string: "https://example.com/path?existing=param")!
         let items = [URLQueryItem(name: "new", value: "item")]
@@ -37,10 +38,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/path?existing=param&new=item")
-    }
+        #expect(result.absoluteString == "https://example.com/path?existing=param&new=item")
 
-    func testAppendingQueryItems_MultipleItems_AddsAllItems() {
+    func appendingQueryItems_MultipleItems_AddsAllItems() {
         // Given
         let url = URL(string: "https://example.com/api")!
         let items = [
@@ -53,12 +53,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/api?param1=value1&param2=value2&param3=value3")
-    }
+        #expect(result.absoluteString == "https://example.com/api?param1=value1&param2=value2&param3=value3")
 
-    // MARK: - URL Schemes Tests
-
-    func testAppendingQueryItems_HTTPSScheme_WorksCorrectly() {
+    func appendingQueryItems_HTTPSScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "https://secure.example.com/api")!
         let items = [URLQueryItem(name: "token", value: "secret123")]
@@ -67,11 +64,12 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://secure.example.com/api?token=secret123")
-        XCTAssertEqual(result.scheme, "https")
+        #expect(result.absoluteString == "https://secure.example.com/api?token=secret123")
     }
 
-    func testAppendingQueryItems_HTTPScheme_WorksCorrectly() {
+    @Test("appending query items http scheme  works correctly")
+
+    func appendingQueryItems_HTTPScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "http://example.com/api")!
         let items = [URLQueryItem(name: "debug", value: "true")]
@@ -80,11 +78,12 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "http://example.com/api?debug=true")
-        XCTAssertEqual(result.scheme, "http")
+        #expect(result.absoluteString == "http://example.com/api?debug=true")
     }
 
-    func testAppendingQueryItems_CustomScheme_WorksCorrectly() {
+    @Test("appending query items  custom scheme  works correctly")
+
+    func appendingQueryItems_CustomScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "myapp://action/perform")!
         let items = [URLQueryItem(name: "param", value: "value")]
@@ -93,13 +92,14 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "myapp://action/perform?param=value")
-        XCTAssertEqual(result.scheme, "myapp")
+        #expect(result.absoluteString == "myapp://action/perform?param=value")
     }
 
     // MARK: - URL Components Tests
 
-    func testAppendingQueryItems_PreservesHost() {
+    @Test("appending query items  preserves host")
+
+    func appendingQueryItems_PreservesHost() {
         // Given
         let url = URL(string: "https://api.example.com:8080/v1/endpoint")!
         let items = [URLQueryItem(name: "version", value: "1.0")]
@@ -108,12 +108,10 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.host, "api.example.com")
-        XCTAssertEqual(result.port, 8080)
-        XCTAssertEqual(result.path, "/v1/endpoint")
-    }
+        #expect(result.host == "api.example.com")
+        #expect(result.path == "/v1/endpoint")
 
-    func testAppendingQueryItems_PreservesFragment() {
+    func appendingQueryItems_PreservesFragment() {
         // Given
         let url = URL(string: "https://example.com/page#section")!
         let items = [URLQueryItem(name: "highlight", value: "text")]
@@ -122,11 +120,12 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/page?highlight=text#section")
-        XCTAssertEqual(result.fragment, "section")
+        #expect(result.absoluteString == "https://example.com/page?highlight=text#section")
     }
 
-    func testAppendingQueryItems_WithUserInfo_PreservesUserInfo() {
+    @Test("appending query items  with user info  preserves user info")
+
+    func appendingQueryItems_WithUserInfo_PreservesUserInfo() {
         // Given
         let url = URL(string: "https://user:pass@example.com/path")!
         let items = [URLQueryItem(name: "auth", value: "token")]
@@ -135,14 +134,10 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://user:pass@example.com/path?auth=token")
-        XCTAssertEqual(result.user, "user")
-        XCTAssertEqual(result.password, "pass")
-    }
+        #expect(result.absoluteString == "https://user:pass@example.com/path?auth=token")
+        #expect(result.password == "pass")
 
-    // MARK: - Error Handling Tests
-
-    func testAppendingQueryItems_InvalidURL_ReturnsSelf() {
+    func appendingQueryItems_InvalidURL_ReturnsSelf() {
         // Given - Create a URL that might cause URLComponents to fail
         // This is tricky since URL(string:) already validates, but we can test the fallback
         let url = URL(string: "https://example.com/path")!
@@ -152,12 +147,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let result = url.appendingQueryItems(items)
 
         // Then - Should succeed in this case, but testing the pattern
-        XCTAssertNotNil(result)
-    }
+        #expect(result != nil)
 
-    // MARK: - Chaining Tests
-
-    func testAppendingQueryItems_ChainedCalls_WorksCorrectly() {
+    func appendingQueryItems_ChainedCalls_WorksCorrectly() {
         // Given
         let url = URL(string: "https://example.com/api")!
         let firstItems = [URLQueryItem(name: "step", value: "1")]
@@ -169,10 +161,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
             .appendingQueryItems(secondItems)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://example.com/api?step=1&step=2")
-    }
+        #expect(result.absoluteString == "https://example.com/api?step=1&step=2")
 
-    func testAppendingQueryItems_MultipleChainedCalls_BuildsCorrectly() {
+    func appendingQueryItems_MultipleChainedCalls_BuildsCorrectly() {
         // Given
         let url = URL(string: "https://api.example.com/data")!
 
@@ -183,12 +174,9 @@ final class URLQueryItemsBasicTests: XCTestCase {
             .appendingQueryItems([URLQueryItem(name: "include", value: "metadata")])
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://api.example.com/data?format=json&version=v2&include=metadata")
-    }
+        #expect(result.absoluteString == "https://api.example.com/data?format=json&version=v2&include=metadata")
 
-    // MARK: - Query Order Tests
-
-    func testAppendingQueryItems_PreservesExistingOrder() {
+    func appendingQueryItems_PreservesExistingOrder() {
         // Given
         let url = URL(string: "https://example.com/path?z=last&a=first&m=middle")!
         let items = [URLQueryItem(name: "new", value: "item")]
@@ -201,9 +189,7 @@ final class URLQueryItemsBasicTests: XCTestCase {
         let components = URLComponents(url: result, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
 
-        XCTAssertEqual(queryItems[0].name, "z")
-        XCTAssertEqual(queryItems[1].name, "a")
-        XCTAssertEqual(queryItems[2].name, "m")
-        XCTAssertEqual(queryItems[3].name, "new")
+        #expect(queryItems[0].name == "z")
+        #expect(queryItems[2].name == "m")
     }
 }

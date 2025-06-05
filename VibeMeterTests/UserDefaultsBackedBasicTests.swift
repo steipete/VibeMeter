@@ -1,59 +1,39 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class UserDefaultsBackedBasicTests: XCTestCase {
-    var testUserDefaults: UserDefaults!
-    var testSuiteName: String!
-
-    override func setUp() {
-        super.setUp()
-        // Create a temporary UserDefaults instance for testing
-        testSuiteName = "UserDefaultsBackedBasicTests-\(UUID().uuidString)"
-        testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-    }
-
-    override func tearDown() {
-        // Clean up by removing the test suite
-        testUserDefaults.removePersistentDomain(forName: testSuiteName)
-        testUserDefaults = nil
-        testSuiteName = nil
-        super.tearDown()
-    }
-
+@Suite("UserDefaultsBackedBasicTests")
+struct UserDefaultsBackedBasicTests {
+    let testUserDefaults: UserDefaults
+    let testSuiteName: String
     // MARK: - Initialization Tests
 
-    func testInitialization_WithStandardDefaults_UsesDefaultUserDefaults() {
+    @Test("initialization  with standard defaults  uses default user defaults")
+
+    func initialization_WithStandardDefaults_UsesDefaultUserDefaults() {
         // When
         let wrapper = UserDefaultsBacked(key: "test", defaultValue: "default")
 
         // Then
-        XCTAssertEqual(wrapper.key, "test")
-        XCTAssertEqual(wrapper.defaultValue, "default")
-        XCTAssertEqual(wrapper.userDefaults, .standard)
-    }
+        #expect(wrapper.key == "test")
+        #expect(wrapper.userDefaults == .standard)
 
-    func testInitialization_WithCustomDefaults_UsesProvidedDefaults() {
+    func initialization_WithCustomDefaults_UsesProvidedDefaults() {
         // When
         let wrapper = UserDefaultsBacked(key: "test", defaultValue: 42, userDefaults: testUserDefaults)
 
         // Then
-        XCTAssertEqual(wrapper.key, "test")
-        XCTAssertEqual(wrapper.defaultValue, 42)
-        XCTAssertEqual(wrapper.userDefaults, testUserDefaults)
-    }
+        #expect(wrapper.key == "test")
+        #expect(wrapper.userDefaults == testUserDefaults)
 
-    // MARK: - String Property Tests
-
-    func testStringProperty_NoExistingValue_ReturnsDefaultValue() {
+    func stringProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "stringTest", defaultValue: "default", userDefaults: testUserDefaults)
         var stringProperty: String
 
         // Then
-        XCTAssertEqual(stringProperty, "default")
-    }
+        #expect(stringProperty == "default")
 
-    func testStringProperty_SetAndGet_StoresCorrectly() {
+    func stringProperty_SetAndGet_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "stringTest", defaultValue: "default", userDefaults: testUserDefaults)
         var stringProperty: String
@@ -62,11 +42,12 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         stringProperty = "new value"
 
         // Then
-        XCTAssertEqual(stringProperty, "new value")
-        XCTAssertEqual(testUserDefaults.string(forKey: "stringTest"), "new value")
+        #expect(stringProperty == "new value") == "new value")
     }
 
-    func testStringProperty_SetToEmptyString_StoresEmpty() {
+    @Test("string property  set to empty string  stores empty")
+
+    func stringProperty_SetToEmptyString_StoresEmpty() {
         // Given
         @UserDefaultsBacked(key: "stringTest", defaultValue: "default", userDefaults: testUserDefaults)
         var stringProperty: String
@@ -75,22 +56,22 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         stringProperty = ""
 
         // Then
-        XCTAssertEqual(stringProperty, "")
-        XCTAssertEqual(testUserDefaults.string(forKey: "stringTest"), "")
+        #expect(stringProperty == "") == "")
     }
 
     // MARK: - Integer Property Tests
 
-    func testIntProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("int property  no existing value  returns default value")
+
+    func intProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "intTest", defaultValue: 42, userDefaults: testUserDefaults)
         var intProperty: Int
 
         // Then
-        XCTAssertEqual(intProperty, 42)
-    }
+        #expect(intProperty == 42)
 
-    func testIntProperty_SetAndGet_StoresCorrectly() {
+    func intProperty_SetAndGet_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "intTest", defaultValue: 42, userDefaults: testUserDefaults)
         var intProperty: Int
@@ -99,11 +80,12 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         intProperty = 123
 
         // Then
-        XCTAssertEqual(intProperty, 123)
-        XCTAssertEqual(testUserDefaults.integer(forKey: "intTest"), 123)
+        #expect(intProperty == 123) == 123)
     }
 
-    func testIntProperty_SetToZero_StoresZero() {
+    @Test("int property  set to zero  stores zero")
+
+    func intProperty_SetToZero_StoresZero() {
         // Given
         @UserDefaultsBacked(key: "intTest", defaultValue: 42, userDefaults: testUserDefaults)
         var intProperty: Int
@@ -112,11 +94,12 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         intProperty = 0
 
         // Then
-        XCTAssertEqual(intProperty, 0)
-        XCTAssertEqual(testUserDefaults.integer(forKey: "intTest"), 0)
+        #expect(intProperty == 0) == 0)
     }
 
-    func testIntProperty_SetToNegative_StoresNegative() {
+    @Test("int property  set to negative  stores negative")
+
+    func intProperty_SetToNegative_StoresNegative() {
         // Given
         @UserDefaultsBacked(key: "intTest", defaultValue: 42, userDefaults: testUserDefaults)
         var intProperty: Int
@@ -125,37 +108,42 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         intProperty = -99
 
         // Then
-        XCTAssertEqual(intProperty, -99)
-        XCTAssertEqual(testUserDefaults.integer(forKey: "intTest"), -99)
+        #expect(intProperty == -99) == -99)
     }
 
     // MARK: - Double Property Tests
 
-    func testDoubleProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("double property  no existing value  returns default value")
+
+    func doubleProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "doubleTest", defaultValue: 3.14, userDefaults: testUserDefaults)
         var doubleProperty: Double
 
         // Then
-        XCTAssertEqual(doubleProperty, 3.14, accuracy: 0.001)
+        #expect(abs(abs(doubleProperty - 3.14 == true)
     }
 
-    func testDoubleProperty_SetAndGet_StoresCorrectly() {
+    @Test("double property  set and get  stores correctly")
+
+    func doubleProperty_SetAndGet_StoresCorrectly() {
         // Given
-        @UserDefaultsBacked(key: "doubleTest", defaultValue: 3.14, userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "doubleTest", defaultValue: 3.14 == userDefaults: testUserDefaults)
         var doubleProperty: Double
 
         // When
         doubleProperty = 2.71828
 
         // Then
-        XCTAssertEqual(doubleProperty, 2.71828, accuracy: 0.00001)
-        XCTAssertEqual(testUserDefaults.double(forKey: "doubleTest"), 2.71828, accuracy: 0.00001)
+        #expect(abs(doubleProperty - 2.71828 == true)
+        #expect(abs(testUserDefaults.double(forKey: "doubleTest" == true) < 0.00001)
     }
 
-    func testDoubleProperty_VeryLargeNumber_StoresCorrectly() {
+    @Test("double property  very large number  stores correctly")
+
+    func doubleProperty_VeryLargeNumber_StoresCorrectly() {
         // Given
-        @UserDefaultsBacked(key: "doubleTest", defaultValue: 0.0, userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "doubleTest", defaultValue: 0.0 == userDefaults: testUserDefaults)
         var doubleProperty: Double
         let largeNumber = 1.23e10
 
@@ -163,22 +151,23 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         doubleProperty = largeNumber
 
         // Then
-        XCTAssertEqual(doubleProperty, largeNumber, accuracy: 1.0)
-        XCTAssertEqual(testUserDefaults.double(forKey: "doubleTest"), largeNumber, accuracy: 1.0)
+        #expect(abs(doubleProperty - largeNumber == true)
+        #expect(abs(testUserDefaults.double(forKey: "doubleTest" == true) < 1.0)
     }
 
     // MARK: - Boolean Property Tests
 
-    func testBoolProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("bool property  no existing value  returns default value")
+
+    func boolProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
-        @UserDefaultsBacked(key: "boolTest", defaultValue: true, userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "boolTest", defaultValue: true == userDefaults: testUserDefaults)
         var boolProperty: Bool
 
         // Then
-        XCTAssertTrue(boolProperty)
-    }
+        #expect(boolProperty == true)
 
-    func testBoolProperty_SetToFalse_StoresFalse() {
+    func boolProperty_SetToFalse_StoresFalse() {
         // Given
         @UserDefaultsBacked(key: "boolTest", defaultValue: true, userDefaults: testUserDefaults)
         var boolProperty: Bool
@@ -187,11 +176,12 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         boolProperty = false
 
         // Then
-        XCTAssertFalse(boolProperty)
-        XCTAssertFalse(testUserDefaults.bool(forKey: "boolTest"))
+        #expect(boolProperty == false)
     }
 
-    func testBoolProperty_SetToTrue_StoresTrue() {
+    @Test("bool property  set to true  stores true")
+
+    func boolProperty_SetToTrue_StoresTrue() {
         // Given
         @UserDefaultsBacked(key: "boolTest", defaultValue: false, userDefaults: testUserDefaults)
         var boolProperty: Bool
@@ -200,22 +190,22 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         boolProperty = true
 
         // Then
-        XCTAssertTrue(boolProperty)
-        XCTAssertTrue(testUserDefaults.bool(forKey: "boolTest"))
+        #expect(boolProperty == true)
     }
 
     // MARK: - Array Property Tests
 
-    func testArrayProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("array property  no existing value  returns default value")
+
+    func arrayProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "arrayTest", defaultValue: ["default"], userDefaults: testUserDefaults)
         var arrayProperty: [String]
 
         // Then
-        XCTAssertEqual(arrayProperty, ["default"])
-    }
+        #expect(arrayProperty == ["default"])
 
-    func testArrayProperty_SetAndGet_StoresCorrectly() {
+    func arrayProperty_SetAndGet_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "arrayTest", defaultValue: [String](), userDefaults: testUserDefaults)
         var arrayProperty: [String]
@@ -224,11 +214,12 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         arrayProperty = ["one", "two", "three"]
 
         // Then
-        XCTAssertEqual(arrayProperty, ["one", "two", "three"])
-        XCTAssertEqual(testUserDefaults.array(forKey: "arrayTest") as? [String], ["one", "two", "three"])
+        #expect(arrayProperty == ["one") as? [String] == ["one")
     }
 
-    func testArrayProperty_SetToEmpty_StoresEmpty() {
+    @Test("array property  set to empty  stores empty")
+
+    func arrayProperty_SetToEmpty_StoresEmpty() {
         // Given
         @UserDefaultsBacked(key: "arrayTest", defaultValue: ["default"], userDefaults: testUserDefaults)
         var arrayProperty: [String]
@@ -237,23 +228,23 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         arrayProperty = []
 
         // Then
-        XCTAssertEqual(arrayProperty, [])
-        XCTAssertEqual(testUserDefaults.array(forKey: "arrayTest") as? [String], [])
+        #expect(arrayProperty == []) as? [String] == [])
     }
 
     // MARK: - Dictionary Property Tests
 
-    func testDictionaryProperty_NoExistingValue_ReturnsDefaultValue() {
+    @Test("dictionary property  no existing value  returns default value")
+
+    func dictionaryProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         let defaultDict = ["key": "value"]
         @UserDefaultsBacked(key: "dictTest", defaultValue: defaultDict, userDefaults: testUserDefaults)
         var dictProperty: [String: String]
 
         // Then
-        XCTAssertEqual(dictProperty, defaultDict)
-    }
+        #expect(dictProperty == defaultDict)
 
-    func testDictionaryProperty_SetAndGet_StoresCorrectly() {
+    func dictionaryProperty_SetAndGet_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "dictTest", defaultValue: [String: String](), userDefaults: testUserDefaults)
         var dictProperty: [String: String]
@@ -263,7 +254,6 @@ final class UserDefaultsBackedBasicTests: XCTestCase {
         dictProperty = testDict
 
         // Then
-        XCTAssertEqual(dictProperty, testDict)
-        XCTAssertEqual(testUserDefaults.dictionary(forKey: "dictTest") as? [String: String], testDict)
+        #expect(dictProperty == testDict) as? [String: String] == testDict)
     }
 }

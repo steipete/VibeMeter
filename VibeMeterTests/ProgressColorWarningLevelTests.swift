@@ -1,11 +1,14 @@
 import SwiftUI
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ProgressColorWarningLevelTests: XCTestCase {
+@Suite("ProgressColorWarningLevelTests")
+struct ProgressColorWarningLevelTests {
     // MARK: - Warning Level Tests
 
-    func testWarningLevel_BelowHalfway_ReturnsNormal() {
+    @Test("warning level  below halfway  returns normal")
+
+    func warningLevel_BelowHalfway_ReturnsNormal() {
         // Given
         let testValues = [0.0, 0.1, 0.25, 0.4, 0.49, 0.499]
 
@@ -14,11 +17,13 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .normal, "Progress \(progress) should return normal warning level")
+            #expect(warningLevel == .normal)
         }
     }
 
-    func testWarningLevel_AtExactHalfway_ReturnsLow() {
+    @Test("warning level  at exact halfway  returns low")
+
+    func warningLevel_AtExactHalfway_ReturnsLow() {
         // Given
         let progress = 0.5
 
@@ -26,10 +31,9 @@ final class ProgressColorWarningLevelTests: XCTestCase {
         let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
         // Then
-        XCTAssertEqual(warningLevel, .low, "Progress 0.5 should return low warning level")
-    }
+        #expect(warningLevel == .low)
 
-    func testWarningLevel_BetweenHalfAndThreeQuarters_ReturnsLow() {
+    func warningLevel_BetweenHalfAndThreeQuarters_ReturnsLow() {
         // Given
         let testValues = [0.5, 0.6, 0.65, 0.7, 0.74, 0.749]
 
@@ -38,11 +42,13 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .low, "Progress \(progress) should return low warning level")
+            #expect(warningLevel == .low)
         }
     }
 
-    func testWarningLevel_AtThreeQuarters_ReturnsMedium() {
+    @Test("warning level  at three quarters  returns medium")
+
+    func warningLevel_AtThreeQuarters_ReturnsMedium() {
         // Given
         let progress = 0.75
 
@@ -50,10 +56,9 @@ final class ProgressColorWarningLevelTests: XCTestCase {
         let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
         // Then
-        XCTAssertEqual(warningLevel, .medium, "Progress 0.75 should return medium warning level")
-    }
+        #expect(warningLevel == .medium)
 
-    func testWarningLevel_BetweenThreeQuartersAndNinetyPercent_ReturnsMedium() {
+    func warningLevel_BetweenThreeQuartersAndNinetyPercent_ReturnsMedium() {
         // Given
         let testValues = [0.75, 0.8, 0.85, 0.89, 0.899]
 
@@ -62,11 +67,13 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .medium, "Progress \(progress) should return medium warning level")
+            #expect(warningLevel == .medium)
         }
     }
 
-    func testWarningLevel_AtNinetyPercent_ReturnsHigh() {
+    @Test("warning level  at ninety percent  returns high")
+
+    func warningLevel_AtNinetyPercent_ReturnsHigh() {
         // Given
         let progress = 0.9
 
@@ -74,10 +81,9 @@ final class ProgressColorWarningLevelTests: XCTestCase {
         let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
         // Then
-        XCTAssertEqual(warningLevel, .high, "Progress 0.9 should return high warning level")
-    }
+        #expect(warningLevel == .high)
 
-    func testWarningLevel_AboveNinetyPercent_ReturnsHigh() {
+    func warningLevel_AboveNinetyPercent_ReturnsHigh() {
         // Given
         let testValues = [0.9, 0.95, 1.0, 1.1, 1.5, 2.0]
 
@@ -86,13 +92,15 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .high, "Progress \(progress) should return high warning level")
+            #expect(warningLevel == .high)
         }
     }
 
     // MARK: - Boundary Value Tests for Warning Levels
 
-    func testWarningLevel_ExactBoundaryValues() {
+    @Test("warning level  exact boundary values")
+
+    func warningLevel_ExactBoundaryValues() {
         // Test exact boundary values to ensure correct thresholds
         let testCases = [
             (0.499999, Color.ProgressWarningLevel.normal),
@@ -108,13 +116,15 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, expectedLevel, "Progress \(progress) should return \(expectedLevel)")
+            #expect(warningLevel == expectedLevel)")
         }
     }
 
     // MARK: - Consistency Tests
 
-    func testColorAndWarningLevel_Consistency() {
+    @Test("color and warning level  consistency")
+
+    func colorAndWarningLevel_Consistency() {
         // Test that color and warning level thresholds are consistent
         let testValues = [0.0, 0.25, 0.5, 0.6, 0.75, 0.8, 0.9, 1.0]
 
@@ -126,48 +136,51 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             // Then - Verify color and warning level are consistent
             switch progress {
             case ..<0.5:
-                XCTAssertEqual(color, .progressSafe, "Color should be green for progress \(progress)")
-                XCTAssertEqual(warningLevel, .normal, "Warning level should be normal for progress \(progress)")
+                #expect(color == .progressSafe)
+                #expect(warningLevel == .normal)
             case 0.5 ..< 0.75:
-                XCTAssertEqual(color, .progressCaution, "Color should be yellow for progress \(progress)")
-                XCTAssertEqual(warningLevel, .low, "Warning level should be low for progress \(progress)")
+                #expect(color == .progressCaution)
+                #expect(warningLevel == .low)
             case 0.75 ..< 0.9:
-                XCTAssertEqual(color, .progressWarning, "Color should be orange for progress \(progress)")
-                XCTAssertEqual(warningLevel, .medium, "Warning level should be medium for progress \(progress)")
+                #expect(color == .progressWarning)
+                #expect(warningLevel == .medium)
             default:
-                XCTAssertEqual(color, .progressDanger, "Color should be red for progress \(progress)")
-                XCTAssertEqual(warningLevel, .high, "Warning level should be high for progress \(progress)")
+                #expect(color == .progressDanger)
+                #expect(warningLevel == .high)
             }
         }
     }
 
     // MARK: - WarningLevel Enum Tests
 
-    func testWarningLevel_AllCasesCanBeCreated() {
+    @Test("warning level  all cases can be created")
+
+    func warningLevel_AllCasesCanBeCreated() {
         // Given/When/Then
         let normal = Color.ProgressWarningLevel.normal
         let low = Color.ProgressWarningLevel.low
         let medium = Color.ProgressWarningLevel.medium
         let high = Color.ProgressWarningLevel.high
 
-        XCTAssertNotNil(normal)
-        XCTAssertNotNil(low)
-        XCTAssertNotNil(medium)
-        XCTAssertNotNil(high)
+        #expect(normal != nil)
+        #expect(medium != nil)
     }
 
-    func testWarningLevel_Equatable() {
+    @Test("warning level  equatable")
+
+    func warningLevel_Equatable() {
         // Given
         let normal1 = Color.ProgressWarningLevel.normal
         let normal2 = Color.ProgressWarningLevel.normal
         let low = Color.ProgressWarningLevel.low
 
         // Then
-        XCTAssertEqual(normal1, normal2, "Same warning levels should be equal")
-        XCTAssertNotEqual(normal1, low, "Different warning levels should not be equal")
+        #expect(normal1 == normal2)
     }
 
-    func testWarningLevel_TypicalSpendingScenarios() {
+    @Test("warning level  typical spending scenarios")
+
+    func warningLevel_TypicalSpendingScenarios() {
         // Test realistic spending progress scenarios
         let scenarios = [
             (0.1, "10% of budget", Color.ProgressWarningLevel.normal),
@@ -185,7 +198,7 @@ final class ProgressColorWarningLevelTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, expectedLevel, "Scenario '\(scenario)' should have correct warning level")
+            #expect(warningLevel == expectedLevel)
         }
     }
 }

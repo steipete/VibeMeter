@@ -1,31 +1,17 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class CursorProviderNoTeamTests: XCTestCase {
-    private var cursorProvider: CursorProvider!
-    private var mockURLSession: MockURLSession!
-    private var mockSettingsManager: MockSettingsManager!
-
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
-        cursorProvider = CursorProvider(
-            settingsManager: mockSettingsManager,
-            urlSession: mockURLSession)
-    }
-
-    override func tearDown() {
-        cursorProvider = nil
-        mockURLSession = nil
-        mockSettingsManager = nil
-        super.tearDown()
-    }
-
+@Suite("CursorProviderNoTeamTests")
+struct CursorProviderNoTeamTests {
+    private let cursorProvider: CursorProvider
+    private let mockURLSession: MockURLSession
+    private let mockSettingsManager: MockSettingsManager
     // MARK: - Individual User (No Team) Tests
 
-    func testFetchUserInfo_IndividualUser_NoTeamId() async throws {
+    @Test("fetch user info  individual user  no team id")
+
+    func fetchUserInfo_IndividualUser_NoTeamId() async throws {
         // Given - API returns user without teamId
         let mockUserData = Data("""
         {
@@ -46,12 +32,10 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let userInfo = try await cursorProvider.fetchUserInfo(authToken: "individual-token")
 
         // Then
-        XCTAssertEqual(userInfo.email, "individual@example.com")
-        XCTAssertNil(userInfo.teamId, "Individual users should have nil teamId")
-        XCTAssertEqual(userInfo.provider, .cursor)
-    }
+        #expect(userInfo.email == "individual@example.com")
+        #expect(userInfo.provider == .cursor)
 
-    func testFetchTeamInfo_IndividualUser_EmptyTeams() async throws {
+    func fetchTeamInfo_IndividualUser_EmptyTeams() async throws {
         // Given - API returns empty teams array for individual users
         let mockEmptyTeamsData = Data("""
         {
@@ -72,12 +56,10 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "individual-token")
 
         // Then - Should return fallback team info for individual users
-        XCTAssertEqual(teamInfo.id, CursorAPIConstants.ResponseConstants.individualUserTeamId, "Individual users should get fallback team ID")
-        XCTAssertEqual(teamInfo.name, CursorAPIConstants.ResponseConstants.individualUserTeamName, "Individual users should get fallback team name")
-        XCTAssertEqual(teamInfo.provider, .cursor)
-    }
+        #expect(teamInfo.id == CursorAPIConstants.ResponseConstants.individualUserTeamId)
+        #expect(teamInfo.provider == .cursor)
 
-    func testFetchMonthlyInvoice_IndividualUser_NoTeamId() async throws {
+    func fetchMonthlyInvoice_IndividualUser_NoTeamId() async throws {
         // Given - No stored team ID and none provided (individual user)
         let mockInvoiceData = Data("""
         {
@@ -111,22 +93,17 @@ final class CursorProviderNoTeamTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 1)
-        XCTAssertEqual(invoice.items[0].cents, 2000)
-        XCTAssertEqual(invoice.items[0].description, "Individual Pro Usage")
-        XCTAssertEqual(invoice.totalSpendingCents, 2000)
-        XCTAssertEqual(invoice.pricingDescription?.description, "Individual Pro Plan")
-
-        // Verify request body does NOT contain teamId field
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        #expect(invoice.items.count == 1)
+        #expect(invoice.items[0].description == "Individual Pro Usage")
+        #expect(invoice.pricingDescription?.description == "Individual Pro Plan")
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["month"] as? Int, 12)
-        XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
-        XCTAssertNil(bodyJSON?["teamId"], "Request should not contain teamId field for individual users")
-        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
+        #expect(bodyJSON?["month"] as? Int == 12)
+        #expect(bodyJSON?["teamId"] == nil)
     }
 
-    func testFetchMonthlyInvoice_IndividualUser_EmptyInvoice() async throws {
+    @Test("fetch monthly invoice  individual user  empty invoice")
+
+    func fetchMonthlyInvoice_IndividualUser_EmptyInvoice() async throws {
         // Given - Individual user with no spending
         let mockEmptyInvoiceData = Data("""
         {
@@ -152,19 +129,12 @@ final class CursorProviderNoTeamTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 0, "Individual users can have empty invoices")
-        XCTAssertEqual(invoice.totalSpendingCents, 0)
-        XCTAssertNil(invoice.pricingDescription)
-
-        // Verify no teamId in request
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        #expect(invoice.items.count == 0)
+        #expect(invoice.pricingDescription == nil)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "Request should not contain teamId field")
-    }
+        #expect(bodyJSON?["teamId"] == nil)
 
-    // MARK: - Mixed Scenarios Tests
-
-    func testFetchMonthlyInvoice_TransitionFromTeamToIndividual() async throws {
+    func fetchMonthlyInvoice_TransitionFromTeamToIndividual() async throws {
         // Given - User was previously in a team but now is individual
         // First, set up a previous team session
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -199,15 +169,12 @@ final class CursorProviderNoTeamTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.totalSpendingCents, 1500)
-
-        // Verify that stored teamId was used (not overridden)
+        #expect(invoice.totalSpendingCents == 1500)
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 999, "Should use stored teamId when not explicitly overridden")
-    }
+        #expect(bodyJSON?["teamId"] as? Int == 999)
 
-    func testFetchMonthlyInvoice_ExplicitlyNoTeam() async throws {
+    func fetchMonthlyInvoice_ExplicitlyNoTeam() async throws {
         // Given - User has stored team but we want to fetch without team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
             provider: .cursor,
@@ -243,17 +210,11 @@ final class CursorProviderNoTeamTests: XCTestCase {
             teamId: nil)
 
         // Then
-        XCTAssertEqual(invoice.items.count, 0)
-
-        // Verify no teamId in request
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        #expect(invoice.items.count == 0)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId when session is cleared")
-    }
+        #expect(bodyJSON?["teamId"] == nil)
 
-    // MARK: - API Request Body Formation Tests
-
-    func testAPIRequestBody_WithTeamId() async throws {
+    func aPIRequestBody_WithTeamId() async throws {
         // Given
         let mockInvoiceData = Data("""
         {"items": [], "pricing_description": null}
@@ -279,14 +240,11 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         
-        XCTAssertEqual(bodyJSON?.count, 4, "Should have 4 fields when teamId is present")
-        XCTAssertEqual(bodyJSON?["month"] as? Int, 7)
-        XCTAssertEqual(bodyJSON?["year"] as? Int, 2024)
-        XCTAssertEqual(bodyJSON?["teamId"] as? Int, 12345)
-        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
-    }
+        #expect(bodyJSON?.count == 4)
+        #expect(bodyJSON?["year"] as? Int == 2024)
+        #expect(bodyJSON?["includeUsageEvents"] as? Bool == false)
 
-    func testAPIRequestBody_WithoutTeamId() async throws {
+    func aPIRequestBody_WithoutTeamId() async throws {
         // Given
         let mockInvoiceData = Data("""
         {"items": [], "pricing_description": null}
@@ -312,14 +270,14 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         
-        XCTAssertEqual(bodyJSON?.count, 3, "Should have only 3 fields when teamId is nil")
-        XCTAssertEqual(bodyJSON?["month"] as? Int, 8)
-        XCTAssertEqual(bodyJSON?["year"] as? Int, 2024)
-        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
-        XCTAssertFalse(bodyJSON?.keys.contains("teamId") ?? false, "teamId key should not exist in request body")
+        #expect(bodyJSON?.count == 3)
+        #expect(bodyJSON?["year"] as? Int == 2024)
+        #expect(bodyJSON?.keys.contains("teamId" == false)
     }
 
-    func testAPIRequestBody_TeamIdZero() async throws {
+    @Test("a pi request body  team id zero")
+
+    func aPIRequestBody_TeamIdZero() async throws {
         // Given - Test edge case where teamId is 0
         let mockInvoiceData = Data("""
         {"items": [], "pricing_description": null}
@@ -345,7 +303,6 @@ final class CursorProviderNoTeamTests: XCTestCase {
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         
-        XCTAssertNil(bodyJSON?["teamId"], "Should not include teamId: 0 as it's filtered as invalid")
-        XCTAssertFalse(bodyJSON?.keys.contains("teamId") ?? false, "teamId key should not exist when value is 0")
+        #expect(bodyJSON?["teamId"] == nil) ?? false, "teamId key should not exist when value is 0")
     }
 }

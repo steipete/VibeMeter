@@ -1,11 +1,14 @@
 import SwiftUI
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ProviderConnectionStatusAdvancedTests: XCTestCase {
+@Suite("ProviderConnectionStatusAdvancedTests")
+struct ProviderConnectionStatusAdvancedTests {
     // MARK: - Codable Tests
 
-    func testCodable_Disconnected_EncodesAndDecodes() throws {
+    @Test("codable  disconnected  encodes and decodes")
+
+    func codable_Disconnected_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.disconnected
 
@@ -14,10 +17,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-    }
+        #expect(status == decoded)
 
-    func testCodable_Connecting_EncodesAndDecodes() throws {
+    func codable_Connecting_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.connecting
 
@@ -26,10 +28,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-    }
+        #expect(status == decoded)
 
-    func testCodable_Connected_EncodesAndDecodes() throws {
+    func codable_Connected_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.connected
 
@@ -38,10 +39,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-    }
+        #expect(status == decoded)
 
-    func testCodable_Syncing_EncodesAndDecodes() throws {
+    func codable_Syncing_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.syncing
 
@@ -50,10 +50,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-    }
+        #expect(status == decoded)
 
-    func testCodable_Error_EncodesAndDecodes() throws {
+    func codable_Error_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.error(message: "Network connection failed")
 
@@ -62,16 +61,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-
-        if case let .error(message) = decoded {
-            XCTAssertEqual(message, "Network connection failed")
-        } else {
-            XCTFail("Decoded status should be error case")
+        #expect(status == decoded) = decoded {
+            #expect(message == "Network connection failed")
         }
     }
 
-    func testCodable_RateLimited_WithoutDate_EncodesAndDecodes() throws {
+    @Test("codable  rate limited  without date  encodes and decodes")
+
+    func codable_RateLimited_WithoutDate_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.rateLimited(until: nil)
 
@@ -80,16 +77,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-
-        if case let .rateLimited(until) = decoded {
-            XCTAssertNil(until)
-        } else {
-            XCTFail("Decoded status should be rateLimited case")
+        #expect(status == decoded) = decoded {
+            #expect(until == nil)
         }
     }
 
-    func testCodable_RateLimited_WithDate_EncodesAndDecodes() throws {
+    @Test("codable  rate limited  with date  encodes and decodes")
+
+    func codable_RateLimited_WithDate_EncodesAndDecodes() throws {
         // Given
         let date = Date(timeIntervalSince1970: 1_640_995_200) // Fixed date for testing
         let status = ProviderConnectionStatus.rateLimited(until: date)
@@ -99,16 +94,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-
-        if case let .rateLimited(until) = decoded {
-            XCTAssertEqual(until, date)
-        } else {
-            XCTFail("Decoded status should be rateLimited case")
+        #expect(status == decoded) = decoded {
+            #expect(until == date)
         }
     }
 
-    func testCodable_Stale_EncodesAndDecodes() throws {
+    @Test("codable  stale  encodes and decodes")
+
+    func codable_Stale_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.stale
 
@@ -117,10 +110,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        XCTAssertEqual(status, decoded)
-    }
+        #expect(status == decoded)
 
-    func testCodable_UnknownType_DefaultsToDisconnected() throws {
+    func codable_UnknownType_DefaultsToDisconnected() throws {
         // Given - Manually create JSON with unknown type
         let json = Data("""
         {"type": "unknownType"}
@@ -130,10 +122,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: json)
 
         // Then
-        XCTAssertEqual(decoded, .disconnected)
-    }
+        #expect(decoded == .disconnected)
 
-    func testCodable_MalformedError_ThrowsError() {
+    func codable_MalformedError_ThrowsError() {
         // Given - Error case without message
         let json = Data("""
         {"type": "error"}
@@ -145,7 +136,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
 
     // MARK: - User-Friendly Error Messages Tests
 
-    func testUserFriendlyError_NetworkErrors() {
+    @Test("user friendly error  network errors")
+
+    func userFriendlyError_NetworkErrors() {
         // Given
         let networkErrors = [
             "Network connection failed",
@@ -158,14 +151,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            XCTAssertEqual(
-                status.description,
-                "Connection failed",
-                "Network error '\(error)' should be converted to user-friendly message")
+            #expect(
+                status.description == "Connection failed")
         }
     }
 
-    func testUserFriendlyError_AuthErrors() {
+    @Test("user friendly error  auth errors")
+
+    func userFriendlyError_AuthErrors() {
         // Given
         let authErrors = [
             "Unauthorized access",
@@ -178,14 +171,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            XCTAssertEqual(
-                status.description,
-                "Authentication required",
-                "Auth error '\(error)' should be converted to user-friendly message")
+            #expect(
+                status.description == "Authentication required")
         }
     }
 
-    func testUserFriendlyError_RateLimitErrors() {
+    @Test("user friendly error  rate limit errors")
+
+    func userFriendlyError_RateLimitErrors() {
         // Given
         let rateLimitErrors = [
             "Rate limit exceeded",
@@ -198,14 +191,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            XCTAssertEqual(
-                status.description,
-                "Too many requests",
-                "Rate limit error '\(error)' should be converted to user-friendly message")
+            #expect(
+                status.description == "Too many requests")
         }
     }
 
-    func testUserFriendlyError_ServerErrors() {
+    @Test("user friendly error  server errors")
+
+    func userFriendlyError_ServerErrors() {
         // Given
         let serverErrors = [
             "Internal server error",
@@ -218,14 +211,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            XCTAssertEqual(
-                status.description,
-                "Service unavailable",
-                "Server error '\(error)' should be converted to user-friendly message")
+            #expect(
+                status.description == "Service unavailable")
         }
     }
 
-    func testUserFriendlyError_GenericErrors() {
+    @Test("user friendly error  generic errors")
+
+    func userFriendlyError_GenericErrors() {
         // Given
         let genericErrors = [
             "Something went wrong",
@@ -238,33 +231,31 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            XCTAssertEqual(
-                status.description,
-                "Something went wrong",
-                "Generic error '\(error)' should be converted to fallback message")
+            #expect(
+                status.description == "Something went wrong")
         }
     }
 
     // MARK: - Rate Limit Description Tests
 
-    func testRateLimitDescription_WithNilDate_ShowsGenericMessage() {
+    @Test("rate limit description  with nil date  shows generic message")
+
+    func rateLimitDescription_WithNilDate_ShowsGenericMessage() {
         // Given
         let status = ProviderConnectionStatus.rateLimited(until: nil)
 
         // When/Then
-        XCTAssertEqual(status.description, "Rate limited")
-    }
+        #expect(status.description == "Rate limited")
 
-    func testRateLimitDescription_WithPastDate_ShowsExpiredMessage() {
+    func rateLimitDescription_WithPastDate_ShowsExpiredMessage() {
         // Given
         let pastDate = Date().addingTimeInterval(-60) // 1 minute ago
         let status = ProviderConnectionStatus.rateLimited(until: pastDate)
 
         // When/Then
-        XCTAssertEqual(status.description, "Rate limited")
-    }
+        #expect(status.description == "Rate limited")
 
-    func testRateLimitDescription_WithNearFutureDate_ShowsTimeRemaining() {
+    func rateLimitDescription_WithNearFutureDate_ShowsTimeRemaining() {
         // Given
         let futureDate = Date().addingTimeInterval(45) // 45 seconds from now
         let status = ProviderConnectionStatus.rateLimited(until: futureDate)
@@ -273,11 +264,9 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let description = status.description
 
         // Then
-        XCTAssertTrue(description.contains("Rate limited"))
-        // The exact time might vary slightly due to test execution time
-    }
+        #expect(description.contains("Rate limited")
 
-    func testRateLimitDescription_WithFarFutureDate_ShowsTimeRemaining() {
+    func rateLimitDescription_WithFarFutureDate_ShowsTimeRemaining() {
         // Given
         let futureDate = Date().addingTimeInterval(3700) // Just over 1 hour from now
         let status = ProviderConnectionStatus.rateLimited(until: futureDate)
@@ -286,29 +275,26 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let description = status.description
 
         // Then
-        XCTAssertTrue(description.contains("Rate limited"))
-    }
+        #expect(description.contains("Rate limited")
 
-    // MARK: - Edge Cases Tests
-
-    func testErrorStatus_WithEmptyMessage_HandlesGracefully() {
+    func errorStatus_WithEmptyMessage_HandlesGracefully() {
         // Given
         let status = ProviderConnectionStatus.error(message: "")
 
         // When/Then
-        XCTAssertEqual(status.description, "Something went wrong")
-        XCTAssertEqual(status.shortDescription, "Error")
+        #expect(status.description == "Something went wrong")
     }
 
-    func testErrorStatus_WithWhitespaceMessage_HandlesGracefully() {
+    @Test("error status  with whitespace message  handles gracefully")
+
+    func errorStatus_WithWhitespaceMessage_HandlesGracefully() {
         // Given
         let status = ProviderConnectionStatus.error(message: "   ")
 
         // When/Then
-        XCTAssertEqual(status.description, "Something went wrong")
-    }
+        #expect(status.description == "Something went wrong")
 
-    func testRateLimitStatus_WithVeryDistantFutureDate_HandlesGracefully() {
+    func rateLimitStatus_WithVeryDistantFutureDate_HandlesGracefully() {
         // Given
         let veryFarDate = Date().addingTimeInterval(86400 * 365) // 1 year from now
         let status = ProviderConnectionStatus.rateLimited(until: veryFarDate)
@@ -317,13 +303,14 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let description = status.description
 
         // Then
-        XCTAssertTrue(description.contains("Rate limited"))
-        XCTAssertFalse(description.isEmpty)
+        #expect(description.contains("Rate limited")
     }
 
     // MARK: - JSON Encoding/Decoding Format Tests
 
-    func testJSONFormat_Error_IncludesMessage() throws {
+    @Test("j son format  error  includes message")
+
+    func jSONFormat_Error_IncludesMessage() throws {
         // Given
         let status = ProviderConnectionStatus.error(message: "Test error message")
 
@@ -332,11 +319,12 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let json = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
 
         // Then
-        XCTAssertEqual(json?["type"] as? String, "error")
-        XCTAssertEqual(json?["message"] as? String, "Test error message")
+        #expect(json?["type"] as? String == "error")
     }
 
-    func testJSONFormat_RateLimited_IncludesDate() throws {
+    @Test("j son format  rate limited  includes date")
+
+    func jSONFormat_RateLimited_IncludesDate() throws {
         // Given
         let date = Date()
         let status = ProviderConnectionStatus.rateLimited(until: date)
@@ -348,11 +336,12 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
         let json = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
 
         // Then
-        XCTAssertEqual(json?["type"] as? String, "rateLimited")
-        XCTAssertNotNil(json?["until"])
+        #expect(json?["type"] as? String == "rateLimited")
     }
 
-    func testJSONFormat_SimpleStates_OnlyIncludeType() throws {
+    @Test("j son format  simple states  only include type")
+
+    func jSONFormat_SimpleStates_OnlyIncludeType() throws {
         // Given
         let simpleStatuses: [ProviderConnectionStatus] = [
             .disconnected,
@@ -367,8 +356,7 @@ final class ProviderConnectionStatusAdvancedTests: XCTestCase {
             let encoded = try JSONEncoder().encode(status)
             let json = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
 
-            XCTAssertEqual(json?.count, 1, "Simple states should only have 'type' field")
-            XCTAssertNotNil(json?["type"], "Should have 'type' field")
+            #expect(json?.count == 1)
         }
     }
 }

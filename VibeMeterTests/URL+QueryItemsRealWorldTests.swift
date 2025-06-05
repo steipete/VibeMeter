@@ -1,10 +1,13 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class URLQueryItemsRealWorldTests: XCTestCase {
+@Suite("URLQueryItemsRealWorldTests")
+struct URLQueryItemsRealWorldTests {
     // MARK: - Real-World Usage Tests
 
-    func testAppendingQueryItems_APIEndpoint_WithAuthentication() {
+    @Test("appending query items api endpoint  with authentication")
+
+    func appendingQueryItems_APIEndpoint_WithAuthentication() {
         // Given - Simulating API endpoint construction
         let baseURL = URL(string: "https://api.cursor.sh/v1/invoices")!
         let authItems = [
@@ -17,12 +20,10 @@ final class URLQueryItemsRealWorldTests: XCTestCase {
         let result = baseURL.appendingQueryItems(authItems)
 
         // Then
-        XCTAssertEqual(
-            result.absoluteString,
-            "https://api.cursor.sh/v1/invoices?api_key=sk_test_123456&limit=50&offset=0")
-    }
+        #expect(
+            result.absoluteString == "https://api.cursor.sh/v1/invoices?api_key=sk_test_123456&limit=50&offset=0")
 
-    func testAppendingQueryItems_SearchEndpoint_WithFilters() {
+    func appendingQueryItems_SearchEndpoint_WithFilters() {
         // Given - Simulating search with multiple filters
         let searchURL = URL(string: "https://api.example.com/search?q=swift")!
         let filters = [
@@ -35,12 +36,10 @@ final class URLQueryItemsRealWorldTests: XCTestCase {
         let result = searchURL.appendingQueryItems(filters)
 
         // Then
-        XCTAssertEqual(
-            result.absoluteString,
-            "https://api.example.com/search?q=swift&category=programming&sort=relevance&page=1")
-    }
+        #expect(
+            result.absoluteString == "https://api.example.com/search?q=swift&category=programming&sort=relevance&page=1")
 
-    func testAppendingQueryItems_ExchangeRateAPI_WithCurrencyCodes() {
+    func appendingQueryItems_ExchangeRateAPI_WithCurrencyCodes() {
         // Given - Simulating exchange rate API call
         let baseURL = URL(string: "https://frankfurter.app/latest")!
         let currencyItems = [
@@ -52,6 +51,6 @@ final class URLQueryItemsRealWorldTests: XCTestCase {
         let result = baseURL.appendingQueryItems(currencyItems)
 
         // Then
-        XCTAssertEqual(result.absoluteString, "https://frankfurter.app/latest?from=USD&to=EUR,GBP,JPY")
+        #expect(result.absoluteString == "https://frankfurter.app/latest?from=USD&to=EUR)
     }
 }

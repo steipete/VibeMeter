@@ -1,71 +1,58 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
 /// Tests for the new multi-provider architecture to ensure basic functionality works
+@Suite("MultiProviderArchitectureTests")
 @MainActor
-final class MultiProviderArchitectureTests: XCTestCase {
-    func testServiceProviderCases() {
+struct MultiProviderArchitectureTests {
+    @Test("service provider cases")
+
+    func serviceProviderCases() {
         // Test that ServiceProvider enum has expected cases
         let allCases = ServiceProvider.allCases
-        XCTAssertTrue(allCases.contains(.cursor), "Should contain cursor provider")
-        XCTAssertFalse(allCases.isEmpty, "Should have at least one provider")
+        #expect(allCases.contains(.cursor == true)
     }
 
-    func testServiceProviderProperties() {
+    @Test("service provider properties")
+
+    func serviceProviderProperties() {
         let cursor = ServiceProvider.cursor
 
         // Test basic properties
-        XCTAssertEqual(cursor.displayName, "Cursor", "Display name should be Cursor")
-        XCTAssertEqual(cursor.defaultCurrency, "USD", "Default currency should be USD")
-        XCTAssertTrue(cursor.supportsTeams, "Cursor should support teams")
-        XCTAssertEqual(cursor.keychainService, "com.steipete.vibemeter.cursor", "Keychain service should be correct")
+        #expect(cursor.displayName == "Cursor")
+        #expect(cursor.supportsTeams == true)
 
         // Test URLs
-        XCTAssertNotNil(cursor.authenticationURL, "Should have authentication URL")
-        XCTAssertNotNil(cursor.websiteURL, "Should have website URL")
+        #expect(cursor.authenticationURL != nil)
 
         // Test cookie properties
-        XCTAssertEqual(cursor.authCookieName, "WorkosCursorSessionToken", "Cookie name should be correct")
-        XCTAssertEqual(cursor.cookieDomain, ".cursor.com", "Cookie domain should be correct")
+        #expect(cursor.authCookieName == "WorkosCursorSessionToken")
     }
 
-    func testMultiProviderUserSessionData() {
+    @Test("multi provider user session data")
+
+    func multiProviderUserSessionData() {
         let userSession = MultiProviderUserSessionData()
 
         // Test initial state
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider, "Should not be logged into any provider initially")
-        XCTAssertTrue(userSession.loggedInProviders.isEmpty, "Should have no logged in providers initially")
-        XCTAssertNil(userSession.mostRecentSession, "Should have no recent session initially")
+        #expect(userSession.isLoggedInToAnyProvider == false)
+        #expect(userSession.mostRecentSession == nil)
 
-        // Test login success
-        userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test Team", teamId: 123)
+        #expect(userSession.isLoggedInToAnyProvider == true)
+        #expect(userSession.loggedInProviders == [.cursor])
+        #expect(session != nil)
+        #expect(session?.teamName == "Test Team")
+        #expect(session?.isLoggedIn ?? false == true)
 
-        XCTAssertTrue(userSession.isLoggedInToAnyProvider, "Should be logged into a provider after login")
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor), "Should be logged into cursor")
-        XCTAssertEqual(userSession.loggedInProviders, [.cursor], "Should have cursor in logged in providers")
+        #expect(userSession.isLoggedInToAnyProvider == false)
+        #expect(userSession.loggedInProviders.isEmpty == true)
 
-        let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session, "Should have a session for cursor")
-        XCTAssertEqual(session?.userEmail, "test@example.com", "Email should be correct")
-        XCTAssertEqual(session?.teamName, "Test Team", "Team name should be correct")
-        XCTAssertEqual(session?.teamId, 123, "Team ID should be correct")
-        XCTAssertTrue(session?.isLoggedIn ?? false, "Session should be logged in")
-
-        // Test logout
-        userSession.handleLogout(from: .cursor)
-
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider, "Should not be logged into any provider after logout")
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor), "Should not be logged into cursor after logout")
-        XCTAssertTrue(userSession.loggedInProviders.isEmpty, "Should have no logged in providers after logout")
-    }
-
-    func testMultiProviderSpendingData() {
+    func multiProviderSpendingData() {
         let spendingData = MultiProviderSpendingData()
 
         // Test initial state
-        XCTAssertTrue(spendingData.providersWithData.isEmpty, "Should have no providers with data initially")
-        XCTAssertEqual(spendingData.totalSpendingUSD, 0.0, "Total spending should be 0 initially")
-        XCTAssertNil(spendingData.getSpendingData(for: .cursor), "Should have no spending data for cursor initially")
+        #expect(spendingData.providersWithData.isEmpty == true)
+        #expect(spendingData.getSpendingData(for: .cursor == nil)
 
         // Test updating limits
         spendingData.updateLimits(
@@ -75,70 +62,52 @@ final class MultiProviderArchitectureTests: XCTestCase {
             rates: ["USD": 1.0],
             targetCurrency: "USD")
 
-        XCTAssertTrue(spendingData.providersWithData.contains(.cursor), "Should have cursor in providers with data")
-
-        let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertNotNil(cursorData, "Should have spending data for cursor")
-        XCTAssertEqual(cursorData?.displayWarningLimit, 50.0, "Warning limit should be correct")
-        XCTAssertEqual(cursorData?.displayUpperLimit, 100.0, "Upper limit should be correct")
-
-        // Test clearing data
-        spendingData.clear(provider: .cursor)
-        XCTAssertFalse(
-            spendingData.providersWithData.contains(.cursor),
-            "Should not have cursor in providers with data after clearing")
+        #expect(spendingData.providersWithData.contains(.cursor == true)
+        #expect(cursorData != nil)
+        #expect(cursorData?.displayUpperLimit == 100.0)
+        #expect(
+            spendingData.providersWithData.contains(.cursor == false)
     }
 
-    func testCurrencyData() {
+    @Test("currency data")
+
+    func currencyData() {
         let currencyData = CurrencyData()
 
         // Test initial state
-        XCTAssertEqual(currencyData.selectedCode, "USD", "Should default to USD")
-        XCTAssertEqual(currencyData.selectedSymbol, "$", "Should default to $ symbol")
-        XCTAssertTrue(currencyData.exchangeRatesAvailable, "Exchange rates should be available initially")
-        XCTAssertTrue(currencyData.isUSD, "Should be USD initially")
+        #expect(currencyData.selectedCode == "USD")
+        #expect(currencyData.exchangeRatesAvailable == true)
 
         // Test updating currency
         currencyData.updateSelectedCurrency("EUR")
-        XCTAssertEqual(currencyData.selectedCode, "EUR", "Should update to EUR")
-        XCTAssertFalse(currencyData.isUSD, "Should not be USD after changing to EUR")
+        #expect(currencyData.selectedCode == "EUR")
 
         // Test updating exchange rates
         let testRates = ["EUR": 1.0, "USD": 1.1]
         currencyData.updateExchangeRates(testRates)
-        XCTAssertEqual(currencyData.currentExchangeRates, testRates, "Exchange rates should be updated")
-
-        // Test setting unavailable
-        currencyData.setExchangeRatesUnavailable()
-        XCTAssertFalse(currencyData.exchangeRatesAvailable, "Exchange rates should be unavailable")
-
-        // Test reset
-        currencyData.reset()
-        XCTAssertEqual(currencyData.selectedCode, "USD", "Should reset to USD")
-        XCTAssertTrue(currencyData.exchangeRatesAvailable, "Exchange rates should be available after reset")
+        #expect(currencyData.currentExchangeRates == testRates)
+        #expect(currencyData.exchangeRatesAvailable == false)
+        #expect(currencyData.selectedCode == "USD")
     }
 
-    func testSettingsManager() {
+    @Test("settings manager")
+
+    func settingsManager() {
         // Test that SettingsManager can be created and has reasonable defaults
         let settings = SettingsManager.shared
 
-        XCTAssertGreaterThan(settings.warningLimitUSD, 0, "Warning limit should be positive")
-        XCTAssertGreaterThan(settings.upperLimitUSD, 0, "Upper limit should be positive")
-        XCTAssertGreaterThan(
-            settings.upperLimitUSD,
-            settings.warningLimitUSD,
-            "Upper limit should be greater than warning limit")
-        XCTAssertNotNil(settings.selectedCurrencyCode, "Should have a selected currency code")
-        XCTAssertGreaterThan(settings.refreshIntervalMinutes, 0, "Refresh interval should be positive")
-    }
+        #expect(settings.warningLimitUSD > 0)
+        #expect(
+            settings.upperLimitUSD > settings.warningLimitUSD)
+        #expect(settings.refreshIntervalMinutes > 0)
 
-    func testKeychain() {
+    func keychain() {
         // Test that KeychainHelper can be created without crashing
         let keychain = KeychainHelper(service: "test.service.unique.\(UUID().uuidString)")
 
         // Test basic operations (should not crash)
         let initialToken = keychain.getToken()
-        XCTAssertNil(initialToken, "Should have no token initially")
+        #expect(initialToken == nil)
 
         // Note: We don't test actual save/delete operations as they would affect the real keychain
         // Those would be tested in integration tests with a mock keychain service

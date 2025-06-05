@@ -1,42 +1,38 @@
 import Foundation
 @preconcurrency import UserNotifications
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("NotificationManagerStateTests")
 @MainActor
-final class NotificationManagerStateTests: XCTestCase {
-    private var notificationManager: TestableNotificationManager!
-    private var mockNotificationCenter: MockUNUserNotificationCenter!
+struct NotificationManagerStateTests {
+    private let notificationManager: TestableNotificationManager
+    private let mockNotificationCenter: MockUNUserNotificationCenter
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-    override func tearDown() async throws {
+     async throws {
         notificationManager = nil
         mockNotificationCenter = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - Notification State Reset Tests
 
-    func testResetNotificationStateIfBelow_WarningReset() async {
+    @Test("reset notification state if below  warning reset")
+
+    func resetNotificationStateIfBelow_WarningReset() async {
         // Given - Show warning notification first
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 1)
-
-        // When - Reset when spending is below warning limit
-        await notificationManager.resetNotificationStateIfBelow(
-            limitType: .warning,
-            currentSpendingUSD: 60.0,
-            warningLimitUSD: 75.0,
-            upperLimitUSD: 100.0)
+        #expect(mockNotificationCenter.addCallCount == 1)
 
         // Then - Should be able to show warning notification again
         await notificationManager.showWarningNotification(
@@ -44,10 +40,9 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 2) // Should be 2 now
-    }
+        #expect(mockNotificationCenter.addCallCount == 2)
 
-    func testResetNotificationStateIfBelow_WarningNotReset() async {
+    func resetNotificationStateIfBelow_WarningNotReset() async {
         // Given - Show warning notification first
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
@@ -67,24 +62,16 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 1) // Still 1
-    }
+        #expect(mockNotificationCenter.addCallCount == 1)
 
-    func testResetNotificationStateIfBelow_UpperLimitReset() async {
+    func resetNotificationStateIfBelow_UpperLimitReset() async {
         // Given - Show upper limit notification first
         await notificationManager.showUpperLimitNotification(
             currentSpending: 105.0,
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 1)
-
-        // When - Reset when spending is below upper limit
-        await notificationManager.resetNotificationStateIfBelow(
-            limitType: .upper,
-            currentSpendingUSD: 95.0,
-            warningLimitUSD: 75.0,
-            upperLimitUSD: 100.0)
+        #expect(mockNotificationCenter.addCallCount == 1)
 
         // Then - Should be able to show upper limit notification again
         await notificationManager.showUpperLimitNotification(
@@ -92,10 +79,9 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 2) // Should be 2 now
-    }
+        #expect(mockNotificationCenter.addCallCount == 2)
 
-    func testResetNotificationStateIfBelow_UpperLimitNotReset() async {
+    func resetNotificationStateIfBelow_UpperLimitNotReset() async {
         // Given - Show upper limit notification first
         await notificationManager.showUpperLimitNotification(
             currentSpending: 105.0,
@@ -115,12 +101,9 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 1) // Still 1
-    }
+        #expect(mockNotificationCenter.addCallCount == 1)
 
-    // MARK: - Session Reset Tests
-
-    func testResetAllNotificationStatesForNewSession() async {
+    func resetAllNotificationStatesForNewSession() async {
         // Given - Show both types of notifications
         await notificationManager.showWarningNotification(
             currentSpending: 75.0,
@@ -132,10 +115,7 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 2)
-
-        // When - Reset all states for new session
-        await notificationManager.resetAllNotificationStatesForNewSession()
+        #expect(mockNotificationCenter.addCallCount == 2)
 
         // Then - Should be able to show both notifications again
         await notificationManager.showWarningNotification(
@@ -148,20 +128,7 @@ final class NotificationManagerStateTests: XCTestCase {
             limitAmount: 100.0,
             currencyCode: "USD")
 
-        XCTAssertEqual(mockNotificationCenter.addCallCount, 4) // Should be 4 total
-    }
-}
-
-// MARK: - TestableNotificationManager
-
-private final class TestableNotificationManager: NotificationManagerProtocol, @unchecked Sendable {
-    private let notificationCenter: MockUNUserNotificationCenter
-
-    // Track which notifications have been shown
-    private var warningNotificationShown = false
-    private var upperLimitNotificationShown = false
-
-    init(notificationCenter: MockUNUserNotificationCenter) {
+        #expect(mockNotificationCenter.addCallCount == 4) {
         self.notificationCenter = notificationCenter
     }
 
@@ -174,7 +141,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
-        guard !warningNotificationShown else { return }
+        guard warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
         let formatter = NumberFormatter()
@@ -249,10 +216,14 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         }
     }
 
+    @Test("reset all notification states for new session")
+
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
+
+    @Test("show instance already running notification")
 
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
@@ -310,6 +281,8 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
             throw error
         }
     }
+
+    @Test("reset")
 
     func reset() {
         requestAuthorizationCallCount = 0

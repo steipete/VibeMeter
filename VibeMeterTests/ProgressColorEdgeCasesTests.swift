@@ -1,11 +1,14 @@
 import SwiftUI
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ProgressColorEdgeCasesTests: XCTestCase {
+@Suite("ProgressColorEdgeCasesTests")
+struct ProgressColorEdgeCasesTests {
     // MARK: - Negative Values Tests
 
-    func testColor_NegativeValues_ReturnsGreen() {
+    @Test("color  negative values  returns green")
+
+    func color_NegativeValues_ReturnsGreen() {
         // Given
         let negativeValues = [-1.0, -0.5, -0.1, -0.001]
 
@@ -14,11 +17,13 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressSafe, "Negative progress \(progress) should return green color")
+            #expect(color == .progressSafe)
         }
     }
 
-    func testWarningLevel_NegativeValues_ReturnsNormal() {
+    @Test("warning level  negative values  returns normal")
+
+    func warningLevel_NegativeValues_ReturnsNormal() {
         // Given
         let negativeValues = [-1.0, -0.5, -0.1, -0.001]
 
@@ -27,13 +32,15 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .normal, "Negative progress \(progress) should return normal warning level")
+            #expect(warningLevel == .normal)
         }
     }
 
     // MARK: - Extreme Values Tests
 
-    func testColor_ExtremelyLargeValues_ReturnsRed() {
+    @Test("color  extremely large values  returns red")
+
+    func color_ExtremelyLargeValues_ReturnsRed() {
         // Given
         let largeValues = [10.0, 100.0, 1000.0, Double.greatestFiniteMagnitude]
 
@@ -42,11 +49,13 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let color = Color.progressColor(for: progress)
 
             // Then
-            XCTAssertEqual(color, .progressDanger, "Large progress \(progress) should return red color")
+            #expect(color == .progressDanger)
         }
     }
 
-    func testWarningLevel_ExtremelyLargeValues_ReturnsHigh() {
+    @Test("warning level  extremely large values  returns high")
+
+    func warningLevel_ExtremelyLargeValues_ReturnsHigh() {
         // Given
         let largeValues = [10.0, 100.0, 1000.0, Double.greatestFiniteMagnitude]
 
@@ -55,13 +64,15 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertEqual(warningLevel, .high, "Large progress \(progress) should return high warning level")
+            #expect(warningLevel == .high)
         }
     }
 
     // MARK: - Special Float Values Tests
 
-    func testColor_InfinityValues() {
+    @Test("color  infinity values")
+
+    func color_InfinityValues() {
         // Given
         let infinityValues = [Double.infinity, -Double.infinity]
 
@@ -71,11 +82,13 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
 
             // Then
             // Infinity values should be handled gracefully
-            XCTAssertNotNil(color, "Should handle infinity value \(progress)")
+            #expect(color != nil)
         }
     }
 
-    func testColor_NaNValue() {
+    @Test("color  na n value")
+
+    func color_NaNValue() {
         // Given
         let nanProgress = Double.nan
 
@@ -84,10 +97,9 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
 
         // Then
         // NaN should be handled gracefully (will likely fall through to default case)
-        XCTAssertNotNil(color, "Should handle NaN value")
-    }
+        #expect(color != nil)
 
-    func testWarningLevel_InfinityValues() {
+    func warningLevel_InfinityValues() {
         // Given
         let infinityValues = [Double.infinity, -Double.infinity]
 
@@ -96,11 +108,13 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 
             // Then
-            XCTAssertNotNil(warningLevel, "Should handle infinity value \(progress)")
+            #expect(warningLevel != nil)
         }
     }
 
-    func testWarningLevel_NaNValue() {
+    @Test("warning level  na n value")
+
+    func warningLevel_NaNValue() {
         // Given
         let nanProgress = Double.nan
 
@@ -108,12 +122,9 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
         let warningLevel = Color.ProgressWarningLevel.level(for: nanProgress)
 
         // Then
-        XCTAssertNotNil(warningLevel, "Should handle NaN value")
-    }
+        #expect(warningLevel != nil)
 
-    // MARK: - Performance Tests
-
-    func testColor_Performance() {
+    func color_Performance() {
         // Given
         let iterations = 100_000
         let testProgress = 0.6
@@ -126,10 +137,9 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "Color calculation should be fast")
-    }
+        #expect(duration < 1.0)
 
-    func testWarningLevel_Performance() {
+    func warningLevel_Performance() {
         // Given
         let iterations = 100_000
         let testProgress = 0.8
@@ -142,12 +152,9 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "Warning level calculation should be fast")
-    }
+        #expect(duration < 1.0)
 
-    // MARK: - Comprehensive Range Tests
-
-    func testColor_ComprehensiveRangeTest() {
+    func color_ComprehensiveRangeTest() {
         // Test a comprehensive range of values to ensure no unexpected behavior
         let increment = 0.01
         var currentProgress = 0.0
@@ -158,8 +165,8 @@ final class ProgressColorEdgeCasesTests: XCTestCase {
             let warningLevel = Color.ProgressWarningLevel.level(for: currentProgress)
 
             // Then - Should always return valid values
-            XCTAssertNotNil(color, "Should return valid color for progress \(currentProgress)")
-            XCTAssertNotNil(warningLevel, "Should return valid warning level for progress \(currentProgress)")
+            #expect(color != nil)
+            #expect(warningLevel != nil)
 
             currentProgress += increment
         }

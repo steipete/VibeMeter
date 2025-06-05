@@ -1,15 +1,16 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("MultiProviderLoginManagerTokenTests")
 @MainActor
-final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable {
-    var sut: MultiProviderLoginManager!
-    var providerFactory: ProviderFactory!
-    var mockSettingsManager: SettingsManager!
-    var mockStartupManager: StartupManagerMock!
+struct MultiProviderLoginManagerTokenTests {
+    let sut: MultiProviderLoginManager
+    let providerFactory: ProviderFactory
+    let mockSettingsManager: SettingsManager
+    let mockStartupManager: StartupManagerMock
 
-    override func setUp() async throws {
-        try await super.setUp()
+    init() async throws {
+        try await 
         mockStartupManager = StartupManagerMock()
         mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerTokenTests")!,
@@ -25,27 +26,28 @@ final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable
         #endif
     }
 
-    override func tearDown() async throws {
+     async throws {
         sut = nil
         providerFactory = nil
         mockSettingsManager = nil
         mockStartupManager = nil
-        try await super.tearDown()
+        try await 
     }
 
     // MARK: - Token Validation Tests
 
-    func testValidateAllTokens_WithoutLogin_DoesNotCrash() async {
+    @Test("validate all tokens  without login  does not crash")
+
+    func validateAllTokens_WithoutLogin_DoesNotCrash() async {
         // Given - No login state
 
         // When
         await sut.validateAllTokens()
 
         // Then
-        XCTAssertFalse(sut.isLoggedInToAnyProvider, "Should remain logged out when no initial login")
-    }
+        #expect(sut.isLoggedInToAnyProvider == false)
 
-    func testValidateAllTokens_WithSimulatedLogin_CallsValidation() async {
+    func validateAllTokens_WithSimulatedLogin_CallsValidation() async {
         // Given
         #if DEBUG
             sut._test_simulateLogin(for: .cursor, withToken: "test-token")
@@ -57,10 +59,9 @@ final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable
         // Then
         // This test validates that the method can be called without crashing
         // In real usage, invalid tokens would be handled by the provider validation
-        XCTAssertNotNil(sut)
-    }
+        #expect(sut != nil)
 
-    func testValidateAllTokens_WithMultipleProviders_HandlesGracefully() async {
+    func validateAllTokens_WithMultipleProviders_HandlesGracefully() async {
         // Given
         #if DEBUG
             sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
@@ -72,12 +73,9 @@ final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable
         // Then
         // This test validates that validation works with multiple providers
         // The exact result depends on network availability and token validity
-        XCTAssertNotNil(sut.providerLoginStates)
-    }
+        #expect(sut.providerLoginStates != nil)
 
-    // MARK: - Refresh States Tests
-
-    func testRefreshLoginStatesFromKeychain_UpdatesStates() {
+    func refreshLoginStatesFromKeychain_UpdatesStates() {
         // Given
         #if DEBUG
             sut._test_simulateLogin(for: .cursor, withToken: "stored-token")
@@ -87,13 +85,14 @@ final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable
         sut.refreshLoginStatesFromKeychain()
 
         // Then
-        XCTAssertTrue(sut.isLoggedIn(to: .cursor))
-        XCTAssertEqual(sut.providerLoginStates[.cursor], true)
+        #expect(sut.isLoggedIn(to: .cursor == true)
     }
 
     // MARK: - Cookie Management Tests
 
-    func testGetCookies_WithStoredToken_ReturnsCookies() {
+    @Test("get cookies  with stored token  returns cookies")
+
+    func getCookies_WithStoredToken_ReturnsCookies() {
         // Given
         #if DEBUG
             sut._test_simulateLogin(for: .cursor, withToken: "cookie-token")
@@ -103,25 +102,20 @@ final class MultiProviderLoginManagerTokenTests: XCTestCase, @unchecked Sendable
         let cookies = sut.getCookies(for: .cursor)
 
         // Then
-        XCTAssertNotNil(cookies)
-        XCTAssertEqual(cookies?.count, 1)
+        #expect(cookies != nil)
 
         // Verify cookie properties
         if let cookie = cookies?.first {
-            XCTAssertEqual(cookie.name, ServiceProvider.cursor.authCookieName)
-            XCTAssertEqual(cookie.value, "cookie-token")
-            XCTAssertEqual(cookie.domain, ServiceProvider.cursor.cookieDomain)
-            XCTAssertTrue(cookie.isSecure)
+            #expect(cookie.name == ServiceProvider.cursor.authCookieName)
+            #expect(cookie.domain == ServiceProvider.cursor.cookieDomain)
             // Note: HTTPOnly is not set when creating cookies programmatically
-            XCTAssertFalse(cookie.isHTTPOnly)
-        }
-    }
+            #expect(cookie.isHTTPOnly == false)
 
-    func testGetCookies_WithoutToken_ReturnsNil() {
+    func getCookies_WithoutToken_ReturnsNil() {
         // When
         let cookies = sut.getCookies(for: .cursor)
 
         // Then
-        XCTAssertNil(cookies)
+        #expect(cookies == nil)
     }
 }

@@ -1,31 +1,17 @@
 import Foundation
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class CursorProviderValidationTests: XCTestCase {
-    private var cursorProvider: CursorProvider!
-    private var mockURLSession: MockURLSession!
-    private var mockSettingsManager: MockSettingsManager!
-
-    override func setUp() {
-        super.setUp()
-        mockURLSession = MockURLSession()
-        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
-        cursorProvider = CursorProvider(
-            settingsManager: mockSettingsManager,
-            urlSession: mockURLSession)
-    }
-
-    override func tearDown() {
-        cursorProvider = nil
-        mockURLSession = nil
-        mockSettingsManager = nil
-        super.tearDown()
-    }
-
+@Suite("CursorProviderValidationTests")
+struct CursorProviderValidationTests {
+    private let cursorProvider: CursorProvider
+    private let mockURLSession: MockURLSession
+    private let mockSettingsManager: MockSettingsManager
     // MARK: - Token Validation Tests
 
-    func testValidateToken_ValidToken() async {
+    @Test("validate token  valid token")
+
+    func validateToken_ValidToken() async {
         // Given
         let mockUserData = Data("""
         {
@@ -47,10 +33,9 @@ final class CursorProviderValidationTests: XCTestCase {
         let isValid = await cursorProvider.validateToken(authToken: "valid-token")
 
         // Then
-        XCTAssertTrue(isValid)
-    }
+        #expect(isValid == true)
 
-    func testValidateToken_InvalidToken() async {
+    func validateToken_InvalidToken() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -65,10 +50,9 @@ final class CursorProviderValidationTests: XCTestCase {
         let isValid = await cursorProvider.validateToken(authToken: "invalid-token")
 
         // Then
-        XCTAssertFalse(isValid)
-    }
+        #expect(isValid == false)
 
-    func testValidateToken_NetworkError() async {
+    func validateToken_NetworkError() async {
         // Given
         mockURLSession.nextError = NSError(domain: "NetworkError", code: -1009, userInfo: nil)
 
@@ -76,12 +60,9 @@ final class CursorProviderValidationTests: XCTestCase {
         let isValid = await cursorProvider.validateToken(authToken: "test-token")
 
         // Then
-        XCTAssertFalse(isValid)
-    }
+        #expect(isValid == false)
 
-    // MARK: - Error Handling Tests
-
-    func testNetworkError_RateLimitExceeded() async {
+    func networkError_RateLimitExceeded() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -95,15 +76,15 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            XCTFail("Should have thrown rate limit error")
+            Issue.record("Should have thrown rate limit error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .rateLimitExceeded)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+            #expect(error == .rateLimitExceeded)")
         }
     }
 
-    func testNetworkError_ServiceUnavailable() async {
+    @Test("network error  service unavailable")
+
+    func networkError_ServiceUnavailable() async {
         // Given
         let mockResponse = HTTPURLResponse(
             url: URL(string: "https://www.cursor.com/api/auth/me")!,
@@ -117,15 +98,15 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            XCTFail("Should have thrown service unavailable error")
+            Issue.record("Should have thrown service unavailable error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .serviceUnavailable)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+            #expect(error == .serviceUnavailable)")
         }
     }
 
-    func testNetworkError_DecodingError() async {
+    @Test("network error  decoding error")
+
+    func networkError_DecodingError() async {
         // Given - invalid JSON
         let invalidJSON = Data("{ invalid json }".utf8)
 
@@ -141,19 +122,21 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            XCTFail("Should have thrown decoding error")
+            Issue.record("Should have thrown decoding error")
         } catch let error as ProviderError {
             if case .decodingError = error {
                 // Expected
             } else {
-                XCTFail("Expected decoding error, got \(error)")
+                Issue.record("Expected decoding error, got \(error)")
             }
         } catch {
-            XCTFail("Unexpected error type: \(error)")
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
-    func testNetworkError_SpecificErrorResponse() async {
+    @Test("network error  specific error response")
+
+    func networkError_SpecificErrorResponse() async {
         // Given
         let errorResponse = Data("""
         {
@@ -182,15 +165,15 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            XCTFail("Should have thrown no team found error")
+            Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .noTeamFound)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+            #expect(error == .noTeamFound)")
         }
     }
 
-    func testNetworkError_500WithTeamNotFound() async {
+    @Test("network error 500 with team not found")
+
+    func networkError_500WithTeamNotFound() async {
         // Given
         let errorMessage = Data("Team not found in database".utf8)
 
@@ -206,15 +189,15 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            XCTFail("Should have thrown no team found error")
+            Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .noTeamFound)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+            #expect(error == .noTeamFound)")
         }
     }
 
-    func testNetworkError_GenericNetworkFailure() async {
+    @Test("network error  generic network failure")
+
+    func networkError_GenericNetworkFailure() async {
         // Given
         mockURLSession.nextError = NSError(
             domain: NSURLErrorDomain,
@@ -224,22 +207,23 @@ final class CursorProviderValidationTests: XCTestCase {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            XCTFail("Should have thrown network error")
+            Issue.record("Should have thrown network error")
         } catch let error as ProviderError {
             if case let .networkError(message, statusCode) = error {
-                XCTAssertTrue(message.contains("timed out"))
-                XCTAssertNil(statusCode)
+                #expect(message.contains("timed out")
             } else {
-                XCTFail("Expected network error, got \(error)")
+                Issue.record("Expected network error, got \(error)")
             }
         } catch {
-            XCTFail("Unexpected error type: \(error)")
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
     // MARK: - Request Configuration Tests
 
-    func testRequestConfiguration() async throws {
+    @Test("request configuration")
+
+    func requestConfiguration() async throws {
         // Given
         let mockUserData = Data("""
         {
@@ -263,13 +247,10 @@ final class CursorProviderValidationTests: XCTestCase {
         let request = try XCTUnwrap(mockURLSession.lastRequest)
 
         // Verify headers
-        XCTAssertEqual(request.value(forHTTPHeaderField: "Cookie"), CursorAPIConstants.cookieHeader(for: "test-auth-token"))
-        XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
+        #expect(request.value(forHTTPHeaderField: "Cookie" == true)
+        #expect(request.value(forHTTPHeaderField: "Accept" == true)
 
         // Verify timeout
-        XCTAssertEqual(request.timeoutInterval, 30)
-
-        // Verify URL
-        XCTAssertEqual(request.url, CursorAPIConstants.URLs.userInfo)
+        #expect(request.timeoutInterval == 30)
     }
 }

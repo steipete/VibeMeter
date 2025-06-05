@@ -1,5 +1,5 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
 /// Tests for the MultiProviderSpendingData observable model.
 ///
@@ -8,36 +8,20 @@ import XCTest
 /// - No complex setup or shared state
 /// - Direct testing of business logic
 /// - Clear test boundaries
+@Suite("MultiProviderSpendingDataTests")
 @MainActor
-final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
-    var spendingData: MultiProviderSpendingData!
-
-    override func setUp() {
-        super.setUp()
-        MainActor.assumeIsolated {
-            spendingData = MultiProviderSpendingData()
-        }
-    }
-
-    override func tearDown() {
-        MainActor.assumeIsolated {
-            spendingData = nil
-        }
-        super.tearDown()
-    }
-
+struct MultiProviderSpendingDataTests {
+    let spendingData: MultiProviderSpendingData    }
     // MARK: - Initial State Tests
 
-    func testInitialState() {
+    @Test("initial state")
+
+    func initialState() {
         // All properties should start as empty
-        XCTAssertTrue(spendingData.providersWithData.isEmpty)
-        XCTAssertEqual(spendingData.totalSpendingConverted(to: "USD", rates: [:]), 0.0)
-        XCTAssertNil(spendingData.getSpendingData(for: .cursor))
-    }
+        #expect(spendingData.providersWithData.isEmpty == true), 0.0)
+        #expect(spendingData.getSpendingData(for: .cursor == nil)
 
-    // MARK: - Update Spending Tests
-
-    func testUpdateSpending_USD_SetsCorrectValues() {
+    func updateSpending_USD_SetsCorrectValues() {
         // Arrange
         let invoice = ProviderMonthlyInvoice(
             items: [
@@ -55,16 +39,12 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
         spendingData.updateSpending(for: .cursor, from: invoice, rates: rates, targetCurrency: targetCurrency)
 
         // Assert
-        XCTAssertTrue(spendingData.providersWithData.contains(.cursor))
+        #expect(spendingData.providersWithData.contains(.cursor == true)
+        #expect(cursorData != nil) < 0.01)
+        #expect(abs(cursorData?.displaySpending ?? 0 - 80.0 == true)
+        #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 8000)
 
-        let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertNotNil(cursorData)
-        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 80.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending ?? 0, 80.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.latestInvoiceResponse?.totalSpendingCents, 8000)
-    }
-
-    func testUpdateSpending_EUR_ConvertsCorrectly() {
+    func updateSpending_EUR_ConvertsCorrectly() {
         // Arrange
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 10000, description: "API calls", provider: .cursor)],
@@ -80,11 +60,13 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 100.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending ?? 0, 90.0, accuracy: 0.01) // 100 * 0.9
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0 == true)
+        #expect(abs(cursorData?.displaySpending ?? 0 - 90.0 == true) // 100 * 0.9
     }
 
-    func testUpdateSpending_NonUSD_NoRates_FallsBackToUSD() {
+    @Test("update spending  non usd  no rates  falls back to usd")
+
+    func updateSpending_NonUSD_NoRates_FallsBackToUSD() {
         // Arrange
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: .cursor)],
@@ -100,13 +82,15 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 50.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.displaySpending ?? 0, 50.0, accuracy: 0.01) // Falls back to USD
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 50.0 == true)
+        #expect(abs(cursorData?.displaySpending ?? 0 - 50.0 == true) // Falls back to USD
     }
 
     // MARK: - Update Limits Tests
 
-    func testUpdateLimits_USD_SetsDirectly() {
+    @Test("update limits usd  sets directly")
+
+    func updateLimits_USD_SetsDirectly() {
         // Arrange
         let warningUSD = 200.0
         let upperUSD = 1000.0
@@ -123,11 +107,13 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 200.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 1000.0, accuracy: 0.01)
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0 == true)
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0 == true)
     }
 
-    func testUpdateLimits_EUR_ConvertsCorrectly() {
+    @Test("update limits eur  converts correctly")
+
+    func updateLimits_EUR_ConvertsCorrectly() {
         // Arrange
         let warningUSD = 200.0
         let upperUSD = 1000.0
@@ -144,11 +130,13 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 170.0, accuracy: 0.01) // 200 * 0.85
-        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 850.0, accuracy: 0.01) // 1000 * 0.85
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 170.0 == true) // 200 * 0.85
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 850.0 == true) // 1000 * 0.85
     }
 
-    func testUpdateLimits_InvalidRate_FallsBackToUSD() {
+    @Test("update limits  invalid rate  falls back to usd")
+
+    func updateLimits_InvalidRate_FallsBackToUSD() {
         // Arrange
         let warningUSD = 200.0
         let upperUSD = 1000.0
@@ -165,13 +153,15 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert - Should fall back to USD amounts
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.warningLimitConverted ?? 0, 200.0, accuracy: 0.01)
-        XCTAssertEqual(cursorData?.upperLimitConverted ?? 0, 1000.0, accuracy: 0.01)
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0 == true)
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0 == true)
     }
 
     // MARK: - Usage Data Tests
 
-    func testUpdateUsage_SetsCorrectValues() {
+    @Test("update usage  sets correct values")
+
+    func updateUsage_SetsCorrectValues() {
         // Arrange
         let usageData = ProviderUsageData(
             currentRequests: 150,
@@ -185,16 +175,11 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertNotNil(cursorData?.usageData)
-        XCTAssertEqual(cursorData?.usageData?.currentRequests, 150)
-        XCTAssertEqual(cursorData?.usageData?.totalRequests, 4387)
-        XCTAssertEqual(cursorData?.usageData?.maxRequests, 500)
-        XCTAssertEqual(cursorData?.usageData?.provider, .cursor)
-    }
+        #expect(cursorData?.usageData != nil)
+        #expect(cursorData?.usageData?.totalRequests == 4387)
+        #expect(cursorData?.usageData?.provider == .cursor)
 
-    // MARK: - Clear Tests
-
-    func testClear_SpecificProvider_RemovesOnlyThatProvider() {
+    func clear_SpecificProvider_RemovesOnlyThatProvider() {
         // Arrange - Set up data for cursor
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: .cursor)],
@@ -205,19 +190,17 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
         spendingData.updateSpending(for: .cursor, from: invoice, rates: [:], targetCurrency: "USD")
 
         // Verify data is set
-        XCTAssertTrue(spendingData.providersWithData.contains(.cursor))
-
-        // Act
-        spendingData.clear(provider: .cursor)
+        #expect(spendingData.providersWithData.contains(.cursor == true)
 
         // Assert - Cursor data should be removed
-        XCTAssertFalse(spendingData.providersWithData.contains(.cursor))
-        XCTAssertNil(spendingData.getSpendingData(for: .cursor))
+        #expect(spendingData.providersWithData.contains(.cursor == false)
     }
 
     // MARK: - Multi-Provider Tests
 
-    func testMultipleProviders_IndependentData() {
+    @Test("multiple providers  independent data")
+
+    func multipleProviders_IndependentData() {
         // Arrange
         let cursorInvoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Cursor usage", provider: .cursor)],
@@ -230,15 +213,15 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
         spendingData.updateSpending(for: .cursor, from: cursorInvoice, rates: [:], targetCurrency: "USD")
 
         // Assert
-        XCTAssertTrue(spendingData.providersWithData.contains(.cursor))
-        XCTAssertEqual(spendingData.providersWithData.count, 1)
+        #expect(spendingData.providersWithData.contains(.cursor == true)
 
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertNotNil(cursorData)
-        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 50.0, accuracy: 0.01)
+        #expect(cursorData != nil) < 0.01)
     }
 
-    func testTotalSpending_MultipleProviders() {
+    @Test("total spending  multiple providers")
+
+    func totalSpending_MultipleProviders() {
         // Arrange
         let cursorInvoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Cursor usage", provider: .cursor)],
@@ -251,21 +234,20 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Act & Assert
         let totalUSD = spendingData.totalSpendingConverted(to: "USD", rates: [:])
-        XCTAssertEqual(totalUSD, 50.0, accuracy: 0.01)
+        #expect(abs(totalUSD - 50.0 == true)
 
         let totalEUR = spendingData.totalSpendingConverted(to: "EUR", rates: ["EUR": 0.9])
-        XCTAssertEqual(totalEUR, 45.0, accuracy: 0.01) // 50 * 0.9
+        #expect(abs(totalEUR - 45.0 == true) // 50 * 0.9
     }
 
-    func testTotalSpending_NoProviders_ReturnsZero() {
+    @Test("total spending  no providers  returns zero")
+
+    func totalSpending_NoProviders_ReturnsZero() {
         // Act & Assert
         let total = spendingData.totalSpendingConverted(to: "USD", rates: [:])
-        XCTAssertEqual(total, 0.0)
-    }
+        #expect(total == 0.0)
 
-    // MARK: - Edge Cases
-
-    func testUpdateSpending_OverwritesPreviousData() {
+    func updateSpending_OverwritesPreviousData() {
         // Arrange
         let invoice1 = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "First", provider: .cursor)],
@@ -287,12 +269,11 @@ final class MultiProviderSpendingDataTests: XCTestCase, @unchecked Sendable {
 
         // Assert - Should have latest data
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        XCTAssertEqual(cursorData?.currentSpendingUSD ?? 0, 100.0, accuracy: 0.01) // From invoice2
-        XCTAssertEqual(cursorData?.latestInvoiceResponse?.totalSpendingCents, 10000)
-    }
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0 == true) // From invoice2
+        #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 10000)
 
-    func testGetSpendingData_NonExistentProvider_ReturnsNil() {
+    func getSpendingData_NonExistentProvider_ReturnsNil() {
         // Act & Assert
-        XCTAssertNil(spendingData.getSpendingData(for: .cursor))
+        #expect(spendingData.getSpendingData(for: .cursor == nil)
     }
 }

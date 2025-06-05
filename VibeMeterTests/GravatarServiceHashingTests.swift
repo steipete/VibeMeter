@@ -1,26 +1,29 @@
 import CryptoKit
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("GravatarServiceHashingTests")
 @MainActor
-final class GravatarServiceHashingTests: XCTestCase {
-    var sut: GravatarService!
+struct GravatarServiceHashingTests {
+    let sut: GravatarService
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() async throws {
+        await MainActor.run {  }
         sut = GravatarService.shared
         sut.clearAvatar() // Reset state
     }
 
-    override func tearDown() async throws {
+     async throws {
         sut.clearAvatar()
         sut = nil
-        await MainActor.run { super.tearDown() }
+        await MainActor.run {  }
     }
 
     // MARK: - SHA256 Hashing Tests
 
-    func testSHA256Hashing_KnownInputs_GeneratesExpectedHashes() {
+    @Test("s ha256 hashing  known inputs  generates expected hashes")
+
+    func sHA256Hashing_KnownInputs_GeneratesExpectedHashes() {
         // Test cases with known SHA256 hashes
         let testCases = [
             ("test@example.com", "973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b"),
@@ -34,7 +37,7 @@ final class GravatarServiceHashingTests: XCTestCase {
             let result = sut.gravatarURL(for: email)
 
             // Then
-            XCTAssertNotNil(result, "Should generate URL for email: \(email)")
+            #expect(result != nil)
 
             // Extract hash from URL
             if let url = result?.absoluteString,
@@ -45,17 +48,18 @@ final class GravatarServiceHashingTests: XCTestCase {
                 let extractedHash = String(url[startIndex ..< endIndex])
 
                 // Verify it's a valid 64-character hex string (SHA256)
-                XCTAssertEqual(extractedHash.count, 64, "Hash should be 64 characters for email: \(email)")
-                XCTAssertTrue(
-                    extractedHash.allSatisfy(\.isHexDigit),
-                    "Hash should contain only hex digits for email: \(email)")
+                #expect(extractedHash.count == 64)
+                #expect(
+                    extractedHash.allSatisfy(\.isHexDigit == true)
             } else {
-                XCTFail("Could not extract hash from URL for email: \(email)")
+                Issue.record("Could not extract hash from URL for email: \(email)")
             }
         }
     }
 
-    func testSHA256Hashing_SameEmail_GeneratesSameHash() {
+    @Test("s ha256 hashing  same email  generates same hash")
+
+    func sHA256Hashing_SameEmail_GeneratesSameHash() {
         // Given
         let email = "consistent@test.com"
 
@@ -64,10 +68,9 @@ final class GravatarServiceHashingTests: XCTestCase {
         let url2 = sut.gravatarURL(for: email)
 
         // Then
-        XCTAssertEqual(url1?.absoluteString, url2?.absoluteString, "Same email should generate same hash/URL")
-    }
+        #expect(url1?.absoluteString == url2?.absoluteString)
 
-    func testSHA256Hashing_DifferentEmails_GenerateDifferentHashes() {
+    func sHA256Hashing_DifferentEmails_GenerateDifferentHashes() {
         // Given
         let email1 = "user1@example.com"
         let email2 = "user2@example.com"
@@ -77,15 +80,10 @@ final class GravatarServiceHashingTests: XCTestCase {
         let url2 = sut.gravatarURL(for: email2)
 
         // Then
-        XCTAssertNotEqual(
-            url1?.absoluteString,
-            url2?.absoluteString,
-            "Different emails should generate different hashes/URLs")
-    }
+        #expect(
+            url1?.absoluteString != url2?.absoluteString)
 
-    // MARK: - Performance Tests
-
-    func testGravatarURL_Performance() {
+    func gravatarURL_Performance() {
         // Given
         let emails = (0 ..< 1000).map { "user\($0)@performance.test" }
 
@@ -97,10 +95,9 @@ final class GravatarServiceHashingTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "Generating 1000 Gravatar URLs should be fast")
-    }
+        #expect(duration < 1.0)
 
-    func testSHA256Hashing_Performance() {
+    func sHA256Hashing_Performance() {
         // Given
         let testString = "performance@test.com"
         let iterations = 10000
@@ -114,6 +111,6 @@ final class GravatarServiceHashingTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "SHA256 hashing should be performant")
+        #expect(duration < 1.0)
     }
 }

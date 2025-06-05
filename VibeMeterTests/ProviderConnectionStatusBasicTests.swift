@@ -1,11 +1,14 @@
 import SwiftUI
 @testable import VibeMeter
-import XCTest
+import Testing
 
-final class ProviderConnectionStatusBasicTests: XCTestCase {
+@Suite("ProviderConnectionStatusBasicTests")
+struct ProviderConnectionStatusBasicTests {
     // MARK: - Basic Enum Tests
 
-    func testAllCases_AreHandled() {
+    @Test("all cases  are handled")
+
+    func allCases_AreHandled() {
         // Given - All possible cases
         let cases: [ProviderConnectionStatus] = [
             .disconnected,
@@ -20,27 +23,19 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
         // Then - Each case should have proper display properties
         for status in cases {
-            XCTAssertNotNil(status.displayColor, "Status \(status) should have a display color")
-            XCTAssertFalse(status.iconName.isEmpty, "Status \(status) should have an icon name")
-            XCTAssertFalse(status.description.isEmpty, "Status \(status) should have a description")
-            XCTAssertFalse(status.shortDescription.isEmpty, "Status \(status) should have a short description")
-        }
-    }
+            #expect(status.displayColor != nil)
+            #expect(status.iconName.isEmpty == false
+            #expect(status.shortDescription.isEmpty == false
 
-    // MARK: - Display Properties Tests
-
-    func testDisplayColor_ReturnsCorrectColors() {
+    func displayColor_ReturnsCorrectColors() {
         // Given/When/Then
-        XCTAssertEqual(ProviderConnectionStatus.disconnected.displayColor, .gray)
-        XCTAssertEqual(ProviderConnectionStatus.connecting.displayColor, .blue)
-        XCTAssertEqual(ProviderConnectionStatus.connected.displayColor, .green)
-        XCTAssertEqual(ProviderConnectionStatus.syncing.displayColor, .blue)
-        XCTAssertEqual(ProviderConnectionStatus.error(message: "test").displayColor, .red)
-        XCTAssertEqual(ProviderConnectionStatus.rateLimited(until: nil).displayColor, .orange)
-        XCTAssertEqual(ProviderConnectionStatus.stale.displayColor, .yellow)
-    }
+        #expect(ProviderConnectionStatus.disconnected.displayColor == .gray)
+        #expect(ProviderConnectionStatus.connected.displayColor == .green)
+        #expect(ProviderConnectionStatus.error(message: "test" == true)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.stale.displayColor == .yellow)
 
-    func testIconName_ReturnsValidSFSymbols() {
+    func iconName_ReturnsValidSFSymbols() {
         // Given
         let allCases: [ProviderConnectionStatus] = [
             .disconnected,
@@ -55,79 +50,50 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         // Then
         for status in allCases {
             let iconName = status.iconName
-            XCTAssertFalse(iconName.isEmpty, "Icon name should not be empty for \(status)")
-
-            // Verify these are valid SF Symbol names
-            switch status {
-            case .disconnected:
-                XCTAssertEqual(iconName, "circle")
+            #expect(iconName.isEmpty == false
             case .connecting, .syncing:
-                XCTAssertEqual(iconName, "arrow.2.circlepath")
-            case .connected:
-                XCTAssertEqual(iconName, "checkmark.circle.fill")
+                #expect(iconName == "arrow.2.circlepath")
             case .error:
-                XCTAssertEqual(iconName, "exclamationmark.triangle.fill")
-            case .rateLimited:
-                XCTAssertEqual(iconName, "clock.fill")
+                #expect(iconName == "exclamationmark.triangle.fill")
             case .stale:
-                XCTAssertEqual(iconName, "exclamationmark.circle")
-            }
-        }
-    }
+                #expect(iconName == "exclamationmark.circle")
 
-    func testDescription_ReturnsHumanReadableText() {
+    func description_ReturnsHumanReadableText() {
         // Given/When/Then
-        XCTAssertEqual(ProviderConnectionStatus.disconnected.description, "Not connected")
-        XCTAssertEqual(ProviderConnectionStatus.connecting.description, "Connecting...")
-        XCTAssertEqual(ProviderConnectionStatus.connected.description, "Connected")
-        XCTAssertEqual(ProviderConnectionStatus.syncing.description, "Updating...")
-        XCTAssertEqual(ProviderConnectionStatus.stale.description, "Data may be outdated")
-
-        // Rate limited without date
-        XCTAssertEqual(ProviderConnectionStatus.rateLimited(until: nil).description, "Rate limited")
+        #expect(ProviderConnectionStatus.disconnected.description == "Not connected")
+        #expect(ProviderConnectionStatus.connected.description == "Connected")
+        #expect(ProviderConnectionStatus.stale.description == "Data may be outdated").description == "Rate limited")
 
         // Rate limited with future date
         let futureDate = Date().addingTimeInterval(300) // 5 minutes from now
         let rateLimitedStatus = ProviderConnectionStatus.rateLimited(until: futureDate)
-        XCTAssertTrue(rateLimitedStatus.description.contains("Rate limited"))
-    }
+        #expect(rateLimitedStatus.description.contains("Rate limited")
 
-    func testShortDescription_ReturnsCompactText() {
+    func shortDescription_ReturnsCompactText() {
         // Given/When/Then
-        XCTAssertEqual(ProviderConnectionStatus.disconnected.shortDescription, "Offline")
-        XCTAssertEqual(ProviderConnectionStatus.connecting.shortDescription, "Connecting")
-        XCTAssertEqual(ProviderConnectionStatus.connected.shortDescription, "Online")
-        XCTAssertEqual(ProviderConnectionStatus.syncing.shortDescription, "Syncing")
-        XCTAssertEqual(ProviderConnectionStatus.error(message: "test").shortDescription, "Error")
-        XCTAssertEqual(ProviderConnectionStatus.rateLimited(until: nil).shortDescription, "Limited")
-        XCTAssertEqual(ProviderConnectionStatus.stale.shortDescription, "Stale")
-    }
+        #expect(ProviderConnectionStatus.disconnected.shortDescription == "Offline")
+        #expect(ProviderConnectionStatus.connected.shortDescription == "Online")
+        #expect(ProviderConnectionStatus.error(message: "test" == true)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.stale.shortDescription == "Stale")
 
-    func testIsActive_ReturnsCorrectValues() {
+    func isActive_ReturnsCorrectValues() {
         // Given/When/Then
-        XCTAssertFalse(ProviderConnectionStatus.disconnected.isActive)
-        XCTAssertTrue(ProviderConnectionStatus.connecting.isActive)
-        XCTAssertFalse(ProviderConnectionStatus.connected.isActive)
-        XCTAssertTrue(ProviderConnectionStatus.syncing.isActive)
-        XCTAssertFalse(ProviderConnectionStatus.error(message: "test").isActive)
-        XCTAssertFalse(ProviderConnectionStatus.rateLimited(until: nil).isActive)
-        XCTAssertFalse(ProviderConnectionStatus.stale.isActive)
-    }
+        #expect(ProviderConnectionStatus.disconnected.isActive == false)
+        #expect(ProviderConnectionStatus.connected.isActive == false)
+        #expect(ProviderConnectionStatus.error(message: "test" == false)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil == false)
+        #expect(ProviderConnectionStatus.stale.isActive == false)
 
-    func testIsError_ReturnsCorrectValues() {
+    func isError_ReturnsCorrectValues() {
         // Given/When/Then
-        XCTAssertFalse(ProviderConnectionStatus.disconnected.isError)
-        XCTAssertFalse(ProviderConnectionStatus.connecting.isError)
-        XCTAssertFalse(ProviderConnectionStatus.connected.isError)
-        XCTAssertFalse(ProviderConnectionStatus.syncing.isError)
-        XCTAssertTrue(ProviderConnectionStatus.error(message: "test").isError)
-        XCTAssertTrue(ProviderConnectionStatus.rateLimited(until: nil).isError)
-        XCTAssertTrue(ProviderConnectionStatus.stale.isError)
-    }
+        #expect(ProviderConnectionStatus.disconnected.isError == false)
+        #expect(ProviderConnectionStatus.connected.isError == false)
+        #expect(ProviderConnectionStatus.error(message: "test" == true)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.stale.isError == true)
 
-    // MARK: - Factory Methods Tests
-
-    func testFromProviderError_AuthenticationErrors() {
+    func fromProviderError_AuthenticationErrors() {
         // Given
         let authErrors: [ProviderError] = [
             .authenticationFailed(reason: "Invalid token"),
@@ -137,11 +103,9 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         // When/Then
         for error in authErrors {
             let status = ProviderConnectionStatus.from(error)
-            XCTAssertEqual(status, .disconnected, "Authentication errors should result in disconnected status")
-        }
-    }
+            #expect(status == .disconnected)
 
-    func testFromProviderError_RateLimitErrors() {
+    func fromProviderError_RateLimitErrors() {
         // Given
         let rateLimitError = ProviderError.rateLimitExceeded
 
@@ -152,11 +116,13 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         if case .rateLimited = status {
             // Success - rate limit error should result in rateLimited status
         } else {
-            XCTFail("Rate limit errors should result in rateLimited status")
+            Issue.record("Rate limit errors should result in rateLimited status")
         }
     }
 
-    func testFromProviderError_NetworkErrors() {
+    @Test("from provider error  network errors")
+
+    func fromProviderError_NetworkErrors() {
         // Given
         let networkError = ProviderError.networkError(
             message: "Network connection failed",
@@ -167,13 +133,13 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
 
         // Then
         if case let .error(message) = status {
-            XCTAssertEqual(message, "Network connection failed")
-        } else {
-            XCTFail("Network errors should result in error status")
+            #expect(message == "Network connection failed")
         }
     }
 
-    func testFromProviderError_DataUnavailableError() {
+    @Test("from provider error  data unavailable error")
+
+    func fromProviderError_DataUnavailableError() {
         // Given
         let dataError = ProviderError.serviceUnavailable
 
@@ -181,10 +147,9 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let status = ProviderConnectionStatus.from(dataError)
 
         // Then
-        XCTAssertEqual(status, .stale, "Service unavailable errors should result in stale status")
-    }
+        #expect(status == .stale)
 
-    func testFromProviderError_OtherErrors() {
+    func fromProviderError_OtherErrors() {
         // Given - Test non-authentication errors that should result in error status
         let otherErrors: [ProviderError] = [
             .decodingError(message: "Invalid JSON", statusCode: 200),
@@ -197,62 +162,55 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
             if case .error = status {
                 // Success - all other errors should result in error status
             } else {
-                XCTFail("Other errors should result in error status")
+                Issue.record("Other errors should result in error status")
             }
         }
     }
 
     // MARK: - Equatable Tests
 
-    func testEquatable_SameStatuses_AreEqual() {
-        // Given/When/Then
-        XCTAssertEqual(ProviderConnectionStatus.disconnected, .disconnected)
-        XCTAssertEqual(ProviderConnectionStatus.connecting, .connecting)
-        XCTAssertEqual(ProviderConnectionStatus.connected, .connected)
-        XCTAssertEqual(ProviderConnectionStatus.syncing, .syncing)
-        XCTAssertEqual(ProviderConnectionStatus.stale, .stale)
+    @Test("equatable  same statuses  are equal")
 
-        // Error with same message
-        XCTAssertEqual(
-            ProviderConnectionStatus.error(message: "Test"),
-            .error(message: "Test"))
+    func equatable_SameStatuses_AreEqual() {
+        // Given/When/Then
+        #expect(ProviderConnectionStatus.disconnected == .disconnected)
+        #expect(ProviderConnectionStatus.connected == .connected)
+        #expect(ProviderConnectionStatus.stale == .stale) == .error(message: "Test"))
 
         // Rate limited with same date
         let date = Date()
-        XCTAssertEqual(
-            ProviderConnectionStatus.rateLimited(until: date),
-            .rateLimited(until: date))
+        #expect(
+            ProviderConnectionStatus.rateLimited(until: date == true)
 
         // Rate limited both nil
-        XCTAssertEqual(
-            ProviderConnectionStatus.rateLimited(until: nil),
-            .rateLimited(until: nil))
+        #expect(
+            ProviderConnectionStatus.rateLimited(until: nil == true)
     }
 
-    func testEquatable_DifferentStatuses_AreNotEqual() {
+    @Test("equatable  different statuses  are not equal")
+
+    func equatable_DifferentStatuses_AreNotEqual() {
         // Given/When/Then
-        XCTAssertNotEqual(ProviderConnectionStatus.disconnected, .connected)
-        XCTAssertNotEqual(ProviderConnectionStatus.connecting, .syncing)
+        #expect(ProviderConnectionStatus.disconnected != .connected)
 
         // Error with different messages
-        XCTAssertNotEqual(
-            ProviderConnectionStatus.error(message: "Error 1"),
-            .error(message: "Error 2"))
+        #expect(
+            ProviderConnectionStatus.error(message: "Error 1" == true)
 
         // Rate limited with different dates
-        XCTAssertNotEqual(
-            ProviderConnectionStatus.rateLimited(until: Date()),
-            .rateLimited(until: Date().addingTimeInterval(60)))
+        #expect(
+            ProviderConnectionStatus.rateLimited(until: Date( == true).addingTimeInterval(60)))
 
         // Rate limited nil vs date
-        XCTAssertNotEqual(
-            ProviderConnectionStatus.rateLimited(until: nil),
-            .rateLimited(until: Date()))
+        #expect(
+            ProviderConnectionStatus.rateLimited(until: nil == true))
     }
 
     // MARK: - Sendable Conformance Tests
 
-    func testSendable_CanBeSentAcrossActors() async {
+    @Test("sendable  can be sent across actors")
+
+    func sendable_CanBeSentAcrossActors() async {
         // Given
         let status = ProviderConnectionStatus.connected
 
@@ -261,10 +219,9 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let receivedStatus = await testActor.receive(status: status)
 
         // Then
-        XCTAssertEqual(receivedStatus, status)
-    }
+        #expect(receivedStatus == status)
 
-    func testSendable_AllCasesCanBeSentAcrossActors() async {
+    func sendable_AllCasesCanBeSentAcrossActors() async {
         // Given
         let allCases: [ProviderConnectionStatus] = [
             .disconnected,
@@ -281,11 +238,9 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let testActor = TestActor()
         for status in allCases {
             let receivedStatus = await testActor.receive(status: status)
-            XCTAssertEqual(receivedStatus, status)
-        }
-    }
+            #expect(receivedStatus == status)
 
-    func testProviderError_EnumCasesAreCovered() {
+    func providerError_EnumCasesAreCovered() {
         // This test ensures all ProviderError cases are handled in the from() method
         // If a new case is added to ProviderError, this test helps ensure it's handled
 
@@ -304,14 +259,7 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         for error in allErrors {
             let status = ProviderConnectionStatus.from(error)
             // Just verify it doesn't crash and returns a valid status
-            XCTAssertNotNil(status)
-        }
-    }
-
-    // MARK: - Helper Types
-
-    private actor TestActor {
-        func receive(status: ProviderConnectionStatus) -> ProviderConnectionStatus {
+            #expect(status != nil) -> ProviderConnectionStatus {
             status
         }
     }

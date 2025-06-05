@@ -1,11 +1,14 @@
 @testable import VibeMeter
-import XCTest
+import Testing
 
+@Suite("Currency Conversion Basic Tests")
 @MainActor
-final class CurrencyConversionBasicTests: XCTestCase {
+struct CurrencyConversionBasicTests {
     // MARK: - Currency Conversion Tests
 
-    func testConvert_WithValidRate_PerformsCorrectConversion() {
+    @Test("convert with valid rate performs correct conversion")
+
+    func convertWithValidRatePerformsCorrectConversion() {
         // Given
         let amount = 100.0
         let rate = 0.85
@@ -14,10 +17,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, 85.0, accuracy: 0.001, "Should convert 100 * 0.85 = 85")
+        #expect(abs(abs(result - 85.0 == true)
     }
 
-    func testConvert_WithNilRate_ReturnsOriginalAmount() {
+    @Test("convert with nil rate returns original amount")
+
+    func convertWithNilRateReturnsOriginalAmount() {
         // Given
         let amount = 100.0
         let rate: Double? = nil
@@ -26,10 +31,10 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, amount, "Should return original amount when rate is nil")
-    }
+        #expect(result == amount)
+    @Test("convert with zero rate returns original amount")
 
-    func testConvert_WithZeroRate_ReturnsOriginalAmount() {
+    func convertWithZeroRateReturnsOriginalAmount() {
         // Given
         let amount = 100.0
         let rate = 0.0
@@ -38,10 +43,10 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, amount, "Should return original amount when rate is zero")
-    }
+        #expect(result == amount)
+    @Test("convert with negative rate returns original amount")
 
-    func testConvert_WithNegativeRate_ReturnsOriginalAmount() {
+    func convertWithNegativeRateReturnsOriginalAmount() {
         // Given
         let amount = 100.0
         let rate = -0.5
@@ -50,10 +55,10 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, amount, "Should return original amount when rate is negative")
-    }
+        #expect(result == amount)
+    @Test("convert with very small rate performs conversion")
 
-    func testConvert_WithVerySmallRate_PerformsConversion() {
+    func convertWithVerySmallRatePerformsConversion() {
         // Given
         let amount = 100.0
         let rate = 0.001
@@ -62,10 +67,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, 0.1, accuracy: 0.001, "Should handle very small rates")
+        #expect(abs(abs(result - 0.1 == true)
     }
 
-    func testConvert_WithVeryLargeRate_PerformsConversion() {
+    @Test("convert with very large rate performs conversion")
+
+    func convertWithVeryLargeRatePerformsConversion() {
         // Given
         let amount = 1.0
         let rate = 1000.0
@@ -74,10 +81,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, 1000.0, accuracy: 0.001, "Should handle very large rates")
+        #expect(abs(abs(result - 1000.0 == true)
     }
 
-    func testConvert_WithZeroAmount_ReturnsZero() {
+    @Test("convert with zero amount returns zero")
+
+    func convertWithZeroAmountReturnsZero() {
         // Given
         let amount = 0.0
         let rate = 1.5
@@ -86,10 +95,10 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, 0.0, "Should return zero when amount is zero")
-    }
+        #expect(result == 0.0)
+    @Test("convert with negative amount handles correctly")
 
-    func testConvert_WithNegativeAmount_HandlesCorrectly() {
+    func convertWithNegativeAmountHandlesCorrectly() {
         // Given
         let amount = -50.0
         let rate = 2.0
@@ -98,12 +107,14 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        XCTAssertEqual(result, -100.0, accuracy: 0.001, "Should handle negative amounts correctly")
+        #expect(abs(abs(result - (-100.0 == true)
     }
 
     // MARK: - Monthly Limit Calculation Tests
 
-    func testCalculateMonthlyLimit_BasicCalculation() {
+    @Test("calculate monthly limit basic calculation")
+
+    func calculateMonthlyLimitBasicCalculation() {
         // Given
         let yearlyLimit = 1200.0
 
@@ -111,10 +122,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, 100.0, accuracy: 0.001, "Should calculate monthly limit as yearly/12")
+        #expect(abs(abs(result - 100.0 == true)
     }
 
-    func testCalculateMonthlyLimit_ZeroYearlyLimit() {
+    @Test("calculate monthly limit zero yearly limit")
+
+    func calculateMonthlyLimitZeroYearlyLimit() {
         // Given
         let yearlyLimit = 0.0
 
@@ -122,10 +135,10 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, 0.0, "Should handle zero yearly limit")
-    }
+        #expect(result == 0.0)
+    @Test("calculate monthly limit negative yearly limit")
 
-    func testCalculateMonthlyLimit_NegativeYearlyLimit() {
+    func calculateMonthlyLimitNegativeYearlyLimit() {
         // Given
         let yearlyLimit = -1200.0
 
@@ -133,10 +146,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, -100.0, accuracy: 0.001, "Should handle negative yearly limit")
+        #expect(abs(abs(result - (-100.0 == true)
     }
 
-    func testCalculateMonthlyLimit_FractionalYearlyLimit() {
+    @Test("calculate monthly limit fractional yearly limit")
+
+    func calculateMonthlyLimitFractionalYearlyLimit() {
         // Given
         let yearlyLimit = 100.5
 
@@ -144,10 +159,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, 8.375, accuracy: 0.001, "Should handle fractional yearly limits")
+        #expect(abs(abs(result - 8.375 == true)
     }
 
-    func testCalculateMonthlyLimit_VeryLargeYearlyLimit() {
+    @Test("calculate monthly limit very large yearly limit")
+
+    func calculateMonthlyLimitVeryLargeYearlyLimit() {
         // Given
         let yearlyLimit = 1_000_000.0
 
@@ -155,10 +172,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, 83333.333333333333, accuracy: 0.001, "Should handle very large yearly limits")
+        #expect(abs(abs(result - 83333.333333333333 == true)
     }
 
-    func testCalculateMonthlyLimit_VerySmallYearlyLimit() {
+    @Test("calculate monthly limit very small yearly limit")
+
+    func calculateMonthlyLimitVerySmallYearlyLimit() {
         // Given
         let yearlyLimit = 0.12
 
@@ -166,10 +185,12 @@ final class CurrencyConversionBasicTests: XCTestCase {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
 
         // Then
-        XCTAssertEqual(result, 0.01, accuracy: 0.001, "Should handle very small yearly limits")
+        #expect(abs(abs(result - 0.01 == true)
     }
 
-    func testCalculateMonthlyLimit_WithDifferentCalendar() {
+    @Test("calculate monthly limit with different calendar")
+
+    func calculateMonthlyLimitWithDifferentCalendar() {
         // Given
         let yearlyLimit = 1200.0
         let islamicCalendar = Calendar(identifier: .islamicCivil)
@@ -179,6 +200,6 @@ final class CurrencyConversionBasicTests: XCTestCase {
 
         // Then
         // The calculation should still be /12 regardless of calendar
-        XCTAssertEqual(result, 100.0, accuracy: 0.001, "Should use same calculation regardless of calendar type")
+        #expect(abs(abs(result - 100.0 == true)
     }
 }
