@@ -90,10 +90,10 @@ test_build_validation() {
     # Extract existing builds from appcast
     USED_BUILD_NUMBERS=""
     if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-        USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-        USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     
     # Find highest build

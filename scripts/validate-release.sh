@@ -41,7 +41,7 @@ echo ""
 echo "📌 Existing Build Numbers:"
 USED_BUILD_NUMBERS=""
 if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-    STABLE_BUILDS=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | sort -n)
+    STABLE_BUILDS=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | sort -n)
     if [[ -n "$STABLE_BUILDS" ]]; then
         echo "   Stable releases:"
         echo "$STABLE_BUILDS" | while read -r build; do
@@ -52,7 +52,7 @@ if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
 fi
 
 if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-    PRERELEASE_BUILDS=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | sort -n)
+    PRERELEASE_BUILDS=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | sort -n)
     if [[ -n "$PRERELEASE_BUILDS" ]]; then
         echo "   Pre-release versions:"
         echo "$PRERELEASE_BUILDS" | while read -r build; do

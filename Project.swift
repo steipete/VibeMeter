@@ -84,8 +84,6 @@ let project = Project(
             bundleId: "com.steipete.vibemeter",
             deploymentTargets: .macOS("15.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "1.0-beta.1",
-                "CFBundleVersion": "100",
                 "LSApplicationCategoryType": "public.app-category.productivity",
                 "LSUIElement": true,
                 "NSSupportsAutomaticTermination": false,

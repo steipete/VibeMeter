@@ -165,11 +165,11 @@ if [[ -f "$PROJECT_ROOT/appcast.xml" ]] && [[ -f "$PROJECT_ROOT/appcast-prerelea
     # Get all build numbers from both files
     ALL_BUILDS=""
     if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-        ALL_BUILDS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        ALL_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
         ALL_BUILDS+=" "
-        ALL_BUILDS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        ALL_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     
     # Check for duplicates across files

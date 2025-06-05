@@ -22,10 +22,10 @@ echo "🔍 Checking for build number conflicts..."
 # Parse appcast files for existing build numbers
 USED_BUILD_NUMBERS=""
 if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-    USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+    USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
 fi
 if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-    USED_BUILD_NUMBERS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+    USED_BUILD_NUMBERS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
 fi
 
 # Check if current build number already exists

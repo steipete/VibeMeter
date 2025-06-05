@@ -188,11 +188,11 @@ if [[ -f "$PROJECT_ROOT/appcast.xml" ]] || [[ -f "$PROJECT_ROOT/appcast-prerelea
     EXISTING_BUILDS=""
     
     if [[ -f "$PROJECT_ROOT/appcast.xml" ]]; then
-        EXISTING_BUILDS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast.xml" 2>/dev/null | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        EXISTING_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast.xml" 2>/dev/null | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     
     if [[ -f "$PROJECT_ROOT/appcast-prerelease.xml" ]]; then
-        EXISTING_BUILDS+=$(grep -o 'sparkle:version="[0-9]*"' "$PROJECT_ROOT/appcast-prerelease.xml" 2>/dev/null | sed 's/sparkle:version="//g' | sed 's/"//g' | tr '\n' ' ')
+        EXISTING_BUILDS+=$(grep -E '<sparkle:version>[0-9]+</sparkle:version>' "$PROJECT_ROOT/appcast-prerelease.xml" 2>/dev/null | sed 's/.*<sparkle:version>\([0-9]*\)<\/sparkle:version>.*/\1/' | tr '\n' ' ')
     fi
     
     # Check for duplicate
