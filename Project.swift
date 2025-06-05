@@ -17,7 +17,7 @@ let project = Project(
         base: [
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
-            "CURRENT_PROJECT_VERSION": "100",
+            "CURRENT_PROJECT_VERSION": "201",
             "CODE_SIGN_STYLE": "Automatic",
             "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,

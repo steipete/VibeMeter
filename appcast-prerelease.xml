@@ -5,48 +5,5 @@
         <link>https://github.com/steipete/VibeMeter</link>
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
-        <item>
-            <title>VibeMeter 1.0.0-beta.1</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.1/VibeMeter-1.0.0-beta.1.dmg</link>
-            <sparkle:version>200</sparkle:version>
-            <sparkle:shortVersionString>1.0.0-beta.1-beta.1</sparkle:shortVersionString>
-            <description><![CDATA[
-                <h2>Beta Release 1 of VibeMeter 1.0.0</h2>
-                
-                <p>This is the first beta release of VibeMeter 1.0.0, featuring:</p>
-                
-                <h3>🚀 Major Changes</h3>
-                <ul>
-                    <li><strong>Full App Sandboxing</strong>: Enhanced security with complete sandboxing enabled</li>
-                    <li><strong>Multi-Provider Architecture</strong>: Foundation for supporting multiple AI services</li>
-                    <li><strong>Automatic Updates</strong>: Sparkle integration with EdDSA cryptographic signing</li>
-                </ul>
-                
-                <h3>🛠️ Technical Improvements</h3>
-                <ul>
-                    <li>Swift 6 strict concurrency compliance</li>
-                    <li>Improved error handling and recovery</li>
-                    <li>Enhanced network resilience</li>
-                    <li>Optimized currency conversion caching</li>
-                </ul>
-                
-                <h3>🔧 Bug Fixes</h3>
-                <ul>
-                    <li>Fixed menu bar text display during data refresh</li>
-                    <li>Resolved currency symbol update issues</li>
-                    <li>Addressed Swift 6 concurrency warnings</li>
-                </ul>
-                
-                <p><strong>⚠️ This is a pre-release version.</strong> Please report any issues to: https://github.com/steipete/VibeMeter/issues</p>
-            ]]></description>
-            <pubDate>Wed, 05 Jun 2025 00:00:00 +0000</pubDate>
-            <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.1/VibeMeter-1.0.0-beta.1.dmg"
-                length="5614467"
-                type="application/octet-stream"
-                sparkle:edSignature="racjMQEFUo0w0F0dG8ijtgJlM8yxo4yYXI2o9DNdBkmE2kIyt141jAn3CF63IleSCn13/6YKLooUCK1iMhy1BA=="
-            />
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-        </item>
     </channel>
 </rss>
