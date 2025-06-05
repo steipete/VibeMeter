@@ -64,13 +64,21 @@ public actor CursorProvider: ProviderProtocol {
             await getTeamId()
         }
 
+        // If we have a fallback team ID of 0 or -1, don't send it as it's likely invalid
+        let validTeamId: Int? = if let teamId = effectiveTeamId, teamId > 0 {
+            teamId
+        } else {
+            nil
+        }
+
+        logger.debug("Using team ID for invoice request: \(validTeamId?.description ?? "nil")")
 
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchInvoice(
                 authToken: authToken,
                 month: month,
                 year: year,
-                teamId: effectiveTeamId)
+                teamId: validTeamId)
             return CursorDataTransformer.transformInvoice(from: response, month: month, year: year)
         }
     }

@@ -80,11 +80,5 @@ struct ModelUsage: Decodable, Sendable {
     let numTokens: Int
     let maxRequestUsage: Int?
 
-    private enum CodingKeys: String, CodingKey {
-        case numRequests = "num_requests"
-        case numRequestsTotal = "num_requests_total"
-        case maxTokenUsage = "max_token_usage"
-        case numTokens = "num_tokens"
-        case maxRequestUsage = "max_request_usage"
-    }
+
 }
