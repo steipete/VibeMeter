@@ -111,7 +111,8 @@ fi
 # Clean up the pre-release flag after building
 if [[ "$RELEASE_TYPE" != "stable" ]]; then
     echo "📝 Cleaning up pre-release flag..."
-    sed -i '' '/IS_PRERELEASE_BUILD/d' "$PROJECT_ROOT/Project.swift"
+    # Only remove the temporarily added line with "true" value
+    sed -i '' '/IS_PRERELEASE_BUILD.*true/d' "$PROJECT_ROOT/Project.swift"
 fi
 
 # Verify build
