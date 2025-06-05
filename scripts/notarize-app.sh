@@ -177,33 +177,19 @@ else
     log "Warning: fix-sparkle-sandbox.sh not found or not executable"
 fi
 
-# 1. Sign XPC services first (they need special entitlements)
-log "Signing XPC services..."
-find "$APP_BUNDLE/Contents" -name "*.xpc" -type d | while read xpc; do
-    if [ -f "$xpc/Contents/MacOS/"* ]; then
-        executable=$(find "$xpc/Contents/MacOS" -type f -perm +111 | head -1)
-        if [ -n "$executable" ]; then
-            sign_binary "$executable" "$XPC_ENTITLEMENTS" "XPC service executable"
-        fi
-    fi
-    sign_app_bundle "$xpc" "$XPC_ENTITLEMENTS" "XPC service bundle"
-done
+# 1. Skip signing XPC services - Sparkle provides them already signed
+# According to Sparkle docs: "Due to different code signing requirements, 
+# please do not add --deep to OTHER_CODE_SIGN_FLAGS or from custom build 
+# scripts when signing your application. This is a common source of Sandboxing errors."
+log "Skipping XPC services (Sparkle provides them pre-signed)..."
 
 # 2. Handle Sparkle framework with comprehensive signing
 SPARKLE_FRAMEWORK="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 if [ -d "$SPARKLE_FRAMEWORK" ]; then
     log "Found Sparkle framework, performing comprehensive signing..."
     
-    # Sign XPC services in Sparkle
-    find "$SPARKLE_FRAMEWORK" -name "*.xpc" -type d | while read xpc; do
-        if [ -f "$xpc/Contents/MacOS/"* ]; then
-            executable=$(find "$xpc/Contents/MacOS" -type f -perm +111 | head -1)
-            if [ -n "$executable" ]; then
-                sign_binary "$executable" "$XPC_ENTITLEMENTS" "Sparkle XPC executable"
-            fi
-        fi
-        sign_app_bundle "$xpc" "$XPC_ENTITLEMENTS" "Sparkle XPC service"
-    done
+    # Skip signing XPC services in Sparkle - they must keep their original signatures
+    log "Not re-signing Sparkle XPC services (keeping original signatures)"
     
     # Sign standalone executables in Sparkle
     find "$SPARKLE_FRAMEWORK" -type f -perm +111 -not -path "*/MacOS/*" -not -path "*/XPCServices/*" | while read executable; do
