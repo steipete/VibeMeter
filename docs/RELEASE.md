@@ -113,18 +113,41 @@ VibeMeter is a sandboxed app, which requires special configuration for Sparkle's
    </array>
    ```
 
-3. **XPC Services Location**
+3. **XPC Services - CRITICAL**
    - Must remain inside: `Sparkle.framework/Versions/B/XPCServices/`
-   - Do NOT copy to app bundle (this was our mistake in early betas)
-   - Sparkle automatically manages them based on app bundle ID
+   - Do NOT copy to app bundle
+   - Do NOT modify XPC service bundle IDs
+   - Do NOT re-sign XPC services during build
+   - Notarization will handle proper signing
 
-### Important Sparkle Learnings
+### 🚨 Critical Sparkle Learnings
 
-1. **Downloader Service Not Needed**: Since VibeMeter has network access (`com.apple.security.network.client`), we don't need the Downloader XPC service.
+After extensive debugging, here are the key findings:
 
-2. **XPC Service Names**: The entitlements use `$(PRODUCT_BUNDLE_IDENTIFIER)-spki` format, which Sparkle maps to its internal services.
+1. **XPC Service Bundle IDs Must Match**
+   - Sparkle's Installer.xpc uses: `org.sparkle-project.InstallerLauncher`
+   - Your app tries to connect to this exact bundle ID
+   - Do NOT change the XPC service bundle IDs!
 
-3. **Delegate Requirements**: SparkleUpdaterManager must implement `standardUserDriverWillHandleShowingUpdate` to avoid errors.
+2. **Mach Lookup Entitlements**
+   - The `-spki` suffix in entitlements is a Sparkle convention
+   - Sparkle internally maps this to the correct XPC service
+   - Only the main app needs this entitlement, NOT the XPC services
+
+3. **Build Process Must Not Modify XPC Services**
+   - Don't re-sign XPC services during build
+   - Don't copy them out of Sparkle.framework
+   - Don't modify their Info.plist files
+   - Let the notarization process handle signing
+
+4. **Downloader Service Not Needed**
+   - Since VibeMeter has `com.apple.security.network.client`
+   - Set `SUEnableDownloaderService` to `false`
+   - This simplifies the sandbox configuration
+
+### Important Sparkle Documentation Links
+- [Sandboxing Guide](https://sparkle-project.org/documentation/sandboxing/)
+- [XPC Services](https://sparkle-project.org/documentation/api/protocols/spuupdaterdelegate#updater:willextractupdate:)
 
 ## 🛠️ Utility Scripts
 
@@ -169,14 +192,23 @@ VibeMeter supports two update channels:
 1. **"You're up to date!" when update exists**
    - Check build numbers are incrementing
    - Verify appcast was pushed to GitHub
+   - Ensure appcast has correct build number (not "1")
 
 2. **Update Error: Failed to gain authorization**
-   - Check XPC service configuration
-   - Verify entitlements are correct
+   - Check XPC services are unmodified
+   - Verify entitlements match exactly
+   - Ensure Sparkle framework wasn't re-signed during build
+   - Check Console.app for XPC connection errors
 
-3. **Notarization fails**
+3. **"An error occurred while launching the installer"**
+   - XPC service bundle ID mismatch
+   - Missing or incorrect mach-lookup entitlements
+   - XPC services were modified during build
+
+4. **Notarization fails**
    - Check environment variables are set
    - Verify Developer ID certificate is valid
+   - Ensure all embedded binaries are signed
 
 ### Console Debugging
 ```bash
@@ -184,7 +216,21 @@ VibeMeter supports two update channels:
 log stream --predicate 'process == "VibeMeter"' --level debug
 
 # Check for Sparkle errors
-log stream --predicate 'process == "VibeMeter"' | grep -i sparkle
+log stream --predicate 'process == "VibeMeter"' | grep -i -E "(sparkle|xpc|installer)"
+
+# Look for specific errors
+log stream --predicate 'subsystem == "com.apple.security"'
+```
+
+### Verifying XPC Services
+```bash
+# Check XPC service bundle IDs
+/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" \
+  "/path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist"
+# Should output: org.sparkle-project.InstallerLauncher
+
+# Verify XPC services are signed
+codesign -dvv "/path/to/VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
 ```
 
 ## 🔐 Security and Backup
@@ -213,35 +259,41 @@ If you need to perform steps manually (not recommended):
    - Increment `CURRENT_PROJECT_VERSION`
    - Update `MARKETING_VERSION` if needed
 
-2. **Build**
+2. **Clean Build**
+   ```bash
+   rm -rf build DerivedData .build
+   rm -rf build/SourcePackages  # Clean SPM cache
+   ```
+
+3. **Generate and Build**
    ```bash
    ./scripts/generate-xcproj.sh
    ./scripts/build.sh --configuration Release
    ```
 
-3. **Sign and Notarize**
+4. **Sign and Notarize**
    ```bash
    ./scripts/sign-and-notarize.sh --sign-and-notarize
    ```
 
-4. **Create DMG**
+5. **Create DMG**
    ```bash
    ./scripts/create-dmg.sh
    ```
 
-5. **Generate Signature**
+6. **Generate Signature**
    ```bash
    sign_update build/VibeMeter-X.X.X.dmg
    ```
 
-6. **Create GitHub Release**
+7. **Create GitHub Release**
    ```bash
    git tag -a "vX.X.X" -m "Release X.X.X"
    git push origin "vX.X.X"
    gh release create "vX.X.X" --title "VibeMeter X.X.X" build/VibeMeter-X.X.X.dmg
    ```
 
-7. **Update Appcast**
+8. **Update Appcast**
    ```bash
    ./scripts/generate-appcast.sh
    git add appcast*.xml

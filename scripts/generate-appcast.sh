@@ -201,8 +201,8 @@ create_appcast_item() {
     fi
     
     # Extract build number using helper script
-    if [ -x "scripts/extract-build-number.sh" ]; then
-        build_number=$(scripts/extract-build-number.sh "$temp_dmg" 2>/dev/null || echo "")
+    if [ -x "$SCRIPT_DIR/extract-build-number.sh" ]; then
+        build_number=$("$SCRIPT_DIR/extract-build-number.sh" "$temp_dmg" 2>/dev/null || echo "")
     elif [ -x "$(dirname "$0")/extract-build-number.sh" ]; then
         build_number=$("$(dirname "$0")/extract-build-number.sh" "$temp_dmg" 2>/dev/null || echo "")
     else
