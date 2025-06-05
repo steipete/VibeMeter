@@ -59,7 +59,7 @@ final class MultiProviderDataProcessor: Sendable {
         logSuccessAndSpending(for: provider, spendingData: spendingData)
 
         spendingData.updateConnectionStatus(for: provider, status: .connected)
-        
+
         return context.lastRefreshDates
     }
 

@@ -56,7 +56,7 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
            isPrerelease {
             return .prerelease
         }
-        
+
         // Otherwise, check if the version string contains pre-release keywords
         let prereleaseKeywords = ["beta", "alpha", "rc", "pre", "dev"]
         let lowercaseVersion = appVersion.lowercased()

@@ -189,7 +189,6 @@ final class ProviderConnectionStatusBasicTests: XCTestCase {
         let otherErrors: [ProviderError] = [
             .decodingError(message: "Invalid JSON", statusCode: 200),
             .noTeamFound,
-            .teamIdNotSet,
         ]
 
         // When/Then

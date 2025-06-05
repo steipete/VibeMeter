@@ -132,22 +132,43 @@ final class CursorProviderDataTests: XCTestCase {
         XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
     }
 
-    func testFetchMonthlyInvoice_NoTeamIdAvailable() async {
+    func testFetchMonthlyInvoice_NoTeamIdAvailable() async throws {
         // Given - no stored team ID and none provided
-
-        // When/Then
-        do {
-            _ = try await cursorProvider.fetchMonthlyInvoice(
-                authToken: "test-token",
-                month: 5,
-                year: 2023,
-                teamId: nil)
-            XCTFail("Should have thrown teamIdNotSet error")
-        } catch let error as ProviderError {
-            XCTAssertEqual(error, .teamIdNotSet)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
+        let mockInvoiceData = Data("""
+        {
+            "items": [],
+            "pricing_description": null
         }
+        """.utf8)
+
+        let mockResponse = HTTPURLResponse(
+            url: URL(string: "https://www.cursor.com/api/dashboard/get-monthly-invoice")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil)!
+
+        mockURLSession.nextData = mockInvoiceData
+        mockURLSession.nextResponse = mockResponse
+
+        // When
+        let invoice = try await cursorProvider.fetchMonthlyInvoice(
+            authToken: "test-token",
+            month: 5,
+            year: 2023,
+            teamId: nil)
+
+        // Then
+        XCTAssertEqual(invoice.items.count, 0)
+        XCTAssertEqual(invoice.totalSpendingCents, 0)
+        XCTAssertNil(invoice.pricingDescription)
+
+        // Verify no team ID was sent in the request body
+        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+        XCTAssertEqual(bodyJSON?["month"] as? Int, 5)
+        XCTAssertEqual(bodyJSON?["year"] as? Int, 2023)
+        XCTAssertNil(bodyJSON?["teamId"]) // teamId should not be present when nil
+        XCTAssertEqual(bodyJSON?["includeUsageEvents"] as? Bool, false)
     }
 
     // MARK: - Usage Data Tests
