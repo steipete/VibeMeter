@@ -34,7 +34,7 @@ usage() {
     echo "WORKFLOW:"
     echo "  1. Use this script to bump version"
     echo "  2. Commit the version changes"
-    echo "  3. Use ./scripts/release.sh to create the release"
+    echo "  3. Use ./scripts/release-auto.sh to create the release"
     echo ""
 }
 
@@ -265,9 +265,9 @@ main() {
     echo "📋 Next steps:"
     echo "   1. Review the changes: git diff Project.swift"
     echo "   2. Commit the version bump: git add Project.swift && git commit -m \"Bump version to $new_version\""
-    echo "   3. Create the release: ./scripts/release.sh --stable"
+    echo "   3. Create the release: ./scripts/release-auto.sh stable"
     if [[ "$new_version" =~ -[a-z]+\.[0-9]+$ ]]; then
-        echo "   3. Create the pre-release: ./scripts/release.sh --prerelease ${prerelease_type} ${new_version##*.}"
+        echo "   3. Create the pre-release: ./scripts/release-auto.sh ${prerelease_type} ${new_version##*.}"
     fi
     echo ""
 }

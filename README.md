@@ -138,49 +138,54 @@ Use the version management script to bump versions:
 
 #### Creating Releases
 
-Use the universal release script:
+First check if everything is ready:
+
+```bash
+./scripts/preflight-check.sh
+```
+
+Then use the automated release script:
 
 ```bash
 # Create stable release
-./scripts/release.sh --stable
+./scripts/release-auto.sh stable
 
 # Create pre-releases  
-./scripts/release.sh --prerelease beta 1     # Creates 0.9.2-beta.1
-./scripts/release.sh --prerelease alpha 2    # Creates 0.9.2-alpha.2
-./scripts/release.sh --prerelease rc 1       # Creates 0.9.2-rc.1
+./scripts/release-auto.sh beta 1     # Creates beta.1
+./scripts/release-auto.sh alpha 2    # Creates alpha.2
+./scripts/release-auto.sh rc 1       # Creates rc.1
 ```
 
 #### Complete Release Workflow
 
-1. **Prepare Release:**
+1. **Check Release Readiness:**
+   ```bash
+   ./scripts/preflight-check.sh
+   ```
+
+2. **Update Version:**
    ```bash
    # Bump version (choose appropriate type)
    ./scripts/version.sh --patch
    
-   # Review changes
-   git diff Project.swift
+   # Also increment build number in Project.swift
+   # Edit: "CURRENT_PROJECT_VERSION": "201" -> "202"
    
    # Commit version bump
    git add Project.swift
    git commit -m "Bump version to 0.9.2"
    ```
 
-2. **Create Release:**
+3. **Create Release:**
    ```bash
    # For stable release
-   ./scripts/release.sh --stable
+   ./scripts/release-auto.sh stable
    
    # For pre-release
-   ./scripts/release.sh --prerelease beta 1
+   ./scripts/release-auto.sh beta 1
    ```
 
-3. **Post-Release:**
-   ```bash
-   # Commit updated appcast files
-   git add appcast*.xml
-   git commit -m "Update appcast for v0.9.2"
-   git push origin main
-   ```
+The automated script handles building, signing, notarization, DMG creation, GitHub release, appcast updates, and git commits.
 
 ### Update Channels
 
@@ -210,12 +215,12 @@ To participate:
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
+| `preflight-check.sh` | Validate release readiness | `./scripts/preflight-check.sh` |
+| `release-auto.sh` | Automated release process | `./scripts/release-auto.sh stable` |
 | `version.sh` | Version management | `./scripts/version.sh --patch` |
-| `release.sh` | Universal release creation | `./scripts/release.sh --stable` |
-| `create-github-release.sh` | Stable releases only | `./scripts/create-github-release.sh` |
-| `create-prerelease.sh` | Pre-releases only | `./scripts/create-prerelease.sh beta 1` |
-| `update-appcast.sh` | Update stable appcast | `./scripts/update-appcast.sh 0.9.2 3 dmg-path` |
-| `update-prerelease-appcast.sh` | Update pre-release appcast | `./scripts/update-prerelease-appcast.sh 0.9.2-beta.1 3 dmg-path` |
+| `update-appcast.sh` | Update appcast files | `./scripts/update-appcast.sh 0.9.2 3 dmg-path` |
+| `verify-app.sh` | Verify app signing/notarization | `./scripts/verify-app.sh VibeMeter.app` |
+| `verify-appcast.sh` | Validate appcast files | `./scripts/verify-appcast.sh` |
 
 ## 🏗️ Architecture
 

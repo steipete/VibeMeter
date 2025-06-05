@@ -57,30 +57,20 @@ The automated script will:
 - ✅ Update appcast
 - ✅ Commit and push changes
 
-## 🚀 Quick Start (Manual)
-
-### Creating a Stable Release
-```bash
-./scripts/validate-release.sh              # Check readiness
-./scripts/version.sh --patch               # Bump version
-git add Project.swift && git commit -m "Bump version"
-./scripts/release.sh --stable              # Create release
-git add appcast.xml && git commit -m "Update appcast" && git push
-```
-
-### Creating a Pre-Release
-```bash
-./scripts/validate-release.sh              # Check readiness
-# Edit Project.swift: increment build number
-./scripts/release.sh --prerelease beta 2   # Create beta.2
-git add appcast-prerelease.xml && git commit -m "Update appcast" && git push
-```
+## 🛠️ Utility Scripts
 
 ### Verification Tools
 ```bash
 ./scripts/verify-app.sh <app-or-dmg>       # Verify signing, notarization, entitlements
 ./scripts/verify-appcast.sh                # Validate appcast files
-./scripts/test-release-workflow.sh         # Test entire workflow
+```
+
+### Version Management
+```bash
+./scripts/version.sh --current             # Show current version
+./scripts/version.sh --patch               # Bump patch version (1.0.0 -> 1.0.1)
+./scripts/version.sh --minor               # Bump minor version (1.0.0 -> 1.1.0)
+./scripts/version.sh --major               # Bump major version (1.0.0 -> 2.0.0)
 ```
 
 ## ⚠️ CRITICAL: Common Release Pitfalls
@@ -210,125 +200,25 @@ Use the version management script to prepare releases:
 ./scripts/version.sh --set 1.0.0
 ```
 
-### Creating Releases
+### Other Release Options
 
-#### 1. Universal Release Script (Recommended)
-
-```bash
-# Create stable release
-./scripts/release.sh --stable
-
-# Create pre-releases  
-./scripts/release.sh --prerelease beta 1     # Creates 0.9.2-beta.1
-./scripts/release.sh --prerelease alpha 2    # Creates 0.9.2-alpha.2
-./scripts/release.sh --prerelease rc 1       # Creates 0.9.2-rc.1
-```
-
-#### 2. Individual Release Scripts
-
-```bash
-# Stable releases only
-./scripts/create-github-release.sh
-
-# Pre-releases only
-./scripts/create-prerelease.sh beta 1        # Creates beta.1
-./scripts/create-prerelease.sh alpha 2       # Creates alpha.2
-./scripts/create-prerelease.sh rc 1          # Creates rc.1
-```
-
-#### 3. Quick Release (Using Existing Build)
+#### Quick Release (Using Existing Build)
 If you already have a built, signed, and notarized app:
 
 ```bash
 ./scripts/release-from-existing.sh
 ```
 
-#### 4. Full Release (Build from Source)
-To build everything from scratch:
+#### Local Build and Release
+To build everything from scratch without GitHub:
 
 ```bash
 ./scripts/release-local.sh
 ```
 
-### Complete Release Workflow
+### Manual Release Process (If Not Using Automated Scripts)
 
-#### Stable Release Workflow
-
-1. **Prepare Release:**
-   ```bash
-   # Bump version (choose appropriate type)
-   ./scripts/version.sh --patch
-   
-   # Review changes
-   git diff Project.swift
-   
-   # Commit version bump
-   git add Project.swift
-   git commit -m "Bump version to 0.9.2"
-   ```
-
-2. **Create Release:**
-   ```bash
-   ./scripts/release.sh --stable
-   ```
-
-3. **Post-Release:**
-   ```bash
-   # Commit updated appcast files (both stable and pre-release)
-   git add appcast*.xml
-   git commit -m "Update appcast for v0.9.2"
-   git push origin main
-   ```
-
-#### Pre-release Workflow
-
-**IMPORTANT**: Always ensure MARKETING_VERSION in Project.swift is set to base version (e.g., "1.0.0") NOT a pre-release version before running release scripts!
-
-1. **Prepare Pre-release:**
-   ```bash
-   # CRITICAL: Check current version and build number
-   grep MARKETING_VERSION Project.swift
-   grep CURRENT_PROJECT_VERSION Project.swift
-   
-   # If MARKETING_VERSION shows a pre-release suffix, reset to base version:
-   # Edit Project.swift: "1.0.0-beta.1" -> "1.0.0"
-   
-   # CRITICAL: Increment build number to be higher than ALL existing releases
-   # Check highest existing build:
-   grep -h 'sparkle:version=' appcast*.xml | grep -o '[0-9]*' | sort -n | tail -1
-   
-   # Edit Project.swift: "CURRENT_PROJECT_VERSION": "200" -> "201" (or higher)
-   
-   # Commit version changes
-   git add Project.swift
-   git commit -m "Prepare for beta.2 release (build 201)"
-   ```
-
-2. **Create Pre-release:**
-   ```bash
-   # This will create version "1.0.0-beta.2" from base "1.0.0"
-   ./scripts/release.sh --prerelease beta 2
-   
-   # Or use the direct script:
-   ./scripts/create-prerelease.sh beta 2
-   ```
-
-3. **Verify Build:**
-   ```bash
-   # CRITICAL: Verify the DMG contains the correct build
-   hdiutil attach build/VibeMeter-1.0.0-beta.2.dmg
-   defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleVersion
-   defaults read "/Volumes/VibeMeter/VibeMeter.app/Contents/Info.plist" CFBundleShortVersionString
-   hdiutil detach "/Volumes/VibeMeter"
-   ```
-
-4. **Post-Release:**
-   ```bash
-   # Commit updated pre-release appcast
-   git add appcast-prerelease.xml
-   git commit -m "Update pre-release appcast for v1.0.0-beta.2"
-   git push origin main
-   ```
+If you need to perform the release steps manually, follow the detailed instructions in the sections below. However, the automated release process is strongly recommended as it handles all these steps automatically.
 
 ### Update Channel System
 
@@ -637,62 +527,6 @@ generate_keys -p
 
 ## Complete Release Workflow with Verification
 
-### 🔍 Pre-Release Verification
-
-Before starting any release, run:
-```bash
-./scripts/validate-release.sh
-```
-
-This will check:
-- Git working directory status
-- Current version and build numbers
-- Existing releases and build numbers
-- Build directory state
-- Release readiness
-
-### 🚀 Creating a Release (Recommended Workflow)
-
-#### Option 1: Using the Universal Release Script (Recommended)
-
-**For Stable Release:**
-```bash
-# 1. Validate release readiness
-./scripts/validate-release.sh
-
-# 2. Update version if needed
-./scripts/version.sh --patch  # or --minor, --major
-
-# 3. Commit changes
-git add Project.swift
-git commit -m "Bump version to X.X.X"
-
-# 4. Create release (handles everything automatically)
-./scripts/release.sh --stable
-
-# 5. Commit and push appcast
-git add appcast.xml
-git commit -m "Update appcast for vX.X.X"
-git push origin main
-```
-
-**For Pre-Release:**
-```bash
-# 1. Ensure MARKETING_VERSION is base version (e.g., "1.0.0")
-grep MARKETING_VERSION Project.swift
-# If it shows pre-release suffix, edit to remove it
-
-# 2. Increment build number
-# Edit Project.swift: "CURRENT_PROJECT_VERSION": "201" -> "202"
-
-# 3. Create pre-release
-./scripts/release.sh --prerelease beta 2
-
-# 4. Commit and push appcast
-git add appcast-prerelease.xml
-git commit -m "Update pre-release appcast for v1.0.0-beta.2"
-git push origin main
-```
 
 ### 📋 What Happens During Release
 
@@ -745,20 +579,20 @@ The release scripts perform these steps automatically:
    - ✅ Display next steps
    - ✅ Provide release URL
 
-### 🧪 Testing the Release Workflow
+### 🧪 Pre-flight Check
 
-To test the entire workflow without creating releases:
+Before releasing, always run the pre-flight check:
 ```bash
-./scripts/test-release-workflow.sh
+./scripts/preflight-check.sh
 ```
 
-This tests:
-- All scripts exist and are executable
-- Dependencies are installed
-- Version parsing works
-- Build validation logic
-- Appcast parsing
-- Verification scripts
+This validates:
+- Git status and branch
+- Version and build numbers
+- Required tools and authentication
+- Signing configuration
+- Sparkle setup
+- Appcast validity
 
 ### 🔍 Manual Verification Commands
 
@@ -876,7 +710,7 @@ codesign --verify --deep /path/to/VibeMeter.app/Contents/Frameworks/Sparkle.fram
 
 ### Release (MUST be done in order)
 - [ ] Create and push git tag: `git tag -a "v1.0.0" -m "Release 1.0.0" && git push origin v1.0.0`
-- [ ] Create GitHub release: `./scripts/release.sh --stable` OR manually with `gh release create`
+- [ ] Create GitHub release: `./scripts/release-auto.sh stable` OR manually with `gh release create`
 - [ ] Verify DMG is attached to release on GitHub
 - [ ] Generate/update appcast: `./scripts/generate-appcast.sh`
 - [ ] Manually verify build numbers in appcast match the built app
@@ -927,43 +761,7 @@ Creates a distribution DMG from the signed app.
 - Automatically generates DMG filename if not specified
 - Creates a styled DMG with background and app icon
 
-### Release Management Scripts
-
-#### `release.sh`
-Universal release script that handles both stable and pre-release versions.
-- Usage:
-  - Stable: `./scripts/release.sh --stable`
-  - Pre-release: `./scripts/release.sh --prerelease beta 1`
-- **Automatic features:**
-  - Cleans build directory
-  - Validates build numbers
-  - Verifies built app
-  - Creates GitHub release
-  - Updates appcast
-
-#### `create-github-release.sh`
-Creates stable releases only.
-- **Process:**
-  1. Cleans build directory
-  2. Validates build number is unique and higher than existing
-  3. Builds app in Release configuration
-  4. Verifies built app has correct build number
-  5. Signs and notarizes
-  6. Verifies signed app (entitlements, notarization)
-  7. Creates DMG
-  8. Verifies DMG
-  9. Creates GitHub release
-  10. Updates appcast.xml
-  11. Validates appcast
-
-#### `create-prerelease.sh`
-Creates pre-release versions (alpha, beta, rc).
-- Usage: `./scripts/create-prerelease.sh beta 1`
-- **Features:**
-  - Extracts base version from marketing version
-  - Prevents double suffix issues
-  - Same verification as stable releases
-  - Updates appcast-prerelease.xml
+### Version Management
 
 #### `version.sh`
 Manages version numbers in Project.swift.
@@ -1007,30 +805,38 @@ Validates appcast XML files for correctness and consistency.
   - Cross-validation between stable and pre-release
 - Shows detailed report with pass/fail for each check
 
-#### `validate-release.sh`
-Pre-flight check before creating a release.
-- Usage: `./scripts/validate-release.sh`
-- **Reports on:**
-  - Git working directory status
-  - Current version and build number
-  - Existing build numbers in appcasts
-  - Build number validity
-  - Recent GitHub releases
-  - Build directory state
-- Provides release readiness summary
+#### `preflight-check.sh`
+Comprehensive pre-flight check before creating a release.
+- Usage: `./scripts/preflight-check.sh`
+- **Validates:**
+  - Git status (clean working directory, branch, sync with remote)
+  - Version and build number configuration
+  - Build number uniqueness and monotonic increase
+  - Required tools (gh, tuist, Sparkle tools, xcbeautify)
+  - GitHub CLI authentication
+  - Code signing certificate availability
+  - Notarization credentials
+  - Sparkle key configuration
+  - Appcast file validity
+- Provides clear pass/fail status for each check
+- Exits with error if any critical checks fail
 
-#### `test-release-workflow.sh`
-Tests the entire release workflow without creating actual releases.
-- Usage: `./scripts/test-release-workflow.sh`
-- **Tests:**
-  - Script availability and permissions
-  - Required dependencies
-  - Version parsing logic
-  - Build number validation
-  - Appcast parsing
-  - Verification scripts
-  - Pre-release suffix extraction
-- Returns success only if all tests pass
+#### `release-auto.sh`
+Automated release script that handles the complete release process.
+- Usage: 
+  - Stable: `./scripts/release-auto.sh stable`
+  - Pre-release: `./scripts/release-auto.sh beta 1`
+- **Process:**
+  1. Runs pre-flight check
+  2. Generates Xcode project
+  3. Builds the app with xcbeautify
+  4. Signs and notarizes
+  5. Creates DMG
+  6. Creates GitHub release
+  7. Updates appcast
+  8. Commits and pushes changes
+- Stops immediately on any error
+- Provides clear progress updates
 
 ### Appcast Management Scripts
 

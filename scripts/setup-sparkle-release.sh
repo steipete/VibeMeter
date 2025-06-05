@@ -66,10 +66,18 @@ print_step "Step 2: Update Project.swift with Sparkle Configuration"
 # Read the current public key
 PUBLIC_KEY=$(cat sparkle_public_key)
 
-print_step "Step 3: Creating GitHub Release Scripts"
+print_step "Step 3: Verifying Release Scripts"
 
-# Create release script
-cat > "$PROJECT_ROOT/scripts/create-github-release.sh" << 'EOF'
+# Check that release scripts exist
+if [[ -f "$PROJECT_ROOT/scripts/release-auto.sh" ]]; then
+    print_success "Release scripts already exist"
+else
+    print_error "Release scripts not found! Please ensure all scripts are present."
+    exit 1
+fi
+
+# Skip to end of the old script creation block
+: << 'SKIP_OLD_SCRIPT_CREATION'
 #!/bin/bash
 
 # GitHub Release Creation Script for VibeMeter
@@ -134,8 +142,9 @@ echo "📡 Updating appcast.xml..."
 echo "✅ GitHub release created successfully!"
 echo "📡 Don't forget to commit and push the updated appcast.xml"
 EOF
+SKIP_OLD_SCRIPT_CREATION
 
-chmod +x "$PROJECT_ROOT/scripts/create-github-release.sh"
+# Scripts are now provided in the repository
 
 # Create appcast update script
 cat > "$PROJECT_ROOT/scripts/update-appcast.sh" << 'EOF'
@@ -281,11 +290,12 @@ cat << SETUP_EOF
    - GitHub CLI: brew install gh
    - Sign into GitHub: gh auth login
 
-5. 🧪 Test local release:
-   ./scripts/release-local.sh
+5. 🧪 Test release readiness:
+   ./scripts/preflight-check.sh
 
 6. 🚀 Create your first GitHub release:
-   ./scripts/create-github-release.sh
+   ./scripts/release-auto.sh stable  # For stable release
+   ./scripts/release-auto.sh beta 1  # For beta release
 
 7. 📡 Host appcast.xml:
    - Commit appcast.xml to your repository
@@ -299,9 +309,12 @@ cat << SETUP_EOF
 📁 FILES CREATED:
 - private/sparkle_private_key (KEEP SECRET!)
 - private/sparkle_public_key
-- scripts/create-github-release.sh
 - scripts/update-appcast.sh
 - scripts/release-local.sh
+
+📁 EXISTING SCRIPTS:
+- scripts/preflight-check.sh (validates release readiness)
+- scripts/release-auto.sh (automated release process)
 
 SETUP_EOF
 

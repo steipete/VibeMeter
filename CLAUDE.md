@@ -48,15 +48,12 @@ xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Deb
 # Build release version
 ./scripts/build.sh --configuration Release
 
-# Create releases (stable or pre-release)
-./scripts/release.sh --stable                    # Create stable release
-./scripts/release.sh --prerelease beta 1         # Create pre-release (beta.1)
-./scripts/release.sh --prerelease alpha 2        # Create pre-release (alpha.2)
-./scripts/release.sh --prerelease rc 1           # Create release candidate
-
-# Individual release scripts (advanced usage)
-./scripts/create-github-release.sh               # Stable release only
-./scripts/create-prerelease.sh beta 1            # Pre-release only
+# Create releases (automated process)
+./scripts/preflight-check.sh                     # Check if ready to release
+./scripts/release-auto.sh stable                 # Create stable release
+./scripts/release-auto.sh beta 1                 # Create pre-release (beta.1)
+./scripts/release-auto.sh alpha 2                # Create pre-release (alpha.2)
+./scripts/release-auto.sh rc 1                   # Create release candidate
 
 # Code sign and notarize (requires Apple Developer credentials)
 ./scripts/sign-and-notarize.sh --sign-and-notarize
