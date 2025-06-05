@@ -97,7 +97,6 @@ jobs:
           -scheme VibeMeter \
           -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
-          -test-iterations 1 \
           -maximum-parallel-testing-workers 1 \
           | xcbeautify
 
