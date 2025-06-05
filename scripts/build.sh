@@ -70,6 +70,14 @@ if [[ ! -d "$APP_PATH" ]]; then
     exit 1
 fi
 
+# Apply Sparkle sandbox fix for Release builds
+if [[ "$CONFIGURATION" == "Release" ]]; then
+    if [ -x "$SCRIPT_DIR/fix-sparkle-sandbox.sh" ]; then
+        echo "Applying Sparkle sandbox fix..."
+        "$SCRIPT_DIR/fix-sparkle-sandbox.sh" "$APP_PATH"
+    fi
+fi
+
 # Sign the app if requested
 if [[ "$SIGN_APP" == true ]]; then
     if [[ -n "${MACOS_SIGNING_CERTIFICATE_P12_BASE64:-}" ]]; then

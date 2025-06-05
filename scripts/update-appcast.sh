@@ -34,6 +34,12 @@ DMG_FILENAME=$(basename "$DMG_PATH")
 # Get current date in RFC 2822 format
 RELEASE_DATE=$(date -R)
 
+# Load GitHub configuration
+CONFIG_FILE="$PROJECT_ROOT/.github-config"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
 # GitHub release URL
 GITHUB_USERNAME="${GITHUB_USERNAME:-steipete}"
 DOWNLOAD_URL="https://github.com/$GITHUB_USERNAME/VibeMeter/releases/download/v$VERSION/$DMG_FILENAME"
@@ -78,7 +84,7 @@ cat > "$APPCAST_FILE" << APPCAST_EOF
                 type="application/octet-stream"
                 sparkle:edSignature="$ED_SIGNATURE"
             />
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>
     </channel>
 </rss>

@@ -11,8 +11,16 @@ set -euo pipefail
 # Add Sparkle tools to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# Load GitHub configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$(dirname "$SCRIPT_DIR")/.github-config"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
 # Configuration
-GITHUB_REPO="steipete/VibeMeter"
+GITHUB_USERNAME="${GITHUB_USERNAME:-steipete}"
+GITHUB_REPO="${GITHUB_USERNAME}/${GITHUB_REPO:-VibeMeter}"
 SPARKLE_PRIVATE_KEY_PATH="private/sparkle_private_key"
 
 # Colors for output
@@ -40,33 +48,28 @@ get_file_size() {
     curl -sI "$url" | grep -i content-length | awk '{print $2}' | tr -d '\r'
 }
 
-# Function to get known signature
-get_known_signature() {
+# Function to check if we have a cached signature
+get_cached_signature() {
     local filename=$1
+    local cache_file="$temp_dir/signatures_cache.txt"
     
-    case "$filename" in
-        "VibeMeter-1.0.0-beta.2.dmg")
-            echo "hEex/hbK8nM5R25DZkVknEDvQAiHR8BjRUYDA3qcdOSX6NUfzuyZQJ9RLF2nEJSuk/EJieMDDRL8zQEr95Z8Dg=="
-            ;;
-        "VibeMeter-1.0.0-beta.1.dmg")
-            echo "E8y7QOGqkalV7cbkvdhp7sY6XTf5fQBgdSQ4DfHlarSNSJH96u13RG8E7udH84EJFfcuNKkyhCaIn7CuPtd1CA=="
-            ;;
-        "VibeMeter-1.0-beta.2.dmg")
-            echo "9ix0MxG6Phd0Se4/WpWlvxX9lp952oGT9/U/4QTHyZbdNfbQjR/6PNV/BMXruTa8Wrzm6RBE1uvftMi40zYcCA=="
-            ;;
-        "VibeMeter-1.0-beta.1.dmg")
-            echo "6mEIF/ao7T2Okla96TkOIq1qitJcPDlaM+3LxpzcWzJg+vIbY0jBoxZcxtzd+JNGArOlwrpKzuiypuZMDzOWCg=="
-            ;;
-        "VibeMeter-0.9.1.dmg")
-            echo "P49hpPy77LD8RA6kgi5G87NUUvuC1tLN7oq70yTIQXHamWmPodpLFkxY0zXXDpuRUHfMwOwheGv7GHj/kD+2Dg=="
-            ;;
-        "VibeMeter-0.9.0.dmg")
-            echo "dAoJFOZiiFXUbK8IjlK+GRgTeto15J4Cvp1/j/jn05TxH9U/VE+5DORgxL1qEvU3JIa46E136p9bI8N93SvFAQ=="
-            ;;
-        *)
-            echo ""
-            ;;
-    esac
+    # Check if cache file exists and has the signature
+    if [ -f "$cache_file" ]; then
+        grep "^$filename:" "$cache_file" | cut -d: -f2 || echo ""
+    else
+        echo ""
+    fi
+}
+
+# Function to cache a signature
+cache_signature() {
+    local filename=$1
+    local signature=$2
+    local cache_file="$temp_dir/signatures_cache.txt"
+    
+    if [ -n "$signature" ] && [ "$signature" != "" ]; then
+        echo "$filename:$signature" >> "$cache_file"
+    fi
 }
 
 # Function to generate EdDSA signature
@@ -74,10 +77,10 @@ generate_signature() {
     local file_path=$1
     local filename=$(basename "$file_path")
     
-    # Check if we have a known signature first
-    local known_sig=$(get_known_signature "$filename")
-    if [ -n "$known_sig" ]; then
-        echo "$known_sig"
+    # Check if we have a cached signature first
+    local cached_sig=$(get_cached_signature "$filename")
+    if [ -n "$cached_sig" ]; then
+        echo "$cached_sig"
         return 0
     fi
     
@@ -168,11 +171,11 @@ create_appcast_item() {
     local dmg_filename=$(basename "$dmg_url")
     local signature=""
     
-    # Check if we have a known signature first
-    local known_sig=$(get_known_signature "$dmg_filename")
-    if [ -n "$known_sig" ]; then
-        signature="$known_sig"
-        print_info "Using known signature for $dmg_filename"
+    # Check if we have a cached signature first
+    local cached_sig=$(get_cached_signature "$dmg_filename")
+    if [ -n "$cached_sig" ]; then
+        signature="$cached_sig"
+        print_info "Using cached signature for $dmg_filename"
     else
         # We'll download DMG once later for both signature and build number
         signature=""
@@ -191,6 +194,10 @@ create_appcast_item() {
     # Generate signature if we haven't already
     if [ -z "$signature" ]; then
         signature=$(generate_signature "$temp_dmg")
+        # Cache the signature for future runs
+        if [ -n "$signature" ]; then
+            cache_signature "$dmg_filename" "$signature"
+        fi
     fi
     
     # Extract build number using helper script
@@ -198,6 +205,8 @@ create_appcast_item() {
         build_number=$(scripts/extract-build-number.sh "$temp_dmg" 2>/dev/null || echo "")
     elif [ -x "$(dirname "$0")/extract-build-number.sh" ]; then
         build_number=$("$(dirname "$0")/extract-build-number.sh" "$temp_dmg" 2>/dev/null || echo "")
+    else
+        print_warning "extract-build-number.sh not found - build numbers may be incorrect"
     fi
     
     # Fallback to version-based guessing if extraction fails

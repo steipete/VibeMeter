@@ -1,0 +1,8 @@
+# GitHub Configuration for VibeMeter
+# This file contains configuration values for the release scripts
+
+# GitHub username/organization for the repository
+GITHUB_USERNAME="steipete"
+
+# Repository name
+GITHUB_REPO="VibeMeter"

@@ -4,7 +4,21 @@ This document describes the process for creating and publishing a new release of
 
 ## 🚀 Automated Release (Recommended)
 
-The simplest way to create a release is using the automated scripts:
+The simplest way to create a release is using the automated scripts.
+
+### What the Automation Does
+
+The release automation handles these complex tasks automatically:
+1. **Xcode Project Generation** - Regenerates if Project.swift changed
+2. **Build Number Validation** - Ensures unique, incrementing build numbers
+3. **Sparkle XPC Services** - Applies sandbox fixes automatically
+4. **Code Signing & Notarization** - Full signing with correct entitlements
+5. **DMG Creation** - Creates and signs distribution disk image
+6. **GitHub Release** - Creates release with proper tagging
+7. **Appcast Updates** - Extracts real build numbers from DMGs
+8. **Git Management** - Commits and pushes all changes
+
+### Quick Start
 
 ### 1. Pre-flight Check
 ```bash
@@ -76,6 +90,65 @@ The automated script will:
 ./scripts/version.sh --minor               # Bump minor version (1.0.0 -> 1.1.0)
 ./scripts/version.sh --major               # Bump major version (1.0.0 -> 2.0.0)
 ```
+
+## 🎯 Critical Learnings from Beta Testing
+
+### Sparkle Integration for Sandboxed Apps
+
+Through extensive beta testing, we discovered that getting Sparkle to work in a sandboxed macOS app requires precise configuration:
+
+1. **XPC Service Bundle Identifiers Must Match Convention**
+   ```
+   com.steipete.vibemeter-spks  # Downloader service (NOT -spkd!)
+   com.steipete.vibemeter-spki  # Installer service
+   ```
+
+2. **XPC Services Must Be Relocated**
+   - Copy from: `Sparkle.framework/Versions/B/XPCServices/`
+   - To: `VibeMeter.app/Contents/XPCServices/`
+   - Update their Info.plist bundle identifiers
+   - Re-sign with sandbox entitlements
+
+3. **SparkleUpdaterManager Requirements**
+   - Implement all delegate methods, especially `standardUserDriverWillHandleShowingUpdate`
+   - Add update check synchronization to prevent "sessionInProgress" errors
+   - Implement gentle reminders for background apps
+
+4. **Build Number Management**
+   - Build numbers must always increase across ALL releases
+   - The appcast generator now extracts actual build numbers from DMGs
+   - No more hardcoded build number guessing
+
+### Automation Improvements Made
+
+1. **fix-sparkle-sandbox.sh** - Automatically configures XPC services
+2. **extract-build-number.sh** - Reads real build numbers from DMGs
+3. **release-auto.sh** - Handles Xcode project changes and applies all fixes
+4. **generate-appcast.sh** - Uses actual build numbers instead of guessing
+
+### Script Readiness for Next Release
+
+All scripts have been updated and are ready for the next release cycle:
+
+1. **Sparkle Fix Applied Automatically**
+   - In `build.sh` for Release builds
+   - In `release-auto.sh` after build step
+   - XPC services will use correct bundle IDs (`-spks` and `-spki`)
+
+2. **Build Numbers Extracted Correctly**
+   - `generate-appcast.sh` uses `extract-build-number.sh`
+   - No more hardcoded signatures or build numbers
+   - Signatures are cached for performance
+
+3. **Configuration Centralized**
+   - GitHub username/repo in `.github-config`
+   - Consistent minimum system version (15.0)
+   - No more hardcoded values in scripts
+
+4. **Error Handling Improved**
+   - Missing dependency warnings
+   - Better fallback mechanisms
+   - Clear error messages
 
 ## ⚠️ CRITICAL: Common Release Pitfalls
 
@@ -1108,6 +1181,35 @@ codesign -d --entitlements :- /path/to/VibeMeter.app/Contents/Frameworks/Sparkle
 ### Sparkle XPC Services for Sandboxed Apps
 
 **CRITICAL**: For Sparkle to work in a sandboxed app, XPC services must be properly configured.
+
+#### Lessons Learned from Beta Testing
+
+During the development of beta releases, we discovered several critical requirements for Sparkle in sandboxed apps:
+
+1. **XPC Service Bundle ID Naming Convention**
+   - Sparkle expects specific suffixes: `-spks` (Downloader) and `-spki` (Installer)
+   - NOT `-spkd` as some documentation might suggest
+   - Full bundle IDs: `com.steipete.vibemeter-spks` and `com.steipete.vibemeter-spki`
+
+2. **XPC Services Must Be in App Bundle**
+   - Services cannot run from within Sparkle.framework in sandboxed apps
+   - Must be copied to `VibeMeter.app/Contents/XPCServices/`
+   - Must have their bundle identifiers updated to match your app
+
+3. **Delegate Method Requirements**
+   - Must implement `standardUserDriverWillHandleShowingUpdate` to avoid errors
+   - Implement gentle reminders for background apps to avoid warnings
+   - Handle multiple update check prevention with state tracking
+
+4. **Common Errors and Solutions**
+   - `failed to do a bootstrap look-up: xpc_error=[3: No such process]`
+     - Solution: XPC services not found or wrong bundle IDs
+   - `Error: Failed to gain authorization required to update target`
+     - Solution: XPC services need proper entitlements and bundle IDs
+   - `Error: -checkForUpdatesInBackground called but .sessionInProgress == YES`
+     - Solution: Implement update check synchronization
+   - `Delegate is handling showing scheduled update but does not implement standardUserDriverWillHandleShowingUpdate`
+     - Solution: Add the missing delegate method
 
 #### The Problem
 When an app is sandboxed, Sparkle's XPC services (Downloader.xpc and Installer.xpc) cannot communicate with the main app unless they:
