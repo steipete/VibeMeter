@@ -148,12 +148,12 @@ Then use the automated release script:
 
 ```bash
 # Create stable release
-./scripts/release-auto.sh stable
+./scripts/release.sh stable
 
 # Create pre-releases  
-./scripts/release-auto.sh beta 1     # Creates beta.1
-./scripts/release-auto.sh alpha 2    # Creates alpha.2
-./scripts/release-auto.sh rc 1       # Creates rc.1
+./scripts/release.sh beta 1     # Creates beta.1
+./scripts/release.sh alpha 2    # Creates alpha.2
+./scripts/release.sh rc 1       # Creates rc.1
 ```
 
 #### Complete Release Workflow
@@ -179,10 +179,10 @@ Then use the automated release script:
 3. **Create Release:**
    ```bash
    # For stable release
-   ./scripts/release-auto.sh stable
+   ./scripts/release.sh stable
    
    # For pre-release
-   ./scripts/release-auto.sh beta 1
+   ./scripts/release.sh beta 1
    ```
 
 The automated script handles building, signing, notarization, DMG creation, GitHub release, appcast updates, and git commits.
@@ -234,7 +234,7 @@ To participate:
 | Script | Purpose | Usage |
 |--------|---------|-------|
 | `preflight-check.sh` | Validate release readiness | `./scripts/preflight-check.sh` |
-| `release-auto.sh` | Automated release process | `./scripts/release-auto.sh stable` |
+| `release.sh` | Automated release process | `./scripts/release.sh stable` |
 | `version.sh` | Version management | `./scripts/version.sh --patch` |
 | `update-appcast.sh` | Update appcast files | `./scripts/update-appcast.sh 0.9.2 3 dmg-path` |
 | `verify-app.sh` | Verify app signing/notarization | `./scripts/verify-app.sh VibeMeter.app` |

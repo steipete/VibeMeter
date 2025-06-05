@@ -1,6 +1,15 @@
 #!/bin/bash
 
-# Script to run SwiftLint on the project
+# =============================================================================
+# VibeMeter Code Linting Script
+# =============================================================================
+#
+# Runs SwiftLint analysis on the entire project to identify potential issues,
+# style violations, and code quality problems.
+#
+# USAGE: ./scripts/lint.sh
+# DEPENDENCIES: SwiftLint (brew install swiftlint)
+# =============================================================================
 
 set -e
 

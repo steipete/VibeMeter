@@ -20,6 +20,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>IS_PRERELEASE_BUILD</key>
+	<string>$(IS_PRERELEASE_BUILD)</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>

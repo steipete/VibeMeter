@@ -1,7 +1,69 @@
 #!/bin/bash
 
-# Automated Release Script for VibeMeter
-# This script handles the complete release process
+# =============================================================================
+# VibeMeter Automated Release Script
+# =============================================================================
+#
+# This script handles the complete end-to-end release process for VibeMeter,
+# including building, signing, notarization, DMG creation, GitHub releases,
+# and appcast updates. It supports both stable and pre-release versions.
+#
+# USAGE:
+#   ./scripts/release.sh <type> [number]
+#
+# ARGUMENTS:
+#   type     Release type: stable, beta, alpha, rc
+#   number   Pre-release number (required for beta/alpha/rc)
+#
+# FEATURES:
+#   - Complete build and release automation
+#   - Automatic IS_PRERELEASE_BUILD flag handling
+#   - Code signing and notarization
+#   - DMG creation with signing
+#   - GitHub release creation with assets
+#   - Appcast XML generation and updates
+#   - Git tag management and commit automation
+#   - Comprehensive error checking and validation
+#
+# ENVIRONMENT VARIABLES:
+#   APP_STORE_CONNECT_API_KEY_P8    App Store Connect API key (for notarization)
+#   APP_STORE_CONNECT_KEY_ID        API Key ID
+#   APP_STORE_CONNECT_ISSUER_ID     API Key Issuer ID
+#
+# DEPENDENCIES:
+#   - preflight-check.sh (validates release readiness)
+#   - generate-xcproj.sh (Tuist project generation)
+#   - build.sh (application building)
+#   - sign-and-notarize.sh (code signing and notarization)
+#   - create-dmg.sh (DMG creation)
+#   - generate-appcast.sh (appcast updates)
+#   - GitHub CLI (gh) for release creation
+#   - Sparkle tools (sign_update) for EdDSA signatures
+#
+# RELEASE PROCESS:
+#   1. Pre-flight validation (git status, tools, certificates)
+#   2. Xcode project generation and commit if needed
+#   3. Application building with appropriate flags
+#   4. Code signing and notarization
+#   5. DMG creation and signing
+#   6. GitHub release creation with assets
+#   7. Appcast XML generation and updates
+#   8. Git commits and pushes
+#
+# EXAMPLES:
+#   ./scripts/release.sh stable         # Create stable release
+#   ./scripts/release.sh beta 1         # Create beta.1 release
+#   ./scripts/release.sh alpha 2        # Create alpha.2 release
+#   ./scripts/release.sh rc 1           # Create rc.1 release
+#
+# OUTPUT:
+#   - GitHub release at: https://github.com/steipete/VibeMeter/releases
+#   - Signed DMG file in build/ directory
+#   - Updated appcast.xml and appcast-prerelease.xml files
+#   - Git commits and tags pushed to repository
+#
+# =============================================================================
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

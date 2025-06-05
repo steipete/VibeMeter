@@ -1,9 +1,43 @@
 #!/bin/bash
 
-set -euo pipefail
+# =============================================================================
+# VibeMeter Build Script
+# =============================================================================
+# 
+# This script builds the VibeMeter application using xcodebuild with optional
+# code signing support. It includes comprehensive error checking and reports
+# build details including the IS_PRERELEASE_BUILD flag status.
+#
+# USAGE:
+#   ./scripts/build.sh [--configuration Debug|Release] [--sign]
+#
+# ARGUMENTS:
+#   --configuration <Debug|Release>  Build configuration (default: Release)
+#   --sign                          Sign the app after building (requires cert)
+#
+# ENVIRONMENT VARIABLES:
+#   IS_PRERELEASE_BUILD=YES|NO      Sets pre-release flag in Info.plist
+#   MACOS_SIGNING_CERTIFICATE_P12_BASE64  CI certificate for signing
+#
+# OUTPUTS:
+#   - Built app at: build/Build/Products/<Configuration>/VibeMeter.app
+#   - Version and build number information
+#   - IS_PRERELEASE_BUILD flag status verification
+#
+# DEPENDENCIES:
+#   - Xcode and command line tools
+#   - xcbeautify (optional, for prettier output)
+#   - Generated Xcode project (run generate-xcproj.sh first)
+#
+# EXAMPLES:
+#   ./scripts/build.sh                           # Release build
+#   ./scripts/build.sh --configuration Debug     # Debug build
+#   ./scripts/build.sh --sign                    # Release build with signing
+#   IS_PRERELEASE_BUILD=YES ./scripts/build.sh   # Beta build
+#
+# =============================================================================
 
-# Script to build VibeMeter
-# Usage: ./scripts/build.sh [--configuration Debug|Release] [--sign]
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

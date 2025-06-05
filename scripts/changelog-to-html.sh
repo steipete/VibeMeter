@@ -1,6 +1,29 @@
 #!/bin/bash
 
-# changelog-to-html.sh - Convert changelog section to HTML for Sparkle appcast
+# =============================================================================
+# VibeMeter Changelog to HTML Converter
+# =============================================================================
+#
+# Converts specific version sections from CHANGELOG.md to HTML format for
+# inclusion in Sparkle appcast descriptions. Supports markdown formatting
+# including headers, lists, bold text, code, and links.
+#
+# USAGE:
+#   ./scripts/changelog-to-html.sh <version> [changelog_file]
+#
+# ARGUMENTS:
+#   version         Version to extract (e.g., "1.0.0")
+#   changelog_file  Path to changelog file (default: CHANGELOG.md)
+#
+# OUTPUT:
+#   HTML formatted changelog section suitable for Sparkle appcast
+#
+# EXAMPLES:
+#   ./scripts/changelog-to-html.sh 1.0.0
+#   ./scripts/changelog-to-html.sh 0.9.1 docs/CHANGELOG.md
+#
+# =============================================================================
+
 set -euo pipefail
 
 VERSION="${1:-}"

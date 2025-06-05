@@ -1,7 +1,46 @@
 #!/bin/bash
 
-# Verify IS_PRERELEASE_BUILD System Script
-# This script verifies that the automatic update channel detection system is working correctly
+# =============================================================================
+# VibeMeter IS_PRERELEASE_BUILD System Verification Script
+# =============================================================================
+#
+# This script comprehensively verifies that the automatic update channel 
+# detection system is properly configured and functioning. It ensures that
+# beta builds automatically default to the pre-release update channel.
+#
+# USAGE:
+#   ./scripts/verify-prerelease-system.sh
+#
+# VERIFICATION CHECKS:
+#   - Project.swift IS_PRERELEASE_BUILD configuration
+#   - UpdateChannel.swift flag detection logic
+#   - Release script environment variable setup
+#   - AppBehaviorSettingsManager integration
+#   - Build system environment variable handling
+#   - Runtime Info.plist flag verification
+#   - Documentation completeness
+#
+# FEATURES:
+#   - Configuration validation across all components
+#   - Build system integration testing
+#   - Runtime verification of existing builds
+#   - Documentation completeness checking
+#   - Clear pass/fail reporting with fix suggestions
+#
+# EXIT CODES:
+#   0  All checks passed - system properly configured
+#   1  Some checks failed - configuration issues detected
+#
+# DEPENDENCIES:
+#   - Xcode and xcodebuild (for build system testing)
+#   - Generated Xcode workspace (optional, for full testing)
+#   - Existing built apps (optional, for runtime testing)
+#
+# EXAMPLES:
+#   ./scripts/verify-prerelease-system.sh
+#
+# =============================================================================
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

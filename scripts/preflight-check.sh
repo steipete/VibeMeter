@@ -1,7 +1,47 @@
 #!/bin/bash
 
-# Pre-flight Check Script for VibeMeter Releases
-# This script validates everything is ready for a release
+# =============================================================================
+# VibeMeter Pre-flight Check Script
+# =============================================================================
+#
+# This script validates that everything is ready for a VibeMeter release by
+# performing comprehensive checks on git status, build configuration, tools,
+# certificates, and the IS_PRERELEASE_BUILD system.
+#
+# USAGE:
+#   ./scripts/preflight-check.sh
+#
+# VALIDATION CHECKS:
+#   - Git repository status (clean working tree, main branch, synced)
+#   - Version information and build number validation
+#   - Required development tools (Tuist, GitHub CLI, Sparkle tools)
+#   - Code signing certificates and notarization credentials
+#   - Sparkle configuration (keys, appcast files)
+#   - IS_PRERELEASE_BUILD system configuration
+#
+# EXIT CODES:
+#   0  All checks passed - ready to release
+#   1  Some checks failed - fix issues before releasing
+#
+# DEPENDENCIES:
+#   - git (repository management)
+#   - gh (GitHub CLI)
+#   - tuist (project generation)
+#   - sign_update (Sparkle EdDSA signing)
+#   - xcbeautify (optional, build output formatting)
+#   - security (keychain access for certificates)
+#   - xmllint (appcast validation)
+#
+# ENVIRONMENT VARIABLES:
+#   APP_STORE_CONNECT_API_KEY_P8    App Store Connect API key (for notarization)
+#   APP_STORE_CONNECT_KEY_ID        API Key ID
+#   APP_STORE_CONNECT_ISSUER_ID     API Key Issuer ID
+#
+# EXAMPLES:
+#   ./scripts/preflight-check.sh
+#
+# =============================================================================
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

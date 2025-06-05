@@ -1,6 +1,15 @@
 #!/bin/bash
 
-# Script to format all Swift files in the project
+# =============================================================================
+# VibeMeter Code Formatting Script
+# =============================================================================
+#
+# Formats all Swift files in the project using SwiftFormat with project-specific
+# configuration. This ensures consistent code style across the entire codebase.
+#
+# USAGE: ./scripts/format.sh
+# DEPENDENCIES: SwiftFormat (brew install swiftformat)
+# =============================================================================
 
 set -e
 

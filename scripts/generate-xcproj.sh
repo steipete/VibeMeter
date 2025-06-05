@@ -1,5 +1,41 @@
 #!/bin/bash
 
+# =============================================================================
+# VibeMeter Xcode Project Generation Script
+# =============================================================================
+#
+# This script generates the Xcode project and workspace using Tuist, with
+# automatic patches applied for Swift 6 Sendable compliance. It's essential
+# to run this script after any changes to Project.swift or Tuist.swift.
+#
+# USAGE:
+#   ./scripts/generate-xcproj.sh
+#
+# FEATURES:
+#   - Quits Xcode before generation (to avoid conflicts)
+#   - Runs Tuist project generation
+#   - Applies Swift 6 Sendable compliance patches
+#   - Opens the generated workspace in Xcode
+#
+# DEPENDENCIES:
+#   - Tuist (project generation tool)
+#   - Xcode (for opening the workspace)
+#
+# FILES GENERATED:
+#   - VibeMeter.xcodeproj/ (Xcode project)
+#   - VibeMeter.xcworkspace/ (Xcode workspace)
+#   - Derived/ (generated sources and Info.plist files)
+#
+# EXAMPLES:
+#   ./scripts/generate-xcproj.sh
+#
+# NOTES:
+#   - Always run this after modifying Project.swift or Tuist.swift
+#   - The script includes patches for Swift 6 compliance
+#   - Generated files are partially tracked in git for CI compatibility
+#
+# =============================================================================
+
 set -e
 
 # Change to the project directory
