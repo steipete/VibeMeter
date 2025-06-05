@@ -174,33 +174,49 @@ create_appcast_item() {
         signature="$known_sig"
         print_info "Using known signature for $dmg_filename"
     else
-        # Download DMG temporarily to generate signature
-        local temp_dmg="/tmp/$dmg_filename"
-        if [ ! -f "$temp_dmg" ]; then
-            print_info "Downloading DMG for signature generation..."
-            curl -sL "$dmg_url" -o "$temp_dmg" 2>/dev/null
-        fi
-        
-        signature=$(generate_signature "$temp_dmg")
-        rm -f "$temp_dmg"
+        # We'll download DMG once later for both signature and build number
+        signature=""
     fi
     
-    # Extract build number from the DMG filename or use a counter
+    # Extract build number from the DMG
     local build_number=""
-    if [[ $(basename "$dmg_url") =~ -([0-9]+)\.dmg$ ]]; then
-        build_number="${BASH_REMATCH[1]}"
-    else
-        # Try to extract from version string
+    local temp_dmg="/tmp/$dmg_filename"
+    
+    # Download DMG if not already present (for both signature and build number)
+    if [ ! -f "$temp_dmg" ]; then
+        print_info "Downloading DMG for analysis..."
+        curl -sL "$dmg_url" -o "$temp_dmg" 2>/dev/null
+    fi
+    
+    # Generate signature if we haven't already
+    if [ -z "$signature" ]; then
+        signature=$(generate_signature "$temp_dmg")
+    fi
+    
+    # Extract build number using helper script
+    if [ -x "scripts/extract-build-number.sh" ]; then
+        build_number=$(scripts/extract-build-number.sh "$temp_dmg" 2>/dev/null || echo "")
+    elif [ -x "$(dirname "$0")/extract-build-number.sh" ]; then
+        build_number=$("$(dirname "$0")/extract-build-number.sh" "$temp_dmg" 2>/dev/null || echo "")
+    fi
+    
+    # Fallback to version-based guessing if extraction fails
+    if [ -z "$build_number" ]; then
+        print_warning "Could not extract build number from DMG, using fallback"
         case "$version_string" in
             *-beta.1) build_number="100" ;;
             *-beta.2) build_number="101" ;;
             *-beta.3) build_number="102" ;;
+            *-beta.4) build_number="103" ;;
             *-rc.1) build_number="110" ;;
             *-rc.2) build_number="111" ;;
             1.0) build_number="200" ;;
             *) build_number="1" ;;
         esac
     fi
+    
+    # Clean up temp DMG
+    rm -f "$temp_dmg"
     
     # Format the description
     local description="<h2>$title</h2>"

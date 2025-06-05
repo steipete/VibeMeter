@@ -107,6 +107,16 @@ fi
 
 echo "✅ Build complete"
 
+# Step 3.5: Apply Sparkle sandbox fix
+echo ""
+echo "📋 Step 3.5/7: Applying Sparkle sandbox fix..."
+if [ -x "$SCRIPT_DIR/fix-sparkle-sandbox.sh" ]; then
+    "$SCRIPT_DIR/fix-sparkle-sandbox.sh" "$APP_PATH"
+    echo "✅ Sparkle XPC services configured for sandbox"
+else
+    echo "⚠️  fix-sparkle-sandbox.sh not found, skipping"
+fi
+
 # Step 4: Sign and notarize
 echo ""
 echo "📋 Step 4/7: Signing and notarizing..."

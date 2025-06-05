@@ -1105,6 +1105,52 @@ codesign -d --entitlements :- /path/to/VibeMeter.app/Contents/Frameworks/Sparkle
 # "com.apple.security.files.user-selected.read-write" => 1
 ```
 
+### Sparkle XPC Services for Sandboxed Apps
+
+**CRITICAL**: For Sparkle to work in a sandboxed app, XPC services must be properly configured.
+
+#### The Problem
+When an app is sandboxed, Sparkle's XPC services (Downloader.xpc and Installer.xpc) cannot communicate with the main app unless they:
+1. Are located in the app bundle's `Contents/XPCServices/` directory
+2. Have bundle identifiers that match the mach-lookup exceptions in entitlements
+3. Are signed with proper sandbox entitlements
+
+#### The Solution
+The `fix-sparkle-sandbox.sh` script (integrated into the build process) handles this:
+
+```bash
+# Automatically applied during notarization
+./scripts/fix-sparkle-sandbox.sh /path/to/VibeMeter.app
+```
+
+This script:
+1. Copies XPC services from Sparkle.framework to app's XPCServices directory
+2. Renames them to match entitlements:
+   - `Downloader.xpc` → `com.steipete.vibemeter-spks.xpc`
+   - `Installer.xpc` → `com.steipete.vibemeter-spkd.xpc`
+3. Updates their Info.plist bundle identifiers
+4. Signs them with sandbox entitlements
+
+#### Required Entitlements
+The main app's entitlements must include:
+```xml
+<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+<array>
+    <string>com.steipete.vibemeter-spks</string>
+    <string>com.steipete.vibemeter-spkd</string>
+</array>
+```
+
+#### Troubleshooting Sparkle Sandbox Issues
+If you see errors like:
+- `failed to do a bootstrap look-up: xpc_error=[3: No such process]`
+- `Error: Failed to gain authorization required to update target`
+
+Check:
+1. XPC services exist: `ls -la /path/to/VibeMeter.app/Contents/XPCServices/`
+2. Bundle IDs are correct: `plutil -p /path/to/VibeMeter.app/Contents/XPCServices/*/Contents/Info.plist | grep CFBundleIdentifier`
+3. Services are signed: `codesign -dv /path/to/VibeMeter.app/Contents/XPCServices/*`
+
 ### Sandboxing Evolution
 
 VibeMeter v1.0.0 successfully enabled full app sandboxing after resolving Sparkle XPC service issues.
