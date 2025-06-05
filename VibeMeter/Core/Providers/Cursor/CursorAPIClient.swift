@@ -14,7 +14,7 @@ actor CursorAPIClient {
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .useDefaultKeys
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
 
