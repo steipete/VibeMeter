@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.3] - 2025-06-05
+
 ### 🐛 Bug Fixes
 - Fixed invoice fetching for Cursor users without teams - teamId is now optional in API requests
+- Fixed incorrect coding key for startOfMonth, causing failure to decode usage (#16)
+- Fixed CI test execution by removing invalid -test-iterations parameter
+- Fixed API response handling for Individual users (empty response object)
+
+### 🔧 Improvements
+- Replaced mock data with actual API responses for better testing accuracy
+- Improved error handling for team ID fallback (-1 for missing teams)
+- Enhanced CI workflow permissions for external PR comments (#18)
+- Enabled silent project regeneration without Xcode restart
+
+### 📝 Documentation
+- Added link to code signing guide in scripts README
 
 ## [1.0.0-beta.2] - 2025-06-05
 
