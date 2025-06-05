@@ -168,18 +168,18 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     // MARK: Private
 
     private var isCheckingForUpdates = false
-    
+
     private func scheduleStartupUpdateCheck() {
         Task { @MainActor in
             // Wait a moment for the app to finish launching before checking
             try? await Task.sleep(for: .seconds(2))
-            
+
             // Avoid multiple simultaneous update checks
             guard !isCheckingForUpdates else {
                 Self.staticLogger.info("Update check already in progress, skipping startup check")
                 return
             }
-            
+
             Self.staticLogger.info("Checking for updates on startup")
             isCheckingForUpdates = true
             self.updaterController.updater.checkForUpdatesInBackground()
@@ -194,7 +194,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         Task { @MainActor in
             self.isCheckingForUpdates = false
         }
-        
+
         if let error = error as NSError? {
             Self.staticLogger
                 .error(
@@ -280,10 +280,14 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
     public nonisolated func standardUserDriverDidShowModalAlert() {
         Self.staticLogger.debug("Sparkle did show modal alert")
     }
-    
+
     // Called when about to show update
-    public nonisolated func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
-        Self.staticLogger.info("Will handle showing update: \(handleShowingUpdate) for version \(update.displayVersionString)")
+    public nonisolated func standardUserDriverWillHandleShowingUpdate(
+        _ handleShowingUpdate: Bool,
+        forUpdate update: SUAppcastItem,
+        state _: SPUUserUpdateState) {
+        Self.staticLogger
+            .info("Will handle showing update: \(handleShowingUpdate) for version \(update.displayVersionString)")
     }
 
     // MARK: - Gentle Reminders Implementation

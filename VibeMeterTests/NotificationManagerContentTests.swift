@@ -151,9 +151,13 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.locale = Locale(identifier: "en_US")
+        let spendingFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: currentSpending)) ?? "")"
+        let limitFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: limitAmount)) ?? "")"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Alert ⚠️"
@@ -176,9 +180,13 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let precision = .number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))
-        let spendingFormatted = "\(symbol)\(currentSpending.formatted(precision))"
-        let limitFormatted = "\(symbol)\(limitAmount.formatted(precision))"
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.locale = Locale(identifier: "en_US")
+        let spendingFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: currentSpending)) ?? "")"
+        let limitFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: limitAmount)) ?? "")"
 
         let content = UNMutableNotificationContent()
         content.title = "Spending Limit Reached! 🚨"

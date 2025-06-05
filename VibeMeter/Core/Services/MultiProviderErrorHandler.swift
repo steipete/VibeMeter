@@ -38,7 +38,10 @@ final class MultiProviderErrorHandler: Sendable {
                 userSessionData: userSessionData,
                 spendingData: spendingData)
         case let providerError as ProviderError where providerError == .rateLimitExceeded:
-            updatedErrors = handleRateLimitError(for: provider, spendingData: spendingData, refreshErrors: updatedErrors)
+            updatedErrors = handleRateLimitError(
+                for: provider,
+                spendingData: spendingData,
+                refreshErrors: updatedErrors)
         case let retryableError as NetworkRetryHandler.RetryableError:
             updatedErrors = handleNetworkError(
                 for: provider,
