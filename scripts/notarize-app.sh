@@ -156,6 +156,14 @@ sign_app_bundle() {
 
 log "Performing deep signing with proper Sparkle framework handling..."
 
+# 0. Fix Sparkle XPC services for sandbox
+log "Fixing Sparkle XPC services for sandboxed operation..."
+if [ -x "$SCRIPT_DIR/fix-sparkle-sandbox.sh" ]; then
+    "$SCRIPT_DIR/fix-sparkle-sandbox.sh" "$APP_BUNDLE" || log "Warning: Sparkle sandbox fix failed (continuing anyway)"
+else
+    log "Warning: fix-sparkle-sandbox.sh not found or not executable"
+fi
+
 # 1. Sign XPC services first (they need special entitlements)
 log "Signing XPC services..."
 find "$APP_BUNDLE/Contents" -name "*.xpc" -type d | while read xpc; do
