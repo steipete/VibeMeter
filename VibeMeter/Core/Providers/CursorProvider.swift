@@ -64,10 +64,6 @@ public actor CursorProvider: ProviderProtocol {
             await getTeamId()
         }
 
-        // Cursor API requires a team ID for invoice requests
-        // guard let finalTeamId = effectiveTeamId else {
-        //     throw ProviderError.teamIdNotSet
-        // }
 
         return try await resilienceManager.executeWithResilience {
             let response = try await self.apiClient.fetchInvoice(
