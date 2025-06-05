@@ -17,7 +17,7 @@ let project = Project(
         base: [
             "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "COMBINE_HIDPI_IMAGES": true,
-            "CURRENT_PROJECT_VERSION": "103",
+            "CURRENT_PROJECT_VERSION": "104",
             "CODE_SIGN_STYLE": "Automatic",
             "DEVELOPMENT_TEAM": "Y5PE65HELJ",
             "ENABLE_HARDENED_RUNTIME": true,
@@ -98,6 +98,8 @@ let project = Project(
                 "SUCheckAtStartup": true,
                 "SUEnableInstallerLauncherService": true,
                 "SUEnableDownloaderService": false,
+                // This will be set to true by release script for pre-release builds
+                "IS_PRERELEASE_BUILD": "$(IS_PRERELEASE_BUILD)",
             ]),
             sources: [
                 "VibeMeter/App/**/*.swift",

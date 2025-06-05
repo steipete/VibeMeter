@@ -50,7 +50,14 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
 
     /// Determines if the current app version suggests this channel should be default
     public static func defaultChannel(for appVersion: String) -> UpdateChannel {
-        // If the current version contains beta, alpha, or rc, default to prerelease
+        // First check if this build was marked as a pre-release during build time
+        if let isPrereleaseValue = Bundle.main.object(forInfoDictionaryKey: "IS_PRERELEASE_BUILD"),
+           let isPrerelease = isPrereleaseValue as? Bool,
+           isPrerelease {
+            return .prerelease
+        }
+        
+        // Otherwise, check if the version string contains pre-release keywords
         let prereleaseKeywords = ["beta", "alpha", "rc", "pre", "dev"]
         let lowercaseVersion = appVersion.lowercased()
 
