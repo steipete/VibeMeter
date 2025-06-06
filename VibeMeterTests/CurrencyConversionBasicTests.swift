@@ -39,7 +39,7 @@ struct CurrencyConversionBasicTests {
         
         // Then
         let tolerance = testCase.expected.magnitude < 1.0 ? 0.0001 : 0.01
-        #expect(abs(result - testCase.expected) < tolerance, "Failed: \(testCase.description)")
+        #expect(abs(result - testCase.expected) < tolerance)
     }
     
     // MARK: - Edge Case Tests
@@ -86,9 +86,8 @@ struct CurrencyConversionBasicTests {
         let result = CurrencyConversionHelper.formatAmount(testCase.amount, currencySymbol: testCase.symbol)
         
         // Then
-        #expect(result.contains(testCase.symbol), "Should contain currency symbol: \(testCase.description)")
-        #expect(result.contains(String(format: "%.2f", abs(testCase.amount)).replacingOccurrences(of: ".00", with: "")), 
-                "Should contain formatted amount: \(testCase.description)")
+        #expect(result.contains(testCase.symbol))
+        #expect(result.contains(String(format: "%.2f", abs(testCase.amount)).replacingOccurrences(of: ".00", with: "")))
     }
     
     // MARK: - Locale-Specific Formatting Tests
@@ -107,8 +106,8 @@ struct CurrencyConversionBasicTests {
         let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: symbol, locale: locale)
         
         // Then
-        #expect(result.contains(symbol), "Should format with correct symbol: \(description)")
-        #expect(!result.isEmpty, "Should produce non-empty result: \(description)")
+        #expect(result.contains(symbol))
+        #expect(!result.isEmpty)
     }
     
     // MARK: - Monthly Limit Calculation Tests
@@ -125,7 +124,7 @@ struct CurrencyConversionBasicTests {
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
         
         // Then
-        #expect(abs(result - expectedMonthly) < 0.01, "Monthly calculation failed: \(description)")
+        #expect(abs(result - expectedMonthly) < 0.01)
     }
     
     // MARK: - Performance Tests

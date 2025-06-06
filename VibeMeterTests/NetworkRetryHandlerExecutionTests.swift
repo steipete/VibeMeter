@@ -61,7 +61,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.networkTimeout
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then - Should retry maxRetries times
             #expect(attemptCount == 4) // 1 initial + 3 retries
@@ -79,7 +79,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
@@ -97,7 +97,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.serverError(statusCode: 404)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then - Should not retry 4xx errors
             #expect(attemptCount == 1)
@@ -120,7 +120,7 @@ struct NetworkRetryHandlerExecutionTests {
                 }
                 throw NetworkRetryHandler.RetryableError.connectionError
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then
             let elapsed = Date().timeIntervalSince(startTime)
@@ -142,7 +142,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw URLError(.timedOut)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
@@ -160,7 +160,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw URLError(.networkConnectionLost)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
@@ -178,7 +178,7 @@ struct NetworkRetryHandlerExecutionTests {
                 attemptCount += 1
                 throw URLError(.badURL)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then
             #expect(attemptCount == 1) // Should not retry
@@ -201,7 +201,7 @@ struct NetworkRetryHandlerExecutionTests {
                 shouldRetry: { error in
                     error is CustomError
                 })
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then - Should retry custom error
             #expect(attemptCount == 4) // 1 initial + 3 retries
@@ -221,7 +221,7 @@ struct NetworkRetryHandlerExecutionTests {
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 },
                 shouldRetry: { _ in false })
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Then - Should not retry even for normally retryable errors
             #expect(attemptCount == 1)

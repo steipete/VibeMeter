@@ -134,7 +134,7 @@ struct MultiProviderDataOrchestratorTests {
         if let cursorData = spendingData.getSpendingData(for: .cursor) {
             #expect(abs((cursorData.currentSpendingUSD ?? 0) - 123.45) < 0.01)
         } else {
-            Issue.record("Should have spending data for Cursor")
+            Issue.record("Expected condition not met")
         }
     }
 

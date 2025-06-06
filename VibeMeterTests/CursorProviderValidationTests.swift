@@ -87,11 +87,11 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            Issue.record("Should have thrown rate limit error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             #expect(error == .rateLimitExceeded)
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 
@@ -110,11 +110,11 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            Issue.record("Should have thrown service unavailable error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             #expect(error == .serviceUnavailable)
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 
@@ -135,15 +135,15 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            Issue.record("Should have thrown decoding error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             if case .decodingError = error {
                 // Expected
             } else {
-                Issue.record("Expected decoding error, got \(error)")
+                Issue.record("Expected condition not met")
             }
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 
@@ -177,11 +177,11 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            Issue.record("Should have thrown no team found error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 
@@ -203,11 +203,11 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-            Issue.record("Should have thrown no team found error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 
@@ -222,15 +222,15 @@ struct CursorProviderValidationTests {
         // When/Then
         do {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-            Issue.record("Should have thrown network error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             if case let .networkError(message, statusCode) = error {
                 #expect(message.contains("timed out"))
             } else {
-                Issue.record("Expected network error, got \(error)")
+                Issue.record("Expected condition not met")
             }
         } catch {
-            Issue.record("Unexpected error: \(error)")
+            Issue.record("Expected condition not met")
         }
     }
 

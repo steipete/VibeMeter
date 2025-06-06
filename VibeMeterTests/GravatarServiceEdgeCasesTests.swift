@@ -44,7 +44,7 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: unicodeEmail)
 
         // Then
-        #expect(result != nil, "Should generate valid Gravatar URL")
+        #expect(result != nil)
     }
 
     @Test("gravatar url  very long email  handles correctly")
@@ -56,7 +56,7 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: longEmail)
 
         // Then
-        #expect(result != nil, "Should generate valid Gravatar URL")
+        #expect(result != nil)
     }
 
     @Test("gravatar url  zero size  handles gracefully")
@@ -69,7 +69,7 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        #expect(result != nil, "Should use size 0 (doubled from 0)")
+        #expect(result != nil)
     }
 
     @Test("gravatar url  negative size  handles gracefully")

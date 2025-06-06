@@ -49,8 +49,8 @@ struct StringExtensionsTruncateTests {
         let result = testCase.input.truncate(length: testCase.length, trailing: testCase.trailing)
         
         // Then
-        #expect(result == testCase.expected, "Failed: \(testCase.description)")
-        #expect(result.count <= testCase.length || testCase.length == 0, "Result should not exceed max length: \(testCase.description)")
+        #expect(result == testCase.expected)
+        #expect(result.count <= testCase.length || testCase.length == 0)
     }
     
     // MARK: - Negative Length Edge Cases
@@ -64,7 +64,7 @@ struct StringExtensionsTruncateTests {
         let result = string.truncate(length: negativeLength)
         
         // Then
-        #expect(result.isEmpty, "Negative length should return empty string")
+        #expect(result.isEmpty)
     }
     
     // MARK: - Performance Tests
@@ -109,8 +109,8 @@ struct StringExtensionsTruncateTests {
         let result = testCase.input.truncate(length: testCase.length)
         
         // Then
-        #expect(result.hasPrefix(testCase.expectedPrefix), "Should handle special characters correctly: \(testCase.description)")
-        #expect(result.count <= testCase.length, "Should respect length limit: \(testCase.description)")
+        #expect(result.hasPrefix(testCase.expectedPrefix))
+        #expect(result.count <= testCase.length)
     }
     
     // MARK: - Boundary Condition Tests
@@ -127,10 +127,10 @@ struct StringExtensionsTruncateTests {
         
         // Then
         if shouldTruncate {
-            #expect(result != string, "Should truncate when string is longer than length")
-            #expect(result.hasSuffix("..."), "Should add ellipsis when truncating")
+            #expect(result != string)
+            #expect(result.hasSuffix("..."))
         } else {
-            #expect(result == string, "Should not truncate when string fits within length")
+            #expect(result == string)
         }
     }
 }

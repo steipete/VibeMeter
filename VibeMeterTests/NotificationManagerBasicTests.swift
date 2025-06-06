@@ -72,9 +72,9 @@ struct NotificationManagerBasicTests {
             let result = await manager.requestAuthorization()
             
             // Then
-            #expect(result == testCase.expectedResult, "Authorization result mismatch: \(testCase.description)")
-            #expect(mockCenter.lastRequestedOptions == [.alert], "Should request alert permission: \(testCase.description)")
-            #expect(mockCenter.requestAuthorizationCallCount == 1, "Should call authorization once: \(testCase.description)")
+            #expect(result == testCase.expectedResult)
+            #expect(mockCenter.lastRequestedOptions == [.alert])
+            #expect(mockCenter.requestAuthorizationCallCount == 1)
         }
     }
 
@@ -183,13 +183,13 @@ struct NotificationManagerBasicTests {
             )
             
             // Then
-            #expect(mockCenter.addCallCount == 1, "Should add one notification: \(testCase.description)")
+            #expect(mockCenter.addCallCount == 1)
             
-            let request = try #require(mockCenter.lastAddedRequest, "Should have notification request: \(testCase.description)")
-            #expect(request.content.title == testCase.expectedTitle, "Title mismatch: \(testCase.description)")
-            #expect(request.content.body.contains(testCase.expectedBodyContains), "Body should contain expected text: \(testCase.description)")
-            #expect(request.content.categoryIdentifier == testCase.expectedCategory, "Category mismatch: \(testCase.description)")
-            #expect(request.trigger == nil, "Should have no trigger: \(testCase.description)")
+            let request = try #require(mockCenter.lastAddedRequest)
+            #expect(request.content.title == testCase.expectedTitle)
+            #expect(request.content.body.contains(testCase.expectedBodyContains))
+            #expect(request.content.categoryIdentifier == testCase.expectedCategory)
+            #expect(request.trigger == nil)
         }
         
         @Test("Upper limit notification display", arguments: upperLimitNotificationTestCases)
@@ -202,15 +202,15 @@ struct NotificationManagerBasicTests {
             )
             
             // Then
-            #expect(mockCenter.addCallCount == 1, "Should add one notification: \(testCase.description)")
+            #expect(mockCenter.addCallCount == 1)
             
-            let request = try #require(mockCenter.lastAddedRequest, "Should have notification request: \(testCase.description)")
-            #expect(request.content.title == testCase.expectedTitle, "Title mismatch: \(testCase.description)")
-            #expect(request.content.body.contains(testCase.expectedBodyContains), "Body should contain expected text: \(testCase.description)")
-            #expect(request.content.categoryIdentifier == testCase.expectedCategory, "Category mismatch: \(testCase.description)")
+            let request = try #require(mockCenter.lastAddedRequest)
+            #expect(request.content.title == testCase.expectedTitle)
+            #expect(request.content.body.contains(testCase.expectedBodyContains))
+            #expect(request.content.categoryIdentifier == testCase.expectedCategory)
             
             if let expectedInterruption = testCase.expectedInterruption {
-                #expect(request.content.interruptionLevel == expectedInterruption, "Interruption level mismatch: \(testCase.description)")
+                #expect(request.content.interruptionLevel == expectedInterruption)
             }
         }
         
@@ -218,26 +218,26 @@ struct NotificationManagerBasicTests {
         func duplicateNotificationPreventionWarnings() async {
             // Given - First notification
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
-            #expect(mockCenter.addCallCount == 1, "Should show first notification")
+            #expect(mockCenter.addCallCount == 1)
             
             // When - Try to show again
             await manager.showWarningNotification(currentSpending: 80.0, limitAmount: 100.0, currencyCode: "USD")
             
             // Then - Should not trigger another notification
-            #expect(mockCenter.addCallCount == 1, "Should not show duplicate warning notification")
+            #expect(mockCenter.addCallCount == 1)
         }
         
         @Test("Duplicate notification prevention for upper limits")
         func duplicateNotificationPreventionUpperLimits() async {
             // Given - First notification
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
-            #expect(mockCenter.addCallCount == 1, "Should show first notification")
+            #expect(mockCenter.addCallCount == 1)
             
             // When - Try to show again
             await manager.showUpperLimitNotification(currentSpending: 110.0, limitAmount: 100.0, currencyCode: "USD")
             
             // Then - Should not trigger another notification
-            #expect(mockCenter.addCallCount == 1, "Should not show duplicate upper limit notification")
+            #expect(mockCenter.addCallCount == 1)
         }
     }
 
@@ -259,7 +259,7 @@ struct NotificationManagerBasicTests {
             // Given - Show both types of notifications
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
-            #expect(mockCenter.addCallCount == 2, "Should show both initial notifications")
+            #expect(mockCenter.addCallCount == 2)
             
             // When
             await manager.resetAllNotificationStatesForNewSession()
@@ -267,7 +267,7 @@ struct NotificationManagerBasicTests {
             // Then - Should be able to show notifications again
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
-            #expect(mockCenter.addCallCount == 4, "Should show notifications again after reset")
+            #expect(mockCenter.addCallCount == 4)
         }
         
         @Test("State reset below threshold scenarios", arguments: [
@@ -311,7 +311,7 @@ struct NotificationManagerBasicTests {
             }
             
             let expectedCount = shouldReset ? initialCount + 1 : initialCount
-            #expect(mockCenter.addCallCount == expectedCount, "State reset behavior incorrect: \(description)")
+            #expect(mockCenter.addCallCount == expectedCount)
         }
     }
 
@@ -323,15 +323,15 @@ struct NotificationManagerBasicTests {
         await notificationManager.showInstanceAlreadyRunningNotification()
         
         // Then
-        #expect(mockNotificationCenter.addCallCount == 1, "Should add one notification")
+        #expect(mockNotificationCenter.addCallCount == 1)
         
         let request = try #require(mockNotificationCenter.lastAddedRequest, "Should have notification request")
-        #expect(request.content.title == "Vibe Meter Already Running", "Should have correct title")
+        #expect(request.content.title == "Vibe Meter Already Running")
         #expect(
             request.content.body == "Another instance of Vibe Meter is already running. The existing instance has been brought to the front.",
             "Should have correct body"
         )
-        #expect(request.content.categoryIdentifier == "APP_INSTANCE", "Should have correct category")
+        #expect(request.content.categoryIdentifier == "APP_INSTANCE")
     }
     
     // MARK: - Performance Tests
@@ -372,7 +372,7 @@ struct NotificationManagerBasicTests {
         }
         
         // Then - Operations should complete without issues
-        #expect(Bool(true), "Concurrent operations should complete safely")
+        #expect(Bool(true))
     }
 }
 

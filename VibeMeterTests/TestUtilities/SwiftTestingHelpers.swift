@@ -149,7 +149,7 @@ extension TestHelpers {
         _ comment: String = ""
     ) {
         let message = comment.isEmpty ? "Values should be approximately equal" : comment
-        #expect(abs(actual - expected) < tolerance, "\(message): \(actual) ≈ \(expected)")
+        #expect(abs(actual - expected) < tolerance)
     }
     
     /// Verifies that a collection contains all expected elements

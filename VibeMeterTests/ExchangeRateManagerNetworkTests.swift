@@ -109,7 +109,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.isEmpty, "Should return empty dictionary for \(description) (\(statusCode))")
+        #expect(result.isEmpty)
     }
     
     // MARK: - Invalid Data Tests
@@ -155,7 +155,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.isEmpty, "Should handle invalid data gracefully: \(testCase.description)")
+        #expect(result.isEmpty)
     }
 
     // MARK: - Timeout and Network Failure Tests
@@ -169,7 +169,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.isEmpty, "Should handle network timeout gracefully")
+        #expect(result.isEmpty)
     }
     
     @Test("Network connection failure")
@@ -181,7 +181,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.isEmpty, "Should handle network connection failure")
+        #expect(result.isEmpty)
     }
 
     // MARK: - Edge Case Tests
@@ -199,7 +199,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.isEmpty, "Should handle empty rates gracefully")
+        #expect(result.isEmpty)
     }
     
     @Test("Very large rates object", .timeLimit(.minutes(1)))
@@ -220,8 +220,8 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result.count == 100, "Should parse all currencies")
-        #expect(result["CUR50"] == 5.0, "Should parse specific rate correctly")
+        #expect(result.count == 100)
+        #expect(result["CUR50"] == 5.0)
     }
 
     // MARK: - URL Construction Tests
@@ -235,7 +235,7 @@ struct ExchangeRateManagerNetworkTests {
         }
         
         // Then - Verify the URL was called (implicitly tested through mock usage)
-        #expect(mockURLSession.lastRequest != nil, "Should make network request")
+        #expect(mockURLSession.lastRequest != nil)
     }
     
     // MARK: - Concurrent Request Tests
@@ -258,7 +258,7 @@ struct ExchangeRateManagerNetworkTests {
         
         // Then - All should succeed (though only one may actually execute due to caching/deduplication)
         for (index, result) in results.enumerated() {
-            #expect(result["EUR"] != nil, "Result \(index + 1) should contain EUR rate")
+            #expect(result["EUR"] != nil)
         }
     }
 }

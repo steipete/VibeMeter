@@ -99,9 +99,9 @@ struct CursorProviderBasicTests {
             let teamInfo = try await provider.fetchTeamInfo(authToken: "test-token")
             
             // Then
-            #expect(teamInfo.id == testCase.expectedId, "Team ID mismatch: \(testCase.description)")
-            #expect(teamInfo.provider == .cursor, "Provider should be cursor: \(testCase.description)")
-            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Cookie") != nil, "Should set cookie header: \(testCase.description)")
+            #expect(teamInfo.id == testCase.expectedId)
+            #expect(teamInfo.provider == .cursor)
+            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Cookie") != nil)
         }
         
         @Test("Unauthorized team info request")
@@ -119,11 +119,11 @@ struct CursorProviderBasicTests {
             // When/Then
             do {
                 _ = try await provider.fetchTeamInfo(authToken: "invalid-token")
-                Issue.record("Should have thrown unauthorized error")
+                Issue.record("Expected condition not met")
             } catch let error as ProviderError {
-                #expect(error == .unauthorized, "Should throw unauthorized error")
+                #expect(error == .unauthorized)
             } catch {
-                Issue.record("Unexpected error type: \(error)")
+                Issue.record("Expected condition not met")
             }
         }
     }
@@ -206,13 +206,13 @@ struct CursorProviderBasicTests {
             let userInfo = try await provider.fetchUserInfo(authToken: "test-token")
             
             // Then
-            #expect(userInfo.email == testCase.expectedEmail, "Email mismatch: \(testCase.description)")
-            #expect(userInfo.provider == .cursor, "Provider should be cursor: \(testCase.description)")
-            #expect(mockSession.lastRequest?.httpMethod == "GET", "Should use GET method: \(testCase.description)")
+            #expect(userInfo.email == testCase.expectedEmail)
+            #expect(userInfo.provider == .cursor)
+            #expect(mockSession.lastRequest?.httpMethod == "GET")
             
             let cookieHeader = mockSession.lastRequest?.value(forHTTPHeaderField: "Cookie")
-            #expect(cookieHeader?.contains("WorkosCursorSessionToken=test-token") == true, "Should set auth cookie: \(testCase.description)")
-            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Accept") != nil, "Should set Accept header: \(testCase.description)")
+            #expect(cookieHeader?.contains("WorkosCursorSessionToken=test-token") == true)
+            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Accept") != nil)
         }
     }
 
@@ -234,7 +234,7 @@ struct CursorProviderBasicTests {
             let authURL = provider.getAuthenticationURL()
             
             // Then
-            #expect(authURL == CursorAPIConstants.authenticationURL, "Should return correct authentication URL")
+            #expect(authURL == CursorAPIConstants.authenticationURL)
         }
         
         struct TokenExtractionTestCase: @unchecked Sendable {
@@ -311,7 +311,7 @@ struct CursorProviderBasicTests {
             let extractedToken = provider.extractAuthToken(from: testCase.callbackData)
             
             // Then
-            #expect(extractedToken == testCase.expectedToken, "Token extraction failed: \(testCase.description)")
+            #expect(extractedToken == testCase.expectedToken)
         }
     }
     
@@ -354,6 +354,6 @@ struct CursorProviderBasicTests {
         }
         
         // Then - Operations should complete without issues
-        #expect(Bool(true), "Concurrent operations should complete safely")
+        #expect(Bool(true))
     }
 }

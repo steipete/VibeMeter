@@ -45,7 +45,7 @@ struct GravatarServiceHashingTests {
                 #expect(
                     extractedHash.allSatisfy(\.isHexDigit) == true)
             } else {
-                Issue.record("Could not extract hash from URL for email: \(email)")
+                Issue.record("Expected condition not met")
             }
         }
     }

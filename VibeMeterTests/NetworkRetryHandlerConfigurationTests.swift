@@ -26,7 +26,7 @@ struct NetworkRetryHandlerConfigurationTests {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.networkTimeout
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Default config has maxRetries = 3, so 4 attempts total
             #expect(attemptCount == 4)
@@ -47,7 +47,7 @@ struct NetworkRetryHandlerConfigurationTests {
                 attemptCount += 1
                 throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Aggressive config has maxRetries = 5, so 6 attempts total
             #expect(attemptCount == 6)
@@ -75,7 +75,7 @@ struct NetworkRetryHandlerConfigurationTests {
                 attemptTimes.append(Date())
                 throw NetworkRetryHandler.RetryableError.connectionError
             }
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             // Should have 3 attempts (initial + 2 retries)
             #expect(attemptCount == 3)

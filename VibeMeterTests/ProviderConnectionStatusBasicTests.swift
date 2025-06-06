@@ -92,17 +92,13 @@ struct ProviderConnectionStatusBasicTests {
     @Test("Status display properties", arguments: allStatusTestCases)
     func statusDisplayProperties(testCase: StatusTestCase) {
         // Then - Verify all display properties
-        #expect(testCase.status.displayColor == testCase.expectedColor, 
-                "Color mismatch for \(testCase.description)")
-        #expect(testCase.status.iconName == testCase.expectedIconName, 
-                "Icon mismatch for \(testCase.description)")
-        #expect(testCase.status.shortDescription == testCase.expectedShortDescription, 
-                "Short description mismatch for \(testCase.description)")
+        #expect(testCase.status.displayColor == testCase.expectedColor)
+        #expect(testCase.status.iconName == testCase.expectedIconName)
+        #expect(testCase.status.shortDescription == testCase.expectedShortDescription)
         
         // Verify progress indication
         if testCase.shouldShowProgress {
-            #expect(testCase.status.shouldShowProgress, 
-                    "Should show progress for \(testCase.description)")
+            #expect(testCase.status.shouldShowProgress)
         }
     }
     
@@ -121,9 +117,9 @@ struct ProviderConnectionStatusBasicTests {
         
         // Should include time information in detailed description
         if case .rateLimited(let until) = status {
-            #expect(until == futureDate, "Should preserve until date")
+            #expect(until == futureDate)
         } else {
-            Issue.record("Status should be rate limited")
+            Issue.record("Expected condition not met")
         }
     }
     
@@ -159,9 +155,9 @@ struct ProviderConnectionStatusBasicTests {
         
         // Verify error message is preserved
         if case .error(let message) = status {
-            #expect(message == errorMessage, "Should preserve error message")
+            #expect(message == errorMessage)
         } else {
-            Issue.record("Status should be error type")
+            Issue.record("Expected condition not met")
         }
     }
     
@@ -175,8 +171,8 @@ struct ProviderConnectionStatusBasicTests {
         let status3 = ProviderConnectionStatus.disconnected
         
         // Then
-        #expect(status1 == status2, "Same statuses should be equal")
-        #expect(status1 != status3, "Different statuses should not be equal")
+        #expect(status1 == status2)
+        #expect(status1 != status3)
     }
     
     @Test("Error status equality with same message")
@@ -187,8 +183,8 @@ struct ProviderConnectionStatusBasicTests {
         let error3 = ProviderConnectionStatus.error(message: "Different error")
         
         // Then
-        #expect(error1 == error2, "Errors with same message should be equal")
-        #expect(error1 != error3, "Errors with different messages should not be equal")
+        #expect(error1 == error2)
+        #expect(error1 != error3)
     }
     
     @Test("Rate limited equality")
@@ -200,8 +196,8 @@ struct ProviderConnectionStatusBasicTests {
         let rateLimited3 = ProviderConnectionStatus.rateLimited(until: nil)
         
         // Then
-        #expect(rateLimited1 == rateLimited2, "Rate limited with same date should be equal")
-        #expect(rateLimited1 != rateLimited3, "Rate limited with different dates should not be equal")
+        #expect(rateLimited1 == rateLimited2)
+        #expect(rateLimited1 != rateLimited3)
     }
     
     // MARK: - Progress Indication Tests
@@ -217,8 +213,7 @@ struct ProviderConnectionStatusBasicTests {
     ])
     func progressIndicationStates(status: ProviderConnectionStatus, shouldShowProgress: Bool) {
         // Then
-        #expect(status.shouldShowProgress == shouldShowProgress, 
-                "Progress indication mismatch for \(status)")
+        #expect(status.shouldShowProgress == shouldShowProgress)
     }
     
     // MARK: - Status Transitions
@@ -239,14 +234,11 @@ struct ProviderConnectionStatusBasicTests {
         
         for transition in transitions {
             // These transitions should be logically valid
-            #expect(transition.from != transition.to, 
-                    "Transition should change state: \(transition.description)")
+            #expect(transition.from != transition.to)
             
             // Verify both states have valid display properties
-            #expect(!transition.from.shortDescription.isEmpty, 
-                    "From state should have description: \(transition.description)")
-            #expect(!transition.to.shortDescription.isEmpty, 
-                    "To state should have description: \(transition.description)")
+            #expect(!transition.from.shortDescription.isEmpty)
+            #expect(!transition.to.shortDescription.isEmpty)
         }
     }
     
@@ -281,11 +273,11 @@ struct ProviderConnectionStatusBasicTests {
         
         // Empty error message
         let emptyError = ProviderConnectionStatus.error(message: "")
-        #expect(emptyError.shortDescription == "Error", "Should handle empty error message")
+        #expect(emptyError.shortDescription == "Error")
         
         // Nil rate limit date
         let nilRateLimit = ProviderConnectionStatus.rateLimited(until: nil)
-        #expect(nilRateLimit.shortDescription == "Rate Limited", "Should handle nil rate limit date")
+        #expect(nilRateLimit.shortDescription == "Rate Limited")
     }
     
     // MARK: - Known Issues Tests
@@ -298,7 +290,7 @@ struct ProviderConnectionStatusBasicTests {
             let status = ProviderConnectionStatus.error(message: veryLongMessage)
             
             // This might need special handling in UI components
-            #expect(status.shortDescription.count < 100, "UI should truncate long messages")
+            #expect(status.shortDescription.count < 100)
         }
     }
 }

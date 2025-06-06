@@ -212,7 +212,7 @@ struct CursorProviderTransitionTests {
                 month: 6,
                 year: 2024,
                 teamId: nil)
-            Issue.record("Should throw noTeamFound error")
+            Issue.record("Expected condition not met")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
         }

@@ -60,7 +60,7 @@ struct BackgroundDataProcessorErrorTests {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             #expect((error as? TestError) != nil)
             // Other methods should not be called if user info fails
@@ -102,7 +102,7 @@ struct BackgroundDataProcessorErrorTests {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             #expect((error as? TestError) != nil)
             // User and team info should be fetched before invoice fails
@@ -172,12 +172,12 @@ struct BackgroundDataProcessorErrorTests {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             if case let ProviderError.networkError(message, _) = error {
                 #expect(message == "Connection timeout")
             } else {
-                Issue.record("Expected networkError, got \(error)")
+                Issue.record("Expected condition not met")
             }
         }
     }
@@ -196,12 +196,12 @@ struct BackgroundDataProcessorErrorTests {
                 provider: .cursor,
                 authToken: "test-token",
                 providerClient: mockProvider)
-            Issue.record("Should have thrown error")
+            Issue.record("Expected condition not met")
         } catch {
             if case let ProviderError.authenticationFailed(reason) = error {
                 #expect(reason == "Invalid token")
             } else {
-                Issue.record("Expected authenticationFailed, got \(error)")
+                Issue.record("Expected condition not met")
             }
         }
     }
@@ -229,7 +229,7 @@ struct BackgroundDataProcessorErrorTests {
         // Then
         do {
             _ = try await task.value
-            Issue.record("Should have thrown cancellation error")
+            Issue.record("Expected condition not met")
         } catch {
             #expect(error is CancellationError == true)
             #expect(capturedMockProvider.fetchTeamInfoCallCount == 0)

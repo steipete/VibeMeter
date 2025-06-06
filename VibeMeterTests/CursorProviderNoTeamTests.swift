@@ -325,6 +325,6 @@ struct CursorProviderNoTeamTests {
         // Then - Verify request body excludes teamId since 0 is now filtered as invalid
         let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        #expect((bodyJSON?["teamId"] == nil) ?? false, "teamId key should not exist when value is 0")
+        #expect((bodyJSON?["teamId"] == nil) ?? false)
     }
 }

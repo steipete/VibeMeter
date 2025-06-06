@@ -72,7 +72,7 @@ struct GravatarServiceCoreTests {
         let result = sut.gravatarURL(for: emptyEmail)
 
         // Then
-        #expect(result != nil, "Should still generate Gravatar URL")
+        #expect(result != nil)
     }
 
     @Test("gravatar url  custom size  doubles for retina")
@@ -113,7 +113,7 @@ struct GravatarServiceCoreTests {
         let result = sut.gravatarURL(for: email)
 
         // Then
-        #expect(result != nil, "Should include mystery person fallback")
+        #expect(result != nil)
     }
 
     // MARK: - Update Avatar Tests

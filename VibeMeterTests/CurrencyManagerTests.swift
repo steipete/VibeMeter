@@ -58,7 +58,7 @@ struct CurrencyManagerTests {
             #expect(code.allSatisfy { $0.isUppercase })
 
             // Name should contain currency symbol in parentheses
-            #expect(name.contains("("), "Currency name '\(name)' should contain symbol in parentheses")
+            #expect(name.contains("("))
 
             // Name should be capitalized
             #expect(name.first?.isUppercase ?? false)
@@ -87,10 +87,10 @@ struct CurrencyManagerTests {
         #expect(first10Codes.first == "USD")
 
         // EUR should be in top 5
-        #expect(first10Codes.prefix(5).contains("EUR"), "EUR should be in top 5 currencies")
+        #expect(first10Codes.prefix(5).contains("EUR"))
 
         // GBP should be in top 5
-        #expect(first10Codes.prefix(5).contains("GBP"), "GBP should be in top 5 currencies")
+        #expect(first10Codes.prefix(5).contains("GBP"))
     }
 
     @Test("system currency code returns valid code")

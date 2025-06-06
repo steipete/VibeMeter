@@ -206,7 +206,7 @@ struct MultiProviderSpendingDataTests {
         #expect(spendingData.providersWithData.contains(.cursor) == true)
 
         // Clear cursor data
-        spendingData.clearProviderData(for: .cursor)
+        spendingData.clear(provider: .cursor)
 
         // Assert - Cursor data should be removed
         #expect(spendingData.providersWithData.contains(.cursor) == false)
