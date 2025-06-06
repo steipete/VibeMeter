@@ -12,12 +12,6 @@ struct GravatarServiceCoreTests {
         sut.clearAvatar() // Reset state
     }
 
-     async throws {
-        sut.clearAvatar()
-        sut = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - Initialization Tests
 
     @Test("shared instance  is singleton")
@@ -28,12 +22,16 @@ struct GravatarServiceCoreTests {
         let instance2 = GravatarService.shared
 
         // Then
-        #expect(instance1 === instance2 == true)
+        #expect(instance1 === instance2)
+    }
 
+    @Test("initial state no current avatar url")
     func initialState_NoCurrentAvatarURL() {
         // Then
         #expect(sut.currentAvatarURL == nil)
+    }
 
+    @Test("gravatar url valid email generates correct url")
     func gravatarURL_ValidEmail_GeneratesCorrectURL() {
         // Given
         let email = "test@example.com"

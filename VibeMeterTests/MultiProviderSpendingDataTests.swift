@@ -250,7 +250,9 @@ struct MultiProviderSpendingDataTests {
         // Act & Assert
         let total = spendingData.totalSpendingConverted(to: "USD", rates: [:])
         #expect(total == 0.0)
+    }
 
+    @Test("update spending overwrites previous data")
     func updateSpending_OverwritesPreviousData() {
         // Arrange
         let invoice1 = ProviderMonthlyInvoice(
