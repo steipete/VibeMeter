@@ -217,7 +217,7 @@ struct ProviderConnectionStatusBasicTests {
             let to: ProviderConnectionStatus
             let description: String
         }
-        
+
         let transitions = [
             Transition(from: .disconnected, to: .connecting, description: "disconnect to connect"),
             Transition(from: .connecting, to: .connected, description: "connecting to connected"),

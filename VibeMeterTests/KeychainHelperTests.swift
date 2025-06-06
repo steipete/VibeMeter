@@ -39,7 +39,6 @@ struct KeychainHelperTests {
             _ = keychain.deleteToken()
         }
 
-
         static let tokenTestCases: [TokenTestCase] = [
             TokenTestCase("simple-token", "simple alphanumeric token"),
             TokenTestCase("token-with-dashes-and_underscores", "token with special characters"),

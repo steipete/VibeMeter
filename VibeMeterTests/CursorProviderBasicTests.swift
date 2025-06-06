@@ -95,7 +95,6 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
 
-
         static let teamInfoTestCases: [TeamInfoTestCase] = [
             TeamInfoTestCase(
                 json: """
@@ -189,7 +188,6 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
 
-
         static let userInfoTestCases: [UserInfoTestCase] = [
             UserInfoTestCase(
                 json: """
@@ -267,7 +265,6 @@ struct CursorProviderBasicTests {
             // Then
             #expect(authURL == CursorAPIConstants.authenticationURL)
         }
-
 
         static let tokenExtractionTestCases: [TokenExtractionTestCase] = [
             TokenExtractionTestCase(

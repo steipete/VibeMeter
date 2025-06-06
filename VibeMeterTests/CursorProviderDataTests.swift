@@ -45,6 +45,45 @@ struct CursorProviderDataTests {
         As many fast premium requests as are included in your plan, 1 cent per request after that.
         """
 
+    // MARK: - Helper Methods
+
+    private func createMockInvoiceResponse() -> (Data, HTTPURLResponse) {
+        let mockInvoiceData = Data("""
+            {
+                "items": [
+                    {
+                        "description": "112 discounted claude-4-sonnet-thinking requests",
+                        "cents": 336
+                    },
+                    {
+                        "description": "97 extra fast premium requests beyond 500/month * 4 cents per such request",
+                        "cents": 388
+                    },
+                    {
+                        "description": "59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65",
+                        "cents": 465
+                    },
+                    {
+                        "description": "12 token-based usage calls to o3, totalling: $2.10",
+                        "cents": 210
+                    }
+                ],
+                "pricingDescription": {
+                    "description": "\(Self.mockPricingDescription)",
+                    "id": "392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"
+                }
+            }
+        """.utf8)
+
+        let mockResponse = HTTPURLResponse(
+            url: CursorAPIConstants.URLs.monthlyInvoice,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil)!
+
+        return (mockInvoiceData, mockResponse)
+    }
+
     // MARK: - Monthly Invoice Tests
 
     @Test("fetch monthly invoice  with provided team id")
@@ -121,39 +160,7 @@ struct CursorProviderDataTests {
                                                     userEmail: "test@example.com",
                                                     isActive: true))
 
-        let mockInvoiceData = Data("""
-            {
-                "items": [
-                    {
-                        "description": "112 discounted claude-4-sonnet-thinking requests",
-                        "cents": 336
-                    },
-                    {
-                        "description": "97 extra fast premium requests beyond 500/month * 4 cents per such request",
-                        "cents": 388
-                    },
-                    {
-                        "description": "59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65",
-                        "cents": 465
-                    },
-                    {
-                        "description": "12 token-based usage calls to o3, totalling: $2.10",
-                        "cents": 210
-                    }
-                ],
-                "pricingDescription": {
-                    "description": "\(Self.mockPricingDescription)",
-                    "id": "392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"
-                }
-            }
-        """.utf8)
-
-        let mockResponse = HTTPURLResponse(
-            url: CursorAPIConstants.URLs.monthlyInvoice,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil)!
-
+        let (mockInvoiceData, mockResponse) = createMockInvoiceResponse()
         mockURLSession.nextData = mockInvoiceData
         mockURLSession.nextResponse = mockResponse
 

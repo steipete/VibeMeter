@@ -63,7 +63,7 @@ struct NotificationTestCase: Sendable {
     }
 }
 
-fileprivate struct StateResetTestScenario: Sendable {
+private struct StateResetTestScenario: Sendable {
     let limitType: NotificationLimitType
     let current: Double
     let warning: Double
@@ -435,7 +435,7 @@ struct NotificationManagerBasicTests {
 
 // MARK: - Test Support Types
 
-fileprivate enum NotificationLimitType {
+private enum NotificationLimitType {
     case warning
     case upper
 }
