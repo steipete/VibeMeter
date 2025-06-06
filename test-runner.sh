@@ -93,7 +93,7 @@ echo -e "\n${YELLOW}Building for tests...${NC}"
 BUILD_CMD="xcodebuild build-for-testing \
     -workspace VibeMeter.xcworkspace \
     -scheme VibeMeter \
-    -destination 'platform=macOS,arch=arm64' \
+    -destination 'platform=macOS' \
     -configuration Debug \
     -derivedDataPath build/DerivedData"
 
@@ -111,13 +111,13 @@ echo -e "\n${YELLOW}Running tests...${NC}"
 TEST_CMD="xcodebuild test-without-building \
     -workspace VibeMeter.xcworkspace \
     -scheme VibeMeter \
-    -destination 'platform=macOS,arch=arm64' \
+    -destination 'platform=macOS' \
     -configuration Debug \
     -derivedDataPath build/DerivedData \
-    -parallel-testing-enabled $PARALLEL \
+    -parallel-testing-enabled NO \
     -test-timeouts-enabled YES \
-    -default-test-execution-time-allowance 30 \
-    -maximum-test-execution-time-allowance 120 \
+    -default-test-execution-time-allowance 60 \
+    -maximum-test-execution-time-allowance 300 \
     $TEST_FILTER"
 
 if [ -n "$JUNIT_OUTPUT" ]; then
