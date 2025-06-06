@@ -12,6 +12,12 @@ struct ApplicationMoverTests {
     @Test("check and offer to move to applications")
     @MainActor
     func checkAndOfferToMoveToApplications() {
+        // Skip this test in CI environment as it tries to show UI dialogs
+        guard ProcessInfo.processInfo.environment["CI"] == nil else {
+            print("Skipping ApplicationMover test in CI environment")
+            return
+        }
+        
         // Test that the public API exists and doesn't crash
         // Note: This method shows UI dialogs, so we just test it exists
         applicationMover.checkAndOfferToMoveToApplications()
