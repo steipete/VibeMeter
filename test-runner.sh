@@ -133,45 +133,42 @@ fi
 # Run tests and capture output
 set +e
 if [ -n "$JUNIT_OUTPUT" ]; then
-    # For Swift Testing, we need to use resultBundlePath and process it afterwards
+    # For Swift Testing, run tests and capture results
     eval "$TEST_CMD" 2>&1 | tee test-output.log | xcbeautify
     TEST_STATUS=${PIPESTATUS[0]}
     
-    # Convert xcresult to JUnit format if tests ran
-    if [ -f "test-results.xcresult" ]; then
-        echo -e "\n${YELLOW}Converting test results to JUnit format...${NC}"
-        # Use xcresulttool or xcodebuild to export test results
-        xcodebuild -resultBundlePath test-results.xcresult -resultBundleVersion 3 -exportResultBundlePath test-results.xcresult || true
+    # Create a simple JUnit report based on test output
+    echo -e "\n${YELLOW}Creating test results...${NC}"
+    
+    # Extract test summary from output
+    if grep -q "Test run with" test-output.log; then
+        # Parse Swift Testing output format
+        SUMMARY_LINE=$(grep "Test run with" test-output.log | tail -1)
+        echo "Found summary: $SUMMARY_LINE"
         
-        # For now, create a simple JUnit report based on test output
-        if grep -q "Test run started" test-output.log; then
-            # Extract test counts
-            TOTAL=$(grep -E "Executed [0-9]+ test" test-output.log | tail -1 | sed -E 's/.*Executed ([0-9]+) test.*/\1/' || echo "0")
-            FAILURES=$(grep -E "with [0-9]+ failure" test-output.log | tail -1 | sed -E 's/.*with ([0-9]+) failure.*/\1/' || echo "0")
-            
-            # Create JUnit XML
-            cat > "$JUNIT_OUTPUT" << EOF
+        if echo "$SUMMARY_LINE" | grep -q "passed"; then
+            TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/.*with ([0-9]+) tests.*/\1/' 2>/dev/null || echo "1")
+            FAILURES="0"
+        else
+            TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/.*with ([0-9]+) tests.*/\1/' 2>/dev/null || echo "1") 
+            FAILURES="1"
+        fi
+    else
+        # Fallback values
+        TOTAL="1"
+        FAILURES="1"
+    fi
+    
+    # Create simple JUnit XML
+    cat > "$JUNIT_OUTPUT" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="VibeMeterTests" tests="${TOTAL}" failures="${FAILURES}">
   <testsuite name="VibeMeterTests" tests="${TOTAL}" failures="${FAILURES}">
-    $(grep -E "✔|✗" test-output.log | while read -r line; do
-        if [[ "$line" =~ ✔ ]]; then
-            TEST_NAME=$(echo "$line" | sed -E 's/.*"(.*)".*/\1/')
-            TIME=$(echo "$line" | sed -E 's/.*\(([0-9.]+) seconds\).*/\1/' || echo "0.0")
-            echo "    <testcase name=\"$TEST_NAME\" time=\"$TIME\" />"
-        elif [[ "$line" =~ ✗ ]]; then
-            TEST_NAME=$(echo "$line" | sed -E 's/.*"(.*)".*/\1/')
-            echo "    <testcase name=\"$TEST_NAME\"><failure message=\"Test failed\" /></testcase>"
-        fi
-    done)
+    <testcase name="SwiftTestingSuite" classname="VibeMeterTests">
+    </testcase>
   </testsuite>
 </testsuites>
 EOF
-        else
-            # No Swift Testing output, create empty report
-            echo '<?xml version="1.0" encoding="UTF-8"?><testsuites name="VibeMeterTests" tests="0" failures="0" />' > "$JUNIT_OUTPUT"
-        fi
-    fi
 else
     eval "$TEST_CMD" | xcbeautify
     TEST_STATUS=${PIPESTATUS[0]}
