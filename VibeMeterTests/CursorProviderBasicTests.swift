@@ -2,6 +2,72 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
+// MARK: - Test Case Data Structures
+
+struct TeamInfoTestCase: Sendable {
+    let jsonResponse: String
+    let expectedId: Int
+    let expectedName: String?
+    let description: String
+
+    init(json: String, id: Int, name: String? = nil, _ description: String) {
+        self.jsonResponse = json
+        self.expectedId = id
+        self.expectedName = name
+        self.description = description
+    }
+}
+
+struct MonthlySpendingTestCase: Sendable {
+    let jsonResponse: String
+    let expectedSpending: Double
+    let description: String
+
+    init(json: String, spending: Double, _ description: String) {
+        self.jsonResponse = json
+        self.expectedSpending = spending
+        self.description = description
+    }
+}
+
+struct UsageDataTestCase: Sendable {
+    let jsonResponse: String
+    let expectedUsage: Double
+    let description: String
+
+    init(json: String, usage: Double, _ description: String) {
+        self.jsonResponse = json
+        self.expectedUsage = usage
+        self.description = description
+    }
+}
+
+struct UserInfoTestCase: Sendable {
+    let jsonResponse: String
+    let expectedEmail: String
+    let hasTeamId: Bool
+    let description: String
+
+    init(json: String, email: String, hasTeamId: Bool = true, _ description: String) {
+        self.jsonResponse = json
+        self.expectedEmail = email
+        self.hasTeamId = hasTeamId
+        self.description = description
+    }
+}
+
+struct TokenExtractionTestCase: @unchecked Sendable {
+    let callbackData: [String: Any]
+    let expectedToken: String?
+    let description: String
+
+    init(data: [String: Any], expectedToken: String?, _ description: String) {
+        self.callbackData = data
+        self.expectedToken = expectedToken
+        self.description = description
+    }
+}
+
 @Suite("CursorProvider Basic Tests", .tags(.provider, .unit, .fast))
 struct CursorProviderBasicTests {
     private let cursorProvider: CursorProvider
@@ -29,19 +95,6 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
 
-        struct TeamInfoTestCase: Sendable {
-            let jsonResponse: String
-            let expectedId: Int
-            let expectedName: String?
-            let description: String
-
-            init(json: String, id: Int, name: String? = nil, _ description: String) {
-                self.jsonResponse = json
-                self.expectedId = id
-                self.expectedName = name
-                self.description = description
-            }
-        }
 
         static let teamInfoTestCases: [TeamInfoTestCase] = [
             TeamInfoTestCase(
@@ -136,19 +189,6 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
 
-        struct UserInfoTestCase: Sendable {
-            let jsonResponse: String
-            let expectedEmail: String
-            let hasTeamId: Bool
-            let description: String
-
-            init(json: String, email: String, hasTeamId: Bool = true, _ description: String) {
-                self.jsonResponse = json
-                self.expectedEmail = email
-                self.hasTeamId = hasTeamId
-                self.description = description
-            }
-        }
 
         static let userInfoTestCases: [UserInfoTestCase] = [
             UserInfoTestCase(
@@ -228,17 +268,6 @@ struct CursorProviderBasicTests {
             #expect(authURL == CursorAPIConstants.authenticationURL)
         }
 
-        struct TokenExtractionTestCase: @unchecked Sendable {
-            let callbackData: [String: Any]
-            let expectedToken: String?
-            let description: String
-
-            init(data: [String: Any], expectedToken: String?, _ description: String) {
-                self.callbackData = data
-                self.expectedToken = expectedToken
-                self.description = description
-            }
-        }
 
         static let tokenExtractionTestCases: [TokenExtractionTestCase] = [
             TokenExtractionTestCase(

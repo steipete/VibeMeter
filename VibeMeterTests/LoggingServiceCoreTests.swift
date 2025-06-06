@@ -3,8 +3,7 @@ import os.log
 import Testing
 @testable import VibeMeter
 
-@Suite("LoggingServiceCoreTests")
-.tags(.unit, .fast)
+@Suite("LoggingServiceCoreTests", .tags(.unit, .fast))
 struct LoggingServiceCoreTests {
     // MARK: - LogCategory Tests
 

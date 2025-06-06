@@ -2,8 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("NetworkRetryHandlerExecutionTests")
-.tags(.network, .unit)
+@Suite("NetworkRetryHandlerExecutionTests", .tags(.network, .unit))
 struct NetworkRetryHandlerExecutionTests {
     let sut: NetworkRetryHandler
 

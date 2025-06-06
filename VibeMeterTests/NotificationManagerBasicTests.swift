@@ -3,6 +3,90 @@ import Testing
 @preconcurrency import UserNotifications
 @testable import VibeMeter
 
+// MARK: - Test Case Data Structures
+
+struct AuthorizationTestCase: Sendable {
+    let result: Result<Bool, Error>
+    let expectedResult: Bool
+    let description: String
+
+    init(result: Result<Bool, Error>, expected: Bool, _ description: String) {
+        self.result = result
+        self.expectedResult = expected
+        self.description = description
+    }
+}
+
+struct SpendingNotificationTestCase: Sendable {
+    let spending: Double
+    let limit: Double
+    let currency: String
+    let expectedTitle: String
+    let description: String
+
+    init(spending: Double, limit: Double, currency: String, expectedTitle: String, _ description: String) {
+        self.spending = spending
+        self.limit = limit
+        self.currency = currency
+        self.expectedTitle = expectedTitle
+        self.description = description
+    }
+}
+
+struct NotificationTestCase: Sendable {
+    let currentSpending: Double
+    let limitAmount: Double
+    let currencyCode: String
+    let expectedTitle: String
+    let expectedBodyContains: String
+    let expectedCategory: String
+    let expectedInterruption: UNNotificationInterruptionLevel?
+    let description: String
+
+    init(
+        spending: Double,
+        limit: Double,
+        currency: String = "USD",
+        title: String,
+        bodyContains: String,
+        category: String,
+        interruption: UNNotificationInterruptionLevel? = nil,
+        _ description: String) {
+        self.currentSpending = spending
+        self.limitAmount = limit
+        self.currencyCode = currency
+        self.expectedTitle = title
+        self.expectedBodyContains = bodyContains
+        self.expectedCategory = category
+        self.expectedInterruption = interruption
+        self.description = description
+    }
+}
+
+struct StateResetTestScenario: Sendable {
+    let limitType: NotificationLimitType
+    let current: Double
+    let warning: Double
+    let upper: Double
+    let shouldReset: Bool
+    let description: String
+
+    init(
+        limitType: NotificationLimitType,
+        current: Double,
+        warning: Double,
+        upper: Double,
+        shouldReset: Bool,
+        _ description: String) {
+        self.limitType = limitType
+        self.current = current
+        self.warning = warning
+        self.upper = upper
+        self.shouldReset = shouldReset
+        self.description = description
+    }
+}
+
 @Suite("Notification Manager Tests", .tags(.notifications, .unit, .fast))
 @MainActor
 struct NotificationManagerBasicTests {
@@ -28,17 +112,6 @@ struct NotificationManagerBasicTests {
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
 
-        struct AuthorizationTestCase: Sendable {
-            let result: Result<Bool, Error>
-            let expectedResult: Bool
-            let description: String
-
-            init(result: Result<Bool, Error>, expected: Bool, _ description: String) {
-                self.result = result
-                self.expectedResult = expected
-                self.description = description
-            }
-        }
 
         static let authorizationTestCases: [AuthorizationTestCase] = [
             AuthorizationTestCase(
@@ -87,35 +160,6 @@ struct NotificationManagerBasicTests {
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
 
-        struct NotificationTestCase: Sendable {
-            let currentSpending: Double
-            let limitAmount: Double
-            let currencyCode: String
-            let expectedTitle: String
-            let expectedBodyContains: String
-            let expectedCategory: String
-            let expectedInterruption: UNNotificationInterruptionLevel?
-            let description: String
-
-            init(
-                spending: Double,
-                limit: Double,
-                currency: String = "USD",
-                title: String,
-                bodyContains: String,
-                category: String,
-                interruption: UNNotificationInterruptionLevel? = nil,
-                _ description: String) {
-                self.currentSpending = spending
-                self.limitAmount = limit
-                self.currencyCode = currency
-                self.expectedTitle = title
-                self.expectedBodyContains = bodyContains
-                self.expectedCategory = category
-                self.expectedInterruption = interruption
-                self.description = description
-            }
-        }
 
         static let warningNotificationTestCases: [NotificationTestCase] = [
             NotificationTestCase(
@@ -259,52 +303,46 @@ struct NotificationManagerBasicTests {
         }
 
         @Test("State reset below threshold scenarios", arguments: [
-            (
-                limitType: NotificationLimitType.warning,
+            StateResetTestScenario(
+                limitType: .warning,
                 current: 70.0,
                 warning: 80.0,
                 upper: 100.0,
                 shouldReset: true,
                 "warning reset when below threshold"),
-            (
-                limitType: NotificationLimitType.warning,
+            StateResetTestScenario(
+                limitType: .warning,
                 current: 85.0,
                 warning: 80.0,
                 upper: 100.0,
                 shouldReset: false,
                 "warning not reset when above threshold"),
-            (
-                limitType: NotificationLimitType.upper,
+            StateResetTestScenario(
+                limitType: .upper,
                 current: 95.0,
                 warning: 80.0,
                 upper: 100.0,
                 shouldReset: true,
                 "upper reset when below threshold"),
-            (
-                limitType: NotificationLimitType.upper,
+            StateResetTestScenario(
+                limitType: .upper,
                 current: 105.0,
                 warning: 80.0,
                 upper: 100.0,
                 shouldReset: false,
                 "upper not reset when above threshold")
         ])
-        fileprivate func stateResetBelowThresholdScenarios(
-            limitType: NotificationLimitType,
-            current: Double,
-            warning: Double,
-            upper: Double,
-            shouldReset: Bool,
-            description _: String) async {
+        fileprivate func stateResetBelowThresholdScenarios(scenario: StateResetTestScenario) async {
             // Given - Show initial notification to set state
-            switch limitType {
+            switch scenario.limitType {
             case .warning:
                 await manager.showWarningNotification(
-                    currentSpending: warning + 5,
+                    currentSpending: scenario.warning + 5,
                     limitAmount: 100.0,
                     currencyCode: "USD")
             case .upper:
                 await manager.showUpperLimitNotification(
-                    currentSpending: upper + 5,
+                    currentSpending: scenario.upper + 5,
                     limitAmount: 100.0,
                     currencyCode: "USD")
             }
@@ -313,23 +351,26 @@ struct NotificationManagerBasicTests {
 
             // When
             await manager.resetNotificationStateIfBelow(
-                limitType: limitType,
-                currentSpendingUSD: current,
-                warningLimitUSD: warning,
-                upperLimitUSD: upper)
+                limitType: scenario.limitType,
+                currentSpendingUSD: scenario.current,
+                warningLimitUSD: scenario.warning,
+                upperLimitUSD: scenario.upper)
 
             // Then - Try to show notification again
-            switch limitType {
+            switch scenario.limitType {
             case .warning:
-                await manager.showWarningNotification(currentSpending: current, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showWarningNotification(
+                    currentSpending: scenario.current, 
+                    limitAmount: 100.0, 
+                    currencyCode: "USD")
             case .upper:
                 await manager.showUpperLimitNotification(
-                    currentSpending: current,
+                    currentSpending: scenario.current,
                     limitAmount: 100.0,
                     currencyCode: "USD")
             }
 
-            let expectedCount = shouldReset ? initialCount + 1 : initialCount
+            let expectedCount = scenario.shouldReset ? initialCount + 1 : initialCount
             #expect(mockCenter.addCallCount == expectedCount)
         }
     }

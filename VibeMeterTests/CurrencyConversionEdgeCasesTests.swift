@@ -117,7 +117,8 @@ struct CurrencyConversionEdgeCasesTests {
     func currencyConversionHelperIsMainActor() {
         // Then - CurrencyConversionHelper is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        #expect(CurrencyConversionHelper.self != nil)
+        let _: CurrencyConversionHelper.Type = CurrencyConversionHelper.self
+        #expect(true)
     }
 
     @Test("concurrent access main actor safety")

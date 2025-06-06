@@ -2,8 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("SparkleUpdaterManagerTests")
-.tags(.unit, .fast)
+@Suite("SparkleUpdaterManagerTests", .tags(.unit, .fast))
 @MainActor
 struct SparkleUpdaterManagerTests {
     let sut: SparkleUpdaterManager
@@ -17,22 +16,24 @@ struct SparkleUpdaterManagerTests {
     @Test("initialization in environment does not crash")
     func initialization_InTestEnvironment_DoesNotCrash() {
         // Given/When - Initialization happens in setUp
-        // Then
-        #expect(sut != nil)
+        // Then - Test passes if initialization completed without throwing
+        #expect(true)
     }
 
     @Test("initialization is main actor")
     func initialization_IsMainActor() {
         // Then - SparkleUpdaterManager is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        #expect(sut != nil)
+        let _: SparkleUpdaterManager = sut
+        #expect(true)
     }
 
     @Test("initialization is observable object")
     func initialization_IsObservableObject() {
         // Then - SparkleUpdaterManager uses @Observable (Swift 6 observation system)
         // The class should be observable but doesn't need to conform to ObservableObject protocol
-        #expect(sut != nil)
+        let _: SparkleUpdaterManager = sut
+        #expect(true)
     }
 
     @Test("initialization in test environment skips sparkle setup")
@@ -70,7 +71,6 @@ struct SparkleUpdaterManagerTests {
         // When/Then - Should handle "no update" error gracefully
         // Note: In test environment, Sparkle delegates are not called
         // This test validates that the manager exists and can handle the error pattern
-        #expect(noUpdateError != nil)
         #expect(noUpdateError.code == 1001)
     }
 
@@ -82,7 +82,6 @@ struct SparkleUpdaterManagerTests {
         ])
 
         // When/Then - Should handle appcast error gracefully
-        #expect(appcastError != nil)
         #expect(appcastError.code == 2001)
     }
 
@@ -94,7 +93,6 @@ struct SparkleUpdaterManagerTests {
         ])
 
         // When/Then - Should handle generic error gracefully
-        #expect(genericError != nil)
         #expect(genericError.code == 999)
     }
 
@@ -192,9 +190,6 @@ struct SparkleUpdaterManagerTests {
 
     @Test("nonisolated methods can be called from any thread")
     func nonisolatedMethods_CanBeCalledFromAnyThread() async {
-        // Given - Test that nonisolated methods exist and can be called
-        let testError = NSError(domain: "TestDomain", code: 123, userInfo: nil)
-
         // When - Call nonisolated methods from background thread
         await Task.detached {
             // These delegate methods should be nonisolated and not require MainActor
@@ -206,7 +201,7 @@ struct SparkleUpdaterManagerTests {
         }.value
 
         // Then - Should complete without deadlocks or crashes
-        #expect(testError != nil)
+        #expect(true)
     }
 
     @Test("modal alert sequence handles gracefully")

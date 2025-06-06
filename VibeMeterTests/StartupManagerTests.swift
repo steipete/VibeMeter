@@ -29,8 +29,7 @@ private class MockStartupManager: StartupControlling {
 
 // MARK: - Tests
 
-@Suite("StartupManagerTests")
-.tags(.unit, .fast)
+@Suite("StartupManagerTests", .tags(.unit, .fast))
 @MainActor
 struct StartupManagerTests {
     let sut: StartupManager

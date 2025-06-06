@@ -2,8 +2,21 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("Keychain Helper Tests")
-.tags(.requiresKeychain, .unit)
+// MARK: - Test Case Data Structures
+
+struct TokenTestCase: Sendable {
+    let token: String
+    let description: String
+    let shouldSucceed: Bool
+
+    init(_ token: String, shouldSucceed: Bool = true, _ description: String) {
+        self.token = token
+        self.shouldSucceed = shouldSucceed
+        self.description = description
+    }
+}
+
+@Suite("Keychain Helper Tests", .tags(.requiresKeychain, .unit))
 struct KeychainHelperTests {
     let sut: KeychainHelper
 
@@ -26,17 +39,6 @@ struct KeychainHelperTests {
             _ = keychain.deleteToken()
         }
 
-        struct TokenTestCase: Sendable {
-            let token: String
-            let description: String
-            let shouldSucceed: Bool
-
-            init(_ token: String, shouldSucceed: Bool = true, _ description: String) {
-                self.token = token
-                self.shouldSucceed = shouldSucceed
-                self.description = description
-            }
-        }
 
         static let tokenTestCases: [TokenTestCase] = [
             TokenTestCase("simple-token", "simple alphanumeric token"),
