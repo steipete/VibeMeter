@@ -74,6 +74,7 @@ struct CursorProviderTransitionTests {
         #expect(secondBodyJSON?["teamId"] as? Int == 5000)
     }
 
+    @Test("user transition team member leaves team")
     func userTransition_TeamMemberLeavesTeam() async throws {
         // Given - User starts in a team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -181,6 +182,7 @@ struct CursorProviderTransitionTests {
         #expect(bodyJSON?["teamId"] as? Int != 2222)
     }
 
+    @Test("individual user handles team specific errors")
     func individualUser_HandlesTeamSpecificErrors() async throws {
         // Given - Individual user (no team) getting team-specific error
         let errorResponse = Data("""
@@ -218,6 +220,7 @@ struct CursorProviderTransitionTests {
         }
     }
 
+    @Test("team user successfully fetches without explicit team id")
     func teamUser_SuccessfullyFetchesWithoutExplicitTeamId() async throws {
         // Given - Team user with stored teamId
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -259,6 +262,7 @@ struct CursorProviderTransitionTests {
         #expect(bodyJSON?["teamId"] as? Int == 7777)
     }
 
+    @Test("multiple requests with changing session state")
     func multipleRequestsWithChangingSessionState() async throws {
         // Test 1: No session (individual)
         var mockData = Data("""
