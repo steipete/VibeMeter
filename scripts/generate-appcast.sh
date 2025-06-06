@@ -151,15 +151,27 @@ create_appcast_item() {
     local dmg_url=$2
     local is_prerelease=$3
     
-    local tag=$(echo "$release_json" | jq -r '.tag_name')
-    local title=$(echo "$release_json" | jq -r '.name // .tag_name')
-    local body=$(echo "$release_json" | jq -r '.body // "No description provided"')
-    local published_at=$(echo "$release_json" | jq -r '.published_at')
+    # Extract fields with proper fallbacks
+    local tag=$(echo "$release_json" | jq -r '.tag_name // "unknown"')
+    local title=$(echo "$release_json" | jq -r '.name // .tag_name // "Release"')
+    local body=$(echo "$release_json" | jq -r '.body // "Release notes not available"')
+    local published_at=$(echo "$release_json" | jq -r '.published_at // ""')
+    
+    # Validate critical fields
+    if [ "$tag" = "unknown" ] || [ "$tag" = "null" ] || [ -z "$tag" ]; then
+        print_warning "Invalid tag_name for release, skipping"
+        return 1
+    fi
+    
     local version_string=$(parse_version "$tag")
     
-    # Get DMG asset info
-    local dmg_asset=$(echo "$release_json" | jq -r ".assets[] | select(.browser_download_url == \"$dmg_url\")")
-    local dmg_size=$(echo "$dmg_asset" | jq -r '.size')
+    # Get DMG asset info using base64 encoding for robustness
+    local dmg_asset_b64=$(echo "$release_json" | jq -r ".assets[] | select(.browser_download_url == \"$dmg_url\") | {size: .size, name: .name} | @base64" | head -1)
+    local dmg_size=""
+    
+    if [ -n "$dmg_asset_b64" ] && [ "$dmg_asset_b64" != "null" ]; then
+        dmg_size=$(echo "$dmg_asset_b64" | base64 --decode | jq -r '.size // null')
+    fi
     
     # If size is not in JSON, fetch from HTTP headers
     if [ "$dmg_size" = "null" ] || [ -z "$dmg_size" ]; then
@@ -227,12 +239,24 @@ create_appcast_item() {
     # Clean up temp DMG
     rm -f "$temp_dmg"
     
-    # Format the description
+    # Clean body for XML to handle special characters safely
+    local clean_body
+    clean_body=$(echo "$body" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g')
+    
+    # Format the description with proper XML structure
     local description="<h2>$title</h2>"
     if [ "$is_prerelease" = "true" ]; then
         description+="<p><strong>Pre-release version</strong></p>"
     fi
-    description+="<p>$(echo "$body" | sed 's/^/<p>/; s/$/<\/p>/' | head -5)</p>"
+    
+    # Add body content with proper formatting, limiting to prevent overly long descriptions
+    if [ -n "$clean_body" ] && [ "$clean_body" != "Release notes not available" ]; then
+        # Split body into paragraphs and limit to first 5 lines for brevity
+        local formatted_body=$(echo "$clean_body" | head -5 | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' | sed 's/^/<p>/; s/$/<\/p>/')
+        description+="<div>$formatted_body</div>"
+    else
+        description+="<p>Release notes not available</p>"
+    fi
     
     # Generate the item XML
     cat << EOF
@@ -264,9 +288,18 @@ main() {
     local temp_dir=$(mktemp -d)
     trap "rm -rf $temp_dir" EXIT
     
-    # Fetch all releases from GitHub
+    # Fetch all releases from GitHub with error handling
     print_info "Fetching releases from GitHub..."
-    local releases=$(gh api "repos/$GITHUB_REPO/releases" --paginate)
+    local releases
+    if ! releases=$(gh api "repos/$GITHUB_REPO/releases" --paginate 2>/dev/null); then
+        print_error "Failed to fetch releases from GitHub. Please check your GitHub CLI authentication and network connection."
+        exit 1
+    fi
+    
+    if [ -z "$releases" ] || [ "$releases" = "[]" ]; then
+        print_warning "No releases found for repository $GITHUB_REPO"
+        exit 0
+    fi
     
     # Separate stable and pre-releases
     local stable_releases=$(echo "$releases" | jq -c '.[] | select(.prerelease == false)')
@@ -288,10 +321,20 @@ EOF
     while IFS= read -r release; do
         [ -z "$release" ] && continue
         
-        # Find DMG asset
-        local dmg_url=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
-        if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
-            create_appcast_item "$release" "$dmg_url" "false" >> appcast.xml
+        # Find DMG asset using base64 encoding for robustness
+        local dmg_asset_b64=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | {url: .browser_download_url, name: .name} | @base64' | head -1)
+        
+        if [ -n "$dmg_asset_b64" ] && [ "$dmg_asset_b64" != "null" ]; then
+            local dmg_url=$(echo "$dmg_asset_b64" | base64 --decode | jq -r '.url')
+            if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
+                if create_appcast_item "$release" "$dmg_url" "false" >> appcast.xml; then
+                    print_info "Added stable release: $(echo "$release" | jq -r '.tag_name')"
+                else
+                    print_warning "Failed to create item for stable release: $(echo "$release" | jq -r '.tag_name')"
+                fi
+            fi
+        else
+            print_warning "No DMG asset found for stable release: $(echo "$release" | jq -r '.tag_name // "unknown"')"
         fi
     done <<< "$stable_releases"
     
@@ -314,10 +357,20 @@ EOF
     while IFS= read -r release; do
         [ -z "$release" ] && continue
         
-        # Find DMG asset
-        local dmg_url=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
-        if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
-            create_appcast_item "$release" "$dmg_url" "true" >> appcast-prerelease.xml
+        # Find DMG asset using base64 encoding for robustness
+        local dmg_asset_b64=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | {url: .browser_download_url, name: .name} | @base64' | head -1)
+        
+        if [ -n "$dmg_asset_b64" ] && [ "$dmg_asset_b64" != "null" ]; then
+            local dmg_url=$(echo "$dmg_asset_b64" | base64 --decode | jq -r '.url')
+            if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
+                if create_appcast_item "$release" "$dmg_url" "true" >> appcast-prerelease.xml; then
+                    print_info "Added pre-release: $(echo "$release" | jq -r '.tag_name')"
+                else
+                    print_warning "Failed to create item for pre-release: $(echo "$release" | jq -r '.tag_name')"
+                fi
+            fi
+        else
+            print_warning "No DMG asset found for pre-release: $(echo "$release" | jq -r '.tag_name // "unknown"')"
         fi
     done <<< "$pre_releases"
     
@@ -325,10 +378,20 @@ EOF
     while IFS= read -r release; do
         [ -z "$release" ] && continue
         
-        # Find DMG asset
-        local dmg_url=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
-        if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
-            create_appcast_item "$release" "$dmg_url" "false" >> appcast-prerelease.xml
+        # Find DMG asset using base64 encoding for robustness
+        local dmg_asset_b64=$(echo "$release" | jq -r '.assets[] | select(.name | endswith(".dmg")) | {url: .browser_download_url, name: .name} | @base64' | head -1)
+        
+        if [ -n "$dmg_asset_b64" ] && [ "$dmg_asset_b64" != "null" ]; then
+            local dmg_url=$(echo "$dmg_asset_b64" | base64 --decode | jq -r '.url')
+            if [ -n "$dmg_url" ] && [ "$dmg_url" != "null" ]; then
+                if create_appcast_item "$release" "$dmg_url" "false" >> appcast-prerelease.xml; then
+                    print_info "Added stable release to pre-release feed: $(echo "$release" | jq -r '.tag_name')"
+                else
+                    print_warning "Failed to create item for stable release in pre-release feed: $(echo "$release" | jq -r '.tag_name')"
+                fi
+            fi
+        else
+            print_warning "No DMG asset found for stable release in pre-release feed: $(echo "$release" | jq -r '.tag_name // "unknown"')"
         fi
     done <<< "$stable_releases"
     
