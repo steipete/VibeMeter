@@ -17,7 +17,6 @@ struct CursorProviderDataTests {
     }
 
     // MARK: - Test Data Constants
-    
     private static let mockPricingDescription = """
         1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: \
         10 requests per day included in Pro/Business, 10 cents per request after that.
@@ -98,7 +97,7 @@ struct CursorProviderDataTests {
         // Then
         #expect(invoice.items.count == 4)
         #expect(invoice.items[0].description == "112 discounted claude-4-sonnet-thinking requests")
-        #expect(invoice.items[1].description == 
+        #expect(invoice.items[1].description ==
                     "97 extra fast premium requests beyond 500/month * 4 cents per such request")
         #expect(invoice.month == 11)
         #expect(invoice.provider == .cursor)
