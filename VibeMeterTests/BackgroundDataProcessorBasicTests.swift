@@ -64,7 +64,7 @@ struct BackgroundDataProcessorBasicTests {
         // Then
         let calendar = Calendar.current
         let currentMonth = calendar.component(.month, from: Date()) - 1 // API uses 0-based months
-        let currentYear = calendar.component(.year, from: Date())
+        let _ = calendar.component(.year, from: Date())
 
         #expect(mockProvider.lastInvoiceMonth == currentMonth)
     }

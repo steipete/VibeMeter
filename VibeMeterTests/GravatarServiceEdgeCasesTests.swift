@@ -90,7 +90,7 @@ struct GravatarServiceEdgeCasesTests {
         // Given
         let email = "large@size.com"
         let size = 1000
-        let expectedRetinaSize = 2000
+        let _ = 2000
 
         // When
         let result = sut.gravatarURL(for: email, size: size)

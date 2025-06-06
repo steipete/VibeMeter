@@ -297,7 +297,7 @@ struct CursorProviderTransitionTests {
             httpVersion: nil,
             headerFields: nil)!
 
-        let invoice = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 2, year: 2024, teamId: nil)
+        _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 2, year: 2024, teamId: nil)
 
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
@@ -314,7 +314,7 @@ struct CursorProviderTransitionTests {
             httpVersion: nil,
             headerFields: nil)!
 
-        let invoice = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 3, year: 2024, teamId: nil)
+        _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 3, year: 2024, teamId: nil)
 
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]

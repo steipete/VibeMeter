@@ -37,7 +37,7 @@ struct GravatarServiceCoreTests {
         let email = "test@example.com"
         let expectedHash =
             "973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b" // SHA256 of "test@example.com"
-        let expectedURL = "https://www.gravatar.com/avatar/\(expectedHash)?s=80&d=mp"
+        let _ = "https://www.gravatar.com/avatar/\(expectedHash)?s=80&d=mp"
 
         // When
         let result = sut.gravatarURL(for: email)
@@ -80,7 +80,7 @@ struct GravatarServiceCoreTests {
         // Given
         let email = "user@domain.com"
         let size = 50
-        let expectedRetinaSize = size * 2 // 100
+        let _ = size * 2 // 100
 
         // When
         let result = sut.gravatarURL(for: email, size: size)
@@ -94,7 +94,7 @@ struct GravatarServiceCoreTests {
     func gravatarURL_DefaultSize_Uses40Points() {
         // Given
         let email = "default@size.com"
-        let expectedRetinaSize = 80 // 40 * 2
+        let _ = 80 // 40 * 2
 
         // When
         let result = sut.gravatarURL(for: email)
