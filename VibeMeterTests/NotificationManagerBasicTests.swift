@@ -1,3 +1,6 @@
+// swiftlint:disable file_length
+// Comprehensive test suite requires extensive coverage
+
 import Foundation
 import Testing
 @preconcurrency import UserNotifications
