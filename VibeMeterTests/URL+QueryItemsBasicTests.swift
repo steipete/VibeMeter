@@ -155,7 +155,8 @@ struct URLQueryItemsBasicTests {
         let result = url.appendingQueryItems(items)
 
         // Then - Should succeed in this case, but testing the pattern
-        #expect(result != nil)
+        let _: URL = result
+        #expect(true)
     }
 
     @Test("appending query items chained calls works correctly")

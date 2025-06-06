@@ -152,7 +152,8 @@ struct MenuBarStateManagerTests {
     @Test("menu bar state manager  is observable")
     func menuBarStateManager_IsObservable() {
         // Then
-        #expect((sut as (any Observable)?) != nil)
+        let _: any Observable = sut
+        #expect(true)
     }
 
     @Test("state properties  are public")
@@ -173,7 +174,8 @@ struct MenuBarStateManagerTests {
     func menuBarStateManager_IsMainActor() {
         // Then - MenuBarStateManager is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        #expect(sut != nil)
+        let _: MenuBarStateManager = sut
+        #expect(true)
     }
 
     @Test("concurrent state updates  main actor safety")
@@ -194,7 +196,8 @@ struct MenuBarStateManagerTests {
         }
 
         // Then - Should complete without crashes
-        #expect(sut.currentState != nil)
+        let _: MenuBarState = sut.currentState
+        #expect(true)
     }
 
     @Test("set state  extreme data values  clamps correctly")
