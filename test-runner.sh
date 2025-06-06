@@ -108,15 +108,31 @@ if [ "$VERBOSE" = "NO" ]; then
 fi
 
 if [ "$VERBOSE" = "YES" ]; then
-    # In verbose mode (CI), show raw build output with timeout
-    if ! timeout 600 eval "$BUILD_CMD"; then
-        BUILD_STATUS=$?
-        if [ $BUILD_STATUS -eq 124 ]; then
-            echo -e "${RED}❌ Build timed out after 10 minutes${NC}"
-        else
-            echo -e "${RED}❌ Build failed${NC}"
+    # In verbose mode (CI), show raw build output with timeout protection
+    # Use gtimeout on macOS (from coreutils) or fallback without timeout
+    TIMEOUT_CMD=""
+    if command -v gtimeout &> /dev/null; then
+        TIMEOUT_CMD="gtimeout 600"
+    elif command -v timeout &> /dev/null; then
+        TIMEOUT_CMD="timeout 600"
+    fi
+    
+    if [ -n "$TIMEOUT_CMD" ]; then
+        if ! $TIMEOUT_CMD eval "$BUILD_CMD"; then
+            BUILD_STATUS=$?
+            if [ $BUILD_STATUS -eq 124 ]; then
+                echo -e "${RED}❌ Build timed out after 10 minutes${NC}"
+            else
+                echo -e "${RED}❌ Build failed${NC}"
+            fi
+            exit 1
         fi
-        exit 1
+    else
+        # No timeout available, run without it
+        if ! eval "$BUILD_CMD"; then
+            echo -e "${RED}❌ Build failed${NC}"
+            exit 1
+        fi
     fi
 else
     # Local development, use xcbeautify for clean output
@@ -159,12 +175,18 @@ if [ -n "$JUNIT_OUTPUT" ]; then
     if [ "$VERBOSE" = "YES" ]; then
         # In verbose mode (CI), show raw output without xcbeautify filtering
         # Use timeout to prevent hanging in CI
-        timeout 600 eval "$TEST_CMD" 2>&1 | tee test-output.log
-        TEST_STATUS=${PIPESTATUS[0]}
-        # If timeout occurred, mark as failure
-        if [ $TEST_STATUS -eq 124 ]; then
-            echo "Tests timed out after 10 minutes"
-            TEST_STATUS=1
+        if [ -n "$TIMEOUT_CMD" ]; then
+            $TIMEOUT_CMD eval "$TEST_CMD" 2>&1 | tee test-output.log
+            TEST_STATUS=${PIPESTATUS[0]}
+            # If timeout occurred, mark as failure
+            if [ $TEST_STATUS -eq 124 ]; then
+                echo "Tests timed out after 10 minutes"
+                TEST_STATUS=1
+            fi
+        else
+            # No timeout available, run without it
+            eval "$TEST_CMD" 2>&1 | tee test-output.log
+            TEST_STATUS=${PIPESTATUS[0]}
         fi
     else
         # Local development, use xcbeautify for clean output
@@ -217,12 +239,18 @@ else
     if [ "$VERBOSE" = "YES" ]; then
         # In verbose mode (CI), show raw output without xcbeautify filtering
         # Use timeout to prevent hanging in CI
-        timeout 600 eval "$TEST_CMD"
-        TEST_STATUS=$?
-        # If timeout occurred, mark as failure
-        if [ $TEST_STATUS -eq 124 ]; then
-            echo "Tests timed out after 10 minutes"
-            TEST_STATUS=1
+        if [ -n "$TIMEOUT_CMD" ]; then
+            $TIMEOUT_CMD eval "$TEST_CMD"
+            TEST_STATUS=$?
+            # If timeout occurred, mark as failure
+            if [ $TEST_STATUS -eq 124 ]; then
+                echo "Tests timed out after 10 minutes"
+                TEST_STATUS=1
+            fi
+        else
+            # No timeout available, run without it
+            eval "$TEST_CMD"
+            TEST_STATUS=$?
         fi
     else
         # Local development, use xcbeautify for clean output
