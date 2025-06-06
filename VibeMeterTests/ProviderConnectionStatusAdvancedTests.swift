@@ -1,13 +1,13 @@
+import Foundation
 import SwiftUI
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("ProviderConnectionStatusAdvancedTests")
 struct ProviderConnectionStatusAdvancedTests {
     // MARK: - Codable Tests
 
-    @Test("codable  disconnected  encodes and decodes")
-
+    @Test("codable disconnected encodes and decodes")
     func codable_Disconnected_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.disconnected
@@ -18,7 +18,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(status == decoded)
+    }
 
+    @Test("codable connecting encodes and decodes")
     func codable_Connecting_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.connecting
@@ -29,7 +31,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(status == decoded)
+    }
 
+    @Test("codable connected encodes and decodes")
     func codable_Connected_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.connected
@@ -40,7 +44,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(status == decoded)
+    }
 
+    @Test("codable syncing encodes and decodes")
     func codable_Syncing_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.syncing
@@ -51,7 +57,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(status == decoded)
+    }
 
+    @Test("codable error encodes and decodes")
     func codable_Error_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.error(message: "Network connection failed")
@@ -61,13 +69,13 @@ struct ProviderConnectionStatusAdvancedTests {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        #expect(status == decoded) = decoded {
+        #expect(status == decoded)
+        if case let .error(message) = decoded {
             #expect(message == "Network connection failed")
         }
     }
 
-    @Test("codable  rate limited  without date  encodes and decodes")
-
+    @Test("codable rate limited without date encodes and decodes")
     func codable_RateLimited_WithoutDate_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.rateLimited(until: nil)
@@ -77,13 +85,13 @@ struct ProviderConnectionStatusAdvancedTests {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        #expect(status == decoded) = decoded {
+        #expect(status == decoded)
+        if case let .rateLimited(until) = decoded {
             #expect(until == nil)
         }
     }
 
-    @Test("codable  rate limited  with date  encodes and decodes")
-
+    @Test("codable rate limited with date encodes and decodes")
     func codable_RateLimited_WithDate_EncodesAndDecodes() throws {
         // Given
         let date = Date(timeIntervalSince1970: 1_640_995_200) // Fixed date for testing
@@ -94,13 +102,13 @@ struct ProviderConnectionStatusAdvancedTests {
         let decoded = try JSONDecoder().decode(ProviderConnectionStatus.self, from: encoded)
 
         // Then
-        #expect(status == decoded) = decoded {
+        #expect(status == decoded)
+        if case let .rateLimited(until) = decoded {
             #expect(until == date)
         }
     }
 
-    @Test("codable  stale  encodes and decodes")
-
+    @Test("codable stale encodes and decodes")
     func codable_Stale_EncodesAndDecodes() throws {
         // Given
         let status = ProviderConnectionStatus.stale
@@ -111,7 +119,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(status == decoded)
+    }
 
+    @Test("codable unknown type defaults to disconnected")
     func codable_UnknownType_DefaultsToDisconnected() throws {
         // Given - Manually create JSON with unknown type
         let json = Data("""
@@ -123,7 +133,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(decoded == .disconnected)
+    }
 
+    @Test("codable malformed error throws error")
     func codable_MalformedError_ThrowsError() {
         // Given - Error case without message
         let json = Data("""
@@ -131,13 +143,14 @@ struct ProviderConnectionStatusAdvancedTests {
         """.utf8)
 
         // When/Then
-        XCTAssertThrowsError(try JSONDecoder().decode(ProviderConnectionStatus.self, from: json))
+        #expect(throws: (any Error).self) {
+            try JSONDecoder().decode(ProviderConnectionStatus.self, from: json)
+        }
     }
 
     // MARK: - User-Friendly Error Messages Tests
 
-    @Test("user friendly error  network errors")
-
+    @Test("user friendly error network errors")
     func userFriendlyError_NetworkErrors() {
         // Given
         let networkErrors = [
@@ -151,13 +164,11 @@ struct ProviderConnectionStatusAdvancedTests {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            #expect(
-                status.description == "Connection failed")
+            #expect(status.description == "Connection failed")
         }
     }
 
-    @Test("user friendly error  auth errors")
-
+    @Test("user friendly error auth errors")
     func userFriendlyError_AuthErrors() {
         // Given
         let authErrors = [
@@ -171,13 +182,11 @@ struct ProviderConnectionStatusAdvancedTests {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            #expect(
-                status.description == "Authentication required")
+            #expect(status.description == "Authentication required")
         }
     }
 
-    @Test("user friendly error  rate limit errors")
-
+    @Test("user friendly error rate limit errors")
     func userFriendlyError_RateLimitErrors() {
         // Given
         let rateLimitErrors = [
@@ -191,13 +200,11 @@ struct ProviderConnectionStatusAdvancedTests {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            #expect(
-                status.description == "Too many requests")
+            #expect(status.description == "Too many requests")
         }
     }
 
-    @Test("user friendly error  server errors")
-
+    @Test("user friendly error server errors")
     func userFriendlyError_ServerErrors() {
         // Given
         let serverErrors = [
@@ -211,13 +218,11 @@ struct ProviderConnectionStatusAdvancedTests {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            #expect(
-                status.description == "Service unavailable")
+            #expect(status.description == "Service unavailable")
         }
     }
 
-    @Test("user friendly error  generic errors")
-
+    @Test("user friendly error generic errors")
     func userFriendlyError_GenericErrors() {
         // Given
         let genericErrors = [
@@ -231,22 +236,22 @@ struct ProviderConnectionStatusAdvancedTests {
             let status = ProviderConnectionStatus.error(message: error)
 
             // Then
-            #expect(
-                status.description == "Something went wrong")
+            #expect(status.description == "Something went wrong")
         }
     }
 
     // MARK: - Rate Limit Description Tests
 
-    @Test("rate limit description  with nil date  shows generic message")
-
+    @Test("rate limit description with nil date shows generic message")
     func rateLimitDescription_WithNilDate_ShowsGenericMessage() {
         // Given
         let status = ProviderConnectionStatus.rateLimited(until: nil)
 
         // When/Then
         #expect(status.description == "Rate limited")
+    }
 
+    @Test("rate limit description with past date shows expired message")
     func rateLimitDescription_WithPastDate_ShowsExpiredMessage() {
         // Given
         let pastDate = Date().addingTimeInterval(-60) // 1 minute ago
@@ -254,7 +259,9 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // When/Then
         #expect(status.description == "Rate limited")
+    }
 
+    @Test("rate limit description with near future date shows time remaining")
     func rateLimitDescription_WithNearFutureDate_ShowsTimeRemaining() {
         // Given
         let futureDate = Date().addingTimeInterval(45) // 45 seconds from now
@@ -264,8 +271,10 @@ struct ProviderConnectionStatusAdvancedTests {
         let description = status.description
 
         // Then
-        #expect(description.contains("Rate limited")
+        #expect(description.contains("Rate limited"))
+    }
 
+    @Test("rate limit description with far future date shows time remaining")
     func rateLimitDescription_WithFarFutureDate_ShowsTimeRemaining() {
         // Given
         let futureDate = Date().addingTimeInterval(3700) // Just over 1 hour from now
@@ -275,8 +284,10 @@ struct ProviderConnectionStatusAdvancedTests {
         let description = status.description
 
         // Then
-        #expect(description.contains("Rate limited")
+        #expect(description.contains("Rate limited"))
+    }
 
+    @Test("error status with empty message handles gracefully")
     func errorStatus_WithEmptyMessage_HandlesGracefully() {
         // Given
         let status = ProviderConnectionStatus.error(message: "")
@@ -285,15 +296,16 @@ struct ProviderConnectionStatusAdvancedTests {
         #expect(status.description == "Something went wrong")
     }
 
-    @Test("error status  with whitespace message  handles gracefully")
-
+    @Test("error status with whitespace message handles gracefully")
     func errorStatus_WithWhitespaceMessage_HandlesGracefully() {
         // Given
         let status = ProviderConnectionStatus.error(message: "   ")
 
         // When/Then
         #expect(status.description == "Something went wrong")
+    }
 
+    @Test("rate limit status with very distant future date handles gracefully")
     func rateLimitStatus_WithVeryDistantFutureDate_HandlesGracefully() {
         // Given
         let veryFarDate = Date().addingTimeInterval(86400 * 365) // 1 year from now
@@ -303,13 +315,12 @@ struct ProviderConnectionStatusAdvancedTests {
         let description = status.description
 
         // Then
-        #expect(description.contains("Rate limited")
+        #expect(description.contains("Rate limited"))
     }
 
     // MARK: - JSON Encoding/Decoding Format Tests
 
-    @Test("j son format  error  includes message")
-
+    @Test("json format error includes message")
     func jSONFormat_Error_IncludesMessage() throws {
         // Given
         let status = ProviderConnectionStatus.error(message: "Test error message")
@@ -320,10 +331,10 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(json?["type"] as? String == "error")
+        #expect(json?["message"] as? String == "Test error message")
     }
 
-    @Test("j son format  rate limited  includes date")
-
+    @Test("json format rate limited includes date")
     func jSONFormat_RateLimited_IncludesDate() throws {
         // Given
         let date = Date()
@@ -337,10 +348,10 @@ struct ProviderConnectionStatusAdvancedTests {
 
         // Then
         #expect(json?["type"] as? String == "rateLimited")
+        #expect(json?["until"] != nil)
     }
 
-    @Test("j son format  simple states  only include type")
-
+    @Test("json format simple states only include type")
     func jSONFormat_SimpleStates_OnlyIncludeType() throws {
         // Given
         let simpleStatuses: [ProviderConnectionStatus] = [
@@ -357,6 +368,7 @@ struct ProviderConnectionStatusAdvancedTests {
             let json = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
 
             #expect(json?.count == 1)
+            #expect(json?["type"] != nil)
         }
     }
 }

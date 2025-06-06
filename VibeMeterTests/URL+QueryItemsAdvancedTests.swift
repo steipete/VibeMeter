@@ -85,7 +85,7 @@ struct URLQueryItemsAdvancedTests {
         let result = url.appendingQueryItems(items)
 
         // Then
-        #expect(result != nil)
+        #expect(result.absoluteString.contains("locale=de"))
     }
 
     // MARK: - Long URL Tests
@@ -101,7 +101,7 @@ struct URLQueryItemsAdvancedTests {
         let result = url.appendingQueryItems(items)
 
         // Then
-        #expect(result != nil)
+        #expect(result.absoluteString.contains("param=value"))
         #expect(result.absoluteString.count > url.absoluteString.count)
     }
 

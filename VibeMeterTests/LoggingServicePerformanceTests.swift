@@ -1,7 +1,7 @@
 import Foundation
 import os.log
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("LoggingServicePerformanceTests")
 struct LoggingServicePerformanceTests {

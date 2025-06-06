@@ -1,13 +1,13 @@
+import Foundation
 import SwiftUI
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("ProgressColorEdgeCasesTests")
 struct ProgressColorEdgeCasesTests {
     // MARK: - Negative Values Tests
 
-    @Test("color  negative values  returns green")
-
+    @Test("color negative values returns green")
     func color_NegativeValues_ReturnsGreen() {
         // Given
         let negativeValues = [-1.0, -0.5, -0.1, -0.001]
@@ -21,8 +21,7 @@ struct ProgressColorEdgeCasesTests {
         }
     }
 
-    @Test("warning level  negative values  returns normal")
-
+    @Test("warning level negative values returns normal")
     func warningLevel_NegativeValues_ReturnsNormal() {
         // Given
         let negativeValues = [-1.0, -0.5, -0.1, -0.001]
@@ -38,8 +37,7 @@ struct ProgressColorEdgeCasesTests {
 
     // MARK: - Extreme Values Tests
 
-    @Test("color  extremely large values  returns red")
-
+    @Test("color extremely large values returns red")
     func color_ExtremelyLargeValues_ReturnsRed() {
         // Given
         let largeValues = [10.0, 100.0, 1000.0, Double.greatestFiniteMagnitude]
@@ -53,8 +51,7 @@ struct ProgressColorEdgeCasesTests {
         }
     }
 
-    @Test("warning level  extremely large values  returns high")
-
+    @Test("warning level extremely large values returns high")
     func warningLevel_ExtremelyLargeValues_ReturnsHigh() {
         // Given
         let largeValues = [10.0, 100.0, 1000.0, Double.greatestFiniteMagnitude]
@@ -70,8 +67,7 @@ struct ProgressColorEdgeCasesTests {
 
     // MARK: - Special Float Values Tests
 
-    @Test("color  infinity values")
-
+    @Test("color infinity values")
     func color_InfinityValues() {
         // Given
         let infinityValues = [Double.infinity, -Double.infinity]
@@ -86,8 +82,7 @@ struct ProgressColorEdgeCasesTests {
         }
     }
 
-    @Test("color  na n value")
-
+    @Test("color nan value")
     func color_NaNValue() {
         // Given
         let nanProgress = Double.nan
@@ -98,7 +93,9 @@ struct ProgressColorEdgeCasesTests {
         // Then
         // NaN should be handled gracefully (will likely fall through to default case)
         #expect(color != nil)
+    }
 
+    @Test("warning level infinity values")
     func warningLevel_InfinityValues() {
         // Given
         let infinityValues = [Double.infinity, -Double.infinity]
@@ -112,8 +109,7 @@ struct ProgressColorEdgeCasesTests {
         }
     }
 
-    @Test("warning level  na n value")
-
+    @Test("warning level nan value")
     func warningLevel_NaNValue() {
         // Given
         let nanProgress = Double.nan
@@ -123,7 +119,11 @@ struct ProgressColorEdgeCasesTests {
 
         // Then
         #expect(warningLevel != nil)
+    }
 
+    // MARK: - Performance Tests
+
+    @Test("color performance")
     func color_Performance() {
         // Given
         let iterations = 100_000
@@ -137,8 +137,10 @@ struct ProgressColorEdgeCasesTests {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        #expect(duration < 1.0)
+        #expect(duration < 1.0) // Should complete within 1 second
+    }
 
+    @Test("warning level performance")
     func warningLevel_Performance() {
         // Given
         let iterations = 100_000
@@ -152,8 +154,10 @@ struct ProgressColorEdgeCasesTests {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        #expect(duration < 1.0)
+        #expect(duration < 1.0) // Should complete within 1 second
+    }
 
+    @Test("comprehensive range test")
     func color_ComprehensiveRangeTest() {
         // Test a comprehensive range of values to ensure no unexpected behavior
         let increment = 0.01

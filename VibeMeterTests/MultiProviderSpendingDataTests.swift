@@ -1,5 +1,6 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 /// Tests for the MultiProviderSpendingData observable model.
 ///
@@ -11,7 +12,12 @@ import Testing
 @Suite("MultiProviderSpendingDataTests")
 @MainActor
 struct MultiProviderSpendingDataTests {
-    let spendingData: MultiProviderSpendingData    }
+    let spendingData: MultiProviderSpendingData
+
+    init() {
+        spendingData = MultiProviderSpendingData()
+    }
+
     // MARK: - Initial State Tests
 
     @Test("initial state")
@@ -182,8 +188,11 @@ struct MultiProviderSpendingDataTests {
         #expect(cursorData?.usageData != nil)
         #expect(cursorData?.usageData?.totalRequests == 4387)
         #expect(cursorData?.usageData?.provider == .cursor)
+    }
 
+    @Test("clear specific provider removes only that provider")
     func clear_SpecificProvider_RemovesOnlyThatProvider() {
+        let spendingData = MultiProviderSpendingData()
         // Arrange - Set up data for cursor
         let invoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: .cursor)],
@@ -194,17 +203,21 @@ struct MultiProviderSpendingDataTests {
         spendingData.updateSpending(for: .cursor, from: invoice, rates: [:], targetCurrency: "USD")
 
         // Verify data is set
-        #expect(spendingData.providersWithData.contains(.cursor == true)
+        #expect(spendingData.providersWithData.contains(.cursor) == true)
+
+        // Clear cursor data
+        spendingData.clearProviderData(for: .cursor)
 
         // Assert - Cursor data should be removed
-        #expect(spendingData.providersWithData.contains(.cursor == false)
+        #expect(spendingData.providersWithData.contains(.cursor) == false)
     }
 
     // MARK: - Multi-Provider Tests
 
     @Test("multiple providers  independent data")
-
     func multipleProviders_IndependentData() {
+        let spendingData = MultiProviderSpendingData()
+
         // Arrange
         let cursorInvoice = ProviderMonthlyInvoice(
             items: [ProviderInvoiceItem(cents: 5000, description: "Cursor usage", provider: .cursor)],
@@ -217,10 +230,10 @@ struct MultiProviderSpendingDataTests {
         spendingData.updateSpending(for: .cursor, from: cursorInvoice, rates: [:], targetCurrency: "USD")
 
         // Assert
-        #expect(spendingData.providersWithData.contains(.cursor == true)
+        #expect(spendingData.providersWithData.contains(.cursor))
 
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(cursorData != nil) < 0.01)
+        #expect(cursorData != nil)
     }
 
     @Test("total spending  multiple providers")
@@ -238,10 +251,10 @@ struct MultiProviderSpendingDataTests {
 
         // Act & Assert
         let totalUSD = spendingData.totalSpendingConverted(to: "USD", rates: [:])
-        #expect(abs(totalUSD - 50.0 == true)
+        #expect(abs(totalUSD - 50.0) < 0.01)
 
         let totalEUR = spendingData.totalSpendingConverted(to: "EUR", rates: ["EUR": 0.9])
-        #expect(abs(totalEUR - 45.0 == true) // 50 * 0.9
+        #expect(abs(totalEUR - 45.0) < 0.01) // 50 * 0.9
     }
 
     @Test("total spending  no providers  returns zero")

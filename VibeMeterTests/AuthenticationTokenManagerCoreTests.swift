@@ -8,7 +8,7 @@ struct AuthenticationTokenManagerCoreTests {
     private let mockKeychainServices: [ServiceProvider: MockKeychainService]
 
     init() {
-        let mockServices: [ServiceProvider: MockKeychainService] = [:]
+        var mockServices: [ServiceProvider: MockKeychainService] = [:]
         for provider in ServiceProvider.allCases {
             mockServices[provider] = MockKeychainService()
         }

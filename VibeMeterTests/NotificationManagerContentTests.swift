@@ -1,7 +1,7 @@
 import Foundation
+import Testing
 @preconcurrency import UserNotifications
 @testable import VibeMeter
-import Testing
 
 @Suite("NotificationManagerContentTests")
 @MainActor
@@ -10,7 +10,7 @@ struct NotificationManagerContentTests {
     private let mockNotificationCenter: MockUNUserNotificationCenter
 
     init() async throws {
-        await MainActor.run {  }
+        await MainActor.run {}
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }

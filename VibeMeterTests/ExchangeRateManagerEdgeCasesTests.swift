@@ -1,17 +1,17 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("ExchangeRateManagerEdgeCasesTests")
 struct ExchangeRateManagerEdgeCasesTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
-    
+
     init() {
         self.mockURLSession = MockURLSession()
         self.exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
     }
-    
+
     // MARK: - Edge Cases and Error Scenarios
 
     @Test("get exchange rates empty rates response")

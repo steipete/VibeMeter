@@ -1,8 +1,15 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
-@Suite("CursorProvider Basic Tests")
+// Import shared test utilities
+typealias Helpers = TestHelpers
+
+extension Tag {
+    @Tag static var cursor: Self
+}
+
+@Suite("CursorProvider Basic Tests", .tags(.unit, .provider, .cursor))
 struct CursorProviderBasicTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
@@ -17,212 +24,328 @@ struct CursorProviderBasicTests {
     }
 
     // MARK: - Team Info Tests
-
-    @Test("fetch team info success")
-
-    func fetchTeamInfoSuccess() async throws {
-        // Given
-        let mockTeamsData = Data("""
-        {
-            "teams": [
+    
+    @Suite("Team Information Fetching", .tags(.unit, .team))
+    struct TeamInfoTests {
+        let provider: CursorProvider
+        let mockSession: MockURLSession
+        
+        init() {
+            self.mockSession = MockURLSession()
+            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
+        }
+        
+        struct TeamInfoTestCase {
+            let jsonResponse: String
+            let expectedId: Int
+            let expectedName: String?
+            let description: String
+            
+            init(json: String, id: Int, name: String? = nil, _ description: String) {
+                self.jsonResponse = json
+                self.expectedId = id
+                self.expectedName = name
+                self.description = description
+            }
+        }
+        
+        static let teamInfoTestCases: [TeamInfoTestCase] = [
+            TeamInfoTestCase(
+                json: """
                 {
-                    "id": 123,
-                    "name": "Test Team"
+                    "teams": [
+                        {
+                            "id": 123,
+                            "name": "Development Team"
+                        }
+                    ]
                 }
-            ]
+                """,
+                id: 123,
+                name: "Development Team",
+                "successful team fetch with name"
+            ),
+            TeamInfoTestCase(
+                json: """
+                {
+                    "teams": [
+                        {
+                            "id": 456,
+                            "name": "Production Team"
+                        }
+                    ]
+                }
+                """,
+                id: 456,
+                name: "Production Team",
+                "successful team fetch with different team"
+            ),
+            TeamInfoTestCase(
+                json: "{}",
+                id: -1,
+                "fallback team when no teams found"
+            )
+        ]
+        
+        @Test("Team info fetching scenarios", arguments: teamInfoTestCases)
+        func teamInfoFetchingScenarios(testCase: TeamInfoTestCase) async throws {
+            // Given
+            let mockData = Data(testCase.jsonResponse.utf8)
+            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 200, url: CursorAPIConstants.URLs.teams.absoluteString)
+            
+            mockSession.nextData = mockData
+            mockSession.nextResponse = mockResponse
+            
+            // When
+            let teamInfo = try await provider.fetchTeamInfo(authToken: "test-token")
+            
+            // Then
+            #expect(teamInfo.id == testCase.expectedId, "Team ID mismatch: \(testCase.description)")
+            #expect(teamInfo.provider == .cursor, "Provider should be cursor: \(testCase.description)")
+            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Cookie") != nil, "Should set cookie header: \(testCase.description)")
         }
-        """.utf8)
-
-        let mockResponse = HTTPURLResponse(
-            url: CursorAPIConstants.URLs.teams,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil)!
-
-        mockURLSession.nextData = mockTeamsData
-        mockURLSession.nextResponse = mockResponse
-
-        // When
-        let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-
-        // Then
-        #expect(teamInfo.id == 123)
-        #expect(teamInfo.provider == .cursor)
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie") != nil)
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type") != nil)
-    }
-
-    @Test("fetch team info no teams found uses fallback")
-
-    func fetchTeamInfoNoTeamsFoundUsesFallback() async {
-        // Given
-        let mockEmptyTeamsData = Data("""
-        {}
-        """.utf8)
-
-        let mockResponse = HTTPURLResponse(
-            url: CursorAPIConstants.URLs.teams,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil)!
-
-        mockURLSession.nextData = mockEmptyTeamsData
-        mockURLSession.nextResponse = mockResponse
-
-        // When
-        do {
-            let teamInfo = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
-
-            // Then - Should return fallback team info instead of throwing
-            #expect(teamInfo.id == -1, "Should use fallback team ID")
-            #expect(teamInfo.provider == .cursor, "Should maintain correct provider")
-        }
-    }
-
-    @Test("fetch team info unauthorized error")
-
-    func fetchTeamInfoUnauthorizedError() async {
-        // Given
-        let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://www.cursor.com/api/dashboard/teams")!,
-            statusCode: 401,
-            httpVersion: nil,
-            headerFields: nil)!
-
-        mockURLSession.nextData = Data()
-        mockURLSession.nextResponse = mockResponse
-
-        // When/Then
-        do {
-            _ = try await cursorProvider.fetchTeamInfo(authToken: "invalid-token")
-            Issue.record("Should have thrown unauthorized error")
-        } catch let error as ProviderError {
-            #expect(error == .unauthorized)
-        } catch {
-            Issue.record("Unexpected error type: \(error)")
+        
+        @Test("Unauthorized team info request")
+        func unauthorizedTeamInfoRequest() async {
+            // Given
+            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 401, url: CursorAPIConstants.URLs.teams.absoluteString)
+            mockSession.nextData = Data()
+            mockSession.nextResponse = mockResponse
+            
+            // When/Then
+            do {
+                _ = try await provider.fetchTeamInfo(authToken: "invalid-token")
+                Issue.record("Should have thrown unauthorized error")
+            } catch let error as ProviderError {
+                #expect(error == .unauthorized, "Should throw unauthorized error")
+            } catch {
+                Issue.record("Unexpected error type: \(error)")
+            }
         }
     }
 
     // MARK: - User Info Tests
-
-    @Test("fetch user info  success")
-
-    func testFetchUserInfo_Success() async throws {
-        // Given
-        let mockUserData = Data("""
-        {
-            "email": "test@example.com",
-            "teamId": 456
+    
+    @Suite("User Information Fetching", .tags(.unit, .user))
+    struct UserInfoTests {
+        let provider: CursorProvider
+        let mockSession: MockURLSession
+        
+        init() {
+            self.mockSession = MockURLSession()
+            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
-        """.utf8)
-
-        let mockResponse = HTTPURLResponse(
-            url: CursorAPIConstants.URLs.userInfo,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil)!
-
-        mockURLSession.nextData = mockUserData
-        mockURLSession.nextResponse = mockResponse
-
-        // When
-        let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-
-        // Then
-        #expect(userInfo.email == "test@example.com")
-        #expect(userInfo.provider == .cursor)
-        #expect(mockURLSession.lastRequest?.httpMethod == "GET")
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie")?.contains("WorkosCursorSessionToken=test-token") == true)
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept") != nil)
-    }
-
-    @Test("fetch user info  without team id")
-
-    func testFetchUserInfo_WithoutTeamId() async throws {
-        // Given
-        let mockUserData = Data("""
-        {
-            "email": "test@example.com"
+        
+        struct UserInfoTestCase {
+            let jsonResponse: String
+            let expectedEmail: String
+            let hasTeamId: Bool
+            let description: String
+            
+            init(json: String, email: String, hasTeamId: Bool = true, _ description: String) {
+                self.jsonResponse = json
+                self.expectedEmail = email
+                self.hasTeamId = hasTeamId
+                self.description = description
+            }
         }
-        """.utf8)
-
-        let mockResponse = HTTPURLResponse(
-            url: CursorAPIConstants.URLs.userInfo,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil)!
-
-        mockURLSession.nextData = mockUserData
-        mockURLSession.nextResponse = mockResponse
-
-        // When
-        let userInfo = try await cursorProvider.fetchUserInfo(authToken: "test-token")
-
-        // Then
-        #expect(userInfo.email == "test@example.com")
-        #expect(userInfo.provider == .cursor)
-    }
-
-    @Test("get authentication url returns correct url")
-    func testGetAuthenticationURL() async {
-        // When
-        let authURL = cursorProvider.getAuthenticationURL()
-
-        // Then
-        #expect(authURL == CursorAPIConstants.authenticationURL)
-    }
-
-    @Test("extract auth token from cookies")
-    func testExtractAuthToken_FromCookies() async {
-        // Given
-        let cookie = HTTPCookie(properties: [
-            .name: CursorAPIConstants.Headers.sessionCookieName,
-            .value: "extracted-token-123",
-            .domain: ".cursor.com",
-            .path: "/",
-        ])!
-
-        let callbackData: [String: Any] = [
-            "cookies": [cookie],
+        
+        static let userInfoTestCases: [UserInfoTestCase] = [
+            UserInfoTestCase(
+                json: """
+                {
+                    "email": "developer@example.com",
+                    "teamId": 456
+                }
+                """,
+                email: "developer@example.com",
+                "user with team ID"
+            ),
+            UserInfoTestCase(
+                json: """
+                {
+                    "email": "freelancer@example.com"
+                }
+                """,
+                email: "freelancer@example.com",
+                hasTeamId: false,
+                "user without team ID"
+            ),
+            UserInfoTestCase(
+                json: """
+                {
+                    "email": "admin@company.com",
+                    "teamId": 789
+                }
+                """,
+                email: "admin@company.com",
+                "admin user with different team"
+            )
         ]
-
-        // When
-        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
-
-        // Then
-        #expect(extractedToken == "extracted-token-123")
+        
+        @Test("User info fetching scenarios", arguments: userInfoTestCases)
+        func userInfoFetchingScenarios(testCase: UserInfoTestCase) async throws {
+            // Given
+            let mockData = Data(testCase.jsonResponse.utf8)
+            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 200, url: CursorAPIConstants.URLs.userInfo.absoluteString)
+            
+            mockSession.nextData = mockData
+            mockSession.nextResponse = mockResponse
+            
+            // When
+            let userInfo = try await provider.fetchUserInfo(authToken: "test-token")
+            
+            // Then
+            #expect(userInfo.email == testCase.expectedEmail, "Email mismatch: \(testCase.description)")
+            #expect(userInfo.provider == .cursor, "Provider should be cursor: \(testCase.description)")
+            #expect(mockSession.lastRequest?.httpMethod == "GET", "Should use GET method: \(testCase.description)")
+            
+            let cookieHeader = mockSession.lastRequest?.value(forHTTPHeaderField: "Cookie")
+            #expect(cookieHeader?.contains("WorkosCursorSessionToken=test-token") == true, "Should set auth cookie: \(testCase.description)")
+            #expect(mockSession.lastRequest?.value(forHTTPHeaderField: "Accept") != nil, "Should set Accept header: \(testCase.description)")
+        }
     }
 
-    @Test("extract auth token no cookies")
-    func testExtractAuthToken_NoCookies() async {
-        // Given
-        let callbackData: [String: Any] = [:]
-
-        // When
-        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
-
-        // Then
-        #expect(extractedToken == nil)
-    }
-
-    @Test("extract auth token wrong cookie name")
-    func testExtractAuthToken_WrongCookieName() async {
-        // Given
-        let cookie = HTTPCookie(properties: [
-            .name: "SomeOtherCookie",
-            .value: "some-value",
-            .domain: ".cursor.com",
-            .path: "/",
-        ])!
-
-        let callbackData: [String: Any] = [
-            "cookies": [cookie],
+    // MARK: - Authentication Tests
+    
+    @Suite("Authentication Operations", .tags(.unit, .auth))
+    struct AuthenticationTests {
+        let provider: CursorProvider
+        
+        init() {
+            let mockSession = MockURLSession()
+            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
+        }
+        
+        @Test("Authentication URL generation")
+        func authenticationURLGeneration() {
+            // When
+            let authURL = provider.getAuthenticationURL()
+            
+            // Then
+            #expect(authURL == CursorAPIConstants.authenticationURL, "Should return correct authentication URL")
+        }
+        
+        struct TokenExtractionTestCase {
+            let callbackData: [String: Any]
+            let expectedToken: String?
+            let description: String
+            
+            init(data: [String: Any], expectedToken: String?, _ description: String) {
+                self.callbackData = data
+                self.expectedToken = expectedToken
+                self.description = description
+            }
+        }
+        
+        static let tokenExtractionTestCases: [TokenExtractionTestCase] = [
+            TokenExtractionTestCase(
+                data: [
+                    "cookies": [
+                        HTTPCookie(properties: [
+                            .name: CursorAPIConstants.Headers.sessionCookieName,
+                            .value: "valid-token-123",
+                            .domain: ".cursor.com",
+                            .path: "/"
+                        ])!
+                    ]
+                ],
+                expectedToken: "valid-token-123",
+                "valid session cookie extraction"
+            ),
+            TokenExtractionTestCase(
+                data: [:],
+                expectedToken: nil,
+                "no cookies in callback data"
+            ),
+            TokenExtractionTestCase(
+                data: [
+                    "cookies": [
+                        HTTPCookie(properties: [
+                            .name: "SomeOtherCookie",
+                            .value: "irrelevant-value",
+                            .domain: ".cursor.com",
+                            .path: "/"
+                        ])!
+                    ]
+                ],
+                expectedToken: nil,
+                "wrong cookie name"
+            ),
+            TokenExtractionTestCase(
+                data: [
+                    "cookies": [
+                        HTTPCookie(properties: [
+                            .name: CursorAPIConstants.Headers.sessionCookieName,
+                            .value: "another-token-456",
+                            .domain: ".cursor.com",
+                            .path: "/"
+                        ])!,
+                        HTTPCookie(properties: [
+                            .name: "OtherCookie",
+                            .value: "other-value",
+                            .domain: ".cursor.com",
+                            .path: "/"
+                        ])!
+                    ]
+                ],
+                expectedToken: "another-token-456",
+                "multiple cookies with correct one present"
+            )
         ]
-
-        // When
-        let extractedToken = cursorProvider.extractAuthToken(from: callbackData)
-
-        // Then
-        #expect(extractedToken == nil)
+        
+        @Test("Auth token extraction scenarios", arguments: tokenExtractionTestCases)
+        func authTokenExtractionScenarios(testCase: TokenExtractionTestCase) {
+            // When
+            let extractedToken = provider.extractAuthToken(from: testCase.callbackData)
+            
+            // Then
+            #expect(extractedToken == testCase.expectedToken, "Token extraction failed: \(testCase.description)")
+        }
+    }
+    
+    // MARK: - Performance and Integration Tests
+    
+    @Test("Provider initialization performance", .timeLimit(.seconds(1)))
+    func providerInitializationPerformance() {
+        // When/Then - Should initialize quickly
+        for _ in 0..<100 {
+            let mockSession = MockURLSession()
+            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            _ = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
+        }
+    }
+    
+    @Test("Concurrent authentication operations", .tags(.concurrency))
+    func concurrentAuthenticationOperations() async {
+        // Given
+        let iterations = 10
+        
+        // When - Perform concurrent operations
+        await withTaskGroup(of: Void.self) { group in
+            for i in 0..<iterations {
+                group.addTask {
+                    _ = self.cursorProvider.getAuthenticationURL()
+                    
+                    let callbackData: [String: Any] = [
+                        "cookies": [
+                            HTTPCookie(properties: [
+                                .name: CursorAPIConstants.Headers.sessionCookieName,
+                                .value: "concurrent-token-\(i)",
+                                .domain: ".cursor.com",
+                                .path: "/"
+                            ])!
+                        ]
+                    ]
+                    _ = self.cursorProvider.extractAuthToken(from: callbackData)
+                }
+            }
+        }
+        
+        // Then - Operations should complete without issues
+        #expect(Bool(true), "Concurrent operations should complete safely")
     }
 }

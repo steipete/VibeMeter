@@ -1,3 +1,4 @@
+import Foundation
 import os.log
 import Testing
 @testable import VibeMeter

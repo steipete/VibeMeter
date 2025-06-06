@@ -1,6 +1,6 @@
 import ServiceManagement
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 // MARK: - Mock Startup Manager
 
@@ -34,19 +34,19 @@ private class MockStartupManager: StartupControlling {
 struct StartupManagerTests {
     let sut: StartupManager
 
-    init() async throws {
-        await MainActor.run {  }
+    init() {
         sut = StartupManager()
     }
 
     // MARK: - Initialization Tests
 
     @Test("initialization  creates instance")
-
     func initialization_CreatesInstance() {
         // Then
-        #expect(sut != nil)
+        #expect(sut as Any is StartupManager)
+    }
 
+    @Test("is launch at login enabled reflects system status")
     func isLaunchAtLoginEnabled_ReflectsSystemStatus() {
         // Given - The actual system status
         let systemStatus = SMAppService.mainApp.status
@@ -58,13 +58,14 @@ struct StartupManagerTests {
         switch systemStatus {
         case .enabled:
             #expect(isEnabled == true)
+        default:
+            #expect(isEnabled == false)
         }
     }
 
     // MARK: - Enable/Disable Tests
 
     @Test("set launch at login  enabled true  registers app")
-
     func setLaunchAtLogin_EnabledTrue_RegistersApp() {
         // When
         sut.setLaunchAtLogin(enabled: true)
@@ -74,8 +75,10 @@ struct StartupManagerTests {
         // but we verify the method doesn't crash
         let status = SMAppService.mainApp.status
         // The test passes if no exception is thrown - just verify we get a valid status
-        #expect(status != nil)
+        #expect(status == .enabled || status == .notRegistered || status == .requiresApproval || status == .notFound)
+    }
 
+    @Test("set launch at login enabled false unregisters app")
     func setLaunchAtLogin_EnabledFalse_UnregistersApp() {
         // Given - First enable
         sut.setLaunchAtLogin(enabled: true)
@@ -86,8 +89,10 @@ struct StartupManagerTests {
         // Then - Check actual system status
         let status = SMAppService.mainApp.status
         // The test passes if no exception is thrown - just verify we get a valid status
-        #expect(status != nil)
+        #expect(status == .enabled || status == .notRegistered || status == .requiresApproval || status == .notFound)
+    }
 
+    @Test("set launch at login handles errors gracefully")
     func setLaunchAtLogin_HandlesErrorsGracefully() {
         // When - Call multiple times (which might cause errors in some conditions)
         sut.setLaunchAtLogin(enabled: true)
@@ -102,7 +107,6 @@ struct StartupManagerTests {
     // MARK: - Integration Tests with Settings
 
     @Test("integration with settings manager")
-
     func integrationWithSettingsManager() {
         // Given
         let mockStartup = MockStartupManager()
@@ -115,8 +119,10 @@ struct StartupManagerTests {
 
         // Verify initial state
         #expect(settings.launchAtLoginEnabled == false)
-        #expect(mockStartup.setLaunchAtLoginEnabledValue == true)
+        #expect(mockStartup.setLaunchAtLoginCalled == false)
+    }
 
+    @Test("mock startup manager set launch at login")
     func mockStartupManager_SetLaunchAtLogin() {
         // Given
         let mock = MockStartupManager()
@@ -127,7 +133,9 @@ struct StartupManagerTests {
         // Then
         #expect(mock.setLaunchAtLoginCalled == true)
         #expect(mock.isLaunchAtLoginEnabled == true)
+    }
 
+    @Test("mock startup manager disable launch at login")
     func mockStartupManager_DisableLaunchAtLogin() {
         // Given
         let mock = MockStartupManager()
@@ -141,7 +149,6 @@ struct StartupManagerTests {
     }
 
     @Test("mock startup manager  error simulation")
-
     func mockStartupManager_ErrorSimulation() {
         // Given
         let mock = MockStartupManager()
@@ -151,18 +158,14 @@ struct StartupManagerTests {
         mock.setLaunchAtLogin(enabled: true)
 
         // Then
-        #expect(mock.setLaunchAtLoginCalled == true) // Should remain false due to error
+        #expect(mock.setLaunchAtLoginCalled == true)
+        #expect(mock.isLaunchAtLoginEnabled == false) // Should remain false due to error
     }
 
     // MARK: - Thread Safety Tests
 
     @Test("concurrent access  maintains consistency")
-
     func concurrentAccess_MaintainsConsistency() async {
-        // Given
-        let expectation = expectation(description: "Concurrent operations complete")
-        expectation.expectedFulfillmentCount = 20
-
         // When
         await withTaskGroup(of: Void.self) { group in
             for i in 0 ..< 20 {
@@ -172,26 +175,23 @@ struct StartupManagerTests {
                     } else {
                         _ = await self.sut.isLaunchAtLoginEnabled
                     }
-                    expectation.fulfill()
                 }
             }
         }
 
-        // Then
-        await fulfillment(of: [expectation], timeout: 5.0)
+        // Then - Task group completes without error
+        #expect(Bool(true)) // Test passes if we reach here without deadlocks
     }
 
     // MARK: - Protocol Conformance Tests
 
     @Test("startup manager  conforms to startup controlling")
-
     func startupManager_ConformsToStartupControlling() {
         // Then
-        #expect((sut as Any == true)
+        #expect(sut as any StartupControlling is StartupControlling)
     }
 
     @Test("startup manager  is sendable")
-
     func startupManager_IsSendable() {
         // Given
         let manager = StartupManager()
@@ -205,7 +205,6 @@ struct StartupManagerTests {
     // MARK: - State Consistency Tests
 
     @Test("multiple enable disable cycles  maintains consistency")
-
     func multipleEnableDisableCycles_MaintainsConsistency() {
         // When - Perform multiple enable/disable cycles
         for _ in 0 ..< 5 {
@@ -216,8 +215,10 @@ struct StartupManagerTests {
         // Then - Final state should not be enabled
         let finalStatus = SMAppService.mainApp.status
         #expect(
-            finalStatus != .enabled == true)
+            finalStatus != .enabled)
+    }
 
+    @Test("rapid toggling handles gracefully")
     func rapidToggling_HandlesGracefully() {
         // When - Rapidly toggle the setting
         for i in 0 ..< 10 {
@@ -227,7 +228,9 @@ struct StartupManagerTests {
         // Then - No crash and final state is consistent
         let isEnabled = sut.isLaunchAtLoginEnabled
         #expect(isEnabled == false)
+    }
 
+    @Test("status check without prior configuration")
     func statusCheck_WithoutPriorConfiguration() {
         // Given - Fresh instance
         let freshManager = StartupManager()
@@ -236,6 +239,6 @@ struct StartupManagerTests {
         let isEnabled = freshManager.isLaunchAtLoginEnabled
 
         // Then - Should reflect actual system state
-        #expect(isEnabled != nil) // Should return a valid boolean
+        #expect(isEnabled == true || isEnabled == false) // Should return a valid boolean
     }
 }

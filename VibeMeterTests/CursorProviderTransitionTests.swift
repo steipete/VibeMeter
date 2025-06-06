@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 import XCTest
 
 @Suite("CursorProviderTransitionTests")
@@ -8,16 +8,15 @@ struct CursorProviderTransitionTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
-    
+
     init() {
         self.mockURLSession = MockURLSession()
         self.mockSettingsManager = MockSettingsManager()
         self.cursorProvider = CursorProvider(
             urlSession: mockURLSession,
-            settingsManager: mockSettingsManager
-        )
+            settingsManager: mockSettingsManager)
     }
-    
+
     // MARK: - User State Transition Tests
 
     @Test("user transition from individual to team")
@@ -29,7 +28,7 @@ struct CursorProviderTransitionTests {
         let individualInvoiceData = Data("""
         {"items": [{"cents": 1000, "description": "Individual Usage"}], "pricing_description": {"description": "Individual Plan", "id": "individual"}}
         """.utf8)
-        
+
         mockURLSession.nextData = individualInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
             url: CursorAPIConstants.URLs.monthlyInvoice,
@@ -64,7 +63,7 @@ struct CursorProviderTransitionTests {
             authToken: "token",
             month: 2,
             year: 2024,
-            teamId: nil)  // Not providing teamId, should use stored value
+            teamId: nil) // Not providing teamId, should use stored value
 
         // Then
         #expect(teamInvoice.totalSpendingCents == 5000)
@@ -139,7 +138,7 @@ struct CursorProviderTransitionTests {
             authToken: "token",
             month: 4,
             year: 2024,
-            teamId: 9999)  // Override with different team
+            teamId: 9999) // Override with different team
 
         // Then - Verify override teamId was used
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
@@ -173,7 +172,7 @@ struct CursorProviderTransitionTests {
             authToken: "token",
             month: 5,
             year: 2024,
-            teamId: 0)  // Explicitly set to 0
+            teamId: 0) // Explicitly set to 0
 
         // Then - Verify teamId 0 is filtered out as invalid
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)

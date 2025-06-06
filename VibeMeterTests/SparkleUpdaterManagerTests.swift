@@ -6,7 +6,7 @@ import Testing
 struct SparkleUpdaterManagerTests {
     let sut: SparkleUpdaterManager
 
-    init() async throws {
+    init() {
         sut = SparkleUpdaterManager()
     }
 

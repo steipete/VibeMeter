@@ -1,5 +1,6 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 extension Date {
     var month: Int {
@@ -14,11 +15,11 @@ extension Date {
 @Suite("MultiProviderDataOrchestratorTests")
 @MainActor
 struct MultiProviderDataOrchestratorTests {
-    let orchestrator: MultiProviderDataOrchestrator
+    var orchestrator: MultiProviderDataOrchestrator
 
     // Mocks for all dependencies
     let mockLoginManager: MultiProviderLoginManager
-    let mockSettingsManager: SettingsManager
+    let mockSettingsManager: MockSettingsManager
     let mockExchangeRateManager: ExchangeRateManagerMock
     let mockNotificationManager: NotificationManagerMock
     let mockURLSession: MockURLSession
@@ -43,7 +44,7 @@ struct MultiProviderDataOrchestratorTests {
         mockApiClient = CursorAPIClientMock()
         mockExchangeRateManager = ExchangeRateManagerMock()
         mockNotificationManager = NotificationManagerMock()
-        mockSettingsManager = MockSettingsManager(testUserDefaults: testUserDefaults)
+        mockSettingsManager = MockSettingsManager()
 
         // Initialize data models
         spendingData = MultiProviderSpendingData()
@@ -51,14 +52,10 @@ struct MultiProviderDataOrchestratorTests {
         currencyData = CurrencyData()
 
         // Initialize provider factory
-        providerFactory = ProviderFactory(urlSession: mockURLSession)
+        providerFactory = ProviderFactory(settingsManager: mockSettingsManager, urlSession: mockURLSession)
 
         // Initialize login manager
-        mockLoginManager = MultiProviderLoginManager(
-            providerFactory: providerFactory,
-            settingsManager: mockSettingsManager,
-            userSessionData: userSessionData
-        )
+        mockLoginManager = MultiProviderLoginManager(providerFactory: providerFactory)
 
         // Initialize orchestrator
         orchestrator = MultiProviderDataOrchestrator(
@@ -69,9 +66,9 @@ struct MultiProviderDataOrchestratorTests {
             loginManager: mockLoginManager,
             spendingData: spendingData,
             userSessionData: userSessionData,
-            currencyData: currencyData
-        )
+            currencyData: currencyData)
     }
+
     // MARK: - Initial State Tests
 
     @Test("initial state when logged out")
@@ -93,16 +90,8 @@ struct MultiProviderDataOrchestratorTests {
             teamName: "Test Team",
             teamId: 123)
 
-        // Create new orchestrator with logged-in state
-        orchestrator = MultiProviderDataOrchestrator(
-            providerFactory: providerFactory,
-            settingsManager: mockSettingsManager,
-            exchangeRateManager: mockExchangeRateManager,
-            notificationManager: mockNotificationManager,
-            loginManager: mockLoginManager,
-            spendingData: spendingData,
-            userSessionData: userSessionData,
-            currencyData: currencyData)
+        // Note: The orchestrator was already initialized with the data models
+        // that we just updated, so it should reflect the logged-in state
 
         // The orchestrator should not automatically fetch data on initialization
         // It should wait for explicit refresh calls
@@ -140,8 +129,10 @@ struct MultiProviderDataOrchestratorTests {
 
         // Verify the state
         #expect(userSessionData.isLoggedIn(to: .cursor) == true)
-        #expect(userSessionData.mostRecentSession?.teamName == "LoginSuccessTeam") {
-            #expect(abs(cursorData.currentSpendingUSD ?? 0 - 123.45 == true)
+        #expect(userSessionData.mostRecentSession?.teamName == "LoginSuccessTeam")
+
+        if let cursorData = spendingData.getSpendingData(for: .cursor) {
+            #expect(abs((cursorData.currentSpendingUSD ?? 0) - 123.45) < 0.01)
         } else {
             Issue.record("Should have spending data for Cursor")
         }
@@ -176,7 +167,7 @@ struct MultiProviderDataOrchestratorTests {
         orchestrator.logout(from: .cursor)
 
         // Assert
-        #expect(userSessionData.isLoggedIn(to: .cursor == false)
+        #expect(userSessionData.isLoggedIn(to: .cursor) == false)
         // Note: Notification reset is not called on logout - notifications are only reset when explicitly requested
     }
 

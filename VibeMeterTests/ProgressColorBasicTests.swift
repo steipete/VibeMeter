@@ -137,7 +137,7 @@ struct ProgressColorBasicTests {
             (1.2, "20% over budget", Color.progressDanger),
         ]
 
-        for (progress, scenario, expectedColor) in scenarios {
+        for (progress, _, expectedColor) in scenarios {
             // When
             let color = Color.progressColor(for: progress)
 

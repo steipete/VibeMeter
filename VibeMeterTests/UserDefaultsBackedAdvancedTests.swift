@@ -1,22 +1,30 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 @Suite("UserDefaultsBackedAdvancedTests")
 struct UserDefaultsBackedAdvancedTests {
     let testUserDefaults: UserDefaults
     let testSuiteName: String
+
+    init() {
+        self.testSuiteName = "UserDefaultsBackedAdvancedTestSuite-\(UUID().uuidString)"
+        self.testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+    }
+
     // MARK: - Optional Property Tests
 
-    @Test("optional string property  no existing value  returns default value")
-
+    @Test("optional string property no existing value returns default value")
     func optionalStringProperty_NoExistingValue_ReturnsDefaultValue() {
         // Given
         @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
-        let optionalProperty: String?
+        var optionalProperty: String?
 
         // Then
         #expect(optionalProperty == nil)
+    }
 
+    @Test("optional string property set to value stores correctly")
     func optionalStringProperty_SetToValue_StoresCorrectly() {
         // Given
         @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
@@ -26,11 +34,10 @@ struct UserDefaultsBackedAdvancedTests {
         optionalProperty = "test value"
 
         // Then
-        #expect(optionalProperty == "test value") == "test value")
+        #expect(optionalProperty == "test value")
     }
 
-    @Test("optional string property  set to nil  removes from defaults")
-
+    @Test("optional string property set to nil removes from defaults")
     func optionalStringProperty_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
@@ -39,8 +46,14 @@ struct UserDefaultsBackedAdvancedTests {
         // When
         optionalProperty = "test value"
         #expect(optionalProperty == "test value")
-        #expect(testUserDefaults.object(forKey: "optionalTest" == nil)
+        optionalProperty = nil
 
+        // Then
+        #expect(optionalProperty == nil)
+        #expect(testUserDefaults.object(forKey: "optionalTest") == nil)
+    }
+
+    @Test("optional int property set to nil removes from defaults")
     func optionalIntProperty_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalIntTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
@@ -49,8 +62,14 @@ struct UserDefaultsBackedAdvancedTests {
         // When
         optionalProperty = 42
         #expect(optionalProperty == 42)
-        #expect(testUserDefaults.object(forKey: "optionalIntTest" == nil)
+        optionalProperty = nil
 
+        // Then
+        #expect(optionalProperty == nil)
+        #expect(testUserDefaults.object(forKey: "optionalIntTest") == nil)
+    }
+
+    @Test("type safety wrong type in defaults returns default value")
     func typeSafety_WrongTypeInDefaults_ReturnsDefaultValue() {
         // Given - Store a string value
         testUserDefaults.set("not an int", forKey: "typeSafetyTest")
@@ -60,7 +79,9 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then - Should return default value since stored type doesn't match
         #expect(intProperty == 99)
+    }
 
+    @Test("type safety correct type in defaults returns stored value")
     func typeSafety_CorrectTypeInDefaults_ReturnsStoredValue() {
         // Given - Store an int value
         testUserDefaults.set(123, forKey: "typeSafetyTest")
@@ -70,7 +91,9 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then - Should return stored value
         #expect(intProperty == 123)
+    }
 
+    @Test("multiple properties different keys store independently")
     func multipleProperties_DifferentKeys_StoreIndependently() {
         // Given
         @UserDefaultsBacked(key: "prop1", defaultValue: "default1", userDefaults: testUserDefaults)
@@ -85,18 +108,18 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then
         #expect(property1 == "value1")
-        #expect(testUserDefaults.string(forKey: "prop1" == true)
-        #expect(testUserDefaults.string(forKey: "prop2" == true)
+        #expect(property2 == "value2")
+        #expect(testUserDefaults.string(forKey: "prop1") == "value1")
+        #expect(testUserDefaults.string(forKey: "prop2") == "value2")
     }
 
-    @Test("same key  different properties  share value")
-
+    @Test("same key different properties share value")
     func sameKey_DifferentProperties_ShareValue() {
         // Given
         @UserDefaultsBacked(key: "sharedKey", defaultValue: "default1", userDefaults: testUserDefaults)
         var property1: String
 
-        @UserDefaultsBacked(key: "sharedKey", defaultValue: "default2" == userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "sharedKey", defaultValue: "default2", userDefaults: testUserDefaults)
         var property2: String
 
         // When
@@ -104,12 +127,12 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then - Both properties should see the same value
         #expect(property1 == "shared value")
+        #expect(property2 == "shared value")
     }
 
     // MARK: - Persistence Tests
 
-    @Test("persistence  value survives property recreation")
-
+    @Test("persistence value survives property recreation")
     func persistence_ValueSurvivesPropertyRecreation() {
         // Given - Create property and set value
         do {
@@ -124,7 +147,9 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then - Should retrieve previously stored value
         #expect(newProperty == "persistent value")
+    }
 
+    @Test("very long string stores correctly")
     func veryLongString_StoresCorrectly() {
         // Given
         let longString = String(repeating: "a", count: 10000)
@@ -135,11 +160,10 @@ struct UserDefaultsBackedAdvancedTests {
         stringProperty = longString
 
         // Then
-        #expect(stringProperty == longString) == longString)
+        #expect(stringProperty == longString)
     }
 
-    @Test("unicode string  stores correctly")
-
+    @Test("unicode string stores correctly")
     func unicodeString_StoresCorrectly() {
         // Given
         let unicodeString = "🚀 émojis and spëcial chàracters ñ ß ∂ ∑ 中文 🎉"
@@ -150,11 +174,10 @@ struct UserDefaultsBackedAdvancedTests {
         stringProperty = unicodeString
 
         // Then
-        #expect(stringProperty == unicodeString) == unicodeString)
+        #expect(stringProperty == unicodeString)
     }
 
-    @Test("extreme numbers  store correctly")
-
+    @Test("extreme numbers store correctly")
     func extremeNumbers_StoreCorrectly() {
         // Given
         @UserDefaultsBacked(key: "extremeTest", defaultValue: 0.0, userDefaults: testUserDefaults)
@@ -172,24 +195,29 @@ struct UserDefaultsBackedAdvancedTests {
             doubleProperty = extremeValue
 
             // Then
-            #expect(abs(doubleProperty - extremeValue == true)
+            #expect(abs(doubleProperty - extremeValue) < 0.00001)
         }
     }
 
     // MARK: - Optional Handling Tests
 
-    @Test("optional handling  string optional  set to nil  removes from defaults")
-
+    @Test("optional handling string optional set to nil removes from defaults")
     func optionalHandling_StringOptional_SetToNil_RemovesFromDefaults() {
         // Given
-        @UserDefaultsBacked(key: "optionalStringTest", defaultValue: nil as String? == userDefaults: testUserDefaults)
+        @UserDefaultsBacked(key: "optionalStringTest", defaultValue: nil as String?, userDefaults: testUserDefaults)
         var optionalProperty: String?
 
         // When
         optionalProperty = "test value"
         #expect(optionalProperty == "test value")
-        #expect(testUserDefaults.object(forKey: "optionalStringTest" == nil)
+        optionalProperty = nil
 
+        // Then
+        #expect(optionalProperty == nil)
+        #expect(testUserDefaults.object(forKey: "optionalStringTest") == nil)
+    }
+
+    @Test("optional handling int optional set to nil removes from defaults")
     func optionalHandling_IntOptional_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalIntHandlingTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
@@ -198,8 +226,14 @@ struct UserDefaultsBackedAdvancedTests {
         // When
         optionalProperty = 42
         #expect(optionalProperty == 42)
-        #expect(testUserDefaults.object(forKey: "optionalIntHandlingTest" == nil)
+        optionalProperty = nil
 
+        // Then
+        #expect(optionalProperty == nil)
+        #expect(testUserDefaults.object(forKey: "optionalIntHandlingTest") == nil)
+    }
+
+    @Test("optional handling array optional set to nil removes from defaults")
     func optionalHandling_ArrayOptional_SetToNil_RemovesFromDefaults() {
         // Given
         @UserDefaultsBacked(key: "optionalArrayTest", defaultValue: nil as [String]?, userDefaults: testUserDefaults)
@@ -208,8 +242,14 @@ struct UserDefaultsBackedAdvancedTests {
         // When
         optionalProperty = ["value"]
         #expect(optionalProperty == ["value"])
-        #expect(testUserDefaults.object(forKey: "optionalArrayTest" == nil)
+        optionalProperty = nil
 
+        // Then
+        #expect(optionalProperty == nil)
+        #expect(testUserDefaults.object(forKey: "optionalArrayTest") == nil)
+    }
+
+    @Test("property access performance")
     func propertyAccess_Performance() {
         // Given
         @UserDefaultsBacked(key: "performanceTest", defaultValue: 0, userDefaults: testUserDefaults)
@@ -234,13 +274,13 @@ struct UserDefaultsBackedAdvancedTests {
 
         // Then
         #expect(writeDuration < 5.0)
-        #expect(sum == iterations * (iterations - 1)
+        #expect(readDuration < 1.0)
+        #expect(sum == iterations * (iterations - 1))
     }
 
     // MARK: - Memory Management Tests
 
-    @Test("property wrapper  does not retain user defaults")
-
+    @Test("property wrapper does not retain user defaults")
     func propertyWrapper_DoesNotRetainUserDefaults() {
         // Given
         weak var weakUserDefaults: UserDefaults?
@@ -249,7 +289,7 @@ struct UserDefaultsBackedAdvancedTests {
             let customDefaults = UserDefaults(suiteName: "MemoryTest-\(UUID().uuidString)")
             weakUserDefaults = customDefaults
 
-            let wrapper = UserDefaultsBacked(key: "test", defaultValue: "value", userDefaults: customDefaults)
+            let wrapper = UserDefaultsBacked(key: "test", defaultValue: "value", userDefaults: customDefaults!)
 
             // Use the wrapper to ensure it's not optimized away
             _ = wrapper.wrappedValue
@@ -259,7 +299,9 @@ struct UserDefaultsBackedAdvancedTests {
         // Note: This test might be flaky depending on autoreleasepool behavior
         // In practice, UserDefaults instances are often retained by the system
         #expect(weakUserDefaults == nil)
+    }
 
+    @Test("concurrent access thread safety")
     func concurrentAccess_ThreadSafety() async {
         // Given - Create property wrapper that can be safely accessed concurrently
         let taskCount = 50
@@ -290,8 +332,7 @@ struct UserDefaultsBackedAdvancedTests {
 
     // MARK: - Real-World Usage Tests
 
-    @Test("settings manager pattern  works correctly")
-
+    @Test("settings manager pattern works correctly")
     func settingsManagerPattern_WorksCorrectly() {
         // Given - Test UserDefaults property wrapper directly
         @UserDefaultsBacked(key: "lastUpdateCheck", defaultValue: Date.distantPast, userDefaults: testUserDefaults)
@@ -314,13 +355,15 @@ struct UserDefaultsBackedAdvancedTests {
         spendingLimit = 250.5
 
         // Then
-        #expect(abs(lastUpdateCheck.timeIntervalSince1970 - now.timeIntervalSince1970 == true)
+        #expect(abs(lastUpdateCheck.timeIntervalSince1970 - now.timeIntervalSince1970) < 1.0)
         #expect(username == "testuser")
-        #expect(abs(abs(spendingLimit - 250.5 == true)
+        #expect(isFirstLaunch == false)
+        #expect(abs(spendingLimit - 250.5) < 0.001)
 
         // Test values persisted to UserDefaults
-        #expect(testUserDefaults.object(forKey: "lastUpdateCheck" == true)
-        #expect(testUserDefaults.string(forKey: "username" == true)
-        #expect(testUserDefaults.bool(forKey: "isFirstLaunch" == false) - 250.5) < 0.001)
+        #expect(testUserDefaults.object(forKey: "lastUpdateCheck") != nil)
+        #expect(testUserDefaults.string(forKey: "username") == "testuser")
+        #expect(testUserDefaults.bool(forKey: "isFirstLaunch") == false)
+        #expect(abs(testUserDefaults.double(forKey: "spendingLimit") - 250.5) < 0.001)
     }
 }

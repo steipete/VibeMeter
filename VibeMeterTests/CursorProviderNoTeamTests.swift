@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("CursorProviderNoTeamTests")
 struct CursorProviderNoTeamTests {
@@ -108,7 +108,7 @@ struct CursorProviderNoTeamTests {
         #expect(invoice.items.count == 1)
         #expect(invoice.items[0].description == "Individual Pro Usage")
         #expect(invoice.pricingDescription?.description == "Individual Pro Plan")
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["month"] as? Int == 12)
         #expect(bodyJSON?["teamId"] == nil)
@@ -143,7 +143,7 @@ struct CursorProviderNoTeamTests {
         // Then
         #expect(invoice.items.isEmpty)
         #expect(invoice.pricingDescription == nil)
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
     }
@@ -185,7 +185,7 @@ struct CursorProviderNoTeamTests {
 
         // Then
         #expect(invoice.totalSpendingCents == 1500)
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 999)
     }
@@ -228,7 +228,7 @@ struct CursorProviderNoTeamTests {
 
         // Then
         #expect(invoice.items.isEmpty)
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
     }
@@ -257,7 +257,7 @@ struct CursorProviderNoTeamTests {
             teamId: 12345)
 
         // Then - Verify request body includes teamId
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
 
         #expect(bodyJSON?.count == 4)
@@ -291,7 +291,7 @@ struct CursorProviderNoTeamTests {
             teamId: nil)
 
         // Then - Verify request body excludes teamId
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?.count == 3)
         #expect(bodyJSON?["year"] as? Int == 2024)
@@ -323,7 +323,7 @@ struct CursorProviderNoTeamTests {
             teamId: 0)
 
         // Then - Verify request body excludes teamId since 0 is now filtered as invalid
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect((bodyJSON?["teamId"] == nil) ?? false, "teamId key should not exist when value is 0")
     }

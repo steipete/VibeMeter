@@ -1,22 +1,21 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("CursorProviderValidationTests")
 struct CursorProviderValidationTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
-    
+
     init() {
         self.mockURLSession = MockURLSession()
-        self.mockSettingsManager = MockSettingsManager()
+        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
         self.cursorProvider = CursorProvider(
-            urlSession: mockURLSession,
-            settingsManager: mockSettingsManager
-        )
+            settingsManager: mockSettingsManager,
+            urlSession: mockURLSession)
     }
-    
+
     // MARK: - Token Validation Tests
 
     @Test("validate token valid token")
@@ -91,6 +90,8 @@ struct CursorProviderValidationTests {
             Issue.record("Should have thrown rate limit error")
         } catch let error as ProviderError {
             #expect(error == .rateLimitExceeded)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -112,6 +113,8 @@ struct CursorProviderValidationTests {
             Issue.record("Should have thrown service unavailable error")
         } catch let error as ProviderError {
             #expect(error == .serviceUnavailable)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -140,7 +143,7 @@ struct CursorProviderValidationTests {
                 Issue.record("Expected decoding error, got \(error)")
             }
         } catch {
-            Issue.record("Unexpected error type: \(error)")
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -177,6 +180,8 @@ struct CursorProviderValidationTests {
             Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -201,6 +206,8 @@ struct CursorProviderValidationTests {
             Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -223,7 +230,7 @@ struct CursorProviderValidationTests {
                 Issue.record("Expected network error, got \(error)")
             }
         } catch {
-            Issue.record("Unexpected error type: \(error)")
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
@@ -251,7 +258,7 @@ struct CursorProviderValidationTests {
         _ = try await cursorProvider.fetchUserInfo(authToken: "test-auth-token")
 
         // Then
-        let request = try XCTUnwrap(mockURLSession.lastRequest)
+        let request = try #require(mockURLSession.lastRequest)
 
         // Verify headers
         #expect(request.value(forHTTPHeaderField: "Cookie") != nil)

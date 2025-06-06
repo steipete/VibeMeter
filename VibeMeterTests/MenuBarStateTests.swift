@@ -1,5 +1,6 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 @Suite("MenuBarStateTests")
 @MainActor
@@ -7,7 +8,6 @@ struct MenuBarStateTests {
     // MARK: - MenuBarState Tests
 
     @Test("menu bar state  not logged in  properties")
-
     func menuBarState_NotLoggedIn_Properties() {
         // Given
         let state = MenuBarState.notLoggedIn
@@ -15,7 +15,9 @@ struct MenuBarStateTests {
         // Then
         #expect(state.gaugeValue == nil)
         #expect(state.isAnimated == false)
+    }
 
+    @Test("menu bar state loading properties")
     func menuBarState_Loading_Properties() {
         // Given
         let state = MenuBarState.loading
@@ -23,7 +25,9 @@ struct MenuBarStateTests {
         // Then
         #expect(state.gaugeValue == nil)
         #expect(state.isAnimated == true)
+    }
 
+    @Test("menu bar state data properties")
     func menuBarState_Data_Properties() {
         // Given
         let testValues = [0.0, 0.5, 1.0, 1.5, -0.5]
@@ -36,7 +40,10 @@ struct MenuBarStateTests {
             // Then
             #expect(state.gaugeValue == expectedClamped[index])
             #expect(state.isAnimated == false)
+        }
+    }
 
+    @Test("menu bar state equality")
     func menuBarState_Equality() {
         // Given
         let state1 = MenuBarState.notLoggedIn
@@ -52,7 +59,6 @@ struct MenuBarStateTests {
     }
 
     @Test("data state  value clamping")
-
     func dataState_ValueClamping() {
         // Test that data state properly clamps values
         let testCases = [

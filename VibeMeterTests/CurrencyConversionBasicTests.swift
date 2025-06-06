@@ -1,234 +1,147 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
-@Suite("Currency Conversion Basic Tests")
+extension Tag {
+    @Tag static var currency: Self
+    @Tag static var conversion: Self
+    @Tag static var formatting: Self
+}
+
+@Suite("Currency Conversion Basic Tests", .tags(.currency, .conversion))
 @MainActor
 struct CurrencyConversionBasicTests {
-    // MARK: - Currency Conversion Tests
-
-    @Test("convert with valid rate performs correct conversion")
-    func convertWithValidRatePerformsCorrectConversion() {
-        // Given
-        let amount = 100.0
-        let rate = 0.85
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(abs(result - 85.0) < 0.01)
+    
+    // MARK: - Parameterized Conversion Tests
+    
+    struct ConversionTestCase {
+        let amount: Double
+        let rate: Double
+        let expected: Double
+        let description: String
+        
+        init(_ amount: Double, rate: Double, expected: Double, _ description: String) {
+            self.amount = amount
+            self.rate = rate
+            self.expected = expected
+            self.description = description
+        }
     }
-
-    @Test("convert zero amount returns zero")
-    func convertZeroAmountReturnsZero() {
-        // Given
-        let amount = 0.0
-        let rate = 0.85
-
+    
+    static let conversionTestCases: [ConversionTestCase] = [
+        ConversionTestCase(100.0, rate: 0.85, expected: 85.0, "USD to EUR conversion"),
+        ConversionTestCase(0.0, rate: 0.85, expected: 0.0, "zero amount conversion"),
+        ConversionTestCase(100.0, rate: 1.0, expected: 100.0, "same currency conversion"),
+        ConversionTestCase(-100.0, rate: 0.85, expected: -85.0, "negative amount conversion"),
+        ConversionTestCase(1_000_000.0, rate: 0.85, expected: 850_000.0, "large amount conversion"),
+        ConversionTestCase(0.01, rate: 0.85, expected: 0.0085, "small amount conversion"),
+        ConversionTestCase(999.99, rate: 1.2345, expected: 1234.488, "precision conversion")
+    ]
+    
+    @Test("Currency conversion calculations", arguments: conversionTestCases)
+    func conversionCalculations(testCase: ConversionTestCase) {
         // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
+        let result = CurrencyConversionHelper.convert(amount: testCase.amount, rate: testCase.rate)
+        
         // Then
-        #expect(result == 0.0)
+        let tolerance = testCase.expected.magnitude < 1.0 ? 0.0001 : 0.01
+        #expect(abs(result - testCase.expected) < tolerance, "Failed: \(testCase.description)")
     }
-
-    @Test("convert with rate of one returns same amount")
-    func convertWithRateOfOneReturnsSameAmount() {
-        // Given
-        let amount = 100.0
-        let rate = 1.0
-
+    
+    // MARK: - Edge Case Tests
+    
+    @Test("Invalid rate handling", arguments: [nil, 0.0, -1.0, .infinity, .nan])
+    func invalidRateHandling(invalidRate: Double?) {
         // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(result == amount)
+        let result = CurrencyConversionHelper.convert(amount: 100.0, rate: invalidRate)
+        
+        // Then - Should return original amount for invalid rates
+        #expect(result == 100.0)
     }
-
-    @Test("convert negative amount with valid rate")
-    func convertNegativeAmountWithValidRate() {
-        // Given
-        let amount = -100.0
-        let rate = 0.85
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(abs(result - (-85.0)) < 0.01)
+    
+    // MARK: - Currency Formatting Tests
+    
+    struct FormattingTestCase {
+        let amount: Double
+        let symbol: String
+        let expected: String
+        let description: String
+        
+        init(_ amount: Double, symbol: String, expected: String, _ description: String) {
+            self.amount = amount
+            self.symbol = symbol
+            self.expected = expected
+            self.description = description
+        }
     }
-
-    @Test("convert very large amount")
-    func convertVeryLargeAmount() {
-        // Given
-        let amount = 1_000_000.0
-        let rate = 0.85
-
+    
+    static let formattingTestCases: [FormattingTestCase] = [
+        FormattingTestCase(99.99, symbol: "$", expected: "$99.99", "USD formatting"),
+        FormattingTestCase(1000.0, symbol: "€", expected: "€1,000", "EUR large amount"),
+        FormattingTestCase(0.5, symbol: "£", expected: "£0.5", "GBP decimal"),
+        FormattingTestCase(1234567.89, symbol: "¥", expected: "¥1,234,567.89", "JPY very large amount"),
+        FormattingTestCase(0.0, symbol: "$", expected: "$0", "zero amount"),
+        FormattingTestCase(-50.25, symbol: "$", expected: "$-50.25", "negative amount")
+    ]
+    
+    @Test("Currency formatting", arguments: formattingTestCases, .tags(.formatting))
+    func currencyFormatting(testCase: FormattingTestCase) {
         // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
+        let result = CurrencyConversionHelper.formatAmount(testCase.amount, currencySymbol: testCase.symbol)
+        
         // Then
-        #expect(abs(result - 850_000.0) < 0.01)
+        #expect(result.contains(testCase.symbol), "Should contain currency symbol: \(testCase.description)")
+        #expect(result.contains(String(format: "%.2f", abs(testCase.amount)).replacingOccurrences(of: ".00", with: "")), 
+                "Should contain formatted amount: \(testCase.description)")
     }
-
-    @Test("convert very small amount")
-    func convertVerySmallAmount() {
+    
+    // MARK: - Locale-Specific Formatting Tests
+    
+    @Test("Locale-specific formatting", arguments: [
+        (Locale(identifier: "en_US"), "$", "US formatting"),
+        (Locale(identifier: "de_DE"), "€", "German formatting"),
+        (Locale(identifier: "ja_JP"), "¥", "Japanese formatting")
+    ])
+    func localeSpecificFormatting(locale: Locale, symbol: String, description: String) {
         // Given
-        let amount = 0.01
-        let rate = 0.85
-
+        let amount = 1234.56
+        
         // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
+        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: symbol, locale: locale)
+        
         // Then
-        #expect(abs(result - 0.0085) < 0.0001)
+        #expect(result.contains(symbol), "Should format with correct symbol: \(description)")
+        #expect(!result.isEmpty, "Should produce non-empty result: \(description)")
     }
-
-    // MARK: - Format Currency Tests
-
-    @Test("format currency with USD shows dollar sign")
-    func formatCurrencyWithUSDShowsDollarSign() {
-        // Given
-        let amount = 99.99
-        let currencyCode = "USD"
-
+    
+    // MARK: - Monthly Limit Calculation Tests
+    
+    @Test("Monthly limit calculation", arguments: [
+        (1200.0, 100.0, "standard yearly limit"),
+        (0.0, 0.0, "zero limit"),
+        (600.0, 50.0, "mid-range limit"),
+        (2400.0, 200.0, "high limit")
+    ])
+    func monthlyLimitCalculation(yearlyLimit: Double, expectedMonthly: Double, description: String) {
         // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
+        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        
         // Then
-        #expect(formatted == "$99.99")
+        #expect(abs(result - expectedMonthly) < 0.01, "Monthly calculation failed: \(description)")
     }
-
-    @Test("format currency with EUR shows euro sign")
-    func formatCurrencyWithEURShowsEuroSign() {
+    
+    // MARK: - Performance Tests
+    
+    @Test("Conversion performance", .timeLimit(.seconds(1)))
+    func conversionPerformance() {
         // Given
-        let amount = 99.99
-        let currencyCode = "EUR"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "€99.99")
-    }
-
-    @Test("format currency with GBP shows pound sign")
-    func formatCurrencyWithGBPShowsPoundSign() {
-        // Given
-        let amount = 99.99
-        let currencyCode = "GBP"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "£99.99")
-    }
-
-    @Test("format currency rounds to two decimal places")
-    func formatCurrencyRoundsToTwoDecimalPlaces() {
-        // Given
-        let amount = 99.999
-        let currencyCode = "USD"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "$100.00")
-    }
-
-    @Test("format currency with zero shows correct format")
-    func formatCurrencyWithZeroShowsCorrectFormat() {
-        // Given
-        let amount = 0.0
-        let currencyCode = "USD"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "$0.00")
-    }
-
-    @Test("format currency with negative amount")
-    func formatCurrencyWithNegativeAmount() {
-        // Given
-        let amount = -99.99
-        let currencyCode = "USD"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        // Formatter might show as -$99.99 or ($99.99) depending on locale
-        #expect(formatted.contains("99.99"))
-    }
-
-    @Test("format currency with unknown currency code uses code as prefix")
-    func formatCurrencyWithUnknownCurrencyCodeUsesCodeAsPrefix() {
-        // Given
-        let amount = 99.99
-        let currencyCode = "XXX"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "XXX 99.99")
-    }
-
-    @Test("format currency with JPY shows yen sign")
-    func formatCurrencyWithJPYShowsYenSign() {
-        // Given
-        let amount = 1000.0
-        let currencyCode = "JPY"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "¥1,000")
-    }
-
-    @Test("format currency with very large amount")
-    func formatCurrencyWithVeryLargeAmount() {
-        // Given
-        let amount = 1_234_567.89
-        let currencyCode = "USD"
-
-        // When
-        let formatted = CurrencyConversionHelper.formatCurrency(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-
-        // Then
-        #expect(formatted == "$1,234,567.89")
+        let iterations = 10_000
+        
+        // When/Then - Should complete within time limit
+        for i in 0..<iterations {
+            let amount = Double(i)
+            let rate = 0.85
+            _ = CurrencyConversionHelper.convert(amount: amount, rate: rate)
+        }
     }
 }

@@ -1,5 +1,6 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 /// Tests for the focused CurrencyData observable model.
 ///
@@ -197,7 +198,7 @@ struct CurrencyDataTests {
     }
 
     @Test("reset clears rates and resets to defaults")
-    func testReset_ClearsRatesAndResetsToDefaults() {
+    func reset_ClearsRatesAndResetsToDefaults() {
         // Arrange - Set some non-default values
         currencyData.updateSelectedCurrency("EUR")
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
@@ -217,10 +218,10 @@ struct CurrencyDataTests {
 
     @Test("currency workflow  select currency  update rates  convert")
 
-    func testCurrencyWorkflow_SelectCurrency_UpdateRates_Convert() {
+    func currencyWorkflow_SelectCurrency_UpdateRates_Convert() {
         // Start with USD
         #expect(currencyData.selectedCode == "USD")
-        
+
         // Change to EUR
         currencyData.updateSelectedCurrency("EUR")
         #expect(currencyData.selectedCode == "EUR")
@@ -240,7 +241,7 @@ struct CurrencyDataTests {
 
     @Test("rates unavailable  workflow")
 
-    func testRatesUnavailable_Workflow() {
+    func ratesUnavailable_Workflow() {
         // Select non-USD currency
         currencyData.updateSelectedCurrency("EUR")
 

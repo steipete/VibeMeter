@@ -106,10 +106,6 @@ struct MultiProviderLoginManagerCallbackTests {
 
         @Test("concurrent operations thread safety")
         func concurrentOperations_ThreadSafety() async {
-            // Given
-            let expectation = XCTestExpectation(description: "Concurrent operations complete")
-            expectation.expectedFulfillmentCount = 50
-
             // When - Perform many concurrent operations
             await withTaskGroup(of: Void.self) { group in
                 for i in 0 ..< 50 {
@@ -122,13 +118,12 @@ struct MultiProviderLoginManagerCallbackTests {
                             _ = await self.sut.isLoggedIn(to: .cursor)
                             _ = await self.sut.getAuthToken(for: .cursor)
                         }
-                        expectation.fulfill()
                     }
                 }
             }
 
-            // Then
-            await fulfillment(of: [expectation], timeout: 5.0)
+            // Then - Test passes if no crashes occur during concurrent access
+            #expect(Bool(true))
         }
     #endif
 }

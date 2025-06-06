@@ -1,8 +1,9 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("MultiProviderUserSessionDataTests")
+@MainActor
 struct MultiProviderUserSessionDataTests {
     var userSession: MultiProviderUserSessionData
 
@@ -35,7 +36,7 @@ struct MultiProviderUserSessionDataTests {
         // Assert
         #expect(userSession.isLoggedInToAnyProvider == true)
         #expect(userSession.loggedInProviders.contains(.cursor) == true)
-        
+
         let session = userSession.getSession(for: .cursor)
         #expect(session != nil)
         #expect(session?.teamName == teamName)
@@ -98,7 +99,7 @@ struct MultiProviderUserSessionDataTests {
 
         // Assert
         #expect(userSession.isLoggedIn(to: .cursor) == false)
-        
+
         let session = userSession.getSession(for: .cursor)
         #expect(session != nil)
         #expect(session?.lastErrorMessage == "Login failed")
@@ -164,7 +165,7 @@ struct MultiProviderUserSessionDataTests {
     func mostRecentSession_UpdatesWithLatestLogin() {
         // Act - Login to cursor first
         userSession.handleLoginSuccess(for: .cursor, email: "first@example.com", teamName: nil, teamId: nil)
-        
+
         let firstRecent = userSession.mostRecentSession
         #expect(firstRecent?.userEmail == "first@example.com")
 

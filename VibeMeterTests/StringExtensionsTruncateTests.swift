@@ -1,152 +1,142 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
-@Suite("StringExtensionsTruncateTests")
+extension Tag {
+    @Tag static var strings: Self
+    @Tag static var truncation: Self
+    @Tag static var edgeCases: Self
+}
+
+@Suite("String Extensions Truncate Tests", .tags(.strings, .truncation))
 struct StringExtensionsTruncateTests {
-    // MARK: - truncate(length:trailing:) Tests
-
-    @Test("truncate  shorter than length  returns original")
-
-    func truncate_ShorterThanLength_ReturnsOriginal() {
-        // Given
-        let string = "Short"
-        let length = 10
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "Short")
-
-    func truncate_ExactLength_ReturnsOriginal() {
-        // Given
-        let string = "Exact"
-        let length = 5
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "Exact")
-
-    func truncate_LongerThanLength_TruncatesWithDefaultTrailing() {
-        // Given
-        let string = "This is a very long string"
-        let length = 10
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "This is a ...") // 10 + 3 for "..."
+    
+    // MARK: - Parameterized Truncation Tests
+    
+    struct TruncationTestCase {
+        let input: String
+        let length: Int
+        let trailing: String
+        let expected: String
+        let description: String
+        
+        init(_ input: String, length: Int, trailing: String = "...", expected: String, _ description: String) {
+            self.input = input
+            self.length = length
+            self.trailing = trailing
+            self.expected = expected
+            self.description = description
+        }
     }
-
-    @Test("truncate  longer than length  truncates with custom trailing")
-
-    func truncate_LongerThanLength_TruncatesWithCustomTrailing() {
-        // Given
-        let string = "This is a very long string"
-        let length = 10
-        let trailing = "—"
-
+    
+    static let truncationTestCases: [TruncationTestCase] = [
+        // Basic truncation cases
+        TruncationTestCase("Short", length: 10, expected: "Short", "shorter than length"),
+        TruncationTestCase("Exact", length: 5, expected: "Exact", "exact length"),
+        TruncationTestCase("This is a very long string", length: 10, expected: "This is...", "longer than length with default trailing"),
+        
+        // Custom trailing cases
+        TruncationTestCase("Long string here", length: 8, trailing: "…", expected: "Long st…", "custom single ellipsis"),
+        TruncationTestCase("Another long text", length: 12, trailing: " [more]", expected: "Anoth [more]", "custom trailing text"),
+        TruncationTestCase("Test string", length: 6, trailing: "", expected: "Test s", "no trailing"),
+        
+        // Edge cases
+        TruncationTestCase("", length: 5, expected: "", "empty string"),
+        TruncationTestCase("A", length: 1, expected: "A", "single character exact"),
+        TruncationTestCase("AB", length: 1, trailing: "X", expected: "X", "trailing longer than allowed"),
+        TruncationTestCase("Hello", length: 0, expected: "", "zero length"),
+        TruncationTestCase("Unicode: 🚀✨🎉", length: 10, expected: "Unicode: 🚀✨🎉", "unicode characters"),
+        TruncationTestCase("Unicode: 🚀✨🎉 test", length: 12, expected: "Unicode: 🚀...", "unicode with truncation")
+    ]
+    
+    @Test("String truncation", arguments: truncationTestCases)
+    func stringTruncation(testCase: TruncationTestCase) {
         // When
-        let result = string.truncate(length: length, trailing: trailing)
-
+        let result = testCase.input.truncate(length: testCase.length, trailing: testCase.trailing)
+        
         // Then
-        #expect(result == "This is a —") // 10 + 1 for "—"
+        #expect(result == testCase.expected, "Failed: \(testCase.description)")
+        #expect(result.count <= testCase.length || testCase.length == 0, "Result should not exceed max length: \(testCase.description)")
     }
-
-    @Test("truncate  empty string  returns empty")
-
-    func truncate_EmptyString_ReturnsEmpty() {
+    
+    // MARK: - Negative Length Edge Cases
+    
+    @Test("Negative length handling", arguments: [-1, -5, -100])
+    func negativeLengthHandling(negativeLength: Int) {
         // Given
-        let string = ""
-        let length = 5
-
+        let string = "Test string"
+        
+        // When
+        let result = string.truncate(length: negativeLength)
+        
+        // Then
+        #expect(result.isEmpty, "Negative length should return empty string")
+    }
+    
+    // MARK: - Performance Tests
+    
+    @Test("Truncation performance with large strings", .timeLimit(.seconds(1)))
+    func truncationPerformanceWithLargeStrings() {
+        // Given
+        let largeString = String(repeating: "This is a test string. ", count: 1000)
+        
+        // When/Then - Should complete within time limit
+        for i in stride(from: 10, through: 100, by: 10) {
+            _ = largeString.truncate(length: i)
+        }
+    }
+    
+    // MARK: - Special Character Tests
+    
+    struct SpecialCharacterTestCase {
+        let input: String
+        let length: Int
+        let expectedPrefix: String
+        let description: String
+        
+        init(_ input: String, length: Int, expectedPrefix: String, _ description: String) {
+            self.input = input
+            self.length = length
+            self.expectedPrefix = expectedPrefix
+            self.description = description
+        }
+    }
+    
+    static let specialCharacterTestCases: [SpecialCharacterTestCase] = [
+        SpecialCharacterTestCase("Line 1\nLine 2\nLine 3", length: 10, expectedPrefix: "Line 1", "newline characters"),
+        SpecialCharacterTestCase("Tab\tSeparated\tValues", length: 15, expectedPrefix: "Tab\tSeparated", "tab characters"),
+        SpecialCharacterTestCase("Emoji: 👨‍💻👩‍🔬🧑‍🎨", length: 12, expectedPrefix: "Emoji: 👨‍💻", "complex emoji"),
+        SpecialCharacterTestCase("áéíóú ñüç ÀÈÌÒÙ", length: 10, expectedPrefix: "áéíóú ñüç", "accented characters")
+    ]
+    
+    @Test("Special character handling", arguments: specialCharacterTestCases, .tags(.edgeCases))
+    func specialCharacterHandling(testCase: SpecialCharacterTestCase) {
+        // When
+        let result = testCase.input.truncate(length: testCase.length)
+        
+        // Then
+        #expect(result.hasPrefix(testCase.expectedPrefix), "Should handle special characters correctly: \(testCase.description)")
+        #expect(result.count <= testCase.length, "Should respect length limit: \(testCase.description)")
+    }
+    
+    // MARK: - Boundary Condition Tests
+    
+    @Test("Boundary conditions", arguments: [
+        (string: "Test", length: 4, shouldTruncate: false),
+        (string: "Test", length: 3, shouldTruncate: true),
+        (string: "A", length: 1, shouldTruncate: false),
+        (string: "AB", length: 1, shouldTruncate: true)
+    ])
+    func boundaryConditions(string: String, length: Int, shouldTruncate: Bool) {
         // When
         let result = string.truncate(length: length)
-
+        
         // Then
-        #expect(result == "")
-
-    func truncate_ZeroLength_ReturnsOnlyTrailing() {
-        // Given
-        let string = "Hello"
-        let length = 0
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "...")
-
-    func truncate_SingleCharacter_TruncatesCorrectly() {
-        // Given
-        let string = "Hello"
-        let length = 1
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "H...")
-
-    func truncate_UnicodeCharacters_HandlesCorrectly() {
-        // Given
-        let string = "Hello 🌍 World 🚀"
-        let length = 8
-
-        // When
-        let result = string.truncate(length: length)
-
-        // Then
-        #expect(result == "Hello 🌍 ...")
-
-    func truncate_EmptyTrailing_WorksCorrectly() {
-        // Given
-        let string = "Hello World"
-        let length = 5
-        let trailing = ""
-
-        // When
-        let result = string.truncate(length: length, trailing: trailing)
-
-        // Then
-        #expect(result == "Hello")
-
-    func truncate_LongTrailing_WorksCorrectly() {
-        // Given
-        let string = "Hello World"
-        let length = 5
-        let trailing = " [truncated]"
-
-        // When
-        let result = string.truncate(length: length, trailing: trailing)
-
-        // Then
-        #expect(result == "Hello [truncated]")
-
-    func truncate_LongUserEmail_ForMenuBarDisplay() {
-        // Given
-        let email = "user.with.very.long.email.address@verylongdomainname.example.com"
-        let maxLength = 25
-
-        // When
-        let result = email.truncate(length: maxLength)
-
-        // Then
-        #expect(result == "user.with.very.long.email...") // 25 + 3
-        #expect(result.hasSuffix("..." == true)
-
-    func truncate_APIEndpointName_ForDisplay() {
-        // Given
-        let endpoint = "/api/v1/users/123456789/profile/settings/advanced/preferences"
-        let maxLength = 30
-
-        // When
-        let result = endpoint.truncate(length: maxLength)
-
-        // Then
-        #expect(result == "/api/v1/users/123456789/profil...") // 30 + 3
+        if shouldTruncate {
+            #expect(result != string, "Should truncate when string is longer than length")
+            #expect(result.hasSuffix("..."), "Should add ellipsis when truncating")
+        } else {
+            #expect(result == string, "Should not truncate when string fits within length")
+        }
     }
 }

@@ -1,17 +1,17 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("ExchangeRateManagerConversionTests")
 struct ExchangeRateManagerConversionTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
-    
+
     init() {
         self.mockURLSession = MockURLSession()
         self.exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
     }
-    
+
     // MARK: - Currency Conversion Tests
 
     @Test("convert same currency returns original amount")

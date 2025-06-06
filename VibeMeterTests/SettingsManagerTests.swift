@@ -1,5 +1,6 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 @Suite("SettingsManager Tests")
 @MainActor
@@ -22,6 +23,7 @@ struct SettingsManagerTests {
             startupManager: StartupManagerMock())
         self.settingsManager = SettingsManager.shared
     }
+
     // MARK: - Default Values Tests
 
     @Test("default currency is usd")
@@ -143,7 +145,6 @@ struct SettingsManagerTests {
     }
 
     @Test("provider session overwrite")
-
     func providerSessionOverwrite() {
         let session1 = ProviderSession(
             provider: .cursor,
@@ -168,11 +169,12 @@ struct SettingsManagerTests {
     }
 
     @Test("get session for non existent provider")
-
     func getSessionForNonExistentProvider() {
         let retrievedSession = settingsManager.getSession(for: .cursor)
         #expect(retrievedSession == nil)
+    }
 
+    @Test("clear user session data")
     func clearUserSessionData() {
         // Set up multiple provider sessions
         let cursorSession = ProviderSession(
@@ -185,11 +187,16 @@ struct SettingsManagerTests {
         settingsManager.updateSession(for: .cursor, session: cursorSession)
 
         // Verify sessions are set
-        #expect(settingsManager.getSession(for: .cursor != nil)
+        #expect(settingsManager.getSession(for: .cursor) != nil)
+
+        // Clear all sessions
+        settingsManager.clearUserSessionData()
 
         // Verify all sessions are cleared
-        #expect(settingsManager.getSession(for: .cursor == nil)
+        #expect(settingsManager.getSession(for: .cursor) == nil)
+    }
 
+    @Test("clear user session data for specific provider")
     func clearUserSessionDataForSpecificProvider() {
         // Set up session for cursor
         let cursorSession = ProviderSession(
@@ -202,16 +209,23 @@ struct SettingsManagerTests {
         settingsManager.updateSession(for: .cursor, session: cursorSession)
 
         // Verify session is set
-        #expect(settingsManager.getSession(for: .cursor != nil)
+        #expect(settingsManager.getSession(for: .cursor) != nil)
+
+        // Clear specific session
+        settingsManager.clearUserSessionData(for: .cursor)
 
         // Verify cursor session is cleared
-        #expect(settingsManager.getSession(for: .cursor == nil)
+        #expect(settingsManager.getSession(for: .cursor) == nil)
+    }
 
+    @Test("refresh interval options")
     func refreshIntervalOptions() {
         let expectedOptions = [1, 2, 5, 10, 15, 30, 60]
         #expect(
             SettingsManager.refreshIntervalOptions == expectedOptions)
+    }
 
+    @Test("refresh interval validation")
     func refreshIntervalValidation() {
         // Test that all valid options can be set
         for option in SettingsManager.refreshIntervalOptions {
@@ -224,7 +238,6 @@ struct SettingsManagerTests {
     // MARK: - Initialization Tests
 
     @Test("initialization with existing values in user defaults")
-
     func initializationWithExistingValuesInUserDefaults() {
         // Pre-populate UserDefaults
         let existingSuiteName = "com.vibemeter.tests.ExistingValues"

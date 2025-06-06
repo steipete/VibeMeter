@@ -1,12 +1,12 @@
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 @Suite("StringExtensionsEdgeCasesTests")
 struct StringExtensionsEdgeCasesTests {
     // MARK: - Edge Cases Tests
 
-    @Test("truncate  negative length  handles gracefully")
-
+    @Test("truncate negative length handles gracefully")
     func truncate_NegativeLength_HandlesGracefully() {
         // Given
         let string = "Hello"
@@ -18,7 +18,9 @@ struct StringExtensionsEdgeCasesTests {
         // Then
         // Negative length should result in empty prefix + trailing
         #expect(result == "...")
+    }
 
+    @Test("truncated negative length handles gracefully")
     func truncated_NegativeLength_HandlesGracefully() {
         // Given
         let string = "Hello"
@@ -30,7 +32,9 @@ struct StringExtensionsEdgeCasesTests {
         // Then
         // Negative length - 3 = -4, prefix(-4) should be empty
         #expect(result == "...")
+    }
 
+    @Test("truncate very long string performance test")
     func truncate_VeryLongString_PerformanceTest() {
         // Given
         let longString = String(repeating: "a", count: 100_000)
@@ -43,10 +47,10 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result.count == 53)
+        #expect(duration < 1.0)
     }
 
-    @Test("truncated  very long string  performance test")
-
+    @Test("truncated very long string performance test")
     func truncated_VeryLongString_PerformanceTest() {
         // Given
         let longString = String(repeating: "b", count: 100_000)
@@ -59,12 +63,12 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result.count == 50)
+        #expect(duration < 1.0)
     }
 
     // MARK: - Whitespace and Special Characters Tests
 
-    @Test("truncate  string with whitespace  preserves whitespace")
-
+    @Test("truncate string with whitespace preserves whitespace")
     func truncate_StringWithWhitespace_PreservesWhitespace() {
         // Given
         let string = "   Hello World   "
@@ -75,7 +79,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "   Hello W...")
+    }
 
+    @Test("truncated string with whitespace preserves whitespace")
     func truncated_StringWithWhitespace_PreservesWhitespace() {
         // Given
         let string = "   Hello World   "
@@ -88,8 +94,7 @@ struct StringExtensionsEdgeCasesTests {
         #expect(result == "   Hell...")
     }
 
-    @Test("truncate  string with newlines  preserves newlines")
-
+    @Test("truncate string with newlines preserves newlines")
     func truncate_StringWithNewlines_PreservesNewlines() {
         // Given
         let string = "First line\nSecond line\nThird line"
@@ -100,7 +105,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "First line\nSeco...")
+    }
 
+    @Test("truncated string with tabs preserves tabs")
     func truncated_StringWithTabs_PreservesTabs() {
         // Given
         let string = "Column1\tColumn2\tColumn3\tColumn4"
@@ -115,8 +122,7 @@ struct StringExtensionsEdgeCasesTests {
 
     // MARK: - International Text Tests
 
-    @Test("truncate  chinese characters  handles correctly")
-
+    @Test("truncate chinese characters handles correctly")
     func truncate_ChineseCharacters_HandlesCorrectly() {
         // Given
         let string = "这是一个很长的中文字符串用于测试"
@@ -127,7 +133,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "这是一个很长的中...")
+    }
 
+    @Test("truncated arabic characters handles correctly")
     func truncated_ArabicCharacters_HandlesCorrectly() {
         // Given
         let string = "هذا نص طويل باللغة العربية للاختبار"
@@ -140,8 +148,7 @@ struct StringExtensionsEdgeCasesTests {
         #expect(result.count == 15)
     }
 
-    @Test("truncate  mixed languages  handles correctly")
-
+    @Test("truncate mixed languages handles correctly")
     func truncate_MixedLanguages_HandlesCorrectly() {
         // Given
         let string = "English 中文 العربية Русский"
@@ -152,7 +159,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "English 中文 ا...")
+    }
 
+    @Test("truncate max int length handles correctly")
     func truncate_MaxIntLength_HandlesCorrectly() {
         // Given
         let string = "Test"
@@ -163,7 +172,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "Test")
+    }
 
+    @Test("truncated max int length handles correctly")
     func truncated_MaxIntLength_HandlesCorrectly() {
         // Given
         let string = "Test"
@@ -174,7 +185,9 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         #expect(result == "Test")
+    }
 
+    @Test("truncate memory efficiency")
     func truncate_MemoryEfficiency() {
         // Given
         let baseString = String(repeating: "x", count: 1000)
@@ -186,11 +199,10 @@ struct StringExtensionsEdgeCasesTests {
         }
 
         // Then - Should complete without memory issues
-        #expect(results.count == 100) + "...")
+        #expect(results.count == 100)
     }
 
-    @Test("truncated  memory efficiency")
-
+    @Test("truncated memory efficiency")
     func truncated_MemoryEfficiency() {
         // Given
         let baseString = String(repeating: "y", count: 1000)

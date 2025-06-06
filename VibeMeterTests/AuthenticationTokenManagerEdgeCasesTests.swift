@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("AuthenticationTokenManager Edge Cases Tests")
 struct AuthenticationTokenManagerEdgeCasesTests {
@@ -8,7 +8,7 @@ struct AuthenticationTokenManagerEdgeCasesTests {
     private let mockKeychainServices: [ServiceProvider: MockKeychainService]
 
     init() {
-        let services: [ServiceProvider: MockKeychainService] = [:]
+        var services: [ServiceProvider: MockKeychainService] = [:]
         for provider in ServiceProvider.allCases {
             services[provider] = MockKeychainService()
         }
@@ -58,7 +58,7 @@ struct AuthenticationTokenManagerEdgeCasesTests {
 
         // Then
         #expect(result == true)
-        #expect(tokenManager.getAuthToken(for: provider == true)
+        #expect(tokenManager.getAuthToken(for: provider) != nil)
     }
 
     @Test("save very long token")

@@ -1,6 +1,7 @@
 import CryptoKit
-@testable import VibeMeter
+import Foundation
 import Testing
+@testable import VibeMeter
 
 @Suite("GravatarServiceCoreTests")
 @MainActor
@@ -86,7 +87,7 @@ struct GravatarServiceCoreTests {
 
         // Then
         #expect(result != nil,
-            "Should double size for retina display")
+                "Should double size for retina display")
     }
 
     @Test("gravatar url  default size  uses40 points")
@@ -100,7 +101,7 @@ struct GravatarServiceCoreTests {
 
         // Then
         #expect(result != nil,
-            "Should use default size of 40 points (80 retina)")
+                "Should use default size of 40 points (80 retina)")
     }
 
     @Test("gravatar url  contains mystery person fallback")
@@ -128,7 +129,7 @@ struct GravatarServiceCoreTests {
 
         // Then
         #expect(sut.currentAvatarURL != nil,
-            "Should be a Gravatar URL")
+                "Should be a Gravatar URL")
     }
 
     @Test("update avatar  with nil email  clears current avatar url")

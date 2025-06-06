@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("BackgroundDataProcessor Error Tests")
 struct BackgroundDataProcessorErrorTests {
@@ -213,8 +213,8 @@ struct BackgroundDataProcessorErrorTests {
         mockProvider.userInfoDelay = 1.0 // Long delay to allow cancellation
 
         // When
-        let capturedProcessor = processor!
-        let capturedMockProvider = mockProvider!
+        let capturedProcessor = processor
+        let capturedMockProvider = mockProvider
         let task = Task { @Sendable in
             try await capturedProcessor.processProviderData(
                 provider: .cursor,

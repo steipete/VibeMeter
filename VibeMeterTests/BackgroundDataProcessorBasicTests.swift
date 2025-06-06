@@ -16,13 +16,17 @@ struct BackgroundDataProcessorBasicTests {
         // Set up mock data
         mockProvider.userInfoToReturn = ProviderUserInfo(email: "test@example.com", provider: .cursor)
         mockProvider.teamInfoToReturn = ProviderTeamInfo(id: 12345, name: "Test Team", provider: .cursor)
-        mockProvider.invoiceToReturn = ProviderInvoice(
+        mockProvider.invoiceToReturn = ProviderMonthlyInvoice(
+            items: [ProviderInvoiceItem(cents: 2000, description: "Test", provider: .cursor)],
             provider: .cursor,
-            items: [ProviderInvoiceItem(description: "Test", cents: 2000)])
+            month: 12,
+            year: 2023)
         mockProvider.usageToReturn = ProviderUsageData(
-            provider: .cursor,
             currentRequests: 500,
-            maxRequests: 10000)
+            totalRequests: 750,
+            maxRequests: 10000,
+            startOfMonth: mockDate,
+            provider: .cursor)
     }
 
     // MARK: - Basic Functionality Tests

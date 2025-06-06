@@ -1,6 +1,6 @@
 import CryptoKit
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("GravatarServiceEdgeCasesTests")
 @MainActor
@@ -97,7 +97,7 @@ struct GravatarServiceEdgeCasesTests {
 
         // Then
         #expect(result != nil,
-            "Should handle large retina size")
+                "Should handle large retina size")
     }
 
     // MARK: - URL Structure Tests
