@@ -219,7 +219,7 @@ struct CurrencyManagerTests {
             // If CurrencyManager is Sendable, this will compile
             _ = manager.availableCurrencies
         }
-        #expect(true) // Test passes if it compiles
+        #expect(Bool(true)) // Test passes if it compiles
     }
 
     @Test("concurrent access thread safety")

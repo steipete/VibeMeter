@@ -17,7 +17,7 @@ struct SparkleUpdaterManagerTests {
     func initialization_InTestEnvironment_DoesNotCrash() {
         // Given/When - Initialization happens in setUp
         // Then - Test passes if initialization completed without throwing
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("initialization is main actor")
@@ -25,7 +25,7 @@ struct SparkleUpdaterManagerTests {
         // Then - SparkleUpdaterManager is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
         let _: SparkleUpdaterManager = sut
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("initialization is observable object")
@@ -33,7 +33,7 @@ struct SparkleUpdaterManagerTests {
         // Then - SparkleUpdaterManager uses @Observable (Swift 6 observation system)
         // The class should be observable but doesn't need to conform to ObservableObject protocol
         let _: SparkleUpdaterManager = sut
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("initialization in test environment skips sparkle setup")
@@ -201,7 +201,7 @@ struct SparkleUpdaterManagerTests {
         }.value
 
         // Then - Should complete without deadlocks or crashes
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("modal alert sequence handles gracefully")

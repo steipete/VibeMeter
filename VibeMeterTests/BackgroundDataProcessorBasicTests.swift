@@ -144,7 +144,7 @@ struct BackgroundDataProcessorBasicTests {
 
     func backgroundDataProcessorIsInitializedCorrectly() {
         // Then - processor is non-optional, so this test just verifies initialization succeeded
-        #expect(true) // Initialization succeeded if we got here
+        #expect(Bool(true)) // Initialization succeeded if we got here
     }
 
     @Test("background data processor runs off main thread")

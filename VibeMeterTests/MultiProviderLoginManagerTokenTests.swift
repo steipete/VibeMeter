@@ -53,7 +53,7 @@ struct MultiProviderLoginManagerTokenTests {
         // Then
         // This test validates that the method can be called without crashing
         // In real usage, invalid tokens would be handled by the provider validation
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("validate all tokens with multiple providers handles gracefully")
@@ -70,7 +70,7 @@ struct MultiProviderLoginManagerTokenTests {
         // This test validates that validation works with multiple providers
         // The exact result depends on network availability and token validity
         let _: [ServiceProvider: Bool] = sut.providerLoginStates
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("refresh login states from keychain updates states")

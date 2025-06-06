@@ -190,7 +190,7 @@ struct StartupManagerTests {
         // Then
         // Verify that StartupManager conforms to StartupControlling protocol
         let _: any StartupControlling = sut
-        #expect(true) // If compilation succeeds, the conformance is verified
+        #expect(Bool(true)) // If compilation succeeds, the conformance is verified
     }
 
     @Test("startup manager  is sendable")

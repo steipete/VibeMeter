@@ -156,7 +156,7 @@ struct URLQueryItemsBasicTests {
 
         // Then - Should succeed in this case, but testing the pattern
         let _: URL = result
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("appending query items chained calls works correctly")

@@ -79,7 +79,7 @@ struct ProgressColorEdgeCasesTests {
             // Then
             // Infinity values should be handled gracefully
             let _: Color = color
-            #expect(true)
+            #expect(Bool(true))
         }
     }
 
@@ -94,7 +94,7 @@ struct ProgressColorEdgeCasesTests {
         // Then
         // NaN should be handled gracefully (will likely fall through to default case)
         let _: Color = color
-        #expect(true)
+        #expect(Bool(true))
     }
 
     @Test("warning level infinity values")
@@ -108,7 +108,7 @@ struct ProgressColorEdgeCasesTests {
 
             // Then
             let _: Color.ProgressWarningLevel = warningLevel
-            #expect(true)
+            #expect(Bool(true))
         }
     }
 
@@ -122,7 +122,7 @@ struct ProgressColorEdgeCasesTests {
 
         // Then
         let _: Color.ProgressWarningLevel = warningLevel
-        #expect(true)
+        #expect(Bool(true))
     }
 
     // MARK: - Performance Tests
@@ -175,7 +175,7 @@ struct ProgressColorEdgeCasesTests {
             // Then - Should always return valid values
             let _: Color = color
             let _: Color.ProgressWarningLevel = warningLevel
-            #expect(true)
+            #expect(Bool(true))
 
             currentProgress += increment
         }
