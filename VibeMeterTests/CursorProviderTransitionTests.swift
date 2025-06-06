@@ -47,6 +47,14 @@ struct CursorProviderTransitionTests {
         let firstBodyJSON = try JSONSerialization.jsonObject(with: firstRequestBody) as? [String: Any]
         #expect(firstBodyJSON?["teamId"] == nil)
 
+        // When - User joins a team, update session with teamId
+        await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
+            provider: .cursor,
+            teamId: 4567,
+            teamName: "Development Team",
+            userEmail: "dev@team.com",
+            isActive: true))
+
         // Fetch invoice as team member
         let teamInvoiceData = Data("""
         {"items": [{"cents": 5000, "description": "Team Usage"}], "pricing_description": {"description": "Team Plan", "id": "team-pro"}}
@@ -71,7 +79,7 @@ struct CursorProviderTransitionTests {
         // Verify stored teamId was used
         let secondRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let secondBodyJSON = try JSONSerialization.jsonObject(with: secondRequestBody) as? [String: Any]
-        #expect(secondBodyJSON?["teamId"] as? Int == 5000)
+        #expect(secondBodyJSON?["teamId"] as? Int == 4567)
     }
 
     @Test("user transition team member leaves team")

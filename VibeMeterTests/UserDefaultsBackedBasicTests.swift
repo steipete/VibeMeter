@@ -224,8 +224,8 @@ struct UserDefaultsBackedBasicTests {
         arrayProperty = ["one", "two", "three"]
 
         // Then
-        #expect(arrayProperty == ["one", "three"])
-        #expect(testUserDefaults.object(forKey: "arrayTest") as? [String] == ["one", "three"])
+        #expect(arrayProperty == ["one", "two", "three"])
+        #expect(testUserDefaults.object(forKey: "arrayTest") as? [String] == ["one", "two", "three"])
     }
 
     @Test("array property set to empty stores empty")

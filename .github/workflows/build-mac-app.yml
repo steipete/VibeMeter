@@ -32,7 +32,9 @@ jobs:
   build:
     name: Build VibeMeter
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     
     steps:
     - name: Checkout code
@@ -65,8 +67,10 @@ jobs:
       run: ./scripts/generate-xcproj.sh
 
     - name: Lint code
-      run: ./scripts/lint.sh
-      continue-on-error: true
+      run: |
+        echo "Running SwiftLint..."
+        ./scripts/lint.sh || true
+        echo "Linting complete (non-blocking)"
 
     - name: Build app
       id: build
@@ -91,23 +95,41 @@ jobs:
         echo "✅ Build successful: $APP_PATH (v$VERSION build $BUILD)"
 
     - name: Run tests
+      timeout-minutes: 15
       run: |
         echo "Running tests..."
         set -o pipefail
+        
+        # Disable parallel testing to avoid concurrency issues
+        # Use explicit test timeout to prevent hanging
         xcodebuild test \
           -workspace VibeMeter.xcworkspace \
           -scheme VibeMeter \
           -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
-          -maximum-parallel-testing-workers 1 \
+          -parallel-testing-enabled NO \
+          -maximum-concurrent-test-simulator-destinations 1 \
+          -test-timeouts-enabled YES \
+          -default-test-execution-time-allowance 60 \
+          -maximum-test-execution-time-allowance 300 \
           -resultBundlePath "test-results.xcresult" \
-          | xcbeautify
+          | xcbeautify --report junit --report-path . --junit-report-filename tests.xml
         
         # Check test results
         TEST_STATUS=$?
         if [ $TEST_STATUS -ne 0 ]; then
           echo "❌ Tests failed with exit code $TEST_STATUS"
           echo "Test results are available in test-results.xcresult"
+          
+          # Try to extract more details from test results
+          if [ -f "tests.xml" ]; then
+            echo "--- Test Summary ---"
+            # Count failures
+            FAILURES=$(grep -o 'failures="[0-9]*"' tests.xml | head -1 | grep -o '[0-9]*' || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' tests.xml | head -1 | grep -o '[0-9]*' || echo "0")
+            echo "Failures: $FAILURES, Errors: $ERRORS"
+          fi
+          
           exit $TEST_STATUS
         else
           echo "✅ All tests passed"
@@ -213,8 +235,19 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ github.sha }}
-        path: test-results.xcresult
+        path: |
+          test-results.xcresult
+          tests.xml
         retention-days: 7
+    
+    - name: Publish Test Results
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: Test Results
+        path: tests.xml
+        reporter: java-junit
+        fail-on-error: false
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

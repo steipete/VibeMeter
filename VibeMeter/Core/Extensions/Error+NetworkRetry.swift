@@ -9,7 +9,7 @@ extension Error {
             switch urlError.code {
             case .timedOut:
                 return .networkTimeout
-            case .cannotFindHost, .cannotConnectToHost, .networkConnectionLost:
+            case .cannotFindHost, .cannotConnectToHost, .networkConnectionLost, .notConnectedToInternet:
                 return .connectionError
             default:
                 return nil

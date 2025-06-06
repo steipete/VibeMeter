@@ -64,7 +64,7 @@ struct BackgroundDataProcessorBasicTests {
         // Then
         let calendar = Calendar.current
         let currentMonth = calendar.component(.month, from: Date()) - 1 // API uses 0-based months
-        let _ = calendar.component(.year, from: Date())
+        _ = calendar.component(.year, from: Date())
 
         #expect(mockProvider.lastInvoiceMonth == currentMonth)
     }
@@ -143,8 +143,8 @@ struct BackgroundDataProcessorBasicTests {
     @Test("background data processor is initialized correctly")
 
     func backgroundDataProcessorIsInitializedCorrectly() {
-        // Then
-        #expect(processor != nil)
+        // Then - processor is non-optional, so this test just verifies initialization succeeded
+        #expect(true) // Initialization succeeded if we got here
     }
 
     @Test("background data processor runs off main thread")

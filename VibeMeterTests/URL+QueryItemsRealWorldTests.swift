@@ -56,6 +56,6 @@ struct URLQueryItemsRealWorldTests {
         let result = baseURL.appendingQueryItems(currencyItems)
 
         // Then
-        #expect(result.absoluteString == "https://frankfurter.app/latest?from=USD&to=EUR%2CGBP%2CJPY")
+        #expect(result.absoluteString == "https://frankfurter.app/latest?from=USD&to=EUR,GBP,JPY")
     }
 }

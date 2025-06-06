@@ -16,61 +16,57 @@ struct NotificationManagerBasicTests {
     }
 
     // MARK: - Authorization Tests
-    
+
     @Suite("Authorization Management")
     struct AuthorizationTests {
         fileprivate let manager: TestableNotificationManager
         fileprivate let mockCenter: MockUNUserNotificationCenter
-        
+
         init() async {
             await MainActor.run {}
             self.mockCenter = MockUNUserNotificationCenter()
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
-        
+
         struct AuthorizationTestCase: Sendable {
             let result: Result<Bool, Error>
             let expectedResult: Bool
             let description: String
-            
+
             init(result: Result<Bool, Error>, expected: Bool, _ description: String) {
                 self.result = result
                 self.expectedResult = expected
                 self.description = description
             }
         }
-        
+
         static let authorizationTestCases: [AuthorizationTestCase] = [
             AuthorizationTestCase(
                 result: .success(true),
                 expected: true,
-                "user grants permission"
-            ),
+                "user grants permission"),
             AuthorizationTestCase(
                 result: .success(false),
                 expected: false,
-                "user denies permission"
-            ),
+                "user denies permission"),
             AuthorizationTestCase(
                 result: .failure(NSError(domain: "TestError", code: 1, userInfo: nil)),
                 expected: false,
-                "system error during authorization"
-            ),
+                "system error during authorization"),
             AuthorizationTestCase(
                 result: .failure(NSError(domain: "UNErrorDomain", code: 1, userInfo: nil)),
                 expected: false,
-                "authorization denied error"
-            )
+                "authorization denied error"),
         ]
-        
+
         @Test("Authorization request scenarios", arguments: authorizationTestCases)
         func authorizationRequestScenarios(testCase: AuthorizationTestCase) async {
             // Given
             mockCenter.authorizationResult = testCase.result
-            
+
             // When
             let result = await manager.requestAuthorization()
-            
+
             // Then
             #expect(result == testCase.expectedResult)
             #expect(mockCenter.lastRequestedOptions == [.alert])
@@ -79,18 +75,18 @@ struct NotificationManagerBasicTests {
     }
 
     // MARK: - Notification Display Tests
-    
+
     @Suite("Notification Display")
     struct NotificationDisplayTests {
         fileprivate let manager: TestableNotificationManager
         fileprivate let mockCenter: MockUNUserNotificationCenter
-        
+
         init() async {
             await MainActor.run {}
             self.mockCenter = MockUNUserNotificationCenter()
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
-        
+
         struct NotificationTestCase: Sendable {
             let currentSpending: Double
             let limitAmount: Double
@@ -100,7 +96,7 @@ struct NotificationManagerBasicTests {
             let expectedCategory: String
             let expectedInterruption: UNNotificationInterruptionLevel?
             let description: String
-            
+
             init(
                 spending: Double,
                 limit: Double,
@@ -109,8 +105,7 @@ struct NotificationManagerBasicTests {
                 bodyContains: String,
                 category: String,
                 interruption: UNNotificationInterruptionLevel? = nil,
-                _ description: String
-            ) {
+                _ description: String) {
                 self.currentSpending = spending
                 self.limitAmount = limit
                 self.currencyCode = currency
@@ -121,7 +116,7 @@ struct NotificationManagerBasicTests {
                 self.description = description
             }
         }
-        
+
         static let warningNotificationTestCases: [NotificationTestCase] = [
             NotificationTestCase(
                 spending: 75.50,
@@ -129,8 +124,7 @@ struct NotificationManagerBasicTests {
                 title: "Spending Alert ⚠️",
                 bodyContains: "$100.00",
                 category: "SPENDING_WARNING",
-                "USD warning notification"
-            ),
+                "USD warning notification"),
             NotificationTestCase(
                 spending: 82.30,
                 limit: 100.0,
@@ -138,8 +132,7 @@ struct NotificationManagerBasicTests {
                 title: "Spending Alert ⚠️",
                 bodyContains: "€82.30",
                 category: "SPENDING_WARNING",
-                "EUR warning notification"
-            ),
+                "EUR warning notification"),
             NotificationTestCase(
                 spending: 45.75,
                 limit: 50.0,
@@ -147,10 +140,9 @@ struct NotificationManagerBasicTests {
                 title: "Spending Alert ⚠️",
                 bodyContains: "GBP45.75",
                 category: "SPENDING_WARNING",
-                "GBP warning notification with unsupported currency symbol"
-            )
+                "GBP warning notification with unsupported currency symbol"),
         ]
-        
+
         static let upperLimitNotificationTestCases: [NotificationTestCase] = [
             NotificationTestCase(
                 spending: 105.75,
@@ -159,8 +151,7 @@ struct NotificationManagerBasicTests {
                 bodyContains: "$100.00",
                 category: "SPENDING_CRITICAL",
                 interruption: .critical,
-                "USD upper limit notification"
-            ),
+                "USD upper limit notification"),
             NotificationTestCase(
                 spending: 92.50,
                 limit: 85.0,
@@ -169,112 +160,133 @@ struct NotificationManagerBasicTests {
                 bodyContains: "€92.50",
                 category: "SPENDING_CRITICAL",
                 interruption: .critical,
-                "EUR upper limit notification"
-            )
+                "EUR upper limit notification"),
         ]
-        
+
         @Test("Warning notification display", arguments: warningNotificationTestCases)
         func warningNotificationDisplay(testCase: NotificationTestCase) async throws {
             // When
             await manager.showWarningNotification(
                 currentSpending: testCase.currentSpending,
                 limitAmount: testCase.limitAmount,
-                currencyCode: testCase.currencyCode
-            )
-            
+                currencyCode: testCase.currencyCode)
+
             // Then
             #expect(mockCenter.addCallCount == 1)
-            
+
             let request = try #require(mockCenter.lastAddedRequest)
             #expect(request.content.title == testCase.expectedTitle)
             #expect(request.content.body.contains(testCase.expectedBodyContains))
             #expect(request.content.categoryIdentifier == testCase.expectedCategory)
             #expect(request.trigger == nil)
         }
-        
+
         @Test("Upper limit notification display", arguments: upperLimitNotificationTestCases)
         func upperLimitNotificationDisplay(testCase: NotificationTestCase) async throws {
             // When
             await manager.showUpperLimitNotification(
                 currentSpending: testCase.currentSpending,
                 limitAmount: testCase.limitAmount,
-                currencyCode: testCase.currencyCode
-            )
-            
+                currencyCode: testCase.currencyCode)
+
             // Then
             #expect(mockCenter.addCallCount == 1)
-            
+
             let request = try #require(mockCenter.lastAddedRequest)
             #expect(request.content.title == testCase.expectedTitle)
             #expect(request.content.body.contains(testCase.expectedBodyContains))
             #expect(request.content.categoryIdentifier == testCase.expectedCategory)
-            
+
             if let expectedInterruption = testCase.expectedInterruption {
                 #expect(request.content.interruptionLevel == expectedInterruption)
             }
         }
-        
+
         @Test("Duplicate notification prevention for warnings")
         func duplicateNotificationPreventionWarnings() async {
             // Given - First notification
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
             #expect(mockCenter.addCallCount == 1)
-            
+
             // When - Try to show again
             await manager.showWarningNotification(currentSpending: 80.0, limitAmount: 100.0, currencyCode: "USD")
-            
+
             // Then - Should not trigger another notification
             #expect(mockCenter.addCallCount == 1)
         }
-        
+
         @Test("Duplicate notification prevention for upper limits")
         func duplicateNotificationPreventionUpperLimits() async {
             // Given - First notification
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
             #expect(mockCenter.addCallCount == 1)
-            
+
             // When - Try to show again
             await manager.showUpperLimitNotification(currentSpending: 110.0, limitAmount: 100.0, currencyCode: "USD")
-            
+
             // Then - Should not trigger another notification
             #expect(mockCenter.addCallCount == 1)
         }
     }
 
     // MARK: - State Management Tests
-    
+
     @Suite("Notification State Management")
     struct StateManagementTests {
         fileprivate let manager: TestableNotificationManager
         fileprivate let mockCenter: MockUNUserNotificationCenter
-        
+
         init() async {
             await MainActor.run {}
             self.mockCenter = MockUNUserNotificationCenter()
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
-        
+
         @Test("Reset notification states for new session")
         func resetNotificationStatesForNewSession() async {
             // Given - Show both types of notifications
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
             #expect(mockCenter.addCallCount == 2)
-            
+
             // When
             await manager.resetAllNotificationStatesForNewSession()
-            
+
             // Then - Should be able to show notifications again
             await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
             await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
             #expect(mockCenter.addCallCount == 4)
         }
-        
+
         @Test("State reset below threshold scenarios", arguments: [
-            (limitType: NotificationLimitType.warning, current: 70.0, warning: 80.0, upper: 100.0, shouldReset: true, "warning reset when below threshold"),
-            (limitType: NotificationLimitType.warning, current: 85.0, warning: 80.0, upper: 100.0, shouldReset: false, "warning not reset when above threshold"),
-            (limitType: NotificationLimitType.upper, current: 95.0, warning: 80.0, upper: 100.0, shouldReset: true, "upper reset when below threshold"),
-            (limitType: NotificationLimitType.upper, current: 105.0, warning: 80.0, upper: 100.0, shouldReset: false, "upper not reset when above threshold")
+            (
+                limitType: NotificationLimitType.warning,
+                current: 70.0,
+                warning: 80.0,
+                upper: 100.0,
+                shouldReset: true,
+                "warning reset when below threshold"),
+            (
+                limitType: NotificationLimitType.warning,
+                current: 85.0,
+                warning: 80.0,
+                upper: 100.0,
+                shouldReset: false,
+                "warning not reset when above threshold"),
+            (
+                limitType: NotificationLimitType.upper,
+                current: 95.0,
+                warning: 80.0,
+                upper: 100.0,
+                shouldReset: true,
+                "upper reset when below threshold"),
+            (
+                limitType: NotificationLimitType.upper,
+                current: 105.0,
+                warning: 80.0,
+                upper: 100.0,
+                shouldReset: false,
+                "upper not reset when above threshold")
         ])
         fileprivate func stateResetBelowThresholdScenarios(
             limitType: NotificationLimitType,
@@ -282,95 +294,101 @@ struct NotificationManagerBasicTests {
             warning: Double,
             upper: Double,
             shouldReset: Bool,
-            description: String
-        ) async {
+            description _: String) async {
             // Given - Show initial notification to set state
             switch limitType {
             case .warning:
-                await manager.showWarningNotification(currentSpending: warning + 5, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showWarningNotification(
+                    currentSpending: warning + 5,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
             case .upper:
-                await manager.showUpperLimitNotification(currentSpending: upper + 5, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: upper + 5,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
             }
-            
+
             let initialCount = mockCenter.addCallCount
-            
+
             // When
             await manager.resetNotificationStateIfBelow(
                 limitType: limitType,
                 currentSpendingUSD: current,
                 warningLimitUSD: warning,
-                upperLimitUSD: upper
-            )
-            
+                upperLimitUSD: upper)
+
             // Then - Try to show notification again
             switch limitType {
             case .warning:
                 await manager.showWarningNotification(currentSpending: current, limitAmount: 100.0, currencyCode: "USD")
             case .upper:
-                await manager.showUpperLimitNotification(currentSpending: current, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: current,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
             }
-            
+
             let expectedCount = shouldReset ? initialCount + 1 : initialCount
             #expect(mockCenter.addCallCount == expectedCount)
         }
     }
 
     // MARK: - Special Notification Tests
-    
+
     @Test("Instance already running notification")
     func instanceAlreadyRunningNotification() async throws {
         // When
         await notificationManager.showInstanceAlreadyRunningNotification()
-        
+
         // Then
         #expect(mockNotificationCenter.addCallCount == 1)
-        
+
         let request = try #require(mockNotificationCenter.lastAddedRequest, "Should have notification request")
         #expect(request.content.title == "Vibe Meter Already Running")
         #expect(
-            request.content.body == "Another instance of Vibe Meter is already running. The existing instance has been brought to the front.",
-            "Should have correct body"
-        )
+            request.content
+                .body ==
+                "Another instance of Vibe Meter is already running. The existing instance has been brought to the front.",
+            "Should have correct body")
         #expect(request.content.categoryIdentifier == "APP_INSTANCE")
     }
-    
+
     // MARK: - Performance Tests
-    
+
     @Test("Notification creation performance", .timeLimit(.minutes(1)))
     func notificationCreationPerformance() async {
         // When/Then - Should handle many notifications efficiently
-        for i in 0..<100 {
+        for i in 0 ..< 100 {
             await notificationManager.showWarningNotification(
                 currentSpending: Double(i),
                 limitAmount: 100.0,
-                currencyCode: "USD"
-            )
-            
+                currencyCode: "USD")
+
             if i % 2 == 0 {
                 await notificationManager.resetAllNotificationStatesForNewSession()
             }
         }
     }
-    
+
     @Test("Concurrent notification operations")
     func concurrentNotificationOperations() async {
         // When - Perform concurrent operations
         await withTaskGroup(of: Void.self) { group in
-            for i in 0..<10 {
+            for i in 0 ..< 10 {
                 group.addTask {
                     await self.notificationManager.showWarningNotification(
                         currentSpending: Double(i * 10),
                         limitAmount: 100.0,
-                        currencyCode: "USD"
-                    )
+                        currencyCode: "USD")
                 }
-                
+
                 group.addTask {
                     await self.notificationManager.resetAllNotificationStatesForNewSession()
                 }
             }
         }
-        
+
         // Then - Operations should complete without issues
         #expect(Bool(true))
     }
@@ -378,12 +396,12 @@ struct NotificationManagerBasicTests {
 
 // MARK: - Test Support Types
 
-fileprivate enum NotificationLimitType {
+private enum NotificationLimitType {
     case warning
     case upper
 }
 
-fileprivate final class TestableNotificationManager: @unchecked Sendable {
+private final class TestableNotificationManager: @unchecked Sendable {
     private let notificationCenter: MockUNUserNotificationCenter
     private var warningNotificationShown = false
     private var upperLimitNotificationShown = false
@@ -474,7 +492,9 @@ fileprivate final class TestableNotificationManager: @unchecked Sendable {
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
         content.title = "Vibe Meter Already Running"
-        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content
+            .body =
+            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 
@@ -489,7 +509,7 @@ fileprivate final class TestableNotificationManager: @unchecked Sendable {
 
 // MARK: - MockUNUserNotificationCenter
 
-fileprivate final class MockUNUserNotificationCenter: @unchecked Sendable {
+private final class MockUNUserNotificationCenter: @unchecked Sendable {
     var authorizationResult: Result<Bool, Error> = .success(true)
     var requestAuthorizationCallCount = 0
     var lastRequestedOptions: UNAuthorizationOptions?

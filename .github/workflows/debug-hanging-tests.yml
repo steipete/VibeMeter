@@ -1,0 +1,131 @@
+name: Debug Hanging Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_filter:
+        description: 'Test filter (e.g., VibeMeterTests/SpecificTestSuite)'
+        required: false
+        default: ''
+      timeout_minutes:
+        description: 'Timeout in minutes'
+        required: false
+        default: '5'
+
+jobs:
+  debug-tests:
+    name: Debug Test Execution
+    runs-on: macos-15
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        xcodebuild -version
+
+    - name: Install tools
+      run: |
+        brew install tuist xcbeautify
+
+    - name: Generate Xcode project
+      run: ./scripts/generate-xcproj.sh
+
+    - name: Build tests with verbose output
+      run: |
+        echo "Building tests..."
+        xcodebuild build-for-testing \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData
+
+    - name: Run tests with debugging
+      timeout-minutes: ${{ github.event.inputs.timeout_minutes }}
+      run: |
+        echo "Running tests with debugging enabled..."
+        
+        # Set up test filter
+        TEST_FILTER=""
+        if [ -n "${{ github.event.inputs.test_filter }}" ]; then
+          TEST_FILTER="-only-testing:${{ github.event.inputs.test_filter }}"
+        fi
+        
+        # Run with verbose output and debugging
+        xcodebuild test-without-building \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData \
+          -parallel-testing-enabled NO \
+          -test-timeouts-enabled YES \
+          -default-test-execution-time-allowance 10 \
+          -maximum-test-execution-time-allowance 30 \
+          -enableAddressSanitizer NO \
+          -enableThreadSanitizer NO \
+          -enableUndefinedBehaviorSanitizer NO \
+          $TEST_FILTER \
+          -resultBundlePath "debug-test-results.xcresult" \
+          2>&1 | tee test-output.log
+        
+        TEST_STATUS=$?
+        
+        echo "Test exit status: $TEST_STATUS"
+        
+        # Analyze test output for hanging patterns
+        echo "=== Analyzing test output for issues ==="
+        
+        # Check for MainActor issues
+        if grep -q "MainActor.assumeIsolated" test-output.log; then
+          echo "⚠️ Found MainActor.assumeIsolated usage - this can cause hangs!"
+        fi
+        
+        # Check for deadlocks
+        if grep -q "deadlock" test-output.log; then
+          echo "⚠️ Possible deadlock detected!"
+        fi
+        
+        # Check for infinite loops in specific tests
+        if grep -E "Test.*started" test-output.log | tail -20; then
+          echo "=== Last 20 tests that started ==="
+          grep -E "Test.*started" test-output.log | tail -20
+        fi
+        
+        # Check system state during hang
+        echo "=== System state ==="
+        ps aux | grep -E "(xctest|VibeMeter)" | grep -v grep || true
+        
+        exit $TEST_STATUS
+
+    - name: Collect diagnostic data
+      if: failure()
+      run: |
+        echo "=== Collecting diagnostic data ==="
+        
+        # Get crash logs if any
+        if [ -d ~/Library/Logs/DiagnosticReports ]; then
+          echo "=== Recent crash logs ==="
+          find ~/Library/Logs/DiagnosticReports -name "*VibeMeter*" -o -name "*xctest*" -mtime -1 -exec cat {} \; || true
+        fi
+        
+        # Get test logs
+        if [ -d "build/DerivedData/Logs/Test" ]; then
+          echo "=== Test logs ==="
+          find build/DerivedData/Logs/Test -name "*.log" -exec echo "--- {} ---" \; -exec cat {} \; || true
+        fi
+
+    - name: Upload diagnostic artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-artifacts-${{ github.run_id }}
+        path: |
+          test-output.log
+          debug-test-results.xcresult
+          build/DerivedData/Logs/Test/
+        retention-days: 7

@@ -70,8 +70,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0) < 0.01)
-        #expect(abs(cursorData?.displaySpending ?? 0 - 90.0) < 0.01) // 100 * 0.9
+        #expect(abs((cursorData?.currentSpendingUSD ?? 0) - 100.0) < 0.01)
+        #expect(abs((cursorData?.displaySpending ?? 0) - 90.0) < 0.01) // 100 * 0.9
     }
 
     @Test("update spending  non usd  no rates  falls back to usd")
@@ -92,8 +92,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 50.0) < 0.01)
-        #expect(abs(cursorData?.displaySpending ?? 0 - 50.0) < 0.01) // Falls back to USD
+        #expect(abs((cursorData?.currentSpendingUSD ?? 0) - 50.0) < 0.01)
+        #expect(abs((cursorData?.displaySpending ?? 0) - 50.0) < 0.01) // Falls back to USD
     }
 
     // MARK: - Update Limits Tests
@@ -117,8 +117,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0) < 0.01)
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0) < 0.01)
+        #expect(abs((cursorData?.warningLimitConverted ?? 0) - 200.0) < 0.01)
+        #expect(abs((cursorData?.upperLimitConverted ?? 0) - 1000.0) < 0.01)
     }
 
     @Test("update limits eur  converts correctly")
@@ -140,8 +140,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 170.0) < 0.01) // 200 * 0.85
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 850.0) < 0.01) // 1000 * 0.85
+        #expect(abs((cursorData?.warningLimitConverted ?? 0) - 170.0) < 0.01) // 200 * 0.85
+        #expect(abs((cursorData?.upperLimitConverted ?? 0) - 850.0) < 0.01) // 1000 * 0.85
     }
 
     @Test("update limits  invalid rate  falls back to usd")
@@ -163,8 +163,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert - Should fall back to USD amounts
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0) < 0.01)
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0) < 0.01)
+        #expect(abs((cursorData?.warningLimitConverted ?? 0) - 200.0) < 0.01)
+        #expect(abs((cursorData?.upperLimitConverted ?? 0) - 1000.0) < 0.01)
     }
 
     // MARK: - Usage Data Tests
@@ -288,7 +288,7 @@ struct MultiProviderSpendingDataTests {
 
         // Assert - Should have latest data
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0) < 0.01) // From invoice2
+        #expect(abs((cursorData?.currentSpendingUSD ?? 0) - 100.0) < 0.01) // From invoice2
         #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 10000)
     }
 

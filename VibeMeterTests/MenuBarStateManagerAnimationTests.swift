@@ -136,7 +136,7 @@ struct MenuBarStateManagerAnimationTests {
 
             // Then
             #expect(
-                result == approximateExpected)
+                abs(result - approximateExpected) < 0.0001)
         }
     }
 

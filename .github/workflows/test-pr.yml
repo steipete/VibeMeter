@@ -1,0 +1,185 @@
+name: PR Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.swift'
+      - '**.xcodeproj'
+      - '**.xcworkspace'
+      - 'Package.swift'
+      - 'Project.swift'
+      - 'Tuist.swift'
+      - '.github/workflows/test-pr.yml'
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  quick-tests:
+    name: Quick PR Tests
+    runs-on: macos-15
+    timeout-minutes: 20
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        xcodebuild -version
+        swift --version
+
+    - name: Cache Tuist
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.tuist/Cache
+          ~/Library/Caches/tuist
+        key: ${{ runner.os }}-tuist-${{ hashFiles('**/Tuist.swift', '**/Project.swift') }}
+        restore-keys: |
+          ${{ runner.os }}-tuist-
+
+    - name: Install build tools
+      run: |
+        # Install Tuist
+        curl -Ls https://install.tuist.io | bash
+        
+        # Install other tools
+        brew install xcbeautify swiftlint swiftformat
+
+    - name: Generate Xcode project
+      env:
+        CI: true
+      run: ./scripts/generate-xcproj.sh
+
+    - name: Swift Format Check
+      run: |
+        echo "Checking Swift formatting..."
+        swiftformat --lint . --config .swiftformat || true
+
+    - name: SwiftLint
+      run: |
+        echo "Running SwiftLint..."
+        swiftlint lint --reporter github-actions-logging || true
+
+    - name: Build for testing
+      run: |
+        echo "Building for tests..."
+        set -o pipefail
+        xcodebuild build-for-testing \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData \
+          | xcbeautify
+
+    - name: Run Core Tests
+      timeout-minutes: 10
+      run: |
+        echo "Running core test suites..."
+        set -o pipefail
+        
+        # Run only the most important test suites for PR validation
+        xcodebuild test-without-building \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData \
+          -parallel-testing-enabled NO \
+          -test-timeouts-enabled YES \
+          -default-test-execution-time-allowance 30 \
+          -maximum-test-execution-time-allowance 120 \
+          -only-testing:VibeMeterTests/CursorProviderBasicTests \
+          -only-testing:VibeMeterTests/CursorProviderDataTests \
+          -only-testing:VibeMeterTests/ExchangeRateManagerNetworkTests \
+          -only-testing:VibeMeterTests/MultiProviderDataOrchestratorTests \
+          -only-testing:VibeMeterTests/CurrencyConversionBasicTests \
+          -only-testing:VibeMeterTests/SettingsManagerTests \
+          -only-testing:VibeMeterTests/NotificationManagerBasicTests \
+          -resultBundlePath "test-results-pr.xcresult" \
+          | xcbeautify --report junit --report-path . --junit-report-filename pr-tests.xml
+        
+        TEST_STATUS=$?
+        if [ $TEST_STATUS -ne 0 ]; then
+          echo "❌ Core tests failed with exit code $TEST_STATUS"
+          exit $TEST_STATUS
+        else
+          echo "✅ Core tests passed"
+        fi
+
+    - name: Upload PR test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pr-test-results-${{ github.event.pull_request.head.sha }}
+        path: |
+          test-results-pr.xcresult
+          pr-tests.xml
+        retention-days: 7
+
+    - name: Publish PR Test Report
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: PR Test Results
+        path: pr-tests.xml
+        reporter: java-junit
+        fail-on-error: false
+
+    - name: Comment test status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const conclusion = '${{ job.status }}';
+          const sha = context.payload.pull_request.head.sha.substring(0, 7);
+          
+          let icon, status;
+          if (conclusion === 'success') {
+            icon = '✅';
+            status = 'All core tests passed!';
+          } else {
+            icon = '❌';
+            status = 'Some tests failed. Check the test report for details.';
+          }
+          
+          const body = `### ${icon} PR Quick Tests
+
+          **Commit:** ${sha}
+          **Status:** ${status}
+
+          This is a quick test run that validates core functionality. Full test suite runs on merge to main.`;
+          
+          // Find and update or create comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('PR Quick Tests')
+          );
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+          }

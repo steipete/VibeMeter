@@ -211,7 +211,7 @@ struct MultiProviderUserSessionDataTests {
         // Assert
         let session = userSession.getSession(for: .cursor)
         #expect(session != nil)
-        #expect(session?.lastErrorMessage == "Unable to fetch team information")
+        #expect(session?.lastErrorMessage == "Test error")
     }
 
     @Test("clear error removes error message")

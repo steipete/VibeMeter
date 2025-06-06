@@ -1,0 +1,279 @@
+name: Test Matrix
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  prepare:
+    name: Prepare Test Matrix
+    runs-on: macos-15
+    outputs:
+      test-suites: ${{ steps.get-suites.outputs.suites }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Get test suites
+      id: get-suites
+      run: |
+        # Define test suite groups for parallel execution
+        cat > test-suites.json << 'EOF'
+        [
+          {
+            "name": "Provider Tests",
+            "suites": [
+              "VibeMeterTests/CursorProviderBasicTests",
+              "VibeMeterTests/CursorProviderDataTests",
+              "VibeMeterTests/CursorProviderTransitionTests",
+              "VibeMeterTests/CursorProviderValidationTests",
+              "VibeMeterTests/CursorProviderNoTeamTests"
+            ]
+          },
+          {
+            "name": "Core Services",
+            "suites": [
+              "VibeMeterTests/ExchangeRateManagerNetworkTests",
+              "VibeMeterTests/ExchangeRateManagerConversionTests",
+              "VibeMeterTests/ExchangeRateManagerEdgeCasesTests",
+              "VibeMeterTests/CurrencyManagerTests",
+              "VibeMeterTests/CurrencyConversionBasicTests",
+              "VibeMeterTests/CurrencyConversionEdgeCasesTests"
+            ]
+          },
+          {
+            "name": "Multi-Provider Tests",
+            "suites": [
+              "VibeMeterTests/MultiProviderDataOrchestratorTests",
+              "VibeMeterTests/MultiProviderLoginManagerCoreTests",
+              "VibeMeterTests/MultiProviderLoginManagerTokenTests",
+              "VibeMeterTests/MultiProviderLoginManagerCallbackTests",
+              "VibeMeterTests/MultiProviderArchitectureTests",
+              "VibeMeterTests/MultiProviderSpendingDataTests",
+              "VibeMeterTests/MultiProviderUserSessionDataTests"
+            ]
+          },
+          {
+            "name": "UI and State Tests",
+            "suites": [
+              "VibeMeterTests/MenuBarStateTests",
+              "VibeMeterTests/MenuBarStateManagerTests",
+              "VibeMeterTests/MenuBarStateManagerAnimationTests",
+              "VibeMeterTests/NotificationManagerBasicTests",
+              "VibeMeterTests/NotificationManagerContentTests",
+              "VibeMeterTests/NotificationManagerFormattingTests",
+              "VibeMeterTests/NotificationManagerStateTests"
+            ]
+          },
+          {
+            "name": "Utility Tests",
+            "suites": [
+              "VibeMeterTests/StringExtensionsTruncateTests",
+              "VibeMeterTests/StringExtensionsTruncatedTests",
+              "VibeMeterTests/StringExtensionsEdgeCasesTests",
+              "VibeMeterTests/URL+QueryItemsBasicTests",
+              "VibeMeterTests/URL+QueryItemsAdvancedTests",
+              "VibeMeterTests/URL+QueryItemsRealWorldTests",
+              "VibeMeterTests/UserDefaultsBackedBasicTests",
+              "VibeMeterTests/UserDefaultsBackedAdvancedTests"
+            ]
+          },
+          {
+            "name": "Other Tests",
+            "suites": [
+              "VibeMeterTests/SettingsManagerTests",
+              "VibeMeterTests/StartupManagerTests",
+              "VibeMeterTests/ApplicationMoverTests",
+              "VibeMeterTests/KeychainHelperTests",
+              "VibeMeterTests/GravatarServiceCoreTests",
+              "VibeMeterTests/GravatarServiceEdgeCasesTests",
+              "VibeMeterTests/GravatarServiceHashingTests",
+              "VibeMeterTests/LoggingServiceCoreTests",
+              "VibeMeterTests/LoggingServiceErrorTests",
+              "VibeMeterTests/LoggingServicePerformanceTests"
+            ]
+          }
+        ]
+        EOF
+        
+        echo "suites=$(cat test-suites.json | jq -c .)" >> $GITHUB_OUTPUT
+
+  test:
+    name: ${{ matrix.suite.name }}
+    needs: prepare
+    runs-on: macos-15
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJson(needs.prepare.outputs.test-suites) }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s $DEVELOPER_DIR
+        xcodebuild -version
+
+    - name: Cache build
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/DerivedData
+          ~/.tuist/Cache
+        key: ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift') }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift') }}-
+          ${{ runner.os }}-build-
+
+    - name: Install tools
+      run: |
+        # Quick tool installation
+        which tuist || curl -Ls https://install.tuist.io | bash
+        which xcbeautify || brew install xcbeautify
+
+    - name: Generate project
+      run: ./scripts/generate-xcproj.sh
+
+    - name: Build for testing
+      run: |
+        if [ ! -d "build/DerivedData" ]; then
+          echo "Building test bundle..."
+          xcodebuild build-for-testing \
+            -workspace VibeMeter.xcworkspace \
+            -scheme VibeMeter \
+            -destination 'platform=macOS,arch=arm64' \
+            -configuration Debug \
+            -derivedDataPath build/DerivedData \
+            -quiet
+        else
+          echo "Using cached build"
+        fi
+
+    - name: Run ${{ matrix.suite.name }}
+      run: |
+        echo "Running test suite: ${{ matrix.suite.name }}"
+        
+        # Build test filter
+        TEST_FILTER=""
+        for suite in $(echo '${{ toJson(matrix.suite.suites) }}' | jq -r '.[]'); do
+          TEST_FILTER="$TEST_FILTER -only-testing:$suite"
+        done
+        
+        # Run tests
+        set -o pipefail
+        xcodebuild test-without-building \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData \
+          -parallel-testing-enabled NO \
+          -test-timeouts-enabled YES \
+          -default-test-execution-time-allowance 30 \
+          -maximum-test-execution-time-allowance 120 \
+          $TEST_FILTER \
+          -resultBundlePath "test-results-${{ matrix.suite.name }}.xcresult" \
+          | xcbeautify --quiet --report junit --report-path . --junit-report-filename "${{ matrix.suite.name }}-tests.xml"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.suite.name }}-${{ github.sha }}
+        path: |
+          test-results-*.xcresult
+          *-tests.xml
+        retention-days: 7
+
+  test-summary:
+    name: Test Summary
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      checks: write
+      pull-requests: write
+      
+    steps:
+    - name: Download all test results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: test-results-*
+        path: test-results
+        
+    - name: Publish combined test report
+      uses: dorny/test-reporter@v1
+      with:
+        name: Combined Test Results
+        path: 'test-results/**/*-tests.xml'
+        reporter: java-junit
+        fail-on-error: false
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Count test results
+          let totalTests = 0;
+          let totalFailures = 0;
+          let failedSuites = [];
+          
+          const testResultsDir = 'test-results';
+          if (fs.existsSync(testResultsDir)) {
+            const files = fs.readdirSync(testResultsDir, { recursive: true })
+              .filter(file => file.endsWith('-tests.xml'));
+              
+            for (const file of files) {
+              const content = fs.readFileSync(path.join(testResultsDir, file), 'utf8');
+              const tests = (content.match(/tests="(\d+)"/g) || [])
+                .map(m => parseInt(m.match(/\d+/)[0]))
+                .reduce((a, b) => a + b, 0);
+              const failures = (content.match(/failures="(\d+)"/g) || [])
+                .map(m => parseInt(m.match(/\d+/)[0]))
+                .reduce((a, b) => a + b, 0);
+                
+              totalTests += tests;
+              totalFailures += failures;
+              
+              if (failures > 0) {
+                const suiteName = file.replace('-tests.xml', '');
+                failedSuites.push(`${suiteName} (${failures} failures)`);
+              }
+            }
+          }
+          
+          const success = totalFailures === 0;
+          const icon = success ? '✅' : '❌';
+          const status = success ? 'All tests passed!' : `${totalFailures} tests failed`;
+          
+          let body = `### ${icon} Test Results
+          
+          **Total Tests:** ${totalTests}
+          **Status:** ${status}`;
+          
+          if (failedSuites.length > 0) {
+            body += `\n\n**Failed Suites:**\n${failedSuites.map(s => `- ${s}`).join('\n')}`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });

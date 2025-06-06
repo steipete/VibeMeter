@@ -181,6 +181,7 @@ struct CursorProviderDataTests {
 
         // Verify date parsing
         let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let expectedDate = formatter.date(from: "2025-05-28T15:57:12.000Z")
         #expect(usageData.startOfMonth == expectedDate)
     }

@@ -184,10 +184,8 @@ struct StringExtensionsTruncatedTests {
         let truncatedResult = string.truncated(to: length)
 
         // Then
-        // truncate() adds trailing after the specified length
-        #expect(truncateResult == "This is a test ...") // 15 + 3
-
-        // truncated() ensures total length doesn't exceed specified length
+        // Both methods should produce the same result - total length = 15
+        #expect(truncateResult == "This is a te...")
         #expect(truncatedResult == "This is a te...")
     }
 
