@@ -55,7 +55,7 @@ struct CurrencyManagerTests {
         for (code, name) in currencies {
             // Currency code should be 3 characters
             #expect(code.count == 3)
-            #expect(code.allSatisfy { $0.isUppercase })
+            #expect(code.allSatisfy(\.isUppercase))
 
             // Name should contain currency symbol in parentheses
             #expect(name.contains("("))

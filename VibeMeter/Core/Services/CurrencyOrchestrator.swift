@@ -194,16 +194,16 @@ public final class CurrencyOrchestrator {
             forName: UserDefaults.didChangeNotification,
             object: nil,
             queue: .main) { [weak self] _ in
-            Task { @MainActor in
-                guard let self else { return }
-                let newCurrency = self.settingsManager.selectedCurrencyCode
-                if newCurrency != self.currencyData.selectedCode {
-                    self.logger.info(
-                        "Currency changed from \(self.currencyData.selectedCode) to \(newCurrency)")
-                    self.updateCurrency(to: newCurrency)
+                Task { @MainActor in
+                    guard let self else { return }
+                    let newCurrency = self.settingsManager.selectedCurrencyCode
+                    if newCurrency != self.currencyData.selectedCode {
+                        self.logger.info(
+                            "Currency changed from \(self.currencyData.selectedCode) to \(newCurrency)")
+                        self.updateCurrency(to: newCurrency)
+                    }
                 }
             }
-        }
     }
 
     private func updateCurrencyConversions() async {

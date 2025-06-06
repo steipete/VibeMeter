@@ -100,9 +100,9 @@ public extension View {
         horizontalPadding: CGFloat = 14,
         verticalPadding: CGFloat = 10) -> some View {
         modifier(CardStyleModifier(
-                    cornerRadius: cornerRadius,
-                    horizontalPadding: horizontalPadding,
-                    verticalPadding: verticalPadding))
+            cornerRadius: cornerRadius,
+            horizontalPadding: horizontalPadding,
+            verticalPadding: verticalPadding))
     }
 }
 

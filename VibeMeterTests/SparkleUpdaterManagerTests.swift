@@ -128,8 +128,8 @@ struct SparkleUpdaterManagerTests {
         // In RELEASE builds, Sparkle should be enabled
 
         #if DEBUG
-        // In debug builds, Sparkle should be disabled
-        #expect(true == true)
+            // In debug builds, Sparkle should be disabled
+            #expect(true == true)
         #endif
     }
 

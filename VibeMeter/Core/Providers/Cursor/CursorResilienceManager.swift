@@ -38,7 +38,7 @@ actor CursorResilienceManager {
     // MARK: - Private Methods
 
     private func executeWithRetry<T: Sendable>(_ operation: @escaping @Sendable () async throws -> T) async throws
-    -> T {
+        -> T {
         var lastError: Error?
         let maxRetries = 3
 

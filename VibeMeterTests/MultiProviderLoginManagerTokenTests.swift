@@ -22,7 +22,7 @@ struct MultiProviderLoginManagerTokenTests {
 
         // Reset any stored states
         #if DEBUG
-        sut._test_reset()
+            sut._test_reset()
         #endif
     }
 
@@ -44,7 +44,7 @@ struct MultiProviderLoginManagerTokenTests {
     func validateAllTokens_WithSimulatedLogin_CallsValidation() async {
         // Given
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "test-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "test-token")
         #endif
 
         // When
@@ -60,7 +60,7 @@ struct MultiProviderLoginManagerTokenTests {
     func validateAllTokens_WithMultipleProviders_HandlesGracefully() async {
         // Given
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
         #endif
 
         // When
@@ -77,7 +77,7 @@ struct MultiProviderLoginManagerTokenTests {
     func refreshLoginStatesFromKeychain_UpdatesStates() {
         // Given
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "stored-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "stored-token")
         #endif
 
         // When
@@ -94,7 +94,7 @@ struct MultiProviderLoginManagerTokenTests {
     func getCookies_WithStoredToken_ReturnsCookies() {
         // Given
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "cookie-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "cookie-token")
         #endif
 
         // When

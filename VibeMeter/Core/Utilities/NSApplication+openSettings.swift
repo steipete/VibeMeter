@@ -16,7 +16,7 @@ extension NSApplication {
         // For macOS 15+ with SwiftUI Settings scene
         if let internalItemAction = NSApp.mainMenu?.item(
             withInternalIdentifier: kAppMenuInternalIdentifier)?.submenu?.item(
-                withLocalizedTitle: kSettingsLocalizedStringKey)?.internalItemAction {
+            withLocalizedTitle: kSettingsLocalizedStringKey)?.internalItemAction {
             internalItemAction()
 
             // Additional step to ensure the settings window comes to front
@@ -49,7 +49,7 @@ extension NSMenuItem {
     /// An internal SwiftUI menu item identifier that should be a public property on `NSMenuItem`.
     var internalIdentifier: String? {
         guard let id = Mirror.firstChild(
-                withLabel: "id", in: self)?.value
+            withLabel: "id", in: self)?.value
         else {
             return nil
         }
@@ -99,10 +99,10 @@ extension NSMenu {
         }
 
         return item(withTitle: NSLocalizedString(
-                        localizedTitleKey,
-                        tableName: tableName,
-                        bundle: localizationResource,
-                        comment: ""))
+            localizedTitleKey,
+            tableName: tableName,
+            bundle: localizationResource,
+            comment: ""))
     }
 }
 

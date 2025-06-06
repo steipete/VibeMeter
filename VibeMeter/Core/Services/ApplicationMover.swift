@@ -196,8 +196,8 @@ final class ApplicationMover {
             logger.info("ApplicationMover: hdiutil returned \(data.count) bytes")
 
             guard let plist = try PropertyListSerialization
-                    .propertyList(from: data, options: [], format: nil) as? [String: Any],
-                  let images = plist["images"] as? [[String: Any]] else {
+                .propertyList(from: data, options: [], format: nil) as? [String: Any],
+                let images = plist["images"] as? [[String: Any]] else {
                 logger.info("ApplicationMover: Failed to parse hdiutil plist or no images found")
                 logger.warning("Failed to parse hdiutil output")
                 return nil

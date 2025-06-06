@@ -29,7 +29,7 @@ public protocol ProviderProtocol: Sendable {
     ///   - teamId: Team ID for the request (optional, for providers that support teams)
     /// - Returns: Monthly invoice with itemized costs
     func fetchMonthlyInvoice(authToken: String, month: Int, year: Int, teamId: Int?) async throws
-    -> ProviderMonthlyInvoice
+        -> ProviderMonthlyInvoice
 
     /// Fetches current usage statistics and quotas.
     /// - Parameter authToken: Authentication token for the provider

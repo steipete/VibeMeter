@@ -22,7 +22,7 @@ struct MultiProviderLoginManagerCallbackTests {
 
         // Reset any stored states
         #if DEBUG
-        sut._test_reset()
+            sut._test_reset()
         #endif
     }
 
@@ -41,7 +41,7 @@ struct MultiProviderLoginManagerCallbackTests {
 
         // When - Simulate the internal login flow
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "success-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "success-token")
         #endif
 
         // Then - In real flow, callback would be called through handleSuccessfulLogin
@@ -76,59 +76,59 @@ struct MultiProviderLoginManagerCallbackTests {
     // MARK: - Error Handling Tests
 
     #if DEBUG
-    @Test("login error tracked per provider")
-    func loginError_TrackedPerProvider() {
-        // Given
-        sut._test_reset()
+        @Test("login error tracked per provider")
+        func loginError_TrackedPerProvider() {
+            // Given
+            sut._test_reset()
 
-        // When - Simulate error state through internal testing
-        // In production, errors would be set through handleLoginCompletion
+            // When - Simulate error state through internal testing
+            // In production, errors would be set through handleLoginCompletion
 
-        // Then
-        #expect(sut.isLoggedIn(to: .cursor) == false)
-    }
+            // Then
+            #expect(sut.isLoggedIn(to: .cursor) == false)
+        }
 
-    @Test("logged in providers returns only logged in providers")
-    func loggedInProviders_ReturnsOnlyLoggedInProviders() {
-        // Given
-        sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
+        @Test("logged in providers returns only logged in providers")
+        func loggedInProviders_ReturnsOnlyLoggedInProviders() {
+            // Given
+            sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
 
-        // When
-        let providers = sut.loggedInProviders
+            // When
+            let providers = sut.loggedInProviders
 
-        // Then
-        #expect(providers == [.cursor])
-    }
+            // Then
+            #expect(providers == [.cursor])
+        }
 
-    @Test("is logged in to any provider with one provider returns true")
-    func isLoggedInToAnyProvider_WithOneProvider_ReturnsTrue() {
-        // Given
-        sut._test_simulateLogin(for: .cursor, withToken: "any-token")
+        @Test("is logged in to any provider with one provider returns true")
+        func isLoggedInToAnyProvider_WithOneProvider_ReturnsTrue() {
+            // Given
+            sut._test_simulateLogin(for: .cursor, withToken: "any-token")
 
-        // Then
-        #expect(sut.isLoggedInToAnyProvider == true)
-    }
+            // Then
+            #expect(sut.isLoggedInToAnyProvider == true)
+        }
 
-    @Test("concurrent operations thread safety")
-    func concurrentOperations_ThreadSafety() async {
-        // When - Perform many concurrent operations
-        await withTaskGroup(of: Void.self) { group in
-            for i in 0 ..< 50 {
-                group.addTask {
-                    if i % 2 == 0 {
-                        #if DEBUG
-                        await self.sut._test_simulateLogin(for: .cursor, withToken: "concurrent-\(i)")
-                        #endif
-                    } else {
-                        _ = await self.sut.isLoggedIn(to: .cursor)
-                        _ = await self.sut.getAuthToken(for: .cursor)
+        @Test("concurrent operations thread safety")
+        func concurrentOperations_ThreadSafety() async {
+            // When - Perform many concurrent operations
+            await withTaskGroup(of: Void.self) { group in
+                for i in 0 ..< 50 {
+                    group.addTask {
+                        if i % 2 == 0 {
+                            #if DEBUG
+                                await self.sut._test_simulateLogin(for: .cursor, withToken: "concurrent-\(i)")
+                            #endif
+                        } else {
+                            _ = await self.sut.isLoggedIn(to: .cursor)
+                            _ = await self.sut.getAuthToken(for: .cursor)
+                        }
                     }
                 }
             }
-        }
 
-        // Then - Test passes if no crashes occur during concurrent access
-        #expect(Bool(true))
-    }
+            // Then - Test passes if no crashes occur during concurrent access
+            #expect(Bool(true))
+        }
     #endif
 }

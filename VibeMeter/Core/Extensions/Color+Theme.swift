@@ -277,82 +277,82 @@ extension Color {
 // MARK: - Preview Support
 
 #if DEBUG
-extension Color {
-    /// Preview colors for testing theme adaptation
-    static let previewColors: [(String, Color)] = [
-        ("Gauge Healthy", .gaugeHealthy),
-        ("Gauge Warning", .gaugeWarning),
-        ("Gauge Danger", .gaugeDanger),
-        ("Status Connected", .statusConnected),
-        ("Status Error", .statusError),
-        ("Accent", .vibeMeterAccent),
-    ]
-}
+    extension Color {
+        /// Preview colors for testing theme adaptation
+        static let previewColors: [(String, Color)] = [
+            ("Gauge Healthy", .gaugeHealthy),
+            ("Gauge Warning", .gaugeWarning),
+            ("Gauge Danger", .gaugeDanger),
+            ("Status Connected", .statusConnected),
+            ("Status Error", .statusError),
+            ("Accent", .vibeMeterAccent),
+        ]
+    }
 
-/// SwiftUI view for previewing theme colors
-struct ThemeColorPreview: View {
-    @Environment(\.colorScheme)
-    var colorScheme
+    /// SwiftUI view for previewing theme colors
+    struct ThemeColorPreview: View {
+        @Environment(\.colorScheme)
+        var colorScheme
 
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("Theme Colors - \(colorScheme == .dark ? "Dark" : "Light") Mode")
-                .font(.headline)
+        var body: some View {
+            VStack(spacing: 16) {
+                Text("Theme Colors - \(colorScheme == .dark ? "Dark" : "Light") Mode")
+                    .font(.headline)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                ForEach(Color.previewColors, id: \.0) { name, color in
-                    VStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(color)
-                            .frame(width: 60, height: 40)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+                    ForEach(Color.previewColors, id: \.0) { name, color in
+                        VStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(color)
+                                .frame(width: 60, height: 40)
 
-                        Text(name)
+                            Text(name)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Divider()
+
+                VStack(spacing: 8) {
+                    Text("Adaptive Colors")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    HStack {
+                        Text("Gauge Stroke")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Circle()
+                            .stroke(Color.gaugeStroke(for: colorScheme), lineWidth: 2)
+                            .frame(width: 30, height: 30)
+                    }
+
+                    HStack {
+                        Text("Hover Background")
+                            .font(.caption)
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.hoverBackground(for: colorScheme))
+                            .frame(width: 50, height: 20)
                     }
                 }
             }
-
-            Divider()
-
-            VStack(spacing: 8) {
-                Text("Adaptive Colors")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
-                HStack {
-                    Text("Gauge Stroke")
-                        .font(.caption)
-                    Spacer()
-                    Circle()
-                        .stroke(Color.gaugeStroke(for: colorScheme), lineWidth: 2)
-                        .frame(width: 30, height: 30)
-                }
-
-                HStack {
-                    Text("Hover Background")
-                        .font(.caption)
-                    Spacer()
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.hoverBackground(for: colorScheme))
-                        .frame(width: 50, height: 20)
-                }
-            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
-}
 
-#Preview("Theme Colors - Light") {
-    ThemeColorPreview()
-        .preferredColorScheme(.light)
-        .padding()
-}
+    #Preview("Theme Colors - Light") {
+        ThemeColorPreview()
+            .preferredColorScheme(.light)
+            .padding()
+    }
 
-#Preview("Theme Colors - Dark") {
-    ThemeColorPreview()
-        .preferredColorScheme(.dark)
-        .padding()
-}
+    #Preview("Theme Colors - Dark") {
+        ThemeColorPreview()
+            .preferredColorScheme(.dark)
+            .padding()
+    }
 #endif

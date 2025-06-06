@@ -43,9 +43,9 @@ struct UserAvatarView: View {
     private var fallbackAvatar: some View {
         Circle()
             .fill(LinearGradient(
-                    colors: [Color.blue, Color.purple],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing))
+                colors: [Color.blue, Color.purple],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing))
             .frame(width: size, height: size)
             .overlay(
                 Text(userInitial)

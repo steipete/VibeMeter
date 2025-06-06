@@ -73,7 +73,7 @@ struct MultiProviderLoginManagerCoreTests {
 
         // Reset any stored states
         #if DEBUG
-        sut._test_reset()
+            sut._test_reset()
         #endif
     }
 
@@ -98,58 +98,58 @@ struct MultiProviderLoginManagerCoreTests {
     }
 
     #if DEBUG
-    @Test("simulate login sets login state")
-    func simulateLogin_SetsLoginState() {
-        // When
-        sut._test_simulateLogin(for: .cursor, withToken: "test-token")
+        @Test("simulate login sets login state")
+        func simulateLogin_SetsLoginState() {
+            // When
+            sut._test_simulateLogin(for: .cursor, withToken: "test-token")
 
-        // Then
-        #expect(sut.isLoggedIn(to: .cursor) == true)
-        #expect(sut.isLoggedInToAnyProvider == true)
-    }
+            // Then
+            #expect(sut.isLoggedIn(to: .cursor) == true)
+            #expect(sut.isLoggedInToAnyProvider == true)
+        }
 
-    @Test("multiple provider logins tracks independently")
-    func multipleProviderLogins_TracksIndependently() {
-        // When
-        sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
-        // Simulate future providers
-        sut._test_setLoginState(true, for: .cursor)
+        @Test("multiple provider logins tracks independently")
+        func multipleProviderLogins_TracksIndependently() {
+            // When
+            sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
+            // Simulate future providers
+            sut._test_setLoginState(true, for: .cursor)
 
-        // Then
-        #expect(sut.isLoggedIn(to: .cursor) == true)
-    }
+            // Then
+            #expect(sut.isLoggedIn(to: .cursor) == true)
+        }
     #endif
 
     // MARK: - Logout Tests
 
     #if DEBUG
-    @Test("log out removes token and state")
-    func logOut_RemovesTokenAndState() {
-        // Given
-        sut._test_simulateLogin(for: .cursor, withToken: "test-token")
-        sut.onLoginFailure = { provider, _ in
-            #expect(provider == .cursor)
+        @Test("log out removes token and state")
+        func logOut_RemovesTokenAndState() {
+            // Given
+            sut._test_simulateLogin(for: .cursor, withToken: "test-token")
+            sut.onLoginFailure = { provider, _ in
+                #expect(provider == .cursor)
+            }
+
+            // When
+            sut.logOut(from: .cursor)
+
+            // Then
+            #expect(sut.isLoggedIn(to: .cursor) == false)
+            #expect(sut.isLoggedInToAnyProvider == false)
         }
 
-        // When
-        sut.logOut(from: .cursor)
+        @Test("log out from all removes all providers")
+        func logOutFromAll_RemovesAllProviders() {
+            // Given
+            sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
 
-        // Then
-        #expect(sut.isLoggedIn(to: .cursor) == false)
-        #expect(sut.isLoggedInToAnyProvider == false)
-    }
+            // When
+            sut.logOutFromAll()
 
-    @Test("log out from all removes all providers")
-    func logOutFromAll_RemovesAllProviders() {
-        // Given
-        sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
-
-        // When
-        sut.logOutFromAll()
-
-        // Then
-        #expect(sut.isLoggedIn(to: .cursor) == false)
-    }
+            // Then
+            #expect(sut.isLoggedIn(to: .cursor) == false)
+        }
     #endif
 
     // MARK: - Observable State Tests
@@ -162,7 +162,7 @@ struct MultiProviderLoginManagerCoreTests {
 
         // When
         #if DEBUG
-        sut._test_simulateLogin(for: .cursor, withToken: "test-token")
+            sut._test_simulateLogin(for: .cursor, withToken: "test-token")
         #endif
 
         // Then

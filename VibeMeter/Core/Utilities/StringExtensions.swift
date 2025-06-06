@@ -35,7 +35,8 @@ extension String {
     }
 
     /// Returns a truncated string with the specified maximum length, including the trailing string.
-    /// Unlike `truncate(length:trailing:)`, this method ensures the total length (including trailing) doesn't exceed the specified length.
+    /// Unlike `truncate(length:trailing:)`, this method ensures the total length (including trailing) doesn't exceed
+    /// the specified length.
     func truncated(to maxLength: Int, trailing: String = "...") -> String {
         // Handle zero or negative length
         if maxLength <= 0 {

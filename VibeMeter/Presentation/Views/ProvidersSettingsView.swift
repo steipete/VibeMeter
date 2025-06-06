@@ -90,7 +90,7 @@ struct ProvidersSettingsView: View {
             userSessionData.handleLoginFailure(for: provider,
                                                error: NSError(domain: "SettingsView", code: 1,
                                                               userInfo: [
-                                                                NSLocalizedDescriptionKey: "No auth token found",
+                                                                  NSLocalizedDescriptionKey: "No auth token found",
                                                               ]))
             return
         }

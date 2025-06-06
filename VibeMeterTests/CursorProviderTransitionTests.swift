@@ -52,11 +52,11 @@ struct CursorProviderTransitionTests {
 
         // When - User joins a team, update session with teamId
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 4567,
-                                                    teamName: "Development Team",
-                                                    userEmail: "dev@team.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 4567,
+            teamName: "Development Team",
+            userEmail: "dev@team.com",
+            isActive: true))
 
         // Fetch invoice as team member
         let teamInvoiceData = Data("""
@@ -92,11 +92,11 @@ struct CursorProviderTransitionTests {
     func userTransition_TeamMemberLeavesTeam() async throws {
         // Given - User starts in a team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 3000,
-                                                    teamName: "Current Team",
-                                                    userEmail: "member@team.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 3000,
+            teamName: "Current Team",
+            userEmail: "member@team.com",
+            isActive: true))
 
         // When - User leaves team (session cleared)
         await mockSettingsManager.clearUserSessionData(for: .cursor)
@@ -131,11 +131,11 @@ struct CursorProviderTransitionTests {
     func explicitTeamIdOverridesStoredValue() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 1111,
-                                                    teamName: "Stored Team",
-                                                    userEmail: "user@example.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 1111,
+            teamName: "Stored Team",
+            userEmail: "user@example.com",
+            isActive: true))
 
         let mockInvoiceData = Data("""
         {"items": [{"cents": 2500, "description": "Override Team Usage"}], "pricing_description": null}
@@ -165,11 +165,11 @@ struct CursorProviderTransitionTests {
     func explicitZeroTeamIdFiltered() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 2222,
-                                                    teamName: "Stored Team",
-                                                    userEmail: "user@example.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 2222,
+            teamName: "Stored Team",
+            userEmail: "user@example.com",
+            isActive: true))
 
         let mockInvoiceData = Data("""
         {"items": [], "pricing_description": null}
@@ -238,11 +238,11 @@ struct CursorProviderTransitionTests {
     func teamUser_SuccessfullyFetchesWithoutExplicitTeamId() async throws {
         // Given - Team user with stored teamId
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 7777,
-                                                    teamName: "Active Team",
-                                                    userEmail: "active@team.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 7777,
+            teamName: "Active Team",
+            userEmail: "active@team.com",
+            isActive: true))
 
         let mockInvoiceData = Data("""
         {
@@ -295,11 +295,11 @@ struct CursorProviderTransitionTests {
         var bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-                                                    provider: .cursor,
-                                                    teamId: 4444,
-                                                    teamName: "New Team",
-                                                    userEmail: "user@team.com",
-                                                    isActive: true))
+            provider: .cursor,
+            teamId: 4444,
+            teamName: "New Team",
+            userEmail: "user@team.com",
+            isActive: true))
 
         mockData = Data("""
         {"items": [{"cents": 1500, "description": "Team"}], "pricing_description": null}
