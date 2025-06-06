@@ -92,13 +92,26 @@ jobs:
 
     - name: Run tests
       run: |
+        echo "Running tests..."
+        set -o pipefail
         xcodebuild test \
           -workspace VibeMeter.xcworkspace \
           -scheme VibeMeter \
           -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
           -maximum-parallel-testing-workers 1 \
+          -resultBundlePath "test-results.xcresult" \
           | xcbeautify
+        
+        # Check test results
+        TEST_STATUS=$?
+        if [ $TEST_STATUS -ne 0 ]; then
+          echo "❌ Tests failed with exit code $TEST_STATUS"
+          echo "Test results are available in test-results.xcresult"
+          exit $TEST_STATUS
+        else
+          echo "✅ All tests passed"
+        fi
 
     - name: Import signing certificate
       if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.notarize == 'true')
@@ -195,6 +208,14 @@ jobs:
         DMG_PATH="build/VibeMeter-${{ steps.build.outputs.VERSION }}.dmg"
         echo "DMG_PATH=${DMG_PATH}" >> $GITHUB_OUTPUT
 
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.sha }}
+        path: test-results.xcresult
+        retention-days: 7
+    
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -206,7 +227,7 @@ jobs:
         retention-days: 14
 
     - name: Comment on PR
-      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
       uses: actions/github-script@v7
       with:
         script: |
@@ -214,15 +235,28 @@ jobs:
           const build = '${{ steps.build.outputs.BUILD }}';
           const sha = context.sha.substring(0, 7);
           const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const conclusion = '${{ job.status }}';
           
-          const body = `### ✅ Build Successful!
+          let icon, title, status;
+          if (conclusion === 'success') {
+            icon = '✅';
+            title = 'Build and Tests Successful!';
+            status = 'All tests passed and build completed successfully.';
+          } else {
+            icon = '❌';
+            title = 'Build or Tests Failed!';
+            status = 'Some tests failed or build encountered errors. Check the [workflow logs](' + artifactUrl + ') for details.';
+          }
+          
+          const body = `### ${icon} ${title}
           
           **Version:** ${version} (${build})
           **Commit:** ${sha}
+          **Status:** ${status}
           
           [Download artifacts](${artifactUrl})
           
-          The build artifacts will be available for 14 days.`;
+          Artifacts and test results will be available for 7-14 days.`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
