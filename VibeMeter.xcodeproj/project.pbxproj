@@ -20,6 +20,7 @@
 		0DED20E09192DFB74E04FFBB /* StartupManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */; };
 		0EE90499B2CCE02A6D74F79B /* NetworkRetryHandlerDelayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2FB1FE0BEA33FA55BF153 /* NetworkRetryHandlerDelayTests.swift */; };
 		0F90BF58CE84750C5C5D57C0 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB1DA38348E79E925182B50 /* SettingsManager.swift */; };
+		0FE2390F460792BE7290F591 /* TestTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2F2A168DD9498675D373C3 /* TestTags.swift */; };
 		100DD27D0C6491AC2EEB7CEC /* StatusBarTooltipProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 609A2C1126563728AE3D1F82 /* StatusBarTooltipProvider.swift */; };
 		10D62FD23D400ED09437FAF3 /* StringExtensions+MenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC6DFACE5C28C71583906C9 /* StringExtensions+MenuBar.swift */; };
 		10DC5691F4173CDD2D8B567A /* KeychainProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E758952548CFBCAD54D552F /* KeychainProtocol.swift */; };
@@ -383,6 +384,7 @@
 		D89D1B5BE42F17E461AED87C /* StatusBarObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarObserver.swift; sourceTree = "<group>"; };
 		DACAD9BAD5CDC5910A702765 /* ProviderConnectionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatus.swift; sourceTree = "<group>"; };
 		DC0C2D9BC11AE1486876B5DF /* StatusBarMenuManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarMenuManager.swift; sourceTree = "<group>"; };
+		DC2F2A168DD9498675D373C3 /* TestTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTags.swift; sourceTree = "<group>"; };
 		DCD45B2AB5CF3AACECE81B29 /* ExchangeRateManagerConversionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateManagerConversionTests.swift; sourceTree = "<group>"; };
 		DF6772D33491484463E6488A /* ServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProvider.swift; sourceTree = "<group>"; };
 		DF9C72891AA39D97050932EB /* AuthenticationTokenManagerCookieTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationTokenManagerCookieTests.swift; sourceTree = "<group>"; };
@@ -712,6 +714,7 @@
 				C1ACCBD26778AE1AF2C88833 /* NotificationManagerMock.swift */,
 				45CC65B526B76FB43AC46C8C /* StartupManagerMock.swift */,
 				C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */,
+				DC2F2A168DD9498675D373C3 /* TestTags.swift */,
 			);
 			path = TestUtilities;
 			sourceTree = "<group>";
@@ -982,6 +985,7 @@
 				4911DB31E785337FADFFFEC5 /* NotificationManagerMock.swift in Sources */,
 				0A708847F26FBB7B500F777E /* StartupManagerMock.swift in Sources */,
 				AA16ECE4938033919C13EA09 /* SwiftTestingHelpers.swift in Sources */,
+				0FE2390F460792BE7290F591 /* TestTags.swift in Sources */,
 				CC4E9A59AFB38E3F6B8FB058 /* URL+QueryItemsAdvancedTests.swift in Sources */,
 				0511C9CBD35FA63E13459C34 /* URL+QueryItemsBasicTests.swift in Sources */,
 				592C18DB360CECBE5726BE6E /* URL+QueryItemsRealWorldTests.swift in Sources */,

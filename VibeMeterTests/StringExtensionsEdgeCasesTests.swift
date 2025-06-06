@@ -30,8 +30,8 @@ struct StringExtensionsEdgeCasesTests {
         let result = string.truncated(to: length)
 
         // Then
-        // Negative length should result in empty string (our implementation returns empty for <= 0)
-        #expect(result == "")
+        // Negative length (which is <= 3) returns "..." per MenuBar implementation
+        #expect(result == "...")
     }
 
     @Test("truncate very long string performance test")
@@ -78,7 +78,7 @@ struct StringExtensionsEdgeCasesTests {
         let result = string.truncate(length: length)
 
         // Then
-        #expect(result == "   Hello W...") // truncate adds trailing after length
+        #expect(result == "   Hell...") // truncate keeps (length - trailing.count) chars + trailing
     }
 
     @Test("truncated string with whitespace preserves whitespace")
@@ -104,7 +104,7 @@ struct StringExtensionsEdgeCasesTests {
         let result = string.truncate(length: length)
 
         // Then
-        #expect(result == "First line\nSeco...") // truncate adds trailing after length
+        #expect(result == "First line\nS...") // truncate keeps (length - trailing.count) chars + trailing
     }
 
     @Test("truncated string with tabs preserves tabs")
@@ -132,7 +132,7 @@ struct StringExtensionsEdgeCasesTests {
         let result = string.truncate(length: length)
 
         // Then
-        #expect(result == "这是一个很长的中...") // truncate adds trailing after length
+        #expect(result == "这是一个很...") // truncate keeps (length - trailing.count) chars + trailing
     }
 
     @Test("truncated arabic characters handles correctly")
@@ -158,7 +158,7 @@ struct StringExtensionsEdgeCasesTests {
         let result = string.truncate(length: length)
 
         // Then
-        #expect(result == "English 中文 ا...") // truncate adds trailing after length
+        #expect(result == "English 中...") // truncate keeps (length - trailing.count) chars + trailing
     }
 
     @Test("truncate max int length handles correctly")

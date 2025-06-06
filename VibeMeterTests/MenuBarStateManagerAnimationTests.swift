@@ -33,14 +33,11 @@ struct MenuBarStateManagerAnimationTests {
         sut.isTransitioning = false // Skip transition for pure loading animation
 
         // When - Update multiple times to see animation
-        let values = (0 ..< 10).map { _ in
+        for _ in 0 ..< 10 {
             sut.updateAnimation()
-            return sut.animatedGaugeValue
-        }
-
-        // Then
-        // Values should be between 0 and 1
-        for value in values {
+            let value = sut.animatedGaugeValue
+            // Then
+            // Values should be between 0 and 1
             #expect(value >= 0.0)
         }
     }
@@ -67,7 +64,6 @@ struct MenuBarStateManagerAnimationTests {
 
         // Store initial animation state
         sut.updateAnimation()
-        _ = sut.animatedGaugeValue
 
         // When - Simulate time passing
         // (Note: This test is limited since we can't easily mock time)

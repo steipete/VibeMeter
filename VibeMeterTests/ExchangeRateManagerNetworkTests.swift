@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("Exchange Rate Manager Network Tests")
+@Suite("Exchange Rate Manager Network Tests", .tags(.network, .integration, .slow))
 struct ExchangeRateManagerNetworkTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager

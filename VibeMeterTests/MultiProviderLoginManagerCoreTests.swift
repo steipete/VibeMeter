@@ -59,16 +59,14 @@ private final class MockProvider: ProviderProtocol, @unchecked Sendable {
 @MainActor
 struct MultiProviderLoginManagerCoreTests {
     let sut: MultiProviderLoginManager
-    let providerFactory: ProviderFactory
-    let mockSettingsManager: SettingsManager
     let mockStartupManager: StartupManagerMock
 
     init() async throws {
         mockStartupManager = StartupManagerMock()
-        mockSettingsManager = SettingsManager(
+        let mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerTests")!,
             startupManager: mockStartupManager)
-        providerFactory = ProviderFactory(
+        let providerFactory = ProviderFactory(
             settingsManager: mockSettingsManager,
             urlSession: URLSession.shared)
         sut = MultiProviderLoginManager(providerFactory: providerFactory)
@@ -129,9 +127,7 @@ struct MultiProviderLoginManagerCoreTests {
         func logOut_RemovesTokenAndState() {
             // Given
             sut._test_simulateLogin(for: .cursor, withToken: "test-token")
-            var logoutCallbackCalled = false
             sut.onLoginFailure = { provider, _ in
-                logoutCallbackCalled = true
                 #expect(provider == .cursor)
             }
 

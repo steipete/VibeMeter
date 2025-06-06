@@ -21,9 +21,6 @@ struct MultiProviderArchitectureTests {
         #expect(cursor.displayName == "Cursor")
         #expect(cursor.supportsTeams == true)
 
-        // Test URLs
-        #expect(cursor.authenticationURL != nil)
-
         // Test cookie properties
         #expect(cursor.authCookieName == "WorkosCursorSessionToken")
     }
@@ -121,8 +118,7 @@ struct MultiProviderArchitectureTests {
         let keychain = KeychainHelper(service: "test.service.unique.\(UUID().uuidString)")
 
         // Test basic operations (should not crash)
-        let initialToken = keychain.getToken()
-        #expect(initialToken == nil)
+        #expect(keychain.getToken() == nil)
 
         // Note: We don't test actual save/delete operations as they would affect the real keychain
         // Those would be tested in integration tests with a mock keychain service

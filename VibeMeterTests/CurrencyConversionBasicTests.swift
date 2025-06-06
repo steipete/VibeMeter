@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("Currency Conversion Basic Tests")
+@Suite("Currency Conversion Basic Tests", .tags(.currency, .unit, .fast))
 struct CurrencyConversionBasicTests {
     // MARK: - Parameterized Conversion Tests
 
@@ -30,7 +30,7 @@ struct CurrencyConversionBasicTests {
         ConversionTestCase(999.99, rate: 1.2345, expected: 1234.488, "precision conversion"),
     ]
 
-    @Test("Currency conversion calculations", arguments: conversionTestCases)
+    @Test("Currency conversion calculations", .tags(.critical), arguments: conversionTestCases)
     func conversionCalculations(testCase: ConversionTestCase) async {
         // When
         let result = await MainActor.run {
@@ -44,7 +44,7 @@ struct CurrencyConversionBasicTests {
 
     // MARK: - Edge Case Tests
 
-    @Test("Invalid rate handling", arguments: [nil, 0.0, -1.0, .infinity, .nan])
+    @Test("Invalid rate handling", .tags(.edgeCase), arguments: [nil, 0.0, -1.0, .infinity, .nan])
     func invalidRateHandling(invalidRate: Double?) async {
         // When
         let result = await MainActor.run {
