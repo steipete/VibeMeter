@@ -95,9 +95,9 @@ public struct TestHelpers {
     
     // MARK: - Async Test Helpers
     
-    public static func withTimeout<T>(
+    public static func withTimeout<T: Sendable>(
         _ seconds: TimeInterval,
-        operation: @escaping () async throws -> T
+        operation: @escaping @Sendable () async throws -> T
     ) async rethrows -> T {
         try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
@@ -118,8 +118,8 @@ public struct TestHelpers {
     
     // MARK: - Performance Testing Helpers
     
-    public static func measureTime<T>(
-        _ operation: () throws -> T
+    public static func measureTime<T: Sendable>(
+        _ operation: @escaping @Sendable () throws -> T
     ) rethrows -> (result: T, duration: TimeInterval) {
         let startTime = Date()
         let result = try operation()
@@ -127,8 +127,8 @@ public struct TestHelpers {
         return (result, duration)
     }
     
-    public static func measureTimeAsync<T>(
-        _ operation: () async throws -> T
+    public static func measureTimeAsync<T: Sendable>(
+        _ operation: @escaping @Sendable () async throws -> T
     ) async rethrows -> (result: T, duration: TimeInterval) {
         let startTime = Date()
         let result = try await operation()
@@ -145,22 +145,18 @@ extension TestHelpers {
     public static func expectApproximatelyEqual(
         _ actual: Double,
         _ expected: Double,
-        tolerance: Double = 0.01,
-        _ comment: String = ""
+        tolerance: Double = 0.01
     ) {
-        let message = comment.isEmpty ? "Values should be approximately equal" : comment
         #expect(abs(actual - expected) < tolerance)
     }
     
     /// Verifies that a collection contains all expected elements
-    public static func expectContainsAll<T: Equatable>(
+    public static func expectContainsAll<T: Equatable & Sendable>(
         _ collection: [T],
-        _ expectedElements: [T],
-        _ comment: String = ""
+        _ expectedElements: [T]
     ) {
         for element in expectedElements {
-            let message = comment.isEmpty ? "Should contain \(element)" : "\(comment): Should contain \(element)"
-            #expect(collection.contains(element), message)
+            #expect(collection.contains(element))
         }
     }
 }
