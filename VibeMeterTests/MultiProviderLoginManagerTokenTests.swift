@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import VibeMeter
 
@@ -10,8 +11,7 @@ struct MultiProviderLoginManagerTokenTests {
     let mockStartupManager: StartupManagerMock
 
     init() async throws {
-        try await
-            mockStartupManager = StartupManagerMock()
+        mockStartupManager = StartupManagerMock()
         mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerTokenTests")!,
             startupManager: mockStartupManager)
@@ -24,10 +24,6 @@ struct MultiProviderLoginManagerTokenTests {
         #if DEBUG
             sut._test_reset()
         #endif
-    }
-
-    deinit {
-        // Cleanup if needed
     }
 
     // MARK: - Token Validation Tests

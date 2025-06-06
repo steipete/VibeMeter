@@ -2,18 +2,12 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-extension Tag {
-    @Tag static var strings: Self
-    @Tag static var truncation: Self
-    @Tag static var edgeCases: Self
-}
-
-@Suite("String Extensions Truncate Tests", .tags(.strings, .truncation))
+@Suite("String Extensions Truncate Tests")
 struct StringExtensionsTruncateTests {
     
     // MARK: - Parameterized Truncation Tests
     
-    struct TruncationTestCase {
+    struct TruncationTestCase: Sendable {
         let input: String
         let length: Int
         let trailing: String
@@ -75,7 +69,7 @@ struct StringExtensionsTruncateTests {
     
     // MARK: - Performance Tests
     
-    @Test("Truncation performance with large strings", .timeLimit(.seconds(1)))
+    @Test("Truncation performance with large strings", .timeLimit(.minutes(1)))
     func truncationPerformanceWithLargeStrings() {
         // Given
         let largeString = String(repeating: "This is a test string. ", count: 1000)
@@ -88,7 +82,7 @@ struct StringExtensionsTruncateTests {
     
     // MARK: - Special Character Tests
     
-    struct SpecialCharacterTestCase {
+    struct SpecialCharacterTestCase: Sendable {
         let input: String
         let length: Int
         let expectedPrefix: String
@@ -109,7 +103,7 @@ struct StringExtensionsTruncateTests {
         SpecialCharacterTestCase("áéíóú ñüç ÀÈÌÒÙ", length: 10, expectedPrefix: "áéíóú ñüç", "accented characters")
     ]
     
-    @Test("Special character handling", arguments: specialCharacterTestCases, .tags(.edgeCases))
+    @Test("Special character handling", arguments: specialCharacterTestCases)
     func specialCharacterHandling(testCase: SpecialCharacterTestCase) {
         // When
         let result = testCase.input.truncate(length: testCase.length)

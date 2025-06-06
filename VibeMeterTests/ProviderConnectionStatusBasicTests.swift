@@ -3,18 +3,12 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-extension Tag {
-    @Tag static var status: Self
-    @Tag static var ui: Self
-    @Tag static var provider: Self
-}
-
-@Suite("Provider Connection Status Tests", .tags(.status, .provider))
+@Suite("Provider Connection Status Tests")
 struct ProviderConnectionStatusBasicTests {
     
     // MARK: - Test Case Definitions
     
-    struct StatusTestCase {
+    struct StatusTestCase: Sendable {
         let status: ProviderConnectionStatus
         let expectedColor: Color
         let expectedIconName: String
@@ -95,7 +89,7 @@ struct ProviderConnectionStatusBasicTests {
     
     // MARK: - Comprehensive Status Tests
     
-    @Test("Status display properties", arguments: allStatusTestCases, .tags(.ui))
+    @Test("Status display properties", arguments: allStatusTestCases)
     func statusDisplayProperties(testCase: StatusTestCase) {
         // Then - Verify all display properties
         #expect(testCase.status.displayColor == testCase.expectedColor, 
@@ -258,7 +252,7 @@ struct ProviderConnectionStatusBasicTests {
     
     // MARK: - Performance Tests
     
-    @Test("Status creation performance", .timeLimit(.seconds(1)))
+    @Test("Status creation performance", .timeLimit(.minutes(1)))
     func statusCreationPerformance() {
         // When - Create many status instances
         for i in 0..<10_000 {

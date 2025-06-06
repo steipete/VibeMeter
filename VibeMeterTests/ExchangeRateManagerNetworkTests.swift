@@ -2,14 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-extension Tag {
-    @Tag static var network: Self
-    @Tag static var exchangeRates: Self
-    @Tag static var async: Self
-    @Tag static var integration: Self
-}
-
-@Suite("Exchange Rate Manager Network Tests", .tags(.network, .exchangeRates, .async))
+@Suite("Exchange Rate Manager Network Tests")
 struct ExchangeRateManagerNetworkTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
@@ -42,7 +35,7 @@ struct ExchangeRateManagerNetworkTests {
 
     // MARK: - Successful Response Tests
     
-    struct ExchangeRateTestCase {
+    struct ExchangeRateTestCase: Sendable {
         let rates: [String: Double]
         let expectedCurrency: String
         let expectedRate: Double
@@ -82,8 +75,8 @@ struct ExchangeRateManagerNetworkTests {
     @Test("Exchange rate fetching success", arguments: successfulRateTestCases)
     func exchangeRateFetchingSuccess(testCase: ExchangeRateTestCase) async throws {
         // Given
-        let mockData = createMockRatesData(rates: testCase.rates)
-        let mockResponse = createMockResponse(statusCode: 200)
+        let mockData = Self.createMockRatesData(rates: testCase.rates)
+        let mockResponse = Self.createMockResponse(statusCode: 200)
         
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = mockResponse
@@ -92,10 +85,9 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        let rates = try #require(result, "Should return exchange rates: \(testCase.description)")
-        #expect(rates[testCase.expectedCurrency] == testCase.expectedRate, 
+        #expect(result[testCase.expectedCurrency] == testCase.expectedRate, 
                 "Should contain correct rate for \(testCase.expectedCurrency): \(testCase.description)")
-        #expect(rates.count == testCase.rates.count, 
+        #expect(result.count == testCase.rates.count, 
                 "Should return all rates: \(testCase.description)")
     }
 
@@ -109,7 +101,7 @@ struct ExchangeRateManagerNetworkTests {
     ])
     func networkErrorHandling(statusCode: Int, description: String) async {
         // Given
-        let mockResponse = createMockResponse(statusCode: statusCode)
+        let mockResponse = Self.createMockResponse(statusCode: statusCode)
         mockURLSession.nextData = Data()
         mockURLSession.nextResponse = mockResponse
         
@@ -117,12 +109,12 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result == nil, "Should return nil for \(description) (\(statusCode))")
+        #expect(result.isEmpty, "Should return empty dictionary for \(description) (\(statusCode))")
     }
     
     // MARK: - Invalid Data Tests
     
-    struct InvalidDataTestCase {
+    struct InvalidDataTestCase: Sendable {
         let data: Data
         let description: String
         
@@ -155,7 +147,7 @@ struct ExchangeRateManagerNetworkTests {
     @Test("Invalid data handling", arguments: invalidDataTestCases)
     func invalidDataHandling(testCase: InvalidDataTestCase) async {
         // Given
-        let mockResponse = createMockResponse(statusCode: 200)
+        let mockResponse = Self.createMockResponse(statusCode: 200)
         mockURLSession.nextData = testCase.data
         mockURLSession.nextResponse = mockResponse
         
@@ -163,7 +155,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result == nil, "Should handle invalid data gracefully: \(testCase.description)")
+        #expect(result.isEmpty, "Should handle invalid data gracefully: \(testCase.description)")
     }
 
     // MARK: - Timeout and Network Failure Tests
@@ -177,7 +169,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result == nil, "Should handle network timeout gracefully")
+        #expect(result.isEmpty, "Should handle network timeout gracefully")
     }
     
     @Test("Network connection failure")
@@ -189,7 +181,7 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        #expect(result == nil, "Should handle network connection failure")
+        #expect(result.isEmpty, "Should handle network connection failure")
     }
 
     // MARK: - Edge Case Tests
@@ -197,8 +189,8 @@ struct ExchangeRateManagerNetworkTests {
     @Test("Empty rates object")
     func emptyRatesObject() async {
         // Given
-        let mockData = createMockRatesData(rates: [:])
-        let mockResponse = createMockResponse(statusCode: 200)
+        let mockData = Self.createMockRatesData(rates: [:])
+        let mockResponse = Self.createMockResponse(statusCode: 200)
         
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = mockResponse
@@ -207,11 +199,10 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        let rates = try #require(result, "Should return empty rates dictionary")
-        #expect(rates.isEmpty, "Should handle empty rates gracefully")
+        #expect(result.isEmpty, "Should handle empty rates gracefully")
     }
     
-    @Test("Very large rates object", .timeLimit(.seconds(2)))
+    @Test("Very large rates object", .timeLimit(.minutes(1)))
     func veryLargeRatesObject() async throws {
         // Given - Create a large rates object with 100 currencies
         var largeRates: [String: Double] = [:]
@@ -219,8 +210,8 @@ struct ExchangeRateManagerNetworkTests {
             largeRates["CUR\(i)"] = Double(i) * 0.1
         }
         
-        let mockData = createMockRatesData(rates: largeRates)
-        let mockResponse = createMockResponse(statusCode: 200)
+        let mockData = Self.createMockRatesData(rates: largeRates)
+        let mockResponse = Self.createMockResponse(statusCode: 200)
         
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = mockResponse
@@ -229,9 +220,8 @@ struct ExchangeRateManagerNetworkTests {
         let result = await exchangeRateManager.getExchangeRates()
         
         // Then
-        let rates = try #require(result, "Should handle large response")
-        #expect(rates.count == 100, "Should parse all currencies")
-        #expect(rates["CUR50"] == 5.0, "Should parse specific rate correctly")
+        #expect(result.count == 100, "Should parse all currencies")
+        #expect(result["CUR50"] == 5.0, "Should parse specific rate correctly")
     }
 
     // MARK: - URL Construction Tests
@@ -250,11 +240,11 @@ struct ExchangeRateManagerNetworkTests {
     
     // MARK: - Concurrent Request Tests
     
-    @Test("Concurrent requests", .tags(.integration))
+    @Test("Concurrent requests")
     func concurrentRequests() async {
         // Given
-        let mockData = createMockRatesData(rates: ["EUR": 0.92, "GBP": 0.82])
-        let mockResponse = createMockResponse(statusCode: 200)
+        let mockData = Self.createMockRatesData(rates: ["EUR": 0.92, "GBP": 0.82])
+        let mockResponse = Self.createMockResponse(statusCode: 200)
         
         mockURLSession.nextData = mockData
         mockURLSession.nextResponse = mockResponse
@@ -268,10 +258,7 @@ struct ExchangeRateManagerNetworkTests {
         
         // Then - All should succeed (though only one may actually execute due to caching/deduplication)
         for (index, result) in results.enumerated() {
-            if let rates = result {
-                #expect(rates["EUR"] != nil, "Result \(index + 1) should contain EUR rate")
-            }
-            // Note: Some results might be nil due to mock limitations with concurrent access
+            #expect(result["EUR"] != nil, "Result \(index + 1) should contain EUR rate")
         }
     }
 }

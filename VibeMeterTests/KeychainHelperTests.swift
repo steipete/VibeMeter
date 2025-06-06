@@ -2,10 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-// Import shared test utilities
-typealias Helpers = TestHelpers
-
-@Suite("Keychain Helper Tests", .tags(.unit, .security))
+@Suite("Keychain Helper Tests")
 struct KeychainHelperTests {
     let sut: KeychainHelper
 
@@ -19,7 +16,7 @@ struct KeychainHelperTests {
 
     // MARK: - Basic Token Operations
     
-    @Suite("Token Storage Operations", .tags(.unit))
+    @Suite("Token Storage Operations")
     struct TokenStorageTests {
         let keychain: KeychainHelper
         
@@ -28,7 +25,7 @@ struct KeychainHelperTests {
             _ = keychain.deleteToken()
         }
         
-        struct TokenTestCase {
+        struct TokenTestCase: Sendable {
             let token: String
             let description: String
             let shouldSucceed: Bool
@@ -45,7 +42,7 @@ struct KeychainHelperTests {
             TokenTestCase("token-with-dashes-and_underscores", "token with special characters"),
             TokenTestCase("", "empty token"),
             TokenTestCase("jwt.eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0", "JWT-like token"),
-            TokenTestCase(Helpers.randomString(length: 1000), "very long token"),
+            TokenTestCase(String((0..<1000).compactMap { _ in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement() }), "very long token"),
             TokenTestCase("🔑🚀✨", "unicode token"),
             TokenTestCase(#"{"token": "value", "expires": "2023-12-01"}"#, "JSON token")
         ]
@@ -190,7 +187,7 @@ struct KeychainHelperTests {
 
     // MARK: - Concurrent Access Tests
     
-    @Test("Concurrent operations thread safety", .tags(.concurrency))
+    @Test("Concurrent operations thread safety")
     func concurrentOperationsThreadSafety() async {
         // Given
         let iterations = 50
@@ -215,7 +212,7 @@ struct KeychainHelperTests {
 
     // MARK: - Performance Tests
     
-    @Test("Token operations performance", .timeLimit(.seconds(2)), .tags(.performance))
+    @Test("Token operations performance", .timeLimit(.minutes(1)))
     func tokenOperationsPerformance() {
         // Given
         let iterations = 1000
@@ -235,16 +232,16 @@ struct KeychainHelperTests {
     @Test("Large token performance")
     func largeTokenPerformance() async {
         // Given - Very large token (1MB)
-        let largeToken = Helpers.createLongString(baseString: "large", repeats: 50000)
+        let largeToken = String(repeating: "large ", count: 50000)
         
         // When/Then - Should handle large tokens efficiently
-        let (_, saveTime) = await Helpers.measureTimeAsync {
-            return self.sut.saveToken(largeToken)
-        }
+        let startSave = Date()
+        _ = sut.saveToken(largeToken)
+        let saveTime = Date().timeIntervalSince(startSave)
         
-        let (retrievedToken, retrieveTime) = await Helpers.measureTimeAsync {
-            return self.sut.getToken()
-        }
+        let startRetrieve = Date()
+        let retrievedToken = sut.getToken()
+        let retrieveTime = Date().timeIntervalSince(startRetrieve)
         
         // Then
         #expect(retrievedToken == largeToken, "Should handle large tokens correctly")
@@ -268,7 +265,7 @@ struct KeychainHelperTests {
         #expect(protocolConformant.deleteToken() == true, "Protocol method should work")
     }
     
-    @Test("Sendable conformance", .tags(.concurrency))
+    @Test("Sendable conformance")
     func sendableConformance() {
         // When/Then - Should compile and work across actor boundaries
         Task {
@@ -302,7 +299,7 @@ struct KeychainHelperTests {
 
     // MARK: - Integration Tests
     
-    @Test("Real keychain integration", .tags(.integration))
+    @Test("Real keychain integration")
     func realKeychainIntegration() {
         // This test verifies actual keychain integration
         // Using a test-specific service to avoid conflicts

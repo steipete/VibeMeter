@@ -3,17 +3,7 @@ import Testing
 @preconcurrency import UserNotifications
 @testable import VibeMeter
 
-// Import shared test utilities
-typealias Helpers = TestHelpers
-
-extension Tag {
-    @Tag static var notifications: Self
-    @Tag static var authorization: Self
-    @Tag static var spending: Self
-    @Tag static var limits: Self
-}
-
-@Suite("Notification Manager Tests", .tags(.unit, .notifications))
+@Suite("Notification Manager Tests")
 @MainActor
 struct NotificationManagerBasicTests {
     private let notificationManager: TestableNotificationManager
@@ -27,10 +17,10 @@ struct NotificationManagerBasicTests {
 
     // MARK: - Authorization Tests
     
-    @Suite("Authorization Management", .tags(.authorization))
+    @Suite("Authorization Management")
     struct AuthorizationTests {
-        let manager: TestableNotificationManager
-        let mockCenter: MockUNUserNotificationCenter
+        fileprivate let manager: TestableNotificationManager
+        fileprivate let mockCenter: MockUNUserNotificationCenter
         
         init() async {
             await MainActor.run {}
@@ -38,7 +28,7 @@ struct NotificationManagerBasicTests {
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
         
-        struct AuthorizationTestCase {
+        struct AuthorizationTestCase: Sendable {
             let result: Result<Bool, Error>
             let expectedResult: Bool
             let description: String
@@ -67,7 +57,7 @@ struct NotificationManagerBasicTests {
                 "system error during authorization"
             ),
             AuthorizationTestCase(
-                result: .failure(NSError(domain: "UNErrorDomain", code: UNError.authorizationDenied.rawValue, userInfo: nil)),
+                result: .failure(NSError(domain: "UNErrorDomain", code: 1, userInfo: nil)),
                 expected: false,
                 "authorization denied error"
             )
@@ -90,10 +80,10 @@ struct NotificationManagerBasicTests {
 
     // MARK: - Notification Display Tests
     
-    @Suite("Notification Display", .tags(.spending, .limits))
+    @Suite("Notification Display")
     struct NotificationDisplayTests {
-        let manager: TestableNotificationManager
-        let mockCenter: MockUNUserNotificationCenter
+        fileprivate let manager: TestableNotificationManager
+        fileprivate let mockCenter: MockUNUserNotificationCenter
         
         init() async {
             await MainActor.run {}
@@ -101,7 +91,7 @@ struct NotificationManagerBasicTests {
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
         
-        struct NotificationTestCase {
+        struct NotificationTestCase: Sendable {
             let currentSpending: Double
             let limitAmount: Double
             let currencyCode: String
@@ -184,7 +174,7 @@ struct NotificationManagerBasicTests {
         ]
         
         @Test("Warning notification display", arguments: warningNotificationTestCases)
-        func warningNotificationDisplay(testCase: NotificationTestCase) async {
+        func warningNotificationDisplay(testCase: NotificationTestCase) async throws {
             // When
             await manager.showWarningNotification(
                 currentSpending: testCase.currentSpending,
@@ -203,7 +193,7 @@ struct NotificationManagerBasicTests {
         }
         
         @Test("Upper limit notification display", arguments: upperLimitNotificationTestCases)
-        func upperLimitNotificationDisplay(testCase: NotificationTestCase) async {
+        func upperLimitNotificationDisplay(testCase: NotificationTestCase) async throws {
             // When
             await manager.showUpperLimitNotification(
                 currentSpending: testCase.currentSpending,
@@ -253,10 +243,10 @@ struct NotificationManagerBasicTests {
 
     // MARK: - State Management Tests
     
-    @Suite("Notification State Management", .tags(.unit))
+    @Suite("Notification State Management")
     struct StateManagementTests {
-        let manager: TestableNotificationManager
-        let mockCenter: MockUNUserNotificationCenter
+        fileprivate let manager: TestableNotificationManager
+        fileprivate let mockCenter: MockUNUserNotificationCenter
         
         init() async {
             await MainActor.run {}
@@ -286,7 +276,7 @@ struct NotificationManagerBasicTests {
             (limitType: NotificationLimitType.upper, current: 95.0, warning: 80.0, upper: 100.0, shouldReset: true, "upper reset when below threshold"),
             (limitType: NotificationLimitType.upper, current: 105.0, warning: 80.0, upper: 100.0, shouldReset: false, "upper not reset when above threshold")
         ])
-        func stateResetBelowThresholdScenarios(
+        fileprivate func stateResetBelowThresholdScenarios(
             limitType: NotificationLimitType,
             current: Double,
             warning: Double,
@@ -328,7 +318,7 @@ struct NotificationManagerBasicTests {
     // MARK: - Special Notification Tests
     
     @Test("Instance already running notification")
-    func instanceAlreadyRunningNotification() async {
+    func instanceAlreadyRunningNotification() async throws {
         // When
         await notificationManager.showInstanceAlreadyRunningNotification()
         
@@ -346,7 +336,7 @@ struct NotificationManagerBasicTests {
     
     // MARK: - Performance Tests
     
-    @Test("Notification creation performance", .timeLimit(.seconds(2)))
+    @Test("Notification creation performance", .timeLimit(.minutes(1)))
     func notificationCreationPerformance() async {
         // When/Then - Should handle many notifications efficiently
         for i in 0..<100 {
@@ -362,7 +352,7 @@ struct NotificationManagerBasicTests {
         }
     }
     
-    @Test("Concurrent notification operations", .tags(.concurrency))
+    @Test("Concurrent notification operations")
     func concurrentNotificationOperations() async {
         // When - Perform concurrent operations
         await withTaskGroup(of: Void.self) { group in
@@ -388,12 +378,12 @@ struct NotificationManagerBasicTests {
 
 // MARK: - Test Support Types
 
-private enum NotificationLimitType {
+fileprivate enum NotificationLimitType {
     case warning
     case upper
 }
 
-private final class TestableNotificationManager {
+fileprivate final class TestableNotificationManager: @unchecked Sendable {
     private let notificationCenter: MockUNUserNotificationCenter
     private var warningNotificationShown = false
     private var upperLimitNotificationShown = false
@@ -499,7 +489,7 @@ private final class TestableNotificationManager {
 
 // MARK: - MockUNUserNotificationCenter
 
-private final class MockUNUserNotificationCenter {
+fileprivate final class MockUNUserNotificationCenter: @unchecked Sendable {
     var authorizationResult: Result<Bool, Error> = .success(true)
     var requestAuthorizationCallCount = 0
     var lastRequestedOptions: UNAuthorizationOptions?

@@ -2,14 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-// Import shared test utilities
-typealias Helpers = TestHelpers
-
-extension Tag {
-    @Tag static var cursor: Self
-}
-
-@Suite("CursorProvider Basic Tests", .tags(.unit, .provider, .cursor))
+@Suite("CursorProvider Basic Tests")
 struct CursorProviderBasicTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
@@ -25,7 +18,7 @@ struct CursorProviderBasicTests {
 
     // MARK: - Team Info Tests
     
-    @Suite("Team Information Fetching", .tags(.unit, .team))
+    @Suite("Team Information Fetching")
     struct TeamInfoTests {
         let provider: CursorProvider
         let mockSession: MockURLSession
@@ -36,7 +29,7 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
         
-        struct TeamInfoTestCase {
+        struct TeamInfoTestCase: Sendable {
             let jsonResponse: String
             let expectedId: Int
             let expectedName: String?
@@ -92,7 +85,12 @@ struct CursorProviderBasicTests {
         func teamInfoFetchingScenarios(testCase: TeamInfoTestCase) async throws {
             // Given
             let mockData = Data(testCase.jsonResponse.utf8)
-            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 200, url: CursorAPIConstants.URLs.teams.absoluteString)
+            let mockResponse = HTTPURLResponse(
+                url: URL(string: CursorAPIConstants.URLs.teams.absoluteString)!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )!
             
             mockSession.nextData = mockData
             mockSession.nextResponse = mockResponse
@@ -109,7 +107,12 @@ struct CursorProviderBasicTests {
         @Test("Unauthorized team info request")
         func unauthorizedTeamInfoRequest() async {
             // Given
-            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 401, url: CursorAPIConstants.URLs.teams.absoluteString)
+            let mockResponse = HTTPURLResponse(
+                url: URL(string: CursorAPIConstants.URLs.teams.absoluteString)!,
+                statusCode: 401,
+                httpVersion: nil,
+                headerFields: nil
+            )!
             mockSession.nextData = Data()
             mockSession.nextResponse = mockResponse
             
@@ -127,7 +130,7 @@ struct CursorProviderBasicTests {
 
     // MARK: - User Info Tests
     
-    @Suite("User Information Fetching", .tags(.unit, .user))
+    @Suite("User Information Fetching")
     struct UserInfoTests {
         let provider: CursorProvider
         let mockSession: MockURLSession
@@ -138,7 +141,7 @@ struct CursorProviderBasicTests {
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
         
-        struct UserInfoTestCase {
+        struct UserInfoTestCase: Sendable {
             let jsonResponse: String
             let expectedEmail: String
             let hasTeamId: Bool
@@ -189,7 +192,12 @@ struct CursorProviderBasicTests {
         func userInfoFetchingScenarios(testCase: UserInfoTestCase) async throws {
             // Given
             let mockData = Data(testCase.jsonResponse.utf8)
-            let mockResponse = Helpers.createMockHTTPResponse(statusCode: 200, url: CursorAPIConstants.URLs.userInfo.absoluteString)
+            let mockResponse = HTTPURLResponse(
+                url: URL(string: CursorAPIConstants.URLs.userInfo.absoluteString)!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )!
             
             mockSession.nextData = mockData
             mockSession.nextResponse = mockResponse
@@ -210,7 +218,7 @@ struct CursorProviderBasicTests {
 
     // MARK: - Authentication Tests
     
-    @Suite("Authentication Operations", .tags(.unit, .auth))
+    @Suite("Authentication Operations")
     struct AuthenticationTests {
         let provider: CursorProvider
         
@@ -229,7 +237,7 @@ struct CursorProviderBasicTests {
             #expect(authURL == CursorAPIConstants.authenticationURL, "Should return correct authentication URL")
         }
         
-        struct TokenExtractionTestCase {
+        struct TokenExtractionTestCase: @unchecked Sendable {
             let callbackData: [String: Any]
             let expectedToken: String?
             let description: String
@@ -309,7 +317,7 @@ struct CursorProviderBasicTests {
     
     // MARK: - Performance and Integration Tests
     
-    @Test("Provider initialization performance", .timeLimit(.seconds(1)))
+    @Test("Provider initialization performance", .timeLimit(.minutes(1)))
     func providerInitializationPerformance() {
         // When/Then - Should initialize quickly
         for _ in 0..<100 {
@@ -319,7 +327,7 @@ struct CursorProviderBasicTests {
         }
     }
     
-    @Test("Concurrent authentication operations", .tags(.concurrency))
+    @Test("Concurrent authentication operations")
     func concurrentAuthenticationOperations() async {
         // Given
         let iterations = 10

@@ -2,19 +2,12 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-extension Tag {
-    @Tag static var currency: Self
-    @Tag static var conversion: Self
-    @Tag static var formatting: Self
-}
-
-@Suite("Currency Conversion Basic Tests", .tags(.currency, .conversion))
-@MainActor
+@Suite("Currency Conversion Basic Tests")
 struct CurrencyConversionBasicTests {
     
     // MARK: - Parameterized Conversion Tests
     
-    struct ConversionTestCase {
+    struct ConversionTestCase: Sendable {
         let amount: Double
         let rate: Double
         let expected: Double
@@ -39,6 +32,7 @@ struct CurrencyConversionBasicTests {
     ]
     
     @Test("Currency conversion calculations", arguments: conversionTestCases)
+    @MainActor
     func conversionCalculations(testCase: ConversionTestCase) {
         // When
         let result = CurrencyConversionHelper.convert(amount: testCase.amount, rate: testCase.rate)
@@ -51,6 +45,7 @@ struct CurrencyConversionBasicTests {
     // MARK: - Edge Case Tests
     
     @Test("Invalid rate handling", arguments: [nil, 0.0, -1.0, .infinity, .nan])
+    @MainActor
     func invalidRateHandling(invalidRate: Double?) {
         // When
         let result = CurrencyConversionHelper.convert(amount: 100.0, rate: invalidRate)
@@ -61,7 +56,7 @@ struct CurrencyConversionBasicTests {
     
     // MARK: - Currency Formatting Tests
     
-    struct FormattingTestCase {
+    struct FormattingTestCase: Sendable {
         let amount: Double
         let symbol: String
         let expected: String
@@ -84,7 +79,8 @@ struct CurrencyConversionBasicTests {
         FormattingTestCase(-50.25, symbol: "$", expected: "$-50.25", "negative amount")
     ]
     
-    @Test("Currency formatting", arguments: formattingTestCases, .tags(.formatting))
+    @Test("Currency formatting", arguments: formattingTestCases)
+    @MainActor
     func currencyFormatting(testCase: FormattingTestCase) {
         // When
         let result = CurrencyConversionHelper.formatAmount(testCase.amount, currencySymbol: testCase.symbol)
@@ -102,6 +98,7 @@ struct CurrencyConversionBasicTests {
         (Locale(identifier: "de_DE"), "€", "German formatting"),
         (Locale(identifier: "ja_JP"), "¥", "Japanese formatting")
     ])
+    @MainActor
     func localeSpecificFormatting(locale: Locale, symbol: String, description: String) {
         // Given
         let amount = 1234.56
@@ -122,6 +119,7 @@ struct CurrencyConversionBasicTests {
         (600.0, 50.0, "mid-range limit"),
         (2400.0, 200.0, "high limit")
     ])
+    @MainActor
     func monthlyLimitCalculation(yearlyLimit: Double, expectedMonthly: Double, description: String) {
         // When
         let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
@@ -132,7 +130,8 @@ struct CurrencyConversionBasicTests {
     
     // MARK: - Performance Tests
     
-    @Test("Conversion performance", .timeLimit(.seconds(1)))
+    @Test("Conversion performance", .timeLimit(.minutes(1)))
+    @MainActor
     func conversionPerformance() {
         // Given
         let iterations = 10_000

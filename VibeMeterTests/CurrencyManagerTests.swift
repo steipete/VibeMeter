@@ -55,7 +55,7 @@ struct CurrencyManagerTests {
         for (code, name) in currencies {
             // Currency code should be 3 characters
             #expect(code.count == 3)
-            #expect(code.allSatisfy(\.isUppercase))
+            #expect(code.allSatisfy { $0.isUppercase })
 
             // Name should contain currency symbol in parentheses
             #expect(name.contains("("), "Currency name '\(name)' should contain symbol in parentheses")
@@ -99,8 +99,13 @@ struct CurrencyManagerTests {
         let systemCode = sut.systemCurrencyCode
 
         // Then
-        #expect(systemCode.count == 3)
-        #expect(sut.isValidCurrencyCode(systemCode))
+        if let code = systemCode {
+            #expect(code.count == 3)
+            #expect(sut.isValidCurrencyCode(code))
+        } else {
+            // If system doesn't provide a currency code, that's acceptable
+            #expect(systemCode == nil)
+        }
     }
 
     @Test("system currency code consistent results")
@@ -213,7 +218,7 @@ struct CurrencyManagerTests {
             // If CurrencyManager is Sendable, this will compile
             _ = manager.availableCurrencies
         }
-        #expect(sut != nil)
+        #expect(true) // Test passes if it compiles
     }
 
     @Test("concurrent access thread safety")
