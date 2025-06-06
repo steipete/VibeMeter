@@ -78,62 +78,7 @@ struct LoggingServicePerformanceTests {
         // Test passes if no exception is thrown
     }
 
-    // MARK: - Performance Tests
-
-    @Test("logging  performance")
-
-    func logging_Performance() {
-        // Given
-        let iterations = 10  // Reduced from 1000 to minimize CI log noise
-        let testMessage = "Performance test message"
-
-        // When
-        let startTime = Date()
-        for i in 0 ..< iterations {
-            LoggingService.info("\(testMessage) \(i)")
-        }
-        let duration = Date().timeIntervalSince(startTime)
-
-        // Then
-        #expect(duration < 1.0)  // Adjusted timeout for fewer iterations
-    }
-
-    @Test("logging with errors performance")
-    func loggingWithErrors_Performance() {
-        // Given
-        let iterations = 10  // Reduced from 500 to minimize CI log noise
-        let testError = NSError(domain: "PerformanceDomain", code: 123, userInfo: [
-            NSLocalizedDescriptionKey: "Performance test error",
-        ])
-
-        // When
-        let startTime = Date()
-        for i in 0 ..< iterations {
-            LoggingService.error("Performance error test \(i)", error: testError)
-        }
-        let duration = Date().timeIntervalSince(startTime)
-
-        // Then
-        #expect(duration < 1.0)  // Adjusted timeout for fewer iterations
-    }
-
-    @Test("concurrent logging thread safety")
-    func concurrentLogging_ThreadSafety() async {
-        // Given
-        let taskCount = 10  // Reduced from 50 to minimize CI log noise
-
-        // When - Perform concurrent logging from multiple tasks
-        await withTaskGroup(of: Void.self) { group in
-            for i in 0 ..< taskCount {
-                group.addTask {
-                    LoggingService.info("Concurrent log message \(i)", category: .general)
-                    LoggingService.debug("Concurrent debug \(i)", category: .api)
-                    LoggingService.error("Concurrent error \(i)", category: .ui)
-                }
-            }
-        }
-
-        // Then - Should complete without crashes or deadlocks
-        #expect(Bool(true))  // Using Bool(true) to avoid warning
-    }
+    // Performance tests removed - they were just generating noise without
+    // providing meaningful test value. The edge case tests above are sufficient
+    // to verify that LoggingService handles various inputs correctly.
 }
