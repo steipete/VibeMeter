@@ -78,7 +78,7 @@ struct CursorProviderValidationTests {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
             Issue.record("Should have thrown rate limit error")
         } catch let error as ProviderError {
-            #expect(error == .rateLimitExceeded)")
+            #expect(error == .rateLimitExceeded)
         }
     }
 
@@ -100,7 +100,7 @@ struct CursorProviderValidationTests {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
             Issue.record("Should have thrown service unavailable error")
         } catch let error as ProviderError {
-            #expect(error == .serviceUnavailable)")
+            #expect(error == .serviceUnavailable)
         }
     }
 
@@ -167,7 +167,7 @@ struct CursorProviderValidationTests {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
             Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
-            #expect(error == .noTeamFound)")
+            #expect(error == .noTeamFound)
         }
     }
 
@@ -191,7 +191,7 @@ struct CursorProviderValidationTests {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "test-token")
             Issue.record("Should have thrown no team found error")
         } catch let error as ProviderError {
-            #expect(error == .noTeamFound)")
+            #expect(error == .noTeamFound)
         }
     }
 
@@ -210,7 +210,7 @@ struct CursorProviderValidationTests {
             Issue.record("Should have thrown network error")
         } catch let error as ProviderError {
             if case let .networkError(message, statusCode) = error {
-                #expect(message.contains("timed out")
+                #expect(message.contains("timed out"))
             } else {
                 Issue.record("Expected network error, got \(error)")
             }
@@ -247,8 +247,8 @@ struct CursorProviderValidationTests {
         let request = try XCTUnwrap(mockURLSession.lastRequest)
 
         // Verify headers
-        #expect(request.value(forHTTPHeaderField: "Cookie" == true)
-        #expect(request.value(forHTTPHeaderField: "Accept" == true)
+        #expect(request.value(forHTTPHeaderField: "Cookie") != nil)
+        #expect(request.value(forHTTPHeaderField: "Accept") != nil)
 
         // Verify timeout
         #expect(request.timeoutInterval == 30)

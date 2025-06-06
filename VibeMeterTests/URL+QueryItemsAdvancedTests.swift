@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import Testing
 
@@ -5,8 +6,7 @@ import Testing
 struct URLQueryItemsAdvancedTests {
     // MARK: - Edge Cases Tests
 
-    @Test("appending query items  with nil values  handles gracefully")
-
+    @Test("appending query items with nil values handles gracefully")
     func appendingQueryItems_WithNilValues_HandlesGracefully() {
         // Given
         let url = URL(string: "https://example.com/path")!
@@ -21,7 +21,9 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/path?key1=value1&key2&key3=value3")
+    }
 
+    @Test("appending query items with empty values handles gracefully")
     func appendingQueryItems_WithEmptyValues_HandlesGracefully() {
         // Given
         let url = URL(string: "https://example.com/path")!
@@ -36,7 +38,9 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/path?key1=value1&key2=&key3=value3")
+    }
 
+    @Test("appending query items with special characters encodes correctly")
     func appendingQueryItems_WithSpecialCharacters_EncodesCorrectly() {
         // Given
         let url = URL(string: "https://example.com/path")!
@@ -51,9 +55,11 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         // URLQueryItem automatically handles encoding
-        #expect(result.absoluteString.contains("message=hello%20world") // + is not encoded in query strings
-        #expect(result.absoluteString.contains("unicode=caf%C3%A9%20%C3%B1o%C3%B1o%20%F0%9F%9A%80")
+        #expect(result.absoluteString.contains("message=hello%20world")) // + is not encoded in query strings
+        #expect(result.absoluteString.contains("unicode=caf%C3%A9%20%C3%B1o%C3%B1o%20%F0%9F%9A%80"))
+    }
 
+    @Test("appending query items with duplicate keys allows duplicates")
     func appendingQueryItems_WithDuplicateKeys_AllowsDuplicates() {
         // Given
         let url = URL(string: "https://example.com/path?filter=value1")!
@@ -67,7 +73,9 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/path?filter=value1&filter=value2&filter=value3")
+    }
 
+    @Test("appending query items international domain works correctly")
     func appendingQueryItems_InternationalDomain_WorksCorrectly() {
         // Given
         let url = URL(string: "https://münchen.example.com/api")!
@@ -82,8 +90,7 @@ struct URLQueryItemsAdvancedTests {
 
     // MARK: - Long URL Tests
 
-    @Test("appending query items  very long url  handles gracefully")
-
+    @Test("appending query items very long url handles gracefully")
     func appendingQueryItems_VeryLongURL_HandlesGracefully() {
         // Given
         let longPath = String(repeating: "segment/", count: 100)
@@ -95,8 +102,10 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         #expect(result != nil)
-        #expect(result.absoluteString.count > url.absoluteString.count == true)
+        #expect(result.absoluteString.count > url.absoluteString.count)
+    }
 
+    @Test("appending query items performance")
     func appendingQueryItems_Performance() {
         // Given
         let url = URL(string: "https://example.com/api")!
@@ -109,11 +118,13 @@ struct URLQueryItemsAdvancedTests {
 
         // Then
         #expect(duration < 1.0)
-        #expect(result.absoluteString.contains("param99=value99")
+        #expect(result.absoluteString.contains("param99=value99"))
+    }
 
+    @Test("appending query items repeated calls performance")
     func appendingQueryItems_RepeatedCalls_Performance() {
         // Given
-        let url = URL(string: "https://example.com/api")
+        var url = URL(string: "https://example.com/api")!
         let iterations = 1000
 
         // When
@@ -129,8 +140,7 @@ struct URLQueryItemsAdvancedTests {
 
     // MARK: - Memory Management Tests
 
-    @Test("appending query items  efficient memory usage")
-
+    @Test("appending query items efficient memory usage")
     func appendingQueryItems_EfficientMemoryUsage() {
         // Given
         let url = URL(string: "https://example.com/api")!

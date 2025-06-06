@@ -69,7 +69,7 @@ struct MenuBarStateTests {
             let state = MenuBarState.data(value: input)
 
             // Then
-            #expect(state.gaugeValue == expected)")
+            #expect(state.gaugeValue == expected)
         }
     }
 }

@@ -10,7 +10,6 @@ struct MultiProviderLoginManagerCallbackTests {
     let mockStartupManager: StartupManagerMock
 
     init() async throws {
-        try await 
         mockStartupManager = StartupManagerMock()
         mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerCallbackTests")!,
@@ -26,18 +25,9 @@ struct MultiProviderLoginManagerCallbackTests {
         #endif
     }
 
-     async throws {
-        sut = nil
-        providerFactory = nil
-        mockSettingsManager = nil
-        mockStartupManager = nil
-        try await 
-    }
-
     // MARK: - Callback Tests
 
-    @Test("on login success  called after successful login")
-
+    @Test("on login success called after successful login")
     func onLoginSuccess_CalledAfterSuccessfulLogin() {
         // Given
         var successCallbackCalled = false
@@ -55,8 +45,10 @@ struct MultiProviderLoginManagerCallbackTests {
 
         // Then - In real flow, callback would be called through handleSuccessfulLogin
         // For this test, we verify the state is set correctly
-        #expect(sut.isLoggedIn(to: .cursor == true)
+        #expect(sut.isLoggedIn(to: .cursor) == true)
+    }
 
+    @Test("on login dismiss configurable callback")
     func onLoginDismiss_ConfigurableCallback() {
         // Given
         var dismissCallbackCalled = false
@@ -72,13 +64,13 @@ struct MultiProviderLoginManagerCallbackTests {
 
         // Then
         #expect(dismissCallbackCalled == true)
+        #expect(dismissProvider == .cursor)
     }
 
     // MARK: - Error Handling Tests
 
     #if DEBUG
-        @Test("login error  tracked per provider")
-
+        @Test("login error tracked per provider")
         func loginError_TrackedPerProvider() {
             // Given
             sut._test_reset()
@@ -87,8 +79,10 @@ struct MultiProviderLoginManagerCallbackTests {
             // In production, errors would be set through handleLoginCompletion
 
             // Then
-            #expect(sut.isLoggedIn(to: .cursor == false)
+            #expect(sut.isLoggedIn(to: .cursor) == false)
+        }
 
+        @Test("logged in providers returns only logged in providers")
         func loggedInProviders_ReturnsOnlyLoggedInProviders() {
             // Given
             sut._test_simulateLogin(for: .cursor, withToken: "cursor-token")
@@ -98,44 +92,42 @@ struct MultiProviderLoginManagerCallbackTests {
 
             // Then
             #expect(providers == [.cursor])
+        }
 
+        @Test("is logged in to any provider with one provider returns true")
         func isLoggedInToAnyProvider_WithOneProvider_ReturnsTrue() {
             // Given
             sut._test_simulateLogin(for: .cursor, withToken: "any-token")
 
             // Then
             #expect(sut.isLoggedInToAnyProvider == true)
-
-        func isLoggedInToAnyProvider_WithNoProviders_ReturnsFalse() {
-            // Given
-            sut._test_reset()
-
-            // Then
-            #expect(sut.isLoggedInToAnyProvider == false)
-
-    func concurrentAccess_MaintainsConsistency() async {
-        // Given
-        let expectation = expectation(description: "Concurrent operations complete")
-        expectation.expectedFulfillmentCount = 50
-
-        // When
-        await withTaskGroup(of: Void.self) { group in
-            for i in 0 ..< 50 {
-                group.addTask {
-                    if i % 2 == 0 {
-                        #if DEBUG
-                            await self.sut._test_simulateLogin(for: .cursor, withToken: "concurrent-\(i)")
-                        #endif
-                    } else {
-                        _ = await self.sut.isLoggedIn(to: .cursor)
-                        _ = await self.sut.getAuthToken(for: .cursor)
-                    }
-                    expectation.fulfill()
-                }
-            }
         }
 
-        // Then
-        await fulfillment(of: [expectation], timeout: 5.0)
-    }
+        @Test("concurrent operations thread safety")
+        func concurrentOperations_ThreadSafety() async {
+            // Given
+            let expectation = XCTestExpectation(description: "Concurrent operations complete")
+            expectation.expectedFulfillmentCount = 50
+
+            // When - Perform many concurrent operations
+            await withTaskGroup(of: Void.self) { group in
+                for i in 0 ..< 50 {
+                    group.addTask {
+                        if i % 2 == 0 {
+                            #if DEBUG
+                                await self.sut._test_simulateLogin(for: .cursor, withToken: "concurrent-\(i)")
+                            #endif
+                        } else {
+                            _ = await self.sut.isLoggedIn(to: .cursor)
+                            _ = await self.sut.getAuthToken(for: .cursor)
+                        }
+                        expectation.fulfill()
+                    }
+                }
+            }
+
+            // Then
+            await fulfillment(of: [expectation], timeout: 5.0)
+        }
+    #endif
 }

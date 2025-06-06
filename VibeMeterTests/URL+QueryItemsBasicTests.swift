@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import Testing
 
@@ -5,8 +6,7 @@ import Testing
 struct URLQueryItemsBasicTests {
     // MARK: - Basic Functionality Tests
 
-    @Test("appending query items  empty array  returns same url")
-
+    @Test("appending query items empty array returns same url")
     func appendingQueryItems_EmptyArray_ReturnsSameURL() {
         // Given
         let url = URL(string: "https://example.com/path")!
@@ -17,7 +17,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result == url)
+    }
 
+    @Test("appending query items to url without query adds query")
     func appendingQueryItems_ToURLWithoutQuery_AddsQuery() {
         // Given
         let url = URL(string: "https://example.com/path")!
@@ -28,7 +30,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/path?key=value")
+    }
 
+    @Test("appending query items to url with existing query appends to query")
     func appendingQueryItems_ToURLWithExistingQuery_AppendsToQuery() {
         // Given
         let url = URL(string: "https://example.com/path?existing=param")!
@@ -39,7 +43,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/path?existing=param&new=item")
+    }
 
+    @Test("appending query items multiple items adds all items")
     func appendingQueryItems_MultipleItems_AddsAllItems() {
         // Given
         let url = URL(string: "https://example.com/api")!
@@ -54,7 +60,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/api?param1=value1&param2=value2&param3=value3")
+    }
 
+    @Test("appending query items https scheme works correctly")
     func appendingQueryItems_HTTPSScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "https://secure.example.com/api")!
@@ -67,8 +75,7 @@ struct URLQueryItemsBasicTests {
         #expect(result.absoluteString == "https://secure.example.com/api?token=secret123")
     }
 
-    @Test("appending query items http scheme  works correctly")
-
+    @Test("appending query items http scheme works correctly")
     func appendingQueryItems_HTTPScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "http://example.com/api")!
@@ -81,8 +88,7 @@ struct URLQueryItemsBasicTests {
         #expect(result.absoluteString == "http://example.com/api?debug=true")
     }
 
-    @Test("appending query items  custom scheme  works correctly")
-
+    @Test("appending query items custom scheme works correctly")
     func appendingQueryItems_CustomScheme_WorksCorrectly() {
         // Given
         let url = URL(string: "myapp://action/perform")!
@@ -97,8 +103,7 @@ struct URLQueryItemsBasicTests {
 
     // MARK: - URL Components Tests
 
-    @Test("appending query items  preserves host")
-
+    @Test("appending query items preserves host")
     func appendingQueryItems_PreservesHost() {
         // Given
         let url = URL(string: "https://api.example.com:8080/v1/endpoint")!
@@ -110,7 +115,9 @@ struct URLQueryItemsBasicTests {
         // Then
         #expect(result.host == "api.example.com")
         #expect(result.path == "/v1/endpoint")
+    }
 
+    @Test("appending query items preserves fragment")
     func appendingQueryItems_PreservesFragment() {
         // Given
         let url = URL(string: "https://example.com/page#section")!
@@ -123,8 +130,7 @@ struct URLQueryItemsBasicTests {
         #expect(result.absoluteString == "https://example.com/page?highlight=text#section")
     }
 
-    @Test("appending query items  with user info  preserves user info")
-
+    @Test("appending query items with user info preserves user info")
     func appendingQueryItems_WithUserInfo_PreservesUserInfo() {
         // Given
         let url = URL(string: "https://user:pass@example.com/path")!
@@ -136,7 +142,9 @@ struct URLQueryItemsBasicTests {
         // Then
         #expect(result.absoluteString == "https://user:pass@example.com/path?auth=token")
         #expect(result.password == "pass")
+    }
 
+    @Test("appending query items invalid url returns self")
     func appendingQueryItems_InvalidURL_ReturnsSelf() {
         // Given - Create a URL that might cause URLComponents to fail
         // This is tricky since URL(string:) already validates, but we can test the fallback
@@ -148,7 +156,9 @@ struct URLQueryItemsBasicTests {
 
         // Then - Should succeed in this case, but testing the pattern
         #expect(result != nil)
+    }
 
+    @Test("appending query items chained calls works correctly")
     func appendingQueryItems_ChainedCalls_WorksCorrectly() {
         // Given
         let url = URL(string: "https://example.com/api")!
@@ -162,7 +172,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result.absoluteString == "https://example.com/api?step=1&step=2")
+    }
 
+    @Test("appending query items multiple chained calls builds correctly")
     func appendingQueryItems_MultipleChainedCalls_BuildsCorrectly() {
         // Given
         let url = URL(string: "https://api.example.com/data")!
@@ -175,7 +187,9 @@ struct URLQueryItemsBasicTests {
 
         // Then
         #expect(result.absoluteString == "https://api.example.com/data?format=json&version=v2&include=metadata")
+    }
 
+    @Test("appending query items preserves existing order")
     func appendingQueryItems_PreservesExistingOrder() {
         // Given
         let url = URL(string: "https://example.com/path?z=last&a=first&m=middle")!

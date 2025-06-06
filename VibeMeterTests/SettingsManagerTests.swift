@@ -1,26 +1,30 @@
 @testable import VibeMeter
 import Testing
 
+@Suite("SettingsManager Tests")
 @MainActor
-class SettingsManagerTests: XCTestCase, @unchecked Sendable {
+struct SettingsManagerTests {
     let settingsManager: SettingsManager
     let testUserDefaults: UserDefaults
 
-    // Unique suite name for UserDefaults to avoid interference between tests and with the actual app
-    let testSuiteName = "com.vibemeter.tests.SettingsManagerTests"            }
-
-            testUserDefaults = suite
-            // Configure the SettingsManager.shared instance to use our test UserDefaults
-            SettingsManager._test_setSharedInstance(
-                userDefaults: testUserDefaults,
-                startupManager: StartupManagerMock())
-            settingsManager = SettingsManager.shared
-        }
+    init() {
+        // Unique suite name for UserDefaults to avoid interference between tests and with the actual app
+        let testSuiteName = "com.vibemeter.tests.SettingsManagerTests"
+        let suite = UserDefaults(suiteName: testSuiteName)!
+        
+        // Clean up any existing test data
+        suite.removePersistentDomain(forName: testSuiteName)
+        
+        self.testUserDefaults = suite
+        // Configure the SettingsManager.shared instance to use our test UserDefaults
+        SettingsManager._test_setSharedInstance(
+            userDefaults: testUserDefaults,
+            startupManager: StartupManagerMock())
+        self.settingsManager = SettingsManager.shared
     }
     // MARK: - Default Values Tests
 
     @Test("default currency is usd")
-
     func defaultCurrencyIsUSD() {
         #expect(settingsManager.selectedCurrencyCode == "USD")
 

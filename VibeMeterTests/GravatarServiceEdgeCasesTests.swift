@@ -124,8 +124,8 @@ struct GravatarServiceEdgeCasesTests {
 
         // Then
         #expect(result != nil)
-        #expect(urlString.contains("?s=128")")
-        #expect(urlString.contains("&d=mp")
-        #expect(urlString.hasSuffix("d=mp" == true)
+        #expect(urlString.contains("?s=128"))
+        #expect(urlString.contains("&d=mp"))
+        #expect(urlString.hasSuffix("d=mp"))
     }
 }

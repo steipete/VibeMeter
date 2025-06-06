@@ -27,7 +27,7 @@ struct LoggingServiceCoreTests {
 
         for (category, expectedRawValue) in expectedCategories {
             #expect(
-                category.rawValue == expectedRawValue)'")
+                category.rawValue == expectedRawValue)
         }
     }
 
@@ -245,4 +245,3 @@ struct LoggingServiceCoreTests {
 
         // Test passes if no exceptions are thrown
     }
-}

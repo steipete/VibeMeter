@@ -166,7 +166,7 @@ struct BackgroundDataProcessorErrorTests {
             Issue.record("Should have thrown error")
         } catch {
             if case let ProviderError.networkError(message, _) = error {
-                #expect(message == "Connection timeout")")
+                #expect(message == "Connection timeout")
             }
         }
     }
@@ -188,7 +188,7 @@ struct BackgroundDataProcessorErrorTests {
             Issue.record("Should have thrown error")
         } catch {
             if case let ProviderError.authenticationFailed(reason) = error {
-                #expect(reason == "Invalid token")")
+                #expect(reason == "Invalid token")
             }
         }
     }

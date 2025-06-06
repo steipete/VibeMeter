@@ -76,7 +76,7 @@ struct CursorProviderBasicTests {
 
             // Then - Should return fallback team info instead of throwing
             #expect(teamInfo.id == -1, "Should use fallback team ID")
-            #expect(teamInfo.provider == .cursor, "Should maintain correct provider")")
+            #expect(teamInfo.provider == .cursor, "Should maintain correct provider")
         }
     }
 
@@ -98,7 +98,7 @@ struct CursorProviderBasicTests {
             _ = try await cursorProvider.fetchTeamInfo(authToken: "invalid-token")
             Issue.record("Should have thrown unauthorized error")
         } catch let error as ProviderError {
-            #expect(error == .unauthorized)")
+            #expect(error == .unauthorized)
         }
     }
 

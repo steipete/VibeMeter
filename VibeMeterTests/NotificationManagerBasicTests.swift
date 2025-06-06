@@ -15,16 +15,9 @@ struct NotificationManagerBasicTests {
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-     async throws {
-        notificationManager = nil
-        mockNotificationCenter = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - Authorization Tests
 
-    @Test("request authorization  success")
-
+    @Test("request authorization success")
     func requestAuthorization_Success() async {
         // Given
         mockNotificationCenter.authorizationResult = .success(true)
@@ -34,8 +27,10 @@ struct NotificationManagerBasicTests {
 
         // Then
         #expect(result == true)
-        #expect(mockNotificationCenter.lastRequestedOptions == [.alert)
+        #expect(mockNotificationCenter.lastRequestedOptions == [.alert])
+    }
 
+    @Test("request authorization denied")
     func requestAuthorization_Denied() async {
         // Given
         mockNotificationCenter.authorizationResult = .success(false)
@@ -47,8 +42,7 @@ struct NotificationManagerBasicTests {
         #expect(result == false)
     }
 
-    @Test("request authorization  error")
-
+    @Test("request authorization error")
     func requestAuthorization_Error() async {
         // Given
         let error = NSError(domain: "TestError", code: 1, userInfo: nil)
@@ -63,8 +57,7 @@ struct NotificationManagerBasicTests {
 
     // MARK: - Warning Notification Tests
 
-    @Test("show warning notification  first time")
-
+    @Test("show warning notification first time")
     func showWarningNotification_FirstTime() async {
         // Given
         let currentSpending = 75.50
@@ -79,10 +72,13 @@ struct NotificationManagerBasicTests {
 
         // Then
         #expect(mockNotificationCenter.addCallCount == 1)
+        let request = mockNotificationCenter.lastAddedRequest!
         #expect(request.content.title == "Spending Alert ⚠️")
-        #expect(request.content.body.contains("$100.00")
+        #expect(request.content.body.contains("$100.00"))
         #expect(request.trigger == nil)
+    }
 
+    @Test("show warning notification different currency")
     func showWarningNotification_DifferentCurrency() async {
         // Given
         let currentSpending = 82.30
@@ -97,7 +93,8 @@ struct NotificationManagerBasicTests {
 
         // Then
         let request = mockNotificationCenter.lastAddedRequest!
-        #expect(request.content.body.contains("€82.30")
+        #expect(request.content.body.contains("€82.30"))
+    }
     }
 
     @Test("show warning notification  already shown")
