@@ -38,6 +38,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Detect CI environment and increase verbosity
+if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "CI environment detected - enabling verbose output"
+    VERBOSE="YES"
+fi
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -101,9 +107,18 @@ if [ "$VERBOSE" = "NO" ]; then
     BUILD_CMD="$BUILD_CMD -quiet"
 fi
 
-if ! eval "$BUILD_CMD" | xcbeautify; then
-    echo -e "${RED}❌ Build failed${NC}"
-    exit 1
+if [ "$VERBOSE" = "YES" ]; then
+    # In verbose mode (CI), show raw build output
+    if ! eval "$BUILD_CMD"; then
+        echo -e "${RED}❌ Build failed${NC}"
+        exit 1
+    fi
+else
+    # Local development, use xcbeautify for clean output
+    if ! eval "$BUILD_CMD" | xcbeautify; then
+        echo -e "${RED}❌ Build failed${NC}"
+        exit 1
+    fi
 fi
 
 # Run tests
@@ -128,14 +143,23 @@ fi
 
 if [ "$VERBOSE" = "NO" ]; then
     TEST_CMD="$TEST_CMD -quiet"
+else
+    echo "Verbose mode enabled - showing full xcodebuild output"
 fi
 
 # Run tests and capture output
 set +e
 if [ -n "$JUNIT_OUTPUT" ]; then
     # For Swift Testing, run tests and capture results
-    eval "$TEST_CMD" 2>&1 | tee test-output.log | xcbeautify
-    TEST_STATUS=${PIPESTATUS[0]}
+    if [ "$VERBOSE" = "YES" ]; then
+        # In verbose mode (CI), show raw output without xcbeautify filtering
+        eval "$TEST_CMD" 2>&1 | tee test-output.log
+        TEST_STATUS=${PIPESTATUS[0]}
+    else
+        # Local development, use xcbeautify for clean output
+        eval "$TEST_CMD" 2>&1 | tee test-output.log | xcbeautify
+        TEST_STATUS=${PIPESTATUS[0]}
+    fi
     
     # Create a simple JUnit report based on test output
     echo -e "\n${YELLOW}Creating test results...${NC}"
@@ -170,8 +194,15 @@ if [ -n "$JUNIT_OUTPUT" ]; then
 </testsuites>
 EOF
 else
-    eval "$TEST_CMD" | xcbeautify
-    TEST_STATUS=${PIPESTATUS[0]}
+    if [ "$VERBOSE" = "YES" ]; then
+        # In verbose mode (CI), show raw output without xcbeautify filtering
+        eval "$TEST_CMD"
+        TEST_STATUS=$?
+    else
+        # Local development, use xcbeautify for clean output
+        eval "$TEST_CMD" | xcbeautify
+        TEST_STATUS=${PIPESTATUS[0]}
+    fi
 fi
 set -e
 
