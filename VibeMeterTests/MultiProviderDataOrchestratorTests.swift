@@ -44,7 +44,7 @@ struct MultiProviderDataOrchestratorTests {
         mockApiClient = CursorAPIClientMock()
         mockExchangeRateManager = ExchangeRateManagerMock()
         mockNotificationManager = NotificationManagerMock()
-        mockSettingsManager = MockSettingsManager()
+        mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
 
         // Initialize data models
         spendingData = MultiProviderSpendingData()

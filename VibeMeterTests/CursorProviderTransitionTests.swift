@@ -11,10 +11,10 @@ struct CursorProviderTransitionTests {
 
     init() {
         self.mockURLSession = MockURLSession()
-        self.mockSettingsManager = MockSettingsManager()
+        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
         self.cursorProvider = CursorProvider(
-            urlSession: mockURLSession,
-            settingsManager: mockSettingsManager)
+            settingsManager: mockSettingsManager,
+            urlSession: mockURLSession)
     }
 
     // MARK: - User State Transition Tests
