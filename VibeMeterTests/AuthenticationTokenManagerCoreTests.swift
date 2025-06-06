@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("AuthenticationTokenManager Core Tests")
 struct AuthenticationTokenManagerCoreTests {

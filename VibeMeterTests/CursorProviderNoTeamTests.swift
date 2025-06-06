@@ -96,8 +96,7 @@ struct CursorProviderNoTeamTests {
         #expect(invoice.items.count == 1)
         #expect(invoice.items[0].description == "Individual Pro Usage")
         #expect(invoice.pricingDescription?.description == "Individual Pro Plan")
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        #expect(bodyJSON?["month"] as? Int == 12)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]#expect(bodyJSON?["month"] as? Int == 12)
         #expect(bodyJSON?["teamId"] == nil)
     }
 
@@ -129,10 +128,9 @@ struct CursorProviderNoTeamTests {
             teamId: nil)
 
         // Then
-        #expect(invoice.items.count == 0)
+        #expect(invoice.items.isEmpty)
         #expect(invoice.pricingDescription == nil)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        #expect(bodyJSON?["teamId"] == nil)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]#expect(bodyJSON?["teamId"] == nil)
 
     func fetchMonthlyInvoice_TransitionFromTeamToIndividual() async throws {
         // Given - User was previously in a team but now is individual
@@ -171,8 +169,7 @@ struct CursorProviderNoTeamTests {
         // Then
         #expect(invoice.totalSpendingCents == 1500)
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        #expect(bodyJSON?["teamId"] as? Int == 999)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]#expect(bodyJSON?["teamId"] as? Int == 999)
 
     func fetchMonthlyInvoice_ExplicitlyNoTeam() async throws {
         // Given - User has stored team but we want to fetch without team
@@ -210,9 +207,8 @@ struct CursorProviderNoTeamTests {
             teamId: nil)
 
         // Then
-        #expect(invoice.items.count == 0)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        #expect(bodyJSON?["teamId"] == nil)
+        #expect(invoice.items.isEmpty)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]#expect(bodyJSON?["teamId"] == nil)
 
     func aPIRequestBody_WithTeamId() async throws {
         // Given
@@ -239,7 +235,7 @@ struct CursorProviderNoTeamTests {
         // Then - Verify request body includes teamId
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        
+
         #expect(bodyJSON?.count == 4)
         #expect(bodyJSON?["year"] as? Int == 2024)
         #expect(bodyJSON?["includeUsageEvents"] as? Bool == false)
@@ -269,10 +265,9 @@ struct CursorProviderNoTeamTests {
         // Then - Verify request body excludes teamId
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        
         #expect(bodyJSON?.count == 3)
         #expect(bodyJSON?["year"] as? Int == 2024)
-        #expect(bodyJSON?.keys.contains("teamId" == false)
+        #expect(bodyJSON?.keys.contains("teamId") == false)
     }
 
     @Test("a pi request body  team id zero")
@@ -302,7 +297,6 @@ struct CursorProviderNoTeamTests {
         // Then - Verify request body excludes teamId since 0 is now filtered as invalid
         let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
-        
         #expect(bodyJSON?["teamId"] == nil) ?? false, "teamId key should not exist when value is 0")
     }
 }

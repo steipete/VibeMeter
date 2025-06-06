@@ -1,5 +1,5 @@
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("MultiProviderLoginManagerTokenTests")
 @MainActor
@@ -10,8 +10,8 @@ struct MultiProviderLoginManagerTokenTests {
     let mockStartupManager: StartupManagerMock
 
     init() async throws {
-        try await 
-        mockStartupManager = StartupManagerMock()
+        try await
+            mockStartupManager = StartupManagerMock()
         mockSettingsManager = SettingsManager(
             userDefaults: UserDefaults(suiteName: "MultiProviderLoginManagerTokenTests")!,
             startupManager: mockStartupManager)
@@ -26,17 +26,13 @@ struct MultiProviderLoginManagerTokenTests {
         #endif
     }
 
-     async throws {
-        sut = nil
-        providerFactory = nil
-        mockSettingsManager = nil
-        mockStartupManager = nil
-        try await 
+    deinit {
+        // Cleanup if needed
     }
 
     // MARK: - Token Validation Tests
 
-    @Test("validate all tokens  without login  does not crash")
+    @Test("validate all tokens without login does not crash")
 
     func validateAllTokens_WithoutLogin_DoesNotCrash() async {
         // Given - No login state
@@ -46,7 +42,9 @@ struct MultiProviderLoginManagerTokenTests {
 
         // Then
         #expect(sut.isLoggedInToAnyProvider == false)
+    }
 
+    @Test("validate all tokens with simulated login calls validation")
     func validateAllTokens_WithSimulatedLogin_CallsValidation() async {
         // Given
         #if DEBUG
@@ -60,7 +58,9 @@ struct MultiProviderLoginManagerTokenTests {
         // This test validates that the method can be called without crashing
         // In real usage, invalid tokens would be handled by the provider validation
         #expect(sut != nil)
+    }
 
+    @Test("validate all tokens with multiple providers handles gracefully")
     func validateAllTokens_WithMultipleProviders_HandlesGracefully() async {
         // Given
         #if DEBUG
@@ -74,7 +74,9 @@ struct MultiProviderLoginManagerTokenTests {
         // This test validates that validation works with multiple providers
         // The exact result depends on network availability and token validity
         #expect(sut.providerLoginStates != nil)
+    }
 
+    @Test("refresh login states from keychain updates states")
     func refreshLoginStatesFromKeychain_UpdatesStates() {
         // Given
         #if DEBUG
@@ -85,12 +87,12 @@ struct MultiProviderLoginManagerTokenTests {
         sut.refreshLoginStatesFromKeychain()
 
         // Then
-        #expect(sut.isLoggedIn(to: .cursor == true)
+        #expect(sut.isLoggedIn(to: .cursor) == true)
     }
 
     // MARK: - Cookie Management Tests
 
-    @Test("get cookies  with stored token  returns cookies")
+    @Test("get cookies with stored token returns cookies")
 
     func getCookies_WithStoredToken_ReturnsCookies() {
         // Given
@@ -110,7 +112,10 @@ struct MultiProviderLoginManagerTokenTests {
             #expect(cookie.domain == ServiceProvider.cursor.cookieDomain)
             // Note: HTTPOnly is not set when creating cookies programmatically
             #expect(cookie.isHTTPOnly == false)
+        }
+    }
 
+    @Test("get cookies without token returns nil")
     func getCookies_WithoutToken_ReturnsNil() {
         // When
         let cookies = sut.getCookies(for: .cursor)

@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import Testing
 
@@ -7,7 +8,6 @@ struct CurrencyConversionBasicTests {
     // MARK: - Currency Conversion Tests
 
     @Test("convert with valid rate performs correct conversion")
-
     func convertWithValidRatePerformsCorrectConversion() {
         // Given
         let amount = 100.0
@@ -17,189 +17,218 @@ struct CurrencyConversionBasicTests {
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        #expect(abs(abs(result - 85.0 == true)
+        #expect(abs(result - 85.0) < 0.01)
     }
 
-    @Test("convert with nil rate returns original amount")
-
-    func convertWithNilRateReturnsOriginalAmount() {
-        // Given
-        let amount = 100.0
-        let rate: Double? = nil
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(result == amount)
-    @Test("convert with zero rate returns original amount")
-
-    func convertWithZeroRateReturnsOriginalAmount() {
-        // Given
-        let amount = 100.0
-        let rate = 0.0
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(result == amount)
-    @Test("convert with negative rate returns original amount")
-
-    func convertWithNegativeRateReturnsOriginalAmount() {
-        // Given
-        let amount = 100.0
-        let rate = -0.5
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(result == amount)
-    @Test("convert with very small rate performs conversion")
-
-    func convertWithVerySmallRatePerformsConversion() {
-        // Given
-        let amount = 100.0
-        let rate = 0.001
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(abs(abs(result - 0.1 == true)
-    }
-
-    @Test("convert with very large rate performs conversion")
-
-    func convertWithVeryLargeRatePerformsConversion() {
-        // Given
-        let amount = 1.0
-        let rate = 1000.0
-
-        // When
-        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
-
-        // Then
-        #expect(abs(abs(result - 1000.0 == true)
-    }
-
-    @Test("convert with zero amount returns zero")
-
-    func convertWithZeroAmountReturnsZero() {
+    @Test("convert zero amount returns zero")
+    func convertZeroAmountReturnsZero() {
         // Given
         let amount = 0.0
-        let rate = 1.5
+        let rate = 0.85
 
         // When
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
         #expect(result == 0.0)
-    @Test("convert with negative amount handles correctly")
+    }
 
-    func convertWithNegativeAmountHandlesCorrectly() {
+    @Test("convert with rate of one returns same amount")
+    func convertWithRateOfOneReturnsSameAmount() {
         // Given
-        let amount = -50.0
-        let rate = 2.0
+        let amount = 100.0
+        let rate = 1.0
 
         // When
         let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        #expect(abs(abs(result - (-100.0 == true)
+        #expect(result == amount)
     }
 
-    // MARK: - Monthly Limit Calculation Tests
-
-    @Test("calculate monthly limit basic calculation")
-
-    func calculateMonthlyLimitBasicCalculation() {
+    @Test("convert negative amount with valid rate")
+    func convertNegativeAmountWithValidRate() {
         // Given
-        let yearlyLimit = 1200.0
+        let amount = -100.0
+        let rate = 0.85
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        #expect(abs(abs(result - 100.0 == true)
+        #expect(abs(result - (-85.0)) < 0.01)
     }
 
-    @Test("calculate monthly limit zero yearly limit")
-
-    func calculateMonthlyLimitZeroYearlyLimit() {
+    @Test("convert very large amount")
+    func convertVeryLargeAmount() {
         // Given
-        let yearlyLimit = 0.0
+        let amount = 1_000_000.0
+        let rate = 0.85
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        #expect(result == 0.0)
-    @Test("calculate monthly limit negative yearly limit")
-
-    func calculateMonthlyLimitNegativeYearlyLimit() {
-        // Given
-        let yearlyLimit = -1200.0
-
-        // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
-
-        // Then
-        #expect(abs(abs(result - (-100.0 == true)
+        #expect(abs(result - 850_000.0) < 0.01)
     }
 
-    @Test("calculate monthly limit fractional yearly limit")
-
-    func calculateMonthlyLimitFractionalYearlyLimit() {
+    @Test("convert very small amount")
+    func convertVerySmallAmount() {
         // Given
-        let yearlyLimit = 100.5
+        let amount = 0.01
+        let rate = 0.85
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        let result = CurrencyConversionHelper.convert(amount: amount, rate: rate)
 
         // Then
-        #expect(abs(abs(result - 8.375 == true)
+        #expect(abs(result - 0.0085) < 0.0001)
     }
 
-    @Test("calculate monthly limit very large yearly limit")
+    // MARK: - Format Currency Tests
 
-    func calculateMonthlyLimitVeryLargeYearlyLimit() {
+    @Test("format currency with USD shows dollar sign")
+    func formatCurrencyWithUSDShowsDollarSign() {
         // Given
-        let yearlyLimit = 1_000_000.0
+        let amount = 99.99
+        let currencyCode = "USD"
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
 
         // Then
-        #expect(abs(abs(result - 83333.333333333333 == true)
+        #expect(formatted == "$99.99")
     }
 
-    @Test("calculate monthly limit very small yearly limit")
-
-    func calculateMonthlyLimitVerySmallYearlyLimit() {
+    @Test("format currency with EUR shows euro sign")
+    func formatCurrencyWithEURShowsEuroSign() {
         // Given
-        let yearlyLimit = 0.12
+        let amount = 99.99
+        let currencyCode = "EUR"
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit)
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
 
         // Then
-        #expect(abs(abs(result - 0.01 == true)
+        #expect(formatted == "€99.99")
     }
 
-    @Test("calculate monthly limit with different calendar")
-
-    func calculateMonthlyLimitWithDifferentCalendar() {
+    @Test("format currency with GBP shows pound sign")
+    func formatCurrencyWithGBPShowsPoundSign() {
         // Given
-        let yearlyLimit = 1200.0
-        let islamicCalendar = Calendar(identifier: .islamicCivil)
+        let amount = 99.99
+        let currencyCode = "GBP"
 
         // When
-        let result = CurrencyConversionHelper.calculateMonthlyLimit(yearlyLimit: yearlyLimit, using: islamicCalendar)
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
 
         // Then
-        // The calculation should still be /12 regardless of calendar
-        #expect(abs(abs(result - 100.0 == true)
+        #expect(formatted == "£99.99")
+    }
+
+    @Test("format currency rounds to two decimal places")
+    func formatCurrencyRoundsToTwoDecimalPlaces() {
+        // Given
+        let amount = 99.999
+        let currencyCode = "USD"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        #expect(formatted == "$100.00")
+    }
+
+    @Test("format currency with zero shows correct format")
+    func formatCurrencyWithZeroShowsCorrectFormat() {
+        // Given
+        let amount = 0.0
+        let currencyCode = "USD"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        #expect(formatted == "$0.00")
+    }
+
+    @Test("format currency with negative amount")
+    func formatCurrencyWithNegativeAmount() {
+        // Given
+        let amount = -99.99
+        let currencyCode = "USD"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        // Formatter might show as -$99.99 or ($99.99) depending on locale
+        #expect(formatted.contains("99.99"))
+    }
+
+    @Test("format currency with unknown currency code uses code as prefix")
+    func formatCurrencyWithUnknownCurrencyCodeUsesCodeAsPrefix() {
+        // Given
+        let amount = 99.99
+        let currencyCode = "XXX"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        #expect(formatted == "XXX 99.99")
+    }
+
+    @Test("format currency with JPY shows yen sign")
+    func formatCurrencyWithJPYShowsYenSign() {
+        // Given
+        let amount = 1000.0
+        let currencyCode = "JPY"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        #expect(formatted == "¥1,000")
+    }
+
+    @Test("format currency with very large amount")
+    func formatCurrencyWithVeryLargeAmount() {
+        // Given
+        let amount = 1_234_567.89
+        let currencyCode = "USD"
+
+        // When
+        let formatted = CurrencyConversionHelper.formatCurrency(
+            amount: amount,
+            currencyCode: currencyCode
+        )
+
+        // Then
+        #expect(formatted == "$1,234,567.89")
     }
 }

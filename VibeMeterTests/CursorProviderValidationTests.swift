@@ -7,10 +7,19 @@ struct CursorProviderValidationTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
+    
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.mockSettingsManager = MockSettingsManager()
+        self.cursorProvider = CursorProvider(
+            urlSession: mockURLSession,
+            settingsManager: mockSettingsManager
+        )
+    }
+    
     // MARK: - Token Validation Tests
 
-    @Test("validate token  valid token")
-
+    @Test("validate token valid token")
     func validateToken_ValidToken() async {
         // Given
         let mockUserData = Data("""
@@ -34,6 +43,7 @@ struct CursorProviderValidationTests {
 
         // Then
         #expect(isValid == true)
+    }
 
     func validateToken_InvalidToken() async {
         // Given
@@ -51,6 +61,7 @@ struct CursorProviderValidationTests {
 
         // Then
         #expect(isValid == false)
+    }
 
     func validateToken_NetworkError() async {
         // Given
@@ -61,6 +72,7 @@ struct CursorProviderValidationTests {
 
         // Then
         #expect(isValid == false)
+    }
 
     func networkError_RateLimitExceeded() async {
         // Given
@@ -82,8 +94,7 @@ struct CursorProviderValidationTests {
         }
     }
 
-    @Test("network error  service unavailable")
-
+    @Test("network error service unavailable")
     func networkError_ServiceUnavailable() async {
         // Given
         let mockResponse = HTTPURLResponse(
@@ -104,8 +115,7 @@ struct CursorProviderValidationTests {
         }
     }
 
-    @Test("network error  decoding error")
-
+    @Test("network error decoding error")
     func networkError_DecodingError() async {
         // Given - invalid JSON
         let invalidJSON = Data("{ invalid json }".utf8)
@@ -134,8 +144,7 @@ struct CursorProviderValidationTests {
         }
     }
 
-    @Test("network error  specific error response")
-
+    @Test("network error specific error response")
     func networkError_SpecificErrorResponse() async {
         // Given
         let errorResponse = Data("""
@@ -195,8 +204,7 @@ struct CursorProviderValidationTests {
         }
     }
 
-    @Test("network error  generic network failure")
-
+    @Test("network error generic network failure")
     func networkError_GenericNetworkFailure() async {
         // Given
         mockURLSession.nextError = NSError(
@@ -222,7 +230,6 @@ struct CursorProviderValidationTests {
     // MARK: - Request Configuration Tests
 
     @Test("request configuration")
-
     func requestConfiguration() async throws {
         // Given
         let mockUserData = Data("""

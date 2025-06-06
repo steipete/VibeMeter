@@ -1,6 +1,6 @@
 import os.log
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("LoggingServiceErrorTests")
 struct LoggingServiceErrorTests {

@@ -1,21 +1,35 @@
 import Foundation
 @testable import VibeMeter
 import Testing
+import XCTest
 
 @Suite("CursorProviderTransitionTests")
 struct CursorProviderTransitionTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
+    
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.mockSettingsManager = MockSettingsManager()
+        self.cursorProvider = CursorProvider(
+            urlSession: mockURLSession,
+            settingsManager: mockSettingsManager
+        )
+    }
+    
     // MARK: - User State Transition Tests
 
-    @Test("user transition  from individual to team")
-
+    @Test("user transition from individual to team")
     func userTransition_FromIndividualToTeam() async throws {
         // Given - Start as individual user (no session)
         let session = await mockSettingsManager.getSession(for: .cursor)
         #expect(session == nil)
 
+        let individualInvoiceData = Data("""
+        {"items": [{"cents": 1000, "description": "Individual Usage"}], "pricing_description": {"description": "Individual Plan", "id": "individual"}}
+        """.utf8)
+        
         mockURLSession.nextData = individualInvoiceData
         mockURLSession.nextResponse = HTTPURLResponse(
             url: CursorAPIConstants.URLs.monthlyInvoice,
@@ -30,6 +44,7 @@ struct CursorProviderTransitionTests {
             teamId: nil)
 
         #expect(individualInvoice.totalSpendingCents == 1000)
+        let firstRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let firstBodyJSON = try JSONSerialization.jsonObject(with: firstRequestBody) as? [String: Any]
         #expect(firstBodyJSON?["teamId"] == nil)
 
@@ -58,6 +73,7 @@ struct CursorProviderTransitionTests {
         let secondRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let secondBodyJSON = try JSONSerialization.jsonObject(with: secondRequestBody) as? [String: Any]
         #expect(secondBodyJSON?["teamId"] as? Int == 5000)
+    }
 
     func userTransition_TeamMemberLeavesTeam() async throws {
         // Given - User starts in a team
@@ -98,7 +114,6 @@ struct CursorProviderTransitionTests {
     // MARK: - Override Behavior Tests
 
     @Test("explicit team id overrides stored value")
-
     func explicitTeamIdOverridesStoredValue() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -133,7 +148,6 @@ struct CursorProviderTransitionTests {
     }
 
     @Test("explicit zero team id filtered")
-
     func explicitZeroTeamIdFiltered() async throws {
         // Given - User has a stored team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -166,6 +180,7 @@ struct CursorProviderTransitionTests {
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
         #expect(bodyJSON?["teamId"] as? Int != 2222)
+    }
 
     func individualUser_HandlesTeamSpecificErrors() async throws {
         // Given - Individual user (no team) getting team-specific error
@@ -201,6 +216,8 @@ struct CursorProviderTransitionTests {
             Issue.record("Should throw noTeamFound error")
         } catch let error as ProviderError {
             #expect(error == .noTeamFound)
+        }
+    }
 
     func teamUser_SuccessfullyFetchesWithoutExplicitTeamId() async throws {
         // Given - Team user with stored teamId
@@ -238,12 +255,14 @@ struct CursorProviderTransitionTests {
         // Then
         #expect(invoice.items.count == 2)
         #expect(invoice.pricingDescription?.description == "Team Pro Plan")
+        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 7777)
+    }
 
     func multipleRequestsWithChangingSessionState() async throws {
         // Test 1: No session (individual)
-        let mockData = Data("""
+        var mockData = Data("""
         {"items": [{"cents": 500, "description": "Individual"}], "pricing_description": null}
         """.utf8)
         mockURLSession.nextData = mockData
@@ -251,11 +270,11 @@ struct CursorProviderTransitionTests {
             url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil)
+            headerFields: nil)!
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 1, year: 2024, teamId: nil)
-        
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+
+        var requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         var bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -273,10 +292,10 @@ struct CursorProviderTransitionTests {
             url: CursorAPIConstants.URLs.monthlyInvoice,
             statusCode: 200,
             httpVersion: nil,
-            headerFields: nil)
+            headerFields: nil)!
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 2, year: 2024, teamId: nil)
-        
+
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 4444)
@@ -293,7 +312,7 @@ struct CursorProviderTransitionTests {
             headerFields: nil)!
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 3, year: 2024, teamId: nil)
-        
+
         requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)

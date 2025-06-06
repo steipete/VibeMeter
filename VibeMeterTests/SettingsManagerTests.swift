@@ -11,10 +11,10 @@ struct SettingsManagerTests {
         // Unique suite name for UserDefaults to avoid interference between tests and with the actual app
         let testSuiteName = "com.vibemeter.tests.SettingsManagerTests"
         let suite = UserDefaults(suiteName: testSuiteName)!
-        
+
         // Clean up any existing test data
         suite.removePersistentDomain(forName: testSuiteName)
-        
+
         self.testUserDefaults = suite
         // Configure the SettingsManager.shared instance to use our test UserDefaults
         SettingsManager._test_setSharedInstance(
@@ -27,55 +27,78 @@ struct SettingsManagerTests {
     @Test("default currency is usd")
     func defaultCurrencyIsUSD() {
         #expect(settingsManager.selectedCurrencyCode == "USD")
+    }
 
+    @Test("default warning limit")
     func defaultWarningLimit() {
         #expect(settingsManager.warningLimitUSD == 200.0)
+    }
 
+    @Test("default upper limit")
     func defaultUpperLimit() {
         #expect(settingsManager.upperLimitUSD == 1000.0)
+    }
 
+    @Test("default refresh interval")
     func defaultRefreshInterval() {
         #expect(settingsManager.refreshIntervalMinutes == 5)
+    }
 
+    @Test("default launch at login")
     func defaultLaunchAtLogin() {
         #expect(settingsManager.launchAtLoginEnabled == false)
+    }
 
+    @Test("default menu bar display mode")
     func defaultMenuBarDisplayMode() {
         #expect(settingsManager.menuBarDisplayMode == .both)
+    }
 
+    @Test("default show in dock")
     func defaultShowInDock() {
         #expect(settingsManager.showInDock == false)
+    }
 
+    @Test("default enabled providers")
     func defaultEnabledProviders() {
         #expect(settingsManager.enabledProviders == [.cursor])
+    }
 
+    @Test("setting selected currency")
     func settingSelectedCurrency() {
         let newCurrency = "EUR"
         settingsManager.selectedCurrencyCode = newCurrency
         #expect(settingsManager.selectedCurrencyCode == newCurrency)
+    }
 
+    @Test("setting warning limit USD")
     func settingWarningLimitUSD() {
         let newLimit = 150.5
         settingsManager.warningLimitUSD = newLimit
         #expect(settingsManager.warningLimitUSD == newLimit)
+    }
 
+    @Test("setting upper limit USD")
     func settingUpperLimitUSD() {
         let newLimit = 800.75
         settingsManager.upperLimitUSD = newLimit
         #expect(settingsManager.upperLimitUSD == newLimit)
+    }
 
+    @Test("setting refresh interval")
     func settingRefreshInterval() {
         let newInterval = 30
         settingsManager.refreshIntervalMinutes = newInterval
         #expect(settingsManager.refreshIntervalMinutes == newInterval)
+    }
 
+    @Test("setting launch at login")
     func settingLaunchAtLogin() {
         settingsManager.launchAtLoginEnabled = true
         #expect(settingsManager.launchAtLoginEnabled == true)
     }
 
     @Test("setting menu bar display mode")
-
     func settingMenuBarDisplayMode() {
         settingsManager.menuBarDisplayMode = .iconOnly
         #expect(
@@ -83,21 +106,26 @@ struct SettingsManagerTests {
 
         settingsManager.menuBarDisplayMode = .both
         #expect(settingsManager.menuBarDisplayMode == .both)
+    }
 
+    @Test("setting show in dock")
     func settingShowInDock() {
         settingsManager.showInDock = true
         #expect(settingsManager.showInDock == true)
     }
 
     @Test("setting enabled providers")
-
     func settingEnabledProviders() {
         let newProviders: Set<ServiceProvider> = []
         settingsManager.enabledProviders = newProviders
         #expect(settingsManager.enabledProviders == newProviders)
+
+        let allProviders: Set<ServiceProvider> = [.cursor]
         settingsManager.enabledProviders = allProviders
         #expect(settingsManager.enabledProviders == allProviders)
+    }
 
+    @Test("provider session storage")
     func providerSessionStorage() {
         let session = ProviderSession(
             provider: .cursor,

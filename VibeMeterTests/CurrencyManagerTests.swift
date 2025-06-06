@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("CurrencyManagerTests")
 struct CurrencyManagerTests {
@@ -85,7 +85,7 @@ struct CurrencyManagerTests {
         // Then
         // USD should be first (most common)
         #expect(first10Codes.first == "USD")
-        
+
         // EUR should be in top 5
         #expect(first10Codes.prefix(5).contains("EUR"), "EUR should be in top 5 currencies")
 
@@ -177,7 +177,7 @@ struct CurrencyManagerTests {
 
         // When
         let startTime = Date()
-        for _ in 0..<100 {
+        for _ in 0 ..< 100 {
             for code in testCodes {
                 _ = sut.isValidCurrencyCode(code)
             }
@@ -223,7 +223,7 @@ struct CurrencyManagerTests {
 
         // When - Perform concurrent reads
         await withTaskGroup(of: Bool.self) { group in
-            for _ in 0..<taskCount {
+            for _ in 0 ..< taskCount {
                 group.addTask { [sut] in
                     let currencies = sut.availableCurrencies
                     _ = sut.systemCurrencyCode

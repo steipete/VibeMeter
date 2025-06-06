@@ -1,13 +1,12 @@
 import SwiftUI
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("ProgressColorBasicTests")
 struct ProgressColorBasicTests {
     // MARK: - Color Threshold Tests
 
-    @Test("color  below halfway  returns healthy")
-
+    @Test("color below halfway returns healthy")
     func color_BelowHalfway_ReturnsHealthy() {
         // Given
         let testValues = [0.0, 0.1, 0.25, 0.4, 0.49, 0.499]
@@ -21,8 +20,7 @@ struct ProgressColorBasicTests {
         }
     }
 
-    @Test("color  at exact halfway  returns moderate")
-
+    @Test("color at exact halfway returns moderate")
     func color_AtExactHalfway_ReturnsModerate() {
         // Given
         let progress = 0.5
@@ -32,7 +30,9 @@ struct ProgressColorBasicTests {
 
         // Then
         #expect(color == .progressCaution)
+    }
 
+    @Test("color between half and three quarters returns moderate")
     func color_BetweenHalfAndThreeQuarters_ReturnsModerate() {
         // Given
         let testValues = [0.5, 0.6, 0.65, 0.7, 0.74, 0.749]
@@ -46,8 +46,7 @@ struct ProgressColorBasicTests {
         }
     }
 
-    @Test("color  at three quarters  returns warning")
-
+    @Test("color at three quarters returns warning")
     func color_AtThreeQuarters_ReturnsWarning() {
         // Given
         let progress = 0.75
@@ -57,7 +56,9 @@ struct ProgressColorBasicTests {
 
         // Then
         #expect(color == .progressWarning)
+    }
 
+    @Test("color between three quarters and ninety percent returns warning")
     func color_BetweenThreeQuartersAndNinetyPercent_ReturnsWarning() {
         // Given
         let testValues = [0.75, 0.8, 0.85, 0.89, 0.899]
@@ -71,8 +72,7 @@ struct ProgressColorBasicTests {
         }
     }
 
-    @Test("color  at ninety percent  returns danger")
-
+    @Test("color at ninety percent returns danger")
     func color_AtNinetyPercent_ReturnsDanger() {
         // Given
         let progress = 0.9
@@ -82,7 +82,9 @@ struct ProgressColorBasicTests {
 
         // Then
         #expect(color == .progressDanger)
+    }
 
+    @Test("color above ninety percent returns danger")
     func color_AboveNinetyPercent_ReturnsDanger() {
         // Given
         let testValues = [0.9, 0.95, 1.0, 1.1, 1.5, 2.0]
@@ -98,8 +100,7 @@ struct ProgressColorBasicTests {
 
     // MARK: - Boundary Value Tests for Colors
 
-    @Test("color  exact boundary values")
-
+    @Test("color exact boundary values")
     func color_ExactBoundaryValues() {
         // Test exact boundary values to ensure correct thresholds
         let testCases = [
@@ -116,14 +117,13 @@ struct ProgressColorBasicTests {
             let color = Color.progressColor(for: progress)
 
             // Then
-            #expect(color == expectedColor)")
+            #expect(color == expectedColor)
         }
     }
 
     // MARK: - Real-World Scenario Tests
 
-    @Test("color  typical spending scenarios")
-
+    @Test("color typical spending scenarios")
     func color_TypicalSpendingScenarios() {
         // Test realistic spending progress scenarios
         let scenarios = [

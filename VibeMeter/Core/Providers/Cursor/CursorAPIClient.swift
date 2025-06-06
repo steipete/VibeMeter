@@ -94,7 +94,9 @@ actor CursorAPIClient {
         urlComponents.queryItems = [URLQueryItem(name: "user", value: userId)]
 
         guard let endpoint = urlComponents.url else {
-            throw ProviderError.networkError(message: CursorAPIConstants.ErrorMessages.failedToConstructURL, statusCode: nil)
+            throw ProviderError.networkError(
+                message: CursorAPIConstants.ErrorMessages.failedToConstructURL,
+                statusCode: nil)
         }
 
         logger.debug("Usage endpoint URL with user parameter: \(endpoint.absoluteString)")
@@ -145,7 +147,9 @@ actor CursorAPIClient {
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProviderError.networkError(message: CursorAPIConstants.ErrorMessages.invalidResponseType, statusCode: nil)
+            throw ProviderError.networkError(
+                message: CursorAPIConstants.ErrorMessages.invalidResponseType,
+                statusCode: nil)
         }
 
         return (data, httpResponse)

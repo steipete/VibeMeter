@@ -139,7 +139,7 @@ struct CursorProviderDataTests {
 
         // When
         let usageData = try await cursorProvider.fetchUsageData(authToken: "user123::jwt-token")
-        
+
         // Then
         #expect(usageData.currentRequests == 518)
         let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)

@@ -3,11 +3,12 @@ import Testing
 
 @Suite("BackgroundDataProcessor Error Tests")
 struct BackgroundDataProcessorErrorTests {
-    let processor = BackgroundDataProcessor()
+    let processor: BackgroundDataProcessor
     let mockProvider: MockBackgroundProvider
     let mockDate = Date()
 
     init() {
+        processor = BackgroundDataProcessor()
         mockProvider = MockBackgroundProvider()
 
         // Set up default mock responses

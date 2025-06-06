@@ -2,7 +2,7 @@
 import Testing
 
 extension Date {
-    let month: Int {
+    var month: Int {
         Calendar.current.component(.month, from: self)
     }
 
@@ -11,9 +11,10 @@ extension Date {
     }
 }
 
+@Suite("MultiProviderDataOrchestratorTests")
 @MainActor
-class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
-    var orchestrator: MultiProviderDataOrchestrator
+struct MultiProviderDataOrchestratorTests {
+    let orchestrator: MultiProviderDataOrchestrator
 
     // Mocks for all dependencies
     let mockLoginManager: MultiProviderLoginManager
@@ -30,18 +31,56 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
     let currencyData: CurrencyData
 
     let testUserDefaults: UserDefaults
-    let testSuiteName = "com.vibemeter.tests.MultiProviderDataOrchestratorTests"    }
+    let testSuiteName = "com.vibemeter.tests.MultiProviderDataOrchestratorTests"
+
+    init() async throws {
+        // Initialize test user defaults
+        testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        testUserDefaults.removePersistentDomain(forName: testSuiteName)
+
+        // Initialize mocks
+        mockURLSession = MockURLSession()
+        mockApiClient = CursorAPIClientMock()
+        mockExchangeRateManager = ExchangeRateManagerMock()
+        mockNotificationManager = NotificationManagerMock()
+        mockSettingsManager = MockSettingsManager(testUserDefaults: testUserDefaults)
+
+        // Initialize data models
+        spendingData = MultiProviderSpendingData()
+        userSessionData = MultiProviderUserSessionData()
+        currencyData = CurrencyData()
+
+        // Initialize provider factory
+        providerFactory = ProviderFactory(urlSession: mockURLSession)
+
+        // Initialize login manager
+        mockLoginManager = MultiProviderLoginManager(
+            providerFactory: providerFactory,
+            settingsManager: mockSettingsManager,
+            userSessionData: userSessionData
+        )
+
+        // Initialize orchestrator
+        orchestrator = MultiProviderDataOrchestrator(
+            providerFactory: providerFactory,
+            settingsManager: mockSettingsManager,
+            exchangeRateManager: mockExchangeRateManager,
+            notificationManager: mockNotificationManager,
+            loginManager: mockLoginManager,
+            spendingData: spendingData,
+            userSessionData: userSessionData,
+            currencyData: currencyData
+        )
+    }
     // MARK: - Initial State Tests
 
-    @Test("initial state  when logged out")
-
+    @Test("initial state when logged out")
     func initialState_WhenLoggedOut() {
         #expect(userSessionData.isLoggedInToAnyProvider == false)
         #expect(userSessionData.mostRecentSession == nil)
     }
 
-    @Test("initial state  when logged in  starts data refresh")
-
+    @Test("initial state when logged in starts data refresh")
     func initialState_WhenLoggedIn_StartsDataRefresh() async {
         // This test verifies that the orchestrator doesn't automatically
         // refresh data on initialization when a user is logged in.
@@ -67,13 +106,12 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
 
         // The orchestrator should not automatically fetch data on initialization
         // It should wait for explicit refresh calls
-        #expect(userSessionData.isLoggedIn(to: .cursor == true)
+        #expect(userSessionData.isLoggedIn(to: .cursor) == true)
     }
 
     // MARK: - Login Flow Tests
 
-    @Test("login success  refreshes data  updates state")
-
+    @Test("login success refreshes data updates state")
     func loginSuccess_RefreshesData_UpdatesState() async {
         // This test is simplified - in a real implementation, we would need to
         // properly mock the network responses or use dependency injection
@@ -101,7 +139,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         currencyData.updateSelectedCurrency("EUR")
 
         // Verify the state
-        #expect(userSessionData.isLoggedIn(to: .cursor == true)
+        #expect(userSessionData.isLoggedIn(to: .cursor) == true)
         #expect(userSessionData.mostRecentSession?.teamName == "LoginSuccessTeam") {
             #expect(abs(cursorData.currentSpendingUSD ?? 0 - 123.45 == true)
         } else {
@@ -109,7 +147,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-    @Test("logout  clears user data  updates state")
+    @Test("logout clears user data updates state")
 
     func logout_ClearsUserData_UpdatesState() async {
         // Setup: Simulate logged-in state
@@ -131,7 +169,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             rates: ["USD": 1.0],
             targetCurrency: "USD")
 
-        #expect(userSessionData.isLoggedIn(to: .cursor == true)
+        #expect(userSessionData.isLoggedIn(to: .cursor) == true)
         #expect(userSessionData.mostRecentSession?.teamName != nil)
 
         // Act: Simulate logout
@@ -144,7 +182,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
 
     // MARK: - Multi-Provider Tests
 
-    @Test("refresh all providers  with multiple providers")
+    @Test("refresh all providers with multiple providers")
 
     func refreshAllProviders_WithMultipleProviders() async {
         // Enable Cursor provider
@@ -171,10 +209,10 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
             targetCurrency: "USD")
 
         // Test that we have data for enabled providers
-        #expect(spendingData.providersWithData.contains(.cursor == true)
+        #expect(spendingData.providersWithData.contains(.cursor) == true)
     }
 
-    @Test("currency conversion  updates spending data")
+    @Test("currency conversion updates spending data")
 
     func currencyConversion_UpdatesSpendingData() async {
         // Setup exchange rates
@@ -204,7 +242,7 @@ class MultiProviderDataOrchestratorTests: XCTestCase, @unchecked Sendable {
         #expect(currencyData.selectedCode == "EUR")
 
         if let cursorData = spendingData.getSpendingData(for: .cursor) {
-            #expect(abs(cursorData.currentSpendingUSD ?? 0 - 100.0 == true)
+            #expect(abs(cursorData.currentSpendingUSD ?? 0 - 100.0) < 0.01)
             // The spending data model handles currency conversion internally
         }
     }

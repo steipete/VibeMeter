@@ -6,10 +6,15 @@ import Testing
 struct ExchangeRateManagerEdgeCasesTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
+    
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
+    }
+    
     // MARK: - Edge Cases and Error Scenarios
 
-    @Test("get exchange rates  empty rates response")
-
+    @Test("get exchange rates empty rates response")
     func getExchangeRates_EmptyRatesResponse() async {
         // Given
         let mockRatesData = Data("""
@@ -34,6 +39,7 @@ struct ExchangeRateManagerEdgeCasesTests {
 
         // Then
         #expect(rates.isEmpty == true)
+    }
 
     func getExchangeRates_MalformedHTTPResponse() async {
         // Given

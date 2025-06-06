@@ -1,5 +1,5 @@
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 /// Tests for the ApplicationMover service
 @Suite("ApplicationMover Service Tests")
@@ -17,7 +17,7 @@ struct ApplicationMoverTests {
         let applicationsPath = "/Applications/VibeMeter.app"
         let result = applicationMover.isInApplicationsFolder(applicationsPath)
         #expect(result == true)
-        
+
         let userAppsPath = NSHomeDirectory() + "/Applications/VibeMeter.app"
         let userResult = applicationMover.isInApplicationsFolder(userAppsPath)
         #expect(userResult == true)
@@ -30,7 +30,7 @@ struct ApplicationMoverTests {
         let dmgPath = "/Volumes/VibeMeter/VibeMeter.app"
         let result = applicationMover.isRunningFromDMG(dmgPath)
         #expect(result == true)
-        
+
         let normalPath = "/Applications/VibeMeter.app"
         let normalResult = applicationMover.isRunningFromDMG(normalPath)
         #expect(normalResult == false)
@@ -45,17 +45,17 @@ struct ApplicationMoverTests {
         let downloadsPath = homeDirectory + "/Downloads/VibeMeter.app"
         let downloadsResult = applicationMover.isRunningFromTemporaryLocation(downloadsPath)
         #expect(downloadsResult == true)
-        
+
         // Test Desktop
         let desktopPath = homeDirectory + "/Desktop/VibeMeter.app"
         let desktopResult = applicationMover.isRunningFromTemporaryLocation(desktopPath)
         #expect(desktopResult == true)
-        
+
         // Test Documents
         let documentsPath = homeDirectory + "/Documents/VibeMeter.app"
         let documentsResult = applicationMover.isRunningFromTemporaryLocation(documentsPath)
         #expect(documentsResult == true)
-        
+
         // Test Applications (should not be temporary)
         let appsPath = "/Applications/VibeMeter.app"
         let appsResult = applicationMover.isRunningFromTemporaryLocation(appsPath)
@@ -69,12 +69,12 @@ struct ApplicationMoverTests {
         let applicationsPath = "/Applications/VibeMeter.app"
         let applicationsResult = applicationMover.shouldOfferToMove(for: applicationsPath)
         #expect(applicationsResult == false)
-        
+
         // Test that we do offer to move from Downloads
         let downloadsPath = NSHomeDirectory() + "/Downloads/VibeMeter.app"
         let downloadsResult = applicationMover.shouldOfferToMove(for: downloadsPath)
         #expect(downloadsResult == true)
-        
+
         // Test that we do offer to move from DMG
         let dmgPath = "/Volumes/VibeMeter/VibeMeter.app"
         let dmgResult = applicationMover.shouldOfferToMove(for: dmgPath)

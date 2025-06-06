@@ -1,7 +1,7 @@
 import Foundation
+import Testing
 @preconcurrency import UserNotifications
 @testable import VibeMeter
-import Testing
 
 @Suite("NotificationManagerFormattingTests")
 @MainActor
@@ -10,21 +10,18 @@ struct NotificationManagerFormattingTests {
     private let mockNotificationCenter: MockUNUserNotificationCenter
 
     init() async throws {
-        await MainActor.run {  }
+        await MainActor.run {}
         mockNotificationCenter = MockUNUserNotificationCenter()
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-     async throws {
-        notificationManager = nil
-        mockNotificationCenter = nil
-        await MainActor.run {  }
+    deinit {
+        // Cleanup if needed
     }
 
     // MARK: - Currency Formatting Tests
 
-    @Test("currency formatting  all supported currencies")
-
+    @Test("currency formatting all supported currencies")
     func currencyFormatting_AllSupportedCurrencies() async {
         let testCases: [(String, String)] = [
             ("USD", "$"),
@@ -53,7 +50,7 @@ struct NotificationManagerFormattingTests {
             // Then
             let request = mockNotificationCenter.lastAddedRequest!
             #expect(
-                request.content.body.contains("\(expectedSymbol == true),
+                request.content.body.contains(expectedSymbol) == true,
                 "Expected \(expectedSymbol)75.00 in notification body for \(currencyCode), " +
                     "but got: \(request.content.body)")
         }
@@ -61,8 +58,7 @@ struct NotificationManagerFormattingTests {
 
     // MARK: - Number Formatting Tests
 
-    @Test("number formatting  decimal places")
-
+    @Test("number formatting decimal places")
     func numberFormatting_DecimalPlaces() async {
         // Given
         let testCases: [(Double, String)] = [
@@ -86,14 +82,14 @@ struct NotificationManagerFormattingTests {
             let request = mockNotificationCenter.lastAddedRequest!
             let body = request.content.body
             #expect(
-                body.contains(expected == true): Expected \(expected) in notification body, but got: \(body)")
+                body.contains(expected) == true,
+                "Expected \(expected) in notification body, but got: \(body)")
         }
     }
 
     // MARK: - Edge Cases
 
-    @Test("notification  zero amounts")
-
+    @Test("notification zero amounts")
     func notification_ZeroAmounts() async {
         // When
         await notificationManager.showWarningNotification(
@@ -103,8 +99,10 @@ struct NotificationManagerFormattingTests {
 
         // Then
         let request = mockNotificationCenter.lastAddedRequest!
-        #expect(request.content.body.contains("$0.00")
+        #expect(request.content.body.contains("$0.00"))
+    }
 
+    @Test("notification very large amounts")
     func notification_VeryLargeAmounts() async {
         // When
         await notificationManager.showWarningNotification(
@@ -114,11 +112,10 @@ struct NotificationManagerFormattingTests {
 
         // Then
         let request = mockNotificationCenter.lastAddedRequest!
-        #expect(request.content.body.contains("$999 == true)
+        #expect(request.content.body.contains("$999") == true)
     }
 
-    @Test("notification  unsupported currency")
-
+    @Test("notification unsupported currency")
     func notification_UnsupportedCurrency() async {
         // When
         await notificationManager.showWarningNotification(
@@ -128,7 +125,14 @@ struct NotificationManagerFormattingTests {
 
         // Then - Should use currency code as fallback
         let request = mockNotificationCenter.lastAddedRequest!
-        #expect(request.content.body.contains("XXX75.00") {
+        #expect(request.content.body.contains("XXX75.00"))
+    }
+}
+
+// MARK: - TestableNotificationManager
+
+private class TestableNotificationManager: NotificationManager {
+    init(notificationCenter: MockUNUserNotificationCenter) {
         self.notificationCenter = notificationCenter
     }
 
@@ -216,14 +220,10 @@ struct NotificationManagerFormattingTests {
         }
     }
 
-    @Test("reset all notification states for new session")
-
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
-
-    @Test("show instance already running notification")
 
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
@@ -281,8 +281,6 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
             throw error
         }
     }
-
-    @Test("reset")
 
     func reset() {
         requestAuthorizationCallCount = 0

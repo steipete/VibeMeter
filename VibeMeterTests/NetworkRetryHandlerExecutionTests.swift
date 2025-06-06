@@ -7,7 +7,6 @@ struct NetworkRetryHandlerExecutionTests {
 
     init() async throws {
         sut = NetworkRetryHandler()
-    
     }
 
     // MARK: - Success Cases

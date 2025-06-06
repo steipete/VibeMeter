@@ -1,5 +1,5 @@
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("BackgroundDataProcessorBasicTests")
 struct BackgroundDataProcessorBasicTests {
@@ -11,19 +11,17 @@ struct BackgroundDataProcessorBasicTests {
         self.processor = BackgroundDataProcessor()
         self.mockProvider = MockBackgroundProvider()
         self.mockDate = Date()
-        
+
         // Set up mock data
         mockProvider.userInfoToReturn = ProviderUserInfo(email: "test@example.com", provider: .cursor)
         mockProvider.teamInfoToReturn = ProviderTeamInfo(id: 12345, name: "Test Team", provider: .cursor)
         mockProvider.invoiceToReturn = ProviderInvoice(
             provider: .cursor,
-            items: [ProviderInvoiceItem(description: "Test", cents: 2000)]
-        )
+            items: [ProviderInvoiceItem(description: "Test", cents: 2000)])
         mockProvider.usageToReturn = ProviderUsageData(
             provider: .cursor,
             currentRequests: 500,
-            maxRequests: 10000
-        )
+            maxRequests: 10000)
     }
 
     // MARK: - Basic Functionality Tests

@@ -269,11 +269,12 @@ struct MultiProviderSpendingDataTests {
 
         // Assert - Should have latest data
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0 == true) // From invoice2
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0) < 0.01) // From invoice2
         #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 10000)
+    }
 
     func getSpendingData_NonExistentProvider_ReturnsNil() {
         // Act & Assert
-        #expect(spendingData.getSpendingData(for: .cursor == nil)
+        #expect(spendingData.getSpendingData(for: .cursor) == nil)
     }
 }

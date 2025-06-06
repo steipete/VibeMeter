@@ -6,10 +6,15 @@ import Testing
 struct ExchangeRateManagerNetworkTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
+    
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.exchangeRateManager = ExchangeRateManager(urlSession: mockURLSession)
+    }
+    
     // MARK: - Exchange Rate Fetching Tests
 
-    @Test("get exchange rates  success")
-
+    @Test("get exchange rates success")
     func getExchangeRates_Success() async {
         // Given
         let mockRatesData = Data("""
@@ -41,8 +46,7 @@ struct ExchangeRateManagerNetworkTests {
         #expect(rates["JPY"] == 149.50)
     }
 
-    @Test("get exchange rates  network error  returns fallback rates")
-
+    @Test("get exchange rates network error returns fallback rates")
     func getExchangeRates_NetworkError_ReturnsFallbackRates() async {
         // Given
         mockURLSession.nextError = NSError(domain: "NetworkError", code: -1009, userInfo: nil)
@@ -54,8 +58,7 @@ struct ExchangeRateManagerNetworkTests {
         #expect(rates == exchangeRateManager.fallbackRates)
     }
 
-    @Test("get exchange rates http error  returns fallback rates")
-
+    @Test("get exchange rates http error returns fallback rates")
     func getExchangeRates_HTTPError_ReturnsFallbackRates() async {
         // Given
         let mockResponse = HTTPURLResponse(
@@ -72,6 +75,7 @@ struct ExchangeRateManagerNetworkTests {
 
         // Then
         #expect(rates == exchangeRateManager.fallbackRates)
+    }
 
     func getExchangeRates_InvalidJSON_ReturnsFallbackRates() async {
         // Given
@@ -90,6 +94,7 @@ struct ExchangeRateManagerNetworkTests {
 
         // Then
         #expect(rates == exchangeRateManager.fallbackRates)
+    }
 
     func getExchangeRates_CachingBehavior() async {
         // Given - First successful request
@@ -128,8 +133,7 @@ struct ExchangeRateManagerNetworkTests {
 
     // MARK: - API Request Configuration Tests
 
-    @Test("a pi request  correct url")
-
+    @Test("api request correct url")
     func aPIRequest_CorrectURL() async {
         // Given
         let mockRatesData = Data("""
@@ -158,11 +162,14 @@ struct ExchangeRateManagerNetworkTests {
 
         #expect(components.scheme == "https")
         #expect(components.path == "/latest")
+        let queryItems = components.queryItems ?? []
         #expect(queryItems.contains { $0.name == "symbols" } == true)
         if let symbolsItem = queryItems.first(where: { $0.name == "symbols" }) {
             let symbols = symbolsItem.value?.components(separatedBy: ",") ?? []
-            #expect(symbols.contains("EUR")
-            #expect(symbols.contains("USD" == false)
+            #expect(symbols.contains("EUR"))
+            #expect(symbols.contains("USD") == false)
+        }
+    }
 
     func aPIRequest_CachePolicy() async {
         // Given

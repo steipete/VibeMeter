@@ -1,6 +1,6 @@
 import Foundation
-@testable import VibeMeter
 import Testing
+@testable import VibeMeter
 
 @Suite("URLQueryItemsRealWorldTests")
 struct URLQueryItemsRealWorldTests {
@@ -39,7 +39,8 @@ struct URLQueryItemsRealWorldTests {
 
         // Then
         #expect(
-            result.absoluteString == "https://api.example.com/search?q=swift&category=programming&sort=relevance&page=1")
+            result
+                .absoluteString == "https://api.example.com/search?q=swift&category=programming&sort=relevance&page=1")
     }
 
     @Test("appending query items exchange rate api with currency codes")

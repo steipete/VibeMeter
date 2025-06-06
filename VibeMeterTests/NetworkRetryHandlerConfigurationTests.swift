@@ -7,7 +7,6 @@ struct NetworkRetryHandlerConfigurationTests {
 
     init() async throws {
         sut = NetworkRetryHandler()
-    
     }
 
     // MARK: - Configuration Tests
