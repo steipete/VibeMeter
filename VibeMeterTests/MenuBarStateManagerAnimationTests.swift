@@ -14,7 +14,6 @@ struct MenuBarStateManagerAnimationTests {
     // MARK: - Animation Update Tests
 
     @Test("update animation  not logged in state  sets zero value")
-
     func updateAnimation_NotLoggedInState_SetsZeroValue() {
         // Given
         sut.setState(.notLoggedIn)
@@ -25,7 +24,9 @@ struct MenuBarStateManagerAnimationTests {
 
         // Then
         #expect(sut.animatedGaugeValue == 0.0)
+    }
 
+    @Test("update animation  loading state  generates animated values")
     func updateAnimation_LoadingState_GeneratesAnimatedValues() {
         // Given
         sut.setState(.loading)
@@ -45,7 +46,6 @@ struct MenuBarStateManagerAnimationTests {
     }
 
     @Test("update animation  data state  without transition  sets static value")
-
     func updateAnimation_DataState_WithoutTransition_SetsStaticValue() {
         // Given
         let targetValue = 0.6
@@ -82,7 +82,6 @@ struct MenuBarStateManagerAnimationTests {
     // MARK: - Easing Function Tests
 
     @Test("ease in out  boundary values")
-
     func easeInOut_BoundaryValues() {
         // Given
         let testValues = [0.0, 0.5, 1.0]
@@ -95,7 +94,10 @@ struct MenuBarStateManagerAnimationTests {
             // Then
             #expect(
                 result == expectedResults[index])
+        }
+    }
 
+    @Test("ease in out  smooth curve")
     func easeInOut_SmoothCurve() {
         // Given
         let inputs = stride(from: 0.0, through: 1.0, by: 0.1)
@@ -110,7 +112,6 @@ struct MenuBarStateManagerAnimationTests {
     }
 
     @Test("ease in out  midpoint is half")
-
     func easeInOut_MidpointIsHalf() {
         // When
         let result = sut.easeInOut(0.5)
@@ -120,7 +121,6 @@ struct MenuBarStateManagerAnimationTests {
     }
 
     @Test("ease in out  edge cases")
-
     func easeInOut_EdgeCases() {
         // Test easing function with edge cases
         let testCases = [
@@ -143,7 +143,6 @@ struct MenuBarStateManagerAnimationTests {
     // MARK: - Performance Tests
 
     @Test("update animation  performance")
-
     func updateAnimation_Performance() {
         // Given
         sut.setState(.loading)

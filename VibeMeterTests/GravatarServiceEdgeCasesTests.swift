@@ -12,16 +12,9 @@ struct GravatarServiceEdgeCasesTests {
         sut.clearAvatar() // Reset state
     }
 
-     async throws {
-        sut.clearAvatar()
-        sut = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - Edge Cases and Error Handling
 
     @Test("gravatar url  special characters  handles correctly")
-
     func gravatarURL_SpecialCharacters_HandlesCorrectly() {
         // Given
         let emailsWithSpecialChars = [
@@ -38,12 +31,11 @@ struct GravatarServiceEdgeCasesTests {
             // Then
             #expect(result != nil)
             #expect(
-                result?.absoluteString.contains("gravatar.com")
+                result?.absoluteString.contains("gravatar.com") ?? false)
         }
     }
 
     @Test("gravatar url  unicode characters  handles correctly")
-
     func gravatarURL_UnicodeCharacters_HandlesCorrectly() {
         // Given
         let unicodeEmail = "тест@пример.рф" // Cyrillic characters
@@ -52,11 +44,10 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: unicodeEmail)
 
         // Then
-        #expect(result != nil) ?? false, "Should generate valid Gravatar URL")
+        #expect(result != nil, "Should generate valid Gravatar URL")
     }
 
     @Test("gravatar url  very long email  handles correctly")
-
     func gravatarURL_VeryLongEmail_HandlesCorrectly() {
         // Given
         let longEmail = String(repeating: "a", count: 100) + "@" + String(repeating: "b", count: 100) + ".com"
@@ -65,11 +56,10 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: longEmail)
 
         // Then
-        #expect(result != nil) ?? false, "Should generate valid Gravatar URL")
+        #expect(result != nil, "Should generate valid Gravatar URL")
     }
 
     @Test("gravatar url  zero size  handles gracefully")
-
     func gravatarURL_ZeroSize_HandlesGracefully() {
         // Given
         let email = "zero@size.com"
@@ -79,11 +69,10 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        #expect(result != nil) ?? false, "Should use size 0 (doubled from 0)")
+        #expect(result != nil, "Should use size 0 (doubled from 0)")
     }
 
     @Test("gravatar url  negative size  handles gracefully")
-
     func gravatarURL_NegativeSize_HandlesGracefully() {
         // Given
         let email = "negative@size.com"
@@ -94,7 +83,9 @@ struct GravatarServiceEdgeCasesTests {
 
         // Then
         #expect(result != nil)
+    }
 
+    @Test("gravatar url  large size  handles correctly")
     func gravatarURL_LargeSize_HandlesCorrectly() {
         // Given
         let email = "large@size.com"
@@ -105,14 +96,13 @@ struct GravatarServiceEdgeCasesTests {
         let result = sut.gravatarURL(for: email, size: size)
 
         // Then
-        #expect(result != nil) ?? false,
+        #expect(result != nil,
             "Should handle large retina size")
     }
 
     // MARK: - URL Structure Tests
 
     @Test("gravatar url url structure  is correct")
-
     func gravatarURL_URLStructure_IsCorrect() {
         // Given
         let email = "structure@test.com"
@@ -123,6 +113,7 @@ struct GravatarServiceEdgeCasesTests {
 
         // Then
         #expect(result != nil)
+        let urlString = result?.absoluteString ?? ""
         #expect(urlString.contains("?s=128"))
         #expect(urlString.contains("&d=mp"))
         #expect(urlString.hasSuffix("d=mp"))

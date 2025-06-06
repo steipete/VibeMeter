@@ -12,16 +12,9 @@ struct GravatarServiceHashingTests {
         sut.clearAvatar() // Reset state
     }
 
-     async throws {
-        sut.clearAvatar()
-        sut = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - SHA256 Hashing Tests
 
     @Test("s ha256 hashing  known inputs  generates expected hashes")
-
     func sHA256Hashing_KnownInputs_GeneratesExpectedHashes() {
         // Test cases with known SHA256 hashes
         let testCases = [
@@ -49,7 +42,7 @@ struct GravatarServiceHashingTests {
                 // Verify it's a valid 64-character hex string (SHA256)
                 #expect(extractedHash.count == 64)
                 #expect(
-                    extractedHash.allSatisfy(\.isHexDigit == true)
+                    extractedHash.allSatisfy(\.isHexDigit) == true)
             } else {
                 Issue.record("Could not extract hash from URL for email: \(email)")
             }
@@ -57,7 +50,6 @@ struct GravatarServiceHashingTests {
     }
 
     @Test("s ha256 hashing  same email  generates same hash")
-
     func sHA256Hashing_SameEmail_GeneratesSameHash() {
         // Given
         let email = "consistent@test.com"
@@ -68,7 +60,9 @@ struct GravatarServiceHashingTests {
 
         // Then
         #expect(url1?.absoluteString == url2?.absoluteString)
+    }
 
+    @Test("s ha256 hashing  different emails  generate different hashes")
     func sHA256Hashing_DifferentEmails_GenerateDifferentHashes() {
         // Given
         let email1 = "user1@example.com"
@@ -81,7 +75,9 @@ struct GravatarServiceHashingTests {
         // Then
         #expect(
             url1?.absoluteString != url2?.absoluteString)
+    }
 
+    @Test("gravatar url  performance")
     func gravatarURL_Performance() {
         // Given
         let emails = (0 ..< 1000).map { "user\($0)@performance.test" }
@@ -95,7 +91,9 @@ struct GravatarServiceHashingTests {
 
         // Then
         #expect(duration < 1.0)
+    }
 
+    @Test("s ha256 hashing  performance")
     func sHA256Hashing_Performance() {
         // Given
         let testString = "performance@test.com"
