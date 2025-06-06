@@ -63,7 +63,7 @@ struct NotificationTestCase: Sendable {
     }
 }
 
-struct StateResetTestScenario: Sendable {
+fileprivate struct StateResetTestScenario: Sendable {
     let limitType: NotificationLimitType
     let current: Double
     let warning: Double
@@ -112,7 +112,6 @@ struct NotificationManagerBasicTests {
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
 
-
         static let authorizationTestCases: [AuthorizationTestCase] = [
             AuthorizationTestCase(
                 result: .success(true),
@@ -159,7 +158,6 @@ struct NotificationManagerBasicTests {
             self.mockCenter = MockUNUserNotificationCenter()
             self.manager = TestableNotificationManager(notificationCenter: mockCenter)
         }
-
 
         static let warningNotificationTestCases: [NotificationTestCase] = [
             NotificationTestCase(
@@ -360,8 +358,8 @@ struct NotificationManagerBasicTests {
             switch scenario.limitType {
             case .warning:
                 await manager.showWarningNotification(
-                    currentSpending: scenario.current, 
-                    limitAmount: 100.0, 
+                    currentSpending: scenario.current,
+                    limitAmount: 100.0,
                     currencyCode: "USD")
             case .upper:
                 await manager.showUpperLimitNotification(
@@ -437,7 +435,7 @@ struct NotificationManagerBasicTests {
 
 // MARK: - Test Support Types
 
-private enum NotificationLimitType {
+fileprivate enum NotificationLimitType {
     case warning
     case upper
 }
