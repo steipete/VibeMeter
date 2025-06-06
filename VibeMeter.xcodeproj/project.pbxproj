@@ -129,6 +129,7 @@
 		A62B8203AE670771379D35A6 /* SettingsUIComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */; };
 		A8DC3253FBACD1BE87F89C21 /* UserDefaultsBacked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA604C8790C612FAE7D0450 /* UserDefaultsBacked.swift */; };
 		A8EFCC233D39A94CF445E194 /* NetworkRetryHandlerConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E7580B3D7D78E5425D3B63 /* NetworkRetryHandlerConfigurationTests.swift */; };
+		AA16ECE4938033919C13EA09 /* SwiftTestingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */; };
 		AFB622CE07606F24B1D5A5E5 /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF6772D33491484463E6488A /* ServiceProvider.swift */; };
 		B00249981600F4D79C42A838 /* SpendingLimitsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E2B9D70E29CC6088F42096 /* SpendingLimitsManager.swift */; };
 		B06CDDDED00014965F5AC18F /* CursorDataTransformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2359E6345428D45EED63FDE2 /* CursorDataTransformer.swift */; };
@@ -367,6 +368,7 @@
 		C24E5B8C040D897EAB0397E6 /* MockSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsManager.swift; sourceTree = "<group>"; };
 		C445FEE23D49EF7C638A7AD2 /* CurrencyConversionEdgeCasesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyConversionEdgeCasesTests.swift; sourceTree = "<group>"; };
 		C6B5D9C53CC36213616E28BF /* MenuBarState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarState.swift; sourceTree = "<group>"; };
+		C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingHelpers.swift; sourceTree = "<group>"; };
 		CB1507FD3A26CAB88BC0E65A /* ProviderConnectionStatusAdvancedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatusAdvancedTests.swift; sourceTree = "<group>"; };
 		CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeter-Info.plist"; sourceTree = "<group>"; };
 		CEF27A639A6E365FA187555F /* GravatarServiceEdgeCasesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GravatarServiceEdgeCasesTests.swift; sourceTree = "<group>"; };
@@ -709,6 +711,7 @@
 				BE78244C662C610484A80BD5 /* MockURLSession.swift */,
 				C1ACCBD26778AE1AF2C88833 /* NotificationManagerMock.swift */,
 				45CC65B526B76FB43AC46C8C /* StartupManagerMock.swift */,
+				C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */,
 			);
 			path = TestUtilities;
 			sourceTree = "<group>";
@@ -978,6 +981,7 @@
 				25EA6F50EFD068FDBB62877D /* MockURLSession.swift in Sources */,
 				4911DB31E785337FADFFFEC5 /* NotificationManagerMock.swift in Sources */,
 				0A708847F26FBB7B500F777E /* StartupManagerMock.swift in Sources */,
+				AA16ECE4938033919C13EA09 /* SwiftTestingHelpers.swift in Sources */,
 				CC4E9A59AFB38E3F6B8FB058 /* URL+QueryItemsAdvancedTests.swift in Sources */,
 				0511C9CBD35FA63E13459C34 /* URL+QueryItemsBasicTests.swift in Sources */,
 				592C18DB360CECBE5726BE6E /* URL+QueryItemsRealWorldTests.swift in Sources */,
