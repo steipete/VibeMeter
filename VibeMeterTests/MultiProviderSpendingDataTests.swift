@@ -15,12 +15,13 @@ struct MultiProviderSpendingDataTests {
     // MARK: - Initial State Tests
 
     @Test("initial state")
-
     func initialState() {
         // All properties should start as empty
-        #expect(spendingData.providersWithData.isEmpty == true), 0.0)
-        #expect(spendingData.getSpendingData(for: .cursor == nil)
+        #expect(spendingData.providersWithData.isEmpty == true)
+        #expect(spendingData.getSpendingData(for: .cursor) == nil)
+    }
 
+    @Test("update spending usd sets correct values")
     func updateSpending_USD_SetsCorrectValues() {
         // Arrange
         let invoice = ProviderMonthlyInvoice(
@@ -39,11 +40,14 @@ struct MultiProviderSpendingDataTests {
         spendingData.updateSpending(for: .cursor, from: invoice, rates: rates, targetCurrency: targetCurrency)
 
         // Assert
-        #expect(spendingData.providersWithData.contains(.cursor == true)
-        #expect(cursorData != nil) < 0.01)
-        #expect(abs(cursorData?.displaySpending ?? 0 - 80.0 == true)
+        #expect(spendingData.providersWithData.contains(.cursor) == true)
+        let cursorData = spendingData.getSpendingData(for: .cursor)
+        #expect(cursorData != nil)
+        #expect(abs((cursorData?.displaySpending ?? 0) - 80.0) < 0.01)
         #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 8000)
+    }
 
+    @Test("update spending eur converts correctly")
     func updateSpending_EUR_ConvertsCorrectly() {
         // Arrange
         let invoice = ProviderMonthlyInvoice(
@@ -60,8 +64,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0 == true)
-        #expect(abs(cursorData?.displaySpending ?? 0 - 90.0 == true) // 100 * 0.9
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 100.0) < 0.01)
+        #expect(abs(cursorData?.displaySpending ?? 0 - 90.0) < 0.01) // 100 * 0.9
     }
 
     @Test("update spending  non usd  no rates  falls back to usd")
@@ -82,8 +86,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 50.0 == true)
-        #expect(abs(cursorData?.displaySpending ?? 0 - 50.0 == true) // Falls back to USD
+        #expect(abs(cursorData?.currentSpendingUSD ?? 0 - 50.0) < 0.01)
+        #expect(abs(cursorData?.displaySpending ?? 0 - 50.0) < 0.01) // Falls back to USD
     }
 
     // MARK: - Update Limits Tests
@@ -107,8 +111,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0 == true)
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0 == true)
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0) < 0.01)
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0) < 0.01)
     }
 
     @Test("update limits eur  converts correctly")
@@ -130,8 +134,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 170.0 == true) // 200 * 0.85
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 850.0 == true) // 1000 * 0.85
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 170.0) < 0.01) // 200 * 0.85
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 850.0) < 0.01) // 1000 * 0.85
     }
 
     @Test("update limits  invalid rate  falls back to usd")
@@ -153,8 +157,8 @@ struct MultiProviderSpendingDataTests {
 
         // Assert - Should fall back to USD amounts
         let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0 == true)
-        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0 == true)
+        #expect(abs(cursorData?.warningLimitConverted ?? 0 - 200.0) < 0.01)
+        #expect(abs(cursorData?.upperLimitConverted ?? 0 - 1000.0) < 0.01)
     }
 
     // MARK: - Usage Data Tests
@@ -273,6 +277,7 @@ struct MultiProviderSpendingDataTests {
         #expect(cursorData?.latestInvoiceResponse?.totalSpendingCents == 10000)
     }
 
+    @Test("get spending data for non-existent provider returns nil")
     func getSpendingData_NonExistentProvider_ReturnsNil() {
         // Act & Assert
         #expect(spendingData.getSpendingData(for: .cursor) == nil)

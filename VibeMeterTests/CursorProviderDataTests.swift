@@ -7,6 +7,15 @@ struct CursorProviderDataTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
+
+    init() {
+        self.mockURLSession = MockURLSession()
+        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
+        self.cursorProvider = CursorProvider(
+            settingsManager: mockSettingsManager,
+            urlSession: mockURLSession)
+    }
+
     // MARK: - Monthly Invoice Tests
 
     @Test("fetch monthly invoice  with provided team id")
@@ -41,8 +50,9 @@ struct CursorProviderDataTests {
         #expect(invoice.provider == .cursor)
 
         // Verify request body
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+        let requestBody = mockURLSession.lastRequest?.httpBody
+        #expect(requestBody != nil)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody!) as? [String: Any]
         #expect(bodyJSON?["month"] as? Int == 11)
         #expect(bodyJSON?["teamId"] as? Int == 789)
     }
@@ -81,7 +91,11 @@ struct CursorProviderDataTests {
         // Then
         #expect(invoice.items.count == 4)
         #expect(invoice.pricingDescription == nil)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+        
+        // Verify request body
+        let requestBody = mockURLSession.lastRequest?.httpBody
+        #expect(requestBody != nil)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody!) as? [String: Any]
         #expect(bodyJSON?["month"] as? Int == 5)
         #expect(bodyJSON?["teamId"] as? Int == 999)
     }
@@ -113,7 +127,11 @@ struct CursorProviderDataTests {
         // Then
         #expect(invoice.items.count == 4)
         #expect(invoice.pricingDescription == nil)
-        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+        
+        // Verify request body
+        let requestBody = mockURLSession.lastRequest?.httpBody
+        #expect(requestBody != nil)
+        let bodyJSON = try JSONSerialization.jsonObject(with: requestBody!) as? [String: Any]
         #expect(bodyJSON?["month"] as? Int == 5)
         #expect(bodyJSON?["teamId"] == nil)
     }
@@ -142,12 +160,20 @@ struct CursorProviderDataTests {
 
         // Then
         #expect(usageData.currentRequests == 518)
-        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
-        #expect(urlComponents?.queryItems?.first(where: { $0.name == "user" })
         #expect(usageData.totalRequests == 731)
-        #expect(usageData.provider == .cursor).date(from: "2025-05-28T15:57:12Z")
+        #expect(usageData.provider == .cursor)
+        
+        // Verify URL query parameters
+        let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
+        #expect(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value == "user123")
+        
+        // Verify date parsing
+        let formatter = ISO8601DateFormatter()
+        let expectedDate = formatter.date(from: "2025-05-28T15:57:12.000Z")
         #expect(usageData.startOfMonth == expectedDate)
+    }
 
+    @Test("fetch usage data invalid date format")
     func fetchUsageData_InvalidDateFormat() async throws {
         // Given
         let mockUsageData = Data("""
@@ -169,7 +195,9 @@ struct CursorProviderDataTests {
         // Then - should use current date as fallback
         let timeDifference = abs(usageData.startOfMonth.timeIntervalSinceNow)
         #expect(timeDifference < 60)
+        
+        // Verify URL query parameters
         let urlComponents = URLComponents(url: mockURLSession.lastRequest!.url!, resolvingAgainstBaseURL: false)
-        #expect(urlComponents?.queryItems?.first(where: { $0.name == "user" })
+        #expect(urlComponents?.queryItems?.first(where: { $0.name == "user" })?.value == "user456")
     }
 }

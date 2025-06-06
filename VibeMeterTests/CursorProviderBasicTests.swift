@@ -48,9 +48,8 @@ struct CursorProviderBasicTests {
         // Then
         #expect(teamInfo.id == 123)
         #expect(teamInfo.provider == .cursor)
-        #expect(
-            mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie" == true)
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type" == true)
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie") != nil)
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Content-Type") != nil)
     }
 
     @Test("fetch team info no teams found uses fallback")
@@ -99,6 +98,8 @@ struct CursorProviderBasicTests {
             Issue.record("Should have thrown unauthorized error")
         } catch let error as ProviderError {
             #expect(error == .unauthorized)
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -130,8 +131,9 @@ struct CursorProviderBasicTests {
         // Then
         #expect(userInfo.email == "test@example.com")
         #expect(userInfo.provider == .cursor)
-        #expect(mockURLSession.lastRequest?.httpMethod == "GET") == "WorkosCursorSessionToken=test-token")
-        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept" == true)
+        #expect(mockURLSession.lastRequest?.httpMethod == "GET")
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Cookie")?.contains("WorkosCursorSessionToken=test-token") == true)
+        #expect(mockURLSession.lastRequest?.value(forHTTPHeaderField: "Accept") != nil)
     }
 
     @Test("fetch user info  without team id")
@@ -159,14 +161,18 @@ struct CursorProviderBasicTests {
         // Then
         #expect(userInfo.email == "test@example.com")
         #expect(userInfo.provider == .cursor)
+    }
 
+    @Test("get authentication url returns correct url")
     func testGetAuthenticationURL() async {
         // When
         let authURL = cursorProvider.getAuthenticationURL()
 
         // Then
         #expect(authURL == CursorAPIConstants.authenticationURL)
+    }
 
+    @Test("extract auth token from cookies")
     func testExtractAuthToken_FromCookies() async {
         // Given
         let cookie = HTTPCookie(properties: [
@@ -185,7 +191,9 @@ struct CursorProviderBasicTests {
 
         // Then
         #expect(extractedToken == "extracted-token-123")
+    }
 
+    @Test("extract auth token no cookies")
     func testExtractAuthToken_NoCookies() async {
         // Given
         let callbackData: [String: Any] = [:]
@@ -195,7 +203,9 @@ struct CursorProviderBasicTests {
 
         // Then
         #expect(extractedToken == nil)
+    }
 
+    @Test("extract auth token wrong cookie name")
     func testExtractAuthToken_WrongCookieName() async {
         // Given
         let cookie = HTTPCookie(properties: [

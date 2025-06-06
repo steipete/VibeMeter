@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import Testing
 
@@ -61,7 +62,7 @@ struct BackgroundDataProcessorErrorTests {
                 providerClient: mockProvider)
             Issue.record("Should have thrown error")
         } catch {
-            #expect((error as? TestError == true)
+            #expect((error as? TestError) != nil)
             // Other methods should not be called if user info fails
             #expect(mockProvider.fetchUserInfoCallCount == 1)
             #expect(mockProvider.fetchMonthlyInvoiceCallCount == 0)
@@ -86,6 +87,8 @@ struct BackgroundDataProcessorErrorTests {
         #expect(mockProvider.lastTeamId == nil)
         #expect(mockProvider.fetchTeamInfoCallCount == 1)
         #expect(mockProvider.fetchUsageDataCallCount == 1)
+    }
+
     @Test("process provider data invoice fails throws error")
 
     func processProviderDataInvoiceFailsThrowsError() async {
@@ -101,10 +104,13 @@ struct BackgroundDataProcessorErrorTests {
                 providerClient: mockProvider)
             Issue.record("Should have thrown error")
         } catch {
-            #expect((error as? TestError == true)
+            #expect((error as? TestError) != nil)
             // User and team info should be fetched before invoice fails
             #expect(mockProvider.fetchUserInfoCallCount == 1)
             #expect(mockProvider.fetchMonthlyInvoiceCallCount == 1)
+        }
+    }
+
     @Test("process provider data usage fails uses fallback usage")
 
     func processProviderDataUsageFailsUsesFallbackUsage() async throws {
@@ -149,6 +155,8 @@ struct BackgroundDataProcessorErrorTests {
         #expect(result.invoice.totalSpendingCents == 2000)
         #expect(mockProvider.fetchTeamInfoCallCount == 1)
         #expect(mockProvider.fetchUsageDataCallCount == 1)
+    }
+
     @Test("process provider data network error propagates error")
 
     func processProviderDataNetworkErrorPropagatesError() async {
@@ -168,6 +176,8 @@ struct BackgroundDataProcessorErrorTests {
         } catch {
             if case let ProviderError.networkError(message, _) = error {
                 #expect(message == "Connection timeout")
+            } else {
+                Issue.record("Expected networkError, got \(error)")
             }
         }
     }
@@ -190,6 +200,8 @@ struct BackgroundDataProcessorErrorTests {
         } catch {
             if case let ProviderError.authenticationFailed(reason) = error {
                 #expect(reason == "Invalid token")
+            } else {
+                Issue.record("Expected authenticationFailed, got \(error)")
             }
         }
     }

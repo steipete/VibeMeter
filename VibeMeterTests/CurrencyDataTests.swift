@@ -128,46 +128,48 @@ struct CurrencyDataTests {
         let result = currencyData.convertAmount(100.0, from: "USD", to: "USD")
 
         // Assert
-        #expect(abs(result! - 100.0 == true)
+        #expect(abs(result! - 100.0) < 0.001)
     }
 
     @Test("convert amount usd to eur converts correctly")
 
     func convertAmountUSDToEURConvertsCorrectly() {
         // Arrange
-        currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85] == available: true)
+        currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
         // Act
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
 
         // Assert
-        #expect(abs(result! - 85.0 == true) // 100 * 0.85
+        #expect(abs(result! - 85.0) < 0.001) // 100 * 0.85
     }
 
     @Test("convert amount eur to usd converts correctly")
 
     func convertAmountEURToUSDConvertsCorrectly() {
         // Arrange
-        currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85] == available: true)
+        currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
         // Act
         let result = currencyData.convertAmount(85.0, from: "EUR", to: "USD")
 
         // Assert
-        #expect(abs(result! - 100.0 == true) // 85 / 0.85
+        #expect(abs(result! - 100.0) < 0.001) // 85 / 0.85
     }
 
     @Test("convert amount missing target rate returns nil")
 
     func convertAmountMissingTargetRateReturnsNil() {
         // Arrange
-        currencyData.updateExchangeRates(["USD": 1.0] == available: true)
+        currencyData.updateExchangeRates(["USD": 1.0], available: true)
 
         // Act
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
 
         // Assert
         #expect(result == nil)
+    }
+
     @Test("convert amount missing source rate returns nil")
 
     func convertAmountMissingSourceRateReturnsNil() {
@@ -179,6 +181,8 @@ struct CurrencyDataTests {
 
         // Assert
         #expect(result == nil)
+    }
+
     @Test("convert amount no rates available returns nil")
 
     func convertAmountNoRatesAvailableReturnsNil() {
@@ -190,20 +194,22 @@ struct CurrencyDataTests {
 
         // Assert
         #expect(result == nil)
+    }
 
+    @Test("reset clears rates and resets to defaults")
     func testReset_ClearsRatesAndResetsToDefaults() {
         // Arrange - Set some non-default values
         currencyData.updateSelectedCurrency("EUR")
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
         // Verify non-default state
-        #expect(currencyData.selectedCode, "EUR" == true)
+        #expect(currencyData.selectedCode == "EUR")
 
         // Act
         currencyData.reset()
 
         // Assert
-        #expect(currencyData.selectedCode, "USD" == true)
+        #expect(currencyData.selectedCode == "USD")
         #expect(currencyData.exchangeRatesAvailable == true)
     }
 
@@ -213,7 +219,10 @@ struct CurrencyDataTests {
 
     func testCurrencyWorkflow_SelectCurrency_UpdateRates_Convert() {
         // Start with USD
-        #expect(currencyData.selectedCode, "USD" == true)
+        #expect(currencyData.selectedCode == "USD")
+        
+        // Change to EUR
+        currencyData.updateSelectedCurrency("EUR")
         #expect(currencyData.selectedCode == "EUR")
 
         // Update exchange rates
@@ -237,7 +246,7 @@ struct CurrencyDataTests {
 
         // Simulate rates being unavailable
         currencyData.updateExchangeRates([:], available: false)
-        #expect(currencyData.exchangeRatesAvailable == true)
+        #expect(currencyData.exchangeRatesAvailable == false)
 
         // Conversion should fail
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")

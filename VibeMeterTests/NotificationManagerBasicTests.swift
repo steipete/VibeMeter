@@ -95,10 +95,8 @@ struct NotificationManagerBasicTests {
         let request = mockNotificationCenter.lastAddedRequest!
         #expect(request.content.body.contains("€82.30"))
     }
-    }
 
-    @Test("show warning notification  already shown")
-
+    @Test("show warning notification already shown")
     func showWarningNotification_AlreadyShown() async {
         // Given - Show notification once
         await notificationManager.showWarningNotification(
@@ -108,9 +106,17 @@ struct NotificationManagerBasicTests {
 
         #expect(mockNotificationCenter.addCallCount == 1)
 
+        // When - Try to show again
+        await notificationManager.showWarningNotification(
+            currentSpending: 80.0,
+            limitAmount: 100.0,
+            currencyCode: "USD")
+
         // Then - Should not trigger another notification
         #expect(mockNotificationCenter.addCallCount == 1)
+    }
 
+    @Test("show upper limit notification first time")
     func showUpperLimitNotification_FirstTime() async {
         // Given
         let currentSpending = 105.75
@@ -125,10 +131,13 @@ struct NotificationManagerBasicTests {
 
         // Then
         #expect(mockNotificationCenter.addCallCount == 1)
+        let request = mockNotificationCenter.lastAddedRequest!
         #expect(request.content.title == "Spending Limit Reached! 🚨")
-        #expect(request.content.body.contains("$100.00")
+        #expect(request.content.body.contains("$100.00"))
         #expect(request.content.interruptionLevel == .critical)
+    }
 
+    @Test("show upper limit notification already shown")
     func showUpperLimitNotification_AlreadyShown() async {
         // Given - Show notification once
         await notificationManager.showUpperLimitNotification(
@@ -138,22 +147,79 @@ struct NotificationManagerBasicTests {
 
         #expect(mockNotificationCenter.addCallCount == 1)
 
+        // When - Try to show again
+        await notificationManager.showUpperLimitNotification(
+            currentSpending: 110.0,
+            limitAmount: 100.0,
+            currencyCode: "USD")
+
         // Then - Should not trigger another notification
-        #expect(mockNotificationCenter.addCallCount == 1) {
+        #expect(mockNotificationCenter.addCallCount == 1)
+    }
+
+    @Test("reset all notification states for new session")
+    func resetAllNotificationStatesForNewSession() async {
+        // Given - Notifications previously shown
+        await notificationManager.showWarningNotification(
+            currentSpending: 75.0,
+            limitAmount: 100.0,
+            currencyCode: "USD")
+        await notificationManager.showUpperLimitNotification(
+            currentSpending: 105.0,
+            limitAmount: 100.0,
+            currencyCode: "USD")
+
+        // When
+        await notificationManager.resetAllNotificationStatesForNewSession()
+
+        // Then - Should be able to show notifications again
+        await notificationManager.showWarningNotification(
+            currentSpending: 75.0,
+            limitAmount: 100.0,
+            currencyCode: "USD")
+        #expect(mockNotificationCenter.addCallCount == 3)
+    }
+
+    @Test("show instance already running notification")
+    func showInstanceAlreadyRunningNotification() async {
+        // When
+        await notificationManager.showInstanceAlreadyRunningNotification()
+
+        // Then
+        #expect(mockNotificationCenter.addCallCount == 1)
+        let request = mockNotificationCenter.lastAddedRequest!
+        #expect(request.content.title == "Vibe Meter Already Running")
+        #expect(request.content.body == "Another instance of Vibe Meter is already running. The existing instance has been brought to the front.")
+        #expect(request.content.categoryIdentifier == "APP_INSTANCE")
+    }
+}
+
+// MARK: - Test Support Types
+
+private enum NotificationLimitType {
+    case warning
+    case upper
+}
+
+private final class TestableNotificationManager {
+    private let notificationCenter: MockUNUserNotificationCenter
+    private var warningNotificationShown = false
+    private var upperLimitNotificationShown = false
+
+    init(notificationCenter: MockUNUserNotificationCenter) {
         self.notificationCenter = notificationCenter
-        super.init()
     }
 
     func requestAuthorization() async -> Bool {
         await withCheckedContinuation { continuation in
-            notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+            notificationCenter.requestAuthorization(options: [.alert]) { granted, _ in
                 continuation.resume(returning: granted)
             }
         }
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
-        guard warningNotificationShown else {
+        guard !warningNotificationShown else {
             return
         }
 
@@ -218,21 +284,15 @@ struct NotificationManagerBasicTests {
         }
     }
 
-    @Test("reset all notification states for new session")
-
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
 
-    @Test("show instance already running notification")
-
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
         content.title = "Vibe Meter Already Running"
-        content
-            .body =
-            "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
+        content.body = "Another instance of Vibe Meter is already running. The existing instance has been brought to the front."
         content.sound = .default
         content.categoryIdentifier = "APP_INSTANCE"
 

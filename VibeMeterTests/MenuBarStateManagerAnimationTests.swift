@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import Testing
 
@@ -6,14 +7,8 @@ import Testing
 struct MenuBarStateManagerAnimationTests {
     let sut: MenuBarStateManager
 
-    init() async throws {
-        await MainActor.run {  }
+    init() {
         sut = MenuBarStateManager()
-    }
-
-     async throws {
-        sut = nil
-        await MainActor.run {  }
     }
 
     // MARK: - Animation Update Tests
@@ -62,7 +57,9 @@ struct MenuBarStateManagerAnimationTests {
 
         // Then
         #expect(sut.animatedGaugeValue == targetValue)
+    }
 
+    @Test("loading animation cycle behavior")
     func loadingAnimation_CycleBehavior() {
         // Given
         sut.setState(.loading)

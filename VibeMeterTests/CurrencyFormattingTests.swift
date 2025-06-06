@@ -19,7 +19,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "$123.45")
+    }
 
+    @Test("format amount whole number does not show unnecessary decimals")
     func formatAmount_WholeNumber_DoesNotShowUnnecessaryDecimals() {
         // Given
         let amount = 100.0
@@ -31,7 +33,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "€100")
+    }
 
+    @Test("format amount one decimal place shows correctly")
     func formatAmount_OneDecimalPlace_ShowsCorrectly() {
         // Given
         let amount = 42.5
@@ -43,7 +47,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "£42.5")
+    }
 
+    @Test("format amount large number formats with separators")
     func formatAmount_LargeNumber_FormatsWithSeparators() {
         // Given
         let amount = 1_234_567.89
@@ -55,7 +61,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "$1,234,567.89")
+    }
 
+    @Test("format amount small decimal handles correctly")
     func formatAmount_SmallDecimal_HandlesCorrectly() {
         // Given
         let amount = 0.01
@@ -67,7 +75,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "¢0.01")
+    }
 
+    @Test("format amount zero amount formats correctly")
     func formatAmount_ZeroAmount_FormatsCorrectly() {
         // Given
         let amount = 0.0
@@ -79,7 +89,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "$0")
+    }
 
+    @Test("format amount negative amount shows negative sign")
     func formatAmount_NegativeAmount_ShowsNegativeSign() {
         // Given
         let amount = -25.50
@@ -91,7 +103,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "$-25.5")
+    }
 
+    @Test("format amount different locales respects local formatting")
     func formatAmount_DifferentLocales_RespectsLocalFormatting() {
         // Given
         let amount = 1234.56
@@ -126,7 +140,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "100")
+    }
 
+    @Test("format amount long currency symbol handles correctly")
     func formatAmount_LongCurrencySymbol_HandlesCorrectly() {
         // Given
         let amount = 50.0
@@ -138,7 +154,9 @@ struct CurrencyFormattingTests {
 
         // Then
         #expect(result == "USD50")
+    }
 
+    @Test("format amount special currency symbols handles correctly")
     func formatAmount_SpecialCurrencySymbols_HandlesCorrectly() {
         // Given
         let amount = 100.0
@@ -150,7 +168,7 @@ struct CurrencyFormattingTests {
             let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: symbol, locale: locale)
 
             // Then
-            #expect(result.hasPrefix(symbol == true)
+            #expect(result.hasPrefix(symbol) == true)
         }
     }
 

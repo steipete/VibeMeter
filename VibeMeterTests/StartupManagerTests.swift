@@ -39,13 +39,6 @@ struct StartupManagerTests {
         sut = StartupManager()
     }
 
-     async throws {
-        // Ensure we don't leave the test app registered for launch at login
-        sut.setLaunchAtLogin(enabled: false)
-        sut = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - Initialization Tests
 
     @Test("initialization  creates instance")

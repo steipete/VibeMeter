@@ -19,7 +19,9 @@ struct CurrencyConversionEdgeCasesTests {
         // Then
         // Should handle infinity gracefully (returns original amount due to guard)
         #expect(result == amount)
-    @Test("convert with na n values")
+    }
+
+    @Test("convert with nan values")
 
     func convertWithNaNValues() {
         // Given
@@ -31,6 +33,8 @@ struct CurrencyConversionEdgeCasesTests {
 
         // Then
         #expect(result == amount)
+    }
+
     @Test("format amount with infinite amount")
 
     func formatAmountWithInfiniteAmount() {
@@ -47,7 +51,7 @@ struct CurrencyConversionEdgeCasesTests {
 
         // Then
         // Should have some representation (formatter should handle this)
-        #expect(result.isEmpty == false
+        #expect(result.isEmpty == false)
     }
 
     @Test("format amount with na n amount")
@@ -63,7 +67,7 @@ struct CurrencyConversionEdgeCasesTests {
 
         // Then
         // Should have some representation (formatter should handle this)
-        #expect(result.isEmpty == false
+        #expect(result.isEmpty == false)
     }
 
     // MARK: - Performance Tests
@@ -85,6 +89,8 @@ struct CurrencyConversionEdgeCasesTests {
 
         // Then
         #expect(duration < 1.0)
+    }
+
     @Test("format amount performance")
 
     func formatAmountPerformance() {
@@ -103,12 +109,16 @@ struct CurrencyConversionEdgeCasesTests {
 
         // Then
         #expect(duration < 2.0)
+    }
+
     @Test("currency conversion helper is main actor")
 
     func currencyConversionHelperIsMainActor() {
         // Then - CurrencyConversionHelper is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
         #expect(CurrencyConversionHelper.self != nil)
+    }
+
     @Test("concurrent access main actor safety")
 
     func concurrentAccessMainActorSafety() async {

@@ -15,16 +15,9 @@ struct NotificationManagerContentTests {
         notificationManager = TestableNotificationManager(notificationCenter: mockNotificationCenter)
     }
 
-     async throws {
-        notificationManager = nil
-        mockNotificationCenter = nil
-        await MainActor.run {  }
-    }
-
     // MARK: - Notification Content Tests
 
     @Test("notification content  warning notification")
-
     func notificationContent_WarningNotification() async {
         // When
         await notificationManager.showWarningNotification(
@@ -37,12 +30,11 @@ struct NotificationManagerContentTests {
         let content = request.content
 
         #expect(content.title == "Spending Alert ⚠️")
-        #expect(content.body.contains("warning limit")
+        #expect(content.body.contains("warning limit"))
         #expect(content.categoryIdentifier == "SPENDING_WARNING")
     }
 
     @Test("notification content  upper limit notification")
-
     func notificationContent_UpperLimitNotification() async {
         // When
         await notificationManager.showUpperLimitNotification(
@@ -55,14 +47,13 @@ struct NotificationManagerContentTests {
         let content = request.content
 
         #expect(content.title == "Spending Limit Reached! 🚨")
-        #expect(content.body.contains("maximum limit")
+        #expect(content.body.contains("maximum limit"))
         #expect(content.categoryIdentifier == "SPENDING_CRITICAL")
     }
 
     // MARK: - Notification Identifier Tests
 
     @Test("notification identifiers  unique")
-
     func notificationIdentifiers_Unique() async {
         // When - Show multiple notifications
         await notificationManager.resetAllNotificationStatesForNewSession()
@@ -79,11 +70,14 @@ struct NotificationManagerContentTests {
 
         // Then - Identifiers should be unique
         #expect(mockNotificationCenter.addedRequests.count == 2)
-        #expect(id1.hasPrefix("warning_" == true)
+        let id1 = mockNotificationCenter.addedRequests[0].identifier
+        let id2 = mockNotificationCenter.addedRequests[1].identifier
+        #expect(id1.hasPrefix("warning_"))
+        #expect(id2.hasPrefix("warning_"))
+        #expect(id1 != id2)
     }
 
     @Test("notification identifiers  different types")
-
     func notificationIdentifiers_DifferentTypes() async {
         // When
         await notificationManager.showWarningNotification(
@@ -98,8 +92,13 @@ struct NotificationManagerContentTests {
 
         // Then
         #expect(mockNotificationCenter.addedRequests.count == 2)
-        #expect(upperId.hasPrefix("upper_" == true)
+        let warningId = mockNotificationCenter.addedRequests[0].identifier
+        let upperId = mockNotificationCenter.addedRequests[1].identifier
+        #expect(warningId.hasPrefix("warning_"))
+        #expect(upperId.hasPrefix("upper_"))
+    }
 
+    @Test("notification scheduling  error")
     func notificationScheduling_Error() async {
         // Given
         let error = NSError(domain: "TestError", code: 1, userInfo: nil)
@@ -122,7 +121,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     private let notificationCenter: MockUNUserNotificationCenter
 
     // Track which notifications have been shown
-    private let warningNotificationShown = false
+    private var warningNotificationShown = false
     private var upperLimitNotificationShown = false
 
     init(notificationCenter: MockUNUserNotificationCenter) {
@@ -138,7 +137,7 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
-        guard warningNotificationShown else { return }
+        guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
         let formatter = NumberFormatter()
@@ -213,14 +212,10 @@ private final class TestableNotificationManager: NotificationManagerProtocol, @u
         }
     }
 
-    @Test("reset all notification states for new session")
-
     func resetAllNotificationStatesForNewSession() async {
         warningNotificationShown = false
         upperLimitNotificationShown = false
     }
-
-    @Test("show instance already running notification")
 
     func showInstanceAlreadyRunningNotification() async {
         let content = UNMutableNotificationContent()
@@ -278,8 +273,6 @@ private class MockUNUserNotificationCenter: @unchecked Sendable {
             throw error
         }
     }
-
-    @Test("reset")
 
     func reset() {
         requestAuthorizationCallCount = 0

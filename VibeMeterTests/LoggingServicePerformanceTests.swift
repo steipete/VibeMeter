@@ -1,3 +1,4 @@
+import Foundation
 import os.log
 @testable import VibeMeter
 import Testing
@@ -95,7 +96,9 @@ struct LoggingServicePerformanceTests {
 
         // Then
         #expect(duration < 5.0)
+    }
 
+    @Test("logging with errors performance")
     func loggingWithErrors_Performance() {
         // Given
         let iterations = 500
@@ -112,7 +115,9 @@ struct LoggingServicePerformanceTests {
 
         // Then
         #expect(duration < 3.0)
+    }
 
+    @Test("concurrent logging thread safety")
     func concurrentLogging_ThreadSafety() async {
         // Given
         let taskCount = 50

@@ -7,8 +7,7 @@ import Testing
 struct GravatarServiceHashingTests {
     let sut: GravatarService
 
-    init() async throws {
-        await MainActor.run {  }
+    init() {
         sut = GravatarService.shared
         sut.clearAvatar() // Reset state
     }

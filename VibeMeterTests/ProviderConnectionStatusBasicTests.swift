@@ -24,17 +24,22 @@ struct ProviderConnectionStatusBasicTests {
         // Then - Each case should have proper display properties
         for status in cases {
             #expect(status.displayColor != nil)
-            #expect(status.iconName.isEmpty == false
-            #expect(status.shortDescription.isEmpty == false
+            #expect(status.iconName.isEmpty == false)
+            #expect(status.shortDescription.isEmpty == false)
+        }
+    }
 
+    @Test("display color returns correct colors")
     func displayColor_ReturnsCorrectColors() {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected.displayColor == .gray)
         #expect(ProviderConnectionStatus.connected.displayColor == .green)
-        #expect(ProviderConnectionStatus.error(message: "test" == true)
-        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.error(message: "test").displayColor == .red)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil).displayColor == .orange)
         #expect(ProviderConnectionStatus.stale.displayColor == .yellow)
+    }
 
+    @Test("icon name returns valid SF symbols")
     func iconName_ReturnsValidSFSymbols() {
         // Given
         let allCases: [ProviderConnectionStatus] = [
@@ -50,49 +55,67 @@ struct ProviderConnectionStatusBasicTests {
         // Then
         for status in allCases {
             let iconName = status.iconName
-            #expect(iconName.isEmpty == false
+            #expect(iconName.isEmpty == false)
+            switch status {
             case .connecting, .syncing:
                 #expect(iconName == "arrow.2.circlepath")
             case .error:
                 #expect(iconName == "exclamationmark.triangle.fill")
             case .stale:
                 #expect(iconName == "exclamationmark.circle")
+            default:
+                break
+            }
+        }
+    }
 
+    @Test("description returns human readable text")
     func description_ReturnsHumanReadableText() {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected.description == "Not connected")
         #expect(ProviderConnectionStatus.connected.description == "Connected")
-        #expect(ProviderConnectionStatus.stale.description == "Data may be outdated").description == "Rate limited")
+        #expect(ProviderConnectionStatus.stale.description == "Data may be outdated")
+        #expect(ProviderConnectionStatus.rateLimited(until: nil).description == "Rate limited")
 
         // Rate limited with future date
         let futureDate = Date().addingTimeInterval(300) // 5 minutes from now
         let rateLimitedStatus = ProviderConnectionStatus.rateLimited(until: futureDate)
-        #expect(rateLimitedStatus.description.contains("Rate limited")
+        #expect(rateLimitedStatus.description.contains("Rate limited"))
+    }
 
+    @Test("short description returns compact text")
     func shortDescription_ReturnsCompactText() {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected.shortDescription == "Offline")
         #expect(ProviderConnectionStatus.connected.shortDescription == "Online")
-        #expect(ProviderConnectionStatus.error(message: "test" == true)
-        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.error(message: "test").shortDescription == "Error")
+        #expect(ProviderConnectionStatus.rateLimited(until: nil).shortDescription == "Limited")
         #expect(ProviderConnectionStatus.stale.shortDescription == "Stale")
+    }
 
+    @Test("is active returns correct values")
     func isActive_ReturnsCorrectValues() {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected.isActive == false)
-        #expect(ProviderConnectionStatus.connected.isActive == false)
-        #expect(ProviderConnectionStatus.error(message: "test" == false)
-        #expect(ProviderConnectionStatus.rateLimited(until: nil == false)
+        #expect(ProviderConnectionStatus.connected.isActive == true)
+        #expect(ProviderConnectionStatus.connecting.isActive == true)
+        #expect(ProviderConnectionStatus.syncing.isActive == true)
+        #expect(ProviderConnectionStatus.error(message: "test").isActive == false)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil).isActive == false)
         #expect(ProviderConnectionStatus.stale.isActive == false)
+    }
 
+    @Test("is error returns correct values")
     func isError_ReturnsCorrectValues() {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected.isError == false)
         #expect(ProviderConnectionStatus.connected.isError == false)
-        #expect(ProviderConnectionStatus.error(message: "test" == true)
-        #expect(ProviderConnectionStatus.rateLimited(until: nil == true)
+        #expect(ProviderConnectionStatus.error(message: "test").isError == true)
+        #expect(ProviderConnectionStatus.rateLimited(until: nil).isError == true)
         #expect(ProviderConnectionStatus.stale.isError == true)
+    }
 
+    @Test("from provider error authentication errors")
     func fromProviderError_AuthenticationErrors() {
         // Given
         let authErrors: [ProviderError] = [
@@ -104,7 +127,10 @@ struct ProviderConnectionStatusBasicTests {
         for error in authErrors {
             let status = ProviderConnectionStatus.from(error)
             #expect(status == .disconnected)
+        }
+    }
 
+    @Test("from provider error rate limit errors")
     func fromProviderError_RateLimitErrors() {
         // Given
         let rateLimitError = ProviderError.rateLimitExceeded
@@ -148,7 +174,9 @@ struct ProviderConnectionStatusBasicTests {
 
         // Then
         #expect(status == .stale)
+    }
 
+    @Test("from provider error other errors")
     func fromProviderError_OtherErrors() {
         // Given - Test non-authentication errors that should result in error status
         let otherErrors: [ProviderError] = [
@@ -175,16 +203,17 @@ struct ProviderConnectionStatusBasicTests {
         // Given/When/Then
         #expect(ProviderConnectionStatus.disconnected == .disconnected)
         #expect(ProviderConnectionStatus.connected == .connected)
-        #expect(ProviderConnectionStatus.stale == .stale) == .error(message: "Test"))
+        #expect(ProviderConnectionStatus.stale == .stale)
+        #expect(ProviderConnectionStatus.error(message: "Test") == .error(message: "Test"))
 
         // Rate limited with same date
         let date = Date()
         #expect(
-            ProviderConnectionStatus.rateLimited(until: date == true)
+            ProviderConnectionStatus.rateLimited(until: date) == .rateLimited(until: date))
 
         // Rate limited both nil
         #expect(
-            ProviderConnectionStatus.rateLimited(until: nil == true)
+            ProviderConnectionStatus.rateLimited(until: nil) == .rateLimited(until: nil))
     }
 
     @Test("equatable  different statuses  are not equal")
@@ -195,15 +224,15 @@ struct ProviderConnectionStatusBasicTests {
 
         // Error with different messages
         #expect(
-            ProviderConnectionStatus.error(message: "Error 1" == true)
+            ProviderConnectionStatus.error(message: "Error 1") != .error(message: "Error 2"))
 
         // Rate limited with different dates
         #expect(
-            ProviderConnectionStatus.rateLimited(until: Date( == true).addingTimeInterval(60)))
+            ProviderConnectionStatus.rateLimited(until: Date()) != .rateLimited(until: Date().addingTimeInterval(60)))
 
         // Rate limited nil vs date
         #expect(
-            ProviderConnectionStatus.rateLimited(until: nil == true))
+            ProviderConnectionStatus.rateLimited(until: nil) != .rateLimited(until: Date()))
     }
 
     // MARK: - Sendable Conformance Tests
@@ -220,7 +249,9 @@ struct ProviderConnectionStatusBasicTests {
 
         // Then
         #expect(receivedStatus == status)
+    }
 
+    @Test("sendable all cases can be sent across actors")
     func sendable_AllCasesCanBeSentAcrossActors() async {
         // Given
         let allCases: [ProviderConnectionStatus] = [
@@ -239,7 +270,10 @@ struct ProviderConnectionStatusBasicTests {
         for status in allCases {
             let receivedStatus = await testActor.receive(status: status)
             #expect(receivedStatus == status)
+        }
+    }
 
+    @Test("provider error enum cases are covered")
     func providerError_EnumCasesAreCovered() {
         // This test ensures all ProviderError cases are handled in the from() method
         // If a new case is added to ProviderError, this test helps ensure it's handled
@@ -259,8 +293,15 @@ struct ProviderConnectionStatusBasicTests {
         for error in allErrors {
             let status = ProviderConnectionStatus.from(error)
             // Just verify it doesn't crash and returns a valid status
-            #expect(status != nil) -> ProviderConnectionStatus {
-            status
+            #expect(status != nil)
         }
+    }
+}
+
+// MARK: - Test Support
+
+private actor TestActor {
+    func receive(status: ProviderConnectionStatus) -> ProviderConnectionStatus {
+        return status
     }
 }
