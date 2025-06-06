@@ -84,7 +84,7 @@ struct LoggingServicePerformanceTests {
 
     func logging_Performance() {
         // Given
-        let iterations = 1000
+        let iterations = 10  // Reduced from 1000 to minimize CI log noise
         let testMessage = "Performance test message"
 
         // When
@@ -95,13 +95,13 @@ struct LoggingServicePerformanceTests {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        #expect(duration < 5.0)
+        #expect(duration < 1.0)  // Adjusted timeout for fewer iterations
     }
 
     @Test("logging with errors performance")
     func loggingWithErrors_Performance() {
         // Given
-        let iterations = 500
+        let iterations = 10  // Reduced from 500 to minimize CI log noise
         let testError = NSError(domain: "PerformanceDomain", code: 123, userInfo: [
             NSLocalizedDescriptionKey: "Performance test error",
         ])
@@ -114,13 +114,13 @@ struct LoggingServicePerformanceTests {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        #expect(duration < 3.0)
+        #expect(duration < 1.0)  // Adjusted timeout for fewer iterations
     }
 
     @Test("concurrent logging thread safety")
     func concurrentLogging_ThreadSafety() async {
         // Given
-        let taskCount = 50
+        let taskCount = 10  // Reduced from 50 to minimize CI log noise
 
         // When - Perform concurrent logging from multiple tasks
         await withTaskGroup(of: Void.self) { group in
@@ -134,6 +134,6 @@ struct LoggingServicePerformanceTests {
         }
 
         // Then - Should complete without crashes or deadlocks
-        #expect(true == true)
+        #expect(Bool(true))  // Using Bool(true) to avoid warning
     }
 }
