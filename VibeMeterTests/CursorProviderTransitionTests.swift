@@ -169,7 +169,7 @@ struct CursorProviderTransitionTests {
             headerFields: nil)!
 
         // When - Explicitly provide teamId = 0
-        let invoice = try await cursorProvider.fetchMonthlyInvoice(
+        _ = try await cursorProvider.fetchMonthlyInvoice(
             authToken: "token",
             month: 5,
             year: 2024,
@@ -209,7 +209,7 @@ struct CursorProviderTransitionTests {
 
         // When/Then
         do {
-            let invoice = try await cursorProvider.fetchMonthlyInvoice(
+            _ = try await cursorProvider.fetchMonthlyInvoice(
                 authToken: "token",
                 month: 6,
                 year: 2024,
