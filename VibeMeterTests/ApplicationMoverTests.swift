@@ -17,7 +17,6 @@ struct ApplicationMoverTests {
             print("Skipping ApplicationMover test in CI environment")
             return
         }
-        
         // Test that the public API exists and doesn't crash
         // Note: This method shows UI dialogs, so we just test it exists
         applicationMover.checkAndOfferToMoveToApplications()
