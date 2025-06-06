@@ -8,9 +8,9 @@ struct CursorProviderBasicTests {
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
 
-    init() {
+    init() async {
         self.mockURLSession = MockURLSession()
-        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
+        self.mockSettingsManager = await MockSettingsManager()
         self.cursorProvider = CursorProvider(
             settingsManager: mockSettingsManager,
             urlSession: mockURLSession)
@@ -23,9 +23,9 @@ struct CursorProviderBasicTests {
         let provider: CursorProvider
         let mockSession: MockURLSession
         
-        init() {
+        init() async {
             self.mockSession = MockURLSession()
-            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            let mockSettings = await MockSettingsManager()
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
         
@@ -135,9 +135,9 @@ struct CursorProviderBasicTests {
         let provider: CursorProvider
         let mockSession: MockURLSession
         
-        init() {
+        init() async {
             self.mockSession = MockURLSession()
-            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            let mockSettings = await MockSettingsManager()
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
         
@@ -222,9 +222,9 @@ struct CursorProviderBasicTests {
     struct AuthenticationTests {
         let provider: CursorProvider
         
-        init() {
+        init() async {
             let mockSession = MockURLSession()
-            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            let mockSettings = await MockSettingsManager()
             self.provider = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
         
@@ -318,11 +318,11 @@ struct CursorProviderBasicTests {
     // MARK: - Performance and Integration Tests
     
     @Test("Provider initialization performance", .timeLimit(.minutes(1)))
-    func providerInitializationPerformance() {
+    func providerInitializationPerformance() async {
         // When/Then - Should initialize quickly
         for _ in 0..<100 {
             let mockSession = MockURLSession()
-            let mockSettings = MainActor.assumeIsolated { MockSettingsManager() }
+            let mockSettings = await MockSettingsManager()
             _ = CursorProvider(settingsManager: mockSettings, urlSession: mockSession)
         }
     }

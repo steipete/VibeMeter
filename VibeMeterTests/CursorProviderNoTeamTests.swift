@@ -8,9 +8,9 @@ struct CursorProviderNoTeamTests {
     private let mockURLSession: MockURLSession
     private let mockSettingsManager: MockSettingsManager
 
-    init() {
+    init() async {
         self.mockURLSession = MockURLSession()
-        self.mockSettingsManager = MainActor.assumeIsolated { MockSettingsManager() }
+        self.mockSettingsManager = await MockSettingsManager()
         self.cursorProvider = CursorProvider(
             settingsManager: mockSettingsManager,
             urlSession: mockURLSession)
