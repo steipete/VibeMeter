@@ -275,7 +275,7 @@ struct CursorProviderTransitionTests {
             httpVersion: nil,
             headerFields: nil)!
 
-        let invoice = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 1, year: 2024, teamId: nil)
+        _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 1, year: 2024, teamId: nil)
 
         var requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
         var bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
