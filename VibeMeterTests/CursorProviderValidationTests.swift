@@ -224,7 +224,7 @@ struct CursorProviderValidationTests {
             _ = try await cursorProvider.fetchUserInfo(authToken: "test-token")
             Issue.record("Expected condition not met")
         } catch let error as ProviderError {
-            if case let .networkError(message, statusCode) = error {
+            if case let .networkError(message, _) = error {
                 #expect(message.contains("timed out"))
             } else {
                 Issue.record("Expected condition not met")

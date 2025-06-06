@@ -41,7 +41,7 @@ struct MultiProviderUserSessionDataTests {
         #expect(session != nil)
         #expect(session?.teamName == teamName)
         #expect(session?.teamId == teamId)
-        #expect(session?.isLoggedIn ?? false == true)
+        #expect(session?.isLoggedIn == true)
 
         let mostRecent = userSession.mostRecentSession
         #expect(mostRecent != nil)
@@ -64,7 +64,7 @@ struct MultiProviderUserSessionDataTests {
         #expect(session?.userEmail == email)
         #expect(session?.teamName == nil)
         #expect(session?.teamId == nil)
-        #expect(session?.isLoggedIn ?? false == true)
+        #expect(session?.isLoggedIn == true)
     }
 
     @Test("handle login success clears previous errors")

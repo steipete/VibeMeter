@@ -257,7 +257,7 @@ struct ExchangeRateManagerNetworkTests {
         let results = await [result1, result2, result3]
         
         // Then - All should succeed (though only one may actually execute due to caching/deduplication)
-        for (index, result) in results.enumerated() {
+        for (_, result) in results.enumerated() {
             #expect(result["EUR"] != nil)
         }
     }
