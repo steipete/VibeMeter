@@ -280,7 +280,30 @@ struct CursorProviderDataTests {
     func fetchUsageData_InvalidDateFormat() async throws {
         // Given
         let mockUsageData = Data("""
-                {"gpt-4":{"numRequests":518,"numRequestsTotal":731,"numTokens":13637151,"maxRequestUsage":500,"maxTokenUsage":null},"gpt-3.5-turbo":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":null,"maxTokenUsage":null},"gpt-4-32k":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":50,"maxTokenUsage":null},"startOfMonth":"invalid-date"}
+            {
+                "gpt-4": {
+                    "numRequests": 518,
+                    "numRequestsTotal": 731,
+                    "numTokens": 13637151,
+                    "maxRequestUsage": 500,
+                    "maxTokenUsage": null
+                },
+                "gpt-3.5-turbo": {
+                    "numRequests": 0,
+                    "numRequestsTotal": 0,
+                    "numTokens": 0,
+                    "maxRequestUsage": null,
+                    "maxTokenUsage": null
+                },
+                "gpt-4-32k": {
+                    "numRequests": 0,
+                    "numRequestsTotal": 0,
+                    "numTokens": 0,
+                    "maxRequestUsage": 50,
+                    "maxTokenUsage": null
+                },
+                "startOfMonth": "invalid-date"
+            }
         """.utf8)
 
         let mockResponse = HTTPURLResponse(

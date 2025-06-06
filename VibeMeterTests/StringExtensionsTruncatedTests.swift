@@ -68,7 +68,7 @@ struct StringExtensionsTruncatedTests {
         let result = string.truncated(to: length)
 
         // Then
-        #expect(result == "")
+        #expect(result.isEmpty)
     }
 
     @Test("truncated length three returns only ellipsis")

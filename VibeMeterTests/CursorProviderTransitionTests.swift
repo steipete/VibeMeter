@@ -26,7 +26,10 @@ struct CursorProviderTransitionTests {
         #expect(session == nil)
 
         let individualInvoiceData = Data("""
-        {"items": [{"cents": 1000, "description": "Individual Usage"}], "pricing_description": {"description": "Individual Plan", "id": "individual"}}
+        {
+            "items": [{"cents": 1000, "description": "Individual Usage"}],
+            "pricing_description": {"description": "Individual Plan", "id": "individual"}
+        }
         """.utf8)
 
         mockURLSession.nextData = individualInvoiceData
@@ -57,7 +60,10 @@ struct CursorProviderTransitionTests {
 
         // Fetch invoice as team member
         let teamInvoiceData = Data("""
-        {"items": [{"cents": 5000, "description": "Team Usage"}], "pricing_description": {"description": "Team Plan", "id": "team-pro"}}
+        {
+            "items": [{"cents": 5000, "description": "Team Usage"}],
+            "pricing_description": {"description": "Team Plan", "id": "team-pro"}
+        }
         """.utf8)
 
         mockURLSession.nextData = teamInvoiceData

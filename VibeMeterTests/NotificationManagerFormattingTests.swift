@@ -132,25 +132,30 @@ struct NotificationManagerFormattingTests {
     @Test("upper limit notification formatting")
     func upperLimitNotificationFormatting() async {
         // Given
-        let testCases: [(Double, Double, String)] = [
-            (150.0, 100.0, "USD"),
-            (75.5, 50.0, "EUR"),
-            (200.99, 200.0, "GBP"),
+        struct TestCase {
+            let spending: Double
+            let limit: Double
+            let currency: String
+        }
+        let testCases = [
+            TestCase(spending: 150.0, limit: 100.0, currency: "USD"),
+            TestCase(spending: 75.5, limit: 50.0, currency: "EUR"),
+            TestCase(spending: 200.99, limit: 200.0, currency: "GBP"),
         ]
 
-        for (spending, limit, currency) in testCases {
+        for testCase in testCases {
             // When
             notificationManager.reset()
             await notificationManager.showUpperLimitNotification(
-                currentSpending: spending,
-                limitAmount: limit,
-                currencyCode: currency)
+                currentSpending: testCase.spending,
+                limitAmount: testCase.limit,
+                currencyCode: testCase.currency)
 
             // Then
             #expect(notificationManager.showUpperLimitNotificationCalled == true)
-            #expect(notificationManager.lastUpperLimitSpending == spending)
-            #expect(notificationManager.lastUpperLimitAmount == limit)
-            #expect(notificationManager.lastUpperLimitCurrency == currency)
+            #expect(notificationManager.lastUpperLimitSpending == testCase.spending)
+            #expect(notificationManager.lastUpperLimitAmount == testCase.limit)
+            #expect(notificationManager.lastUpperLimitCurrency == testCase.currency)
         }
     }
 

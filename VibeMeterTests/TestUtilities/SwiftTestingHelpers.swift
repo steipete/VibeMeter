@@ -179,6 +179,7 @@ public enum TestData {
         "Short",
         "Medium length string",
         "This is a longer string for testing truncation",
-        "This is a very long string that should definitely be truncated by any reasonable truncation algorithm because it exceeds normal display limits",
+        "This is a very long string that should definitely be truncated by any reasonable truncation algorithm " +
+        "because it exceeds normal display limits",
     ]
 }

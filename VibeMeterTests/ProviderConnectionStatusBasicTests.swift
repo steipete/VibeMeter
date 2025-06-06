@@ -212,15 +212,21 @@ struct ProviderConnectionStatusBasicTests {
     @Test("Valid status transitions")
     func validStatusTransitions() {
         // Test common valid transition sequences
-        let transitions: [(from: ProviderConnectionStatus, to: ProviderConnectionStatus, description: String)] = [
-            (.disconnected, .connecting, "disconnect to connect"),
-            (.connecting, .connected, "connecting to connected"),
-            (.connected, .syncing, "connected to syncing"),
-            (.syncing, .connected, "syncing back to connected"),
-            (.connected, .stale, "connected to stale"),
-            (.stale, .syncing, "stale to syncing"),
-            (.connected, .error(message: "Network error"), "connected to error"),
-            (.error(message: "Error"), .connecting, "error to reconnecting"),
+        struct Transition {
+            let from: ProviderConnectionStatus
+            let to: ProviderConnectionStatus
+            let description: String
+        }
+        
+        let transitions = [
+            Transition(from: .disconnected, to: .connecting, description: "disconnect to connect"),
+            Transition(from: .connecting, to: .connected, description: "connecting to connected"),
+            Transition(from: .connected, to: .syncing, description: "connected to syncing"),
+            Transition(from: .syncing, to: .connected, description: "syncing back to connected"),
+            Transition(from: .connected, to: .stale, description: "connected to stale"),
+            Transition(from: .stale, to: .syncing, description: "stale to syncing"),
+            Transition(from: .connected, to: .error(message: "Network error"), description: "connected to error"),
+            Transition(from: .error(message: "Error"), to: .connecting, description: "error to reconnecting"),
         ]
 
         for transition in transitions {

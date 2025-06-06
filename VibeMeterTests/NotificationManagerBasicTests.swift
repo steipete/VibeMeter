@@ -347,9 +347,9 @@ struct NotificationManagerBasicTests {
         let request = try #require(mockNotificationCenter.lastAddedRequest, "Should have notification request")
         #expect(request.content.title == "Vibe Meter Already Running")
         #expect(
-            request.content
-                .body ==
-                "Another instance of Vibe Meter is already running. The existing instance has been brought to the front.",
+            request.content.body ==
+                "Another instance of Vibe Meter is already running. " +
+                "The existing instance has been brought to the front.",
             "Should have correct body")
         #expect(request.content.categoryIdentifier == "APP_INSTANCE")
     }

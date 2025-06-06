@@ -17,7 +17,7 @@ struct StringExtensionsEdgeCasesTests {
 
         // Then
         // Negative length should result in empty string
-        #expect(result == "")
+        #expect(result.isEmpty)
     }
 
     @Test("truncated negative length handles gracefully")

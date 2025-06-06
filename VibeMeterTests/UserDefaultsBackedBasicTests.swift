@@ -67,7 +67,7 @@ struct UserDefaultsBackedBasicTests {
         stringProperty = ""
 
         // Then
-        #expect(stringProperty == "")
+        #expect(stringProperty.isEmpty)
     }
 
     // MARK: - Integer Property Tests
