@@ -108,9 +108,14 @@ if [ "$VERBOSE" = "NO" ]; then
 fi
 
 if [ "$VERBOSE" = "YES" ]; then
-    # In verbose mode (CI), show raw build output
-    if ! eval "$BUILD_CMD"; then
-        echo -e "${RED}❌ Build failed${NC}"
+    # In verbose mode (CI), show raw build output with timeout
+    if ! timeout 600 eval "$BUILD_CMD"; then
+        BUILD_STATUS=$?
+        if [ $BUILD_STATUS -eq 124 ]; then
+            echo -e "${RED}❌ Build timed out after 10 minutes${NC}"
+        else
+            echo -e "${RED}❌ Build failed${NC}"
+        fi
         exit 1
     fi
 else
@@ -153,8 +158,14 @@ if [ -n "$JUNIT_OUTPUT" ]; then
     # For Swift Testing, run tests and capture results
     if [ "$VERBOSE" = "YES" ]; then
         # In verbose mode (CI), show raw output without xcbeautify filtering
-        eval "$TEST_CMD" 2>&1 | tee test-output.log
+        # Use timeout to prevent hanging in CI
+        timeout 600 eval "$TEST_CMD" 2>&1 | tee test-output.log
         TEST_STATUS=${PIPESTATUS[0]}
+        # If timeout occurred, mark as failure
+        if [ $TEST_STATUS -eq 124 ]; then
+            echo "Tests timed out after 10 minutes"
+            TEST_STATUS=1
+        fi
     else
         # Local development, use xcbeautify for clean output
         eval "$TEST_CMD" 2>&1 | tee test-output.log | xcbeautify
@@ -178,9 +189,18 @@ if [ -n "$JUNIT_OUTPUT" ]; then
             FAILURES="1"
         fi
     else
-        # Fallback values
-        TOTAL="1"
-        FAILURES="1"
+        # Check for any failed tests in the output
+        FAILED_COUNT=$(grep -c "✗.*failed" test-output.log 2>/dev/null || echo "0")
+        PASSED_COUNT=$(grep -c "✔.*passed" test-output.log 2>/dev/null || echo "0")
+        
+        if [ "$FAILED_COUNT" -gt 0 ]; then
+            TOTAL=$((PASSED_COUNT + FAILED_COUNT))
+            FAILURES="$FAILED_COUNT"
+        else
+            # Fallback values - assume failure if no clear success
+            TOTAL="1"
+            FAILURES="1"
+        fi
     fi
     
     # Create simple JUnit XML
@@ -196,8 +216,14 @@ EOF
 else
     if [ "$VERBOSE" = "YES" ]; then
         # In verbose mode (CI), show raw output without xcbeautify filtering
-        eval "$TEST_CMD"
+        # Use timeout to prevent hanging in CI
+        timeout 600 eval "$TEST_CMD"
         TEST_STATUS=$?
+        # If timeout occurred, mark as failure
+        if [ $TEST_STATUS -eq 124 ]; then
+            echo "Tests timed out after 10 minutes"
+            TEST_STATUS=1
+        fi
     else
         # Local development, use xcbeautify for clean output
         eval "$TEST_CMD" | xcbeautify
