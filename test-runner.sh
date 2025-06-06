@@ -69,14 +69,9 @@ fi
 case $MODE in
     "quick")
         echo -e "${YELLOW}Running quick core tests...${NC}"
+        # For Swift Testing, we can't use -only-testing with the old syntax
+        # Run all tests for now until we figure out the proper syntax
         TEST_FILTER=""
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/CursorProviderBasicTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/CursorProviderDataTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/ExchangeRateManagerNetworkTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/MultiProviderDataOrchestratorTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/CurrencyConversionBasicTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/SettingsManagerTests"
-        TEST_FILTER="$TEST_FILTER -only-testing:VibeMeterTests/NotificationManagerBasicTests"
         ;;
     "all")
         echo -e "${YELLOW}Running all tests...${NC}"
@@ -126,6 +121,8 @@ TEST_CMD="xcodebuild test-without-building \
     $TEST_FILTER"
 
 if [ -n "$JUNIT_OUTPUT" ]; then
+    # Clean up any existing result bundle
+    rm -rf test-results.xcresult
     TEST_CMD="$TEST_CMD -resultBundlePath test-results.xcresult"
 fi
 
@@ -136,11 +133,49 @@ fi
 # Run tests and capture output
 set +e
 if [ -n "$JUNIT_OUTPUT" ]; then
-    eval "$TEST_CMD" | xcbeautify --report junit --report-path . --junit-report-filename "$JUNIT_OUTPUT"
+    # For Swift Testing, we need to use resultBundlePath and process it afterwards
+    eval "$TEST_CMD" 2>&1 | tee test-output.log | xcbeautify
+    TEST_STATUS=${PIPESTATUS[0]}
+    
+    # Convert xcresult to JUnit format if tests ran
+    if [ -f "test-results.xcresult" ]; then
+        echo -e "\n${YELLOW}Converting test results to JUnit format...${NC}"
+        # Use xcresulttool or xcodebuild to export test results
+        xcodebuild -resultBundlePath test-results.xcresult -resultBundleVersion 3 -exportResultBundlePath test-results.xcresult || true
+        
+        # For now, create a simple JUnit report based on test output
+        if grep -q "Test run started" test-output.log; then
+            # Extract test counts
+            TOTAL=$(grep -E "Executed [0-9]+ test" test-output.log | tail -1 | sed -E 's/.*Executed ([0-9]+) test.*/\1/' || echo "0")
+            FAILURES=$(grep -E "with [0-9]+ failure" test-output.log | tail -1 | sed -E 's/.*with ([0-9]+) failure.*/\1/' || echo "0")
+            
+            # Create JUnit XML
+            cat > "$JUNIT_OUTPUT" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="VibeMeterTests" tests="${TOTAL}" failures="${FAILURES}">
+  <testsuite name="VibeMeterTests" tests="${TOTAL}" failures="${FAILURES}">
+    $(grep -E "✔|✗" test-output.log | while read -r line; do
+        if [[ "$line" =~ ✔ ]]; then
+            TEST_NAME=$(echo "$line" | sed -E 's/.*"(.*)".*/\1/')
+            TIME=$(echo "$line" | sed -E 's/.*\(([0-9.]+) seconds\).*/\1/' || echo "0.0")
+            echo "    <testcase name=\"$TEST_NAME\" time=\"$TIME\" />"
+        elif [[ "$line" =~ ✗ ]]; then
+            TEST_NAME=$(echo "$line" | sed -E 's/.*"(.*)".*/\1/')
+            echo "    <testcase name=\"$TEST_NAME\"><failure message=\"Test failed\" /></testcase>"
+        fi
+    done)
+  </testsuite>
+</testsuites>
+EOF
+        else
+            # No Swift Testing output, create empty report
+            echo '<?xml version="1.0" encoding="UTF-8"?><testsuites name="VibeMeterTests" tests="0" failures="0" />' > "$JUNIT_OUTPUT"
+        fi
+    fi
 else
     eval "$TEST_CMD" | xcbeautify
+    TEST_STATUS=${PIPESTATUS[0]}
 fi
-TEST_STATUS=$?
 set -e
 
 # Report results
