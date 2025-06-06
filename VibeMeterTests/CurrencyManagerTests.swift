@@ -55,6 +55,7 @@ struct CurrencyManagerTests {
         for (code, name) in currencies {
             // Currency code should be 3 characters
             #expect(code.count == 3)
+            // swiftformat:disable:next preferKeyPath
             #expect(code.allSatisfy { $0.isUppercase })
 
             // Name should contain currency symbol in parentheses
