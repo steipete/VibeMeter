@@ -142,12 +142,12 @@ if [ -n "$JUNIT_OUTPUT" ]; then
     
     # Extract test summary from output
     if grep -q "Test run with" test-output.log; then
-        # Parse Swift Testing output format
+        # Parse Swift Testing output format: "✔ Test run with 603 tests passed after 117.662 seconds."
         SUMMARY_LINE=$(grep "Test run with" test-output.log | tail -1)
         echo "Found summary: $SUMMARY_LINE"
         
         if echo "$SUMMARY_LINE" | grep -q "passed"; then
-            TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/.*with ([0-9]+) tests.*/\1/' 2>/dev/null || echo "1")
+            TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/.*with ([0-9]+) tests passed.*/\1/' 2>/dev/null || echo "1")
             FAILURES="0"
         else
             TOTAL=$(echo "$SUMMARY_LINE" | sed -E 's/.*with ([0-9]+) tests.*/\1/' 2>/dev/null || echo "1") 
