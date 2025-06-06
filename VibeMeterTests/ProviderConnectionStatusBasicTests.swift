@@ -3,7 +3,7 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-@Suite("Provider Connection Status Tests")
+@Suite("Provider Connection Status Tests", .tags(.provider, .unit))
 struct ProviderConnectionStatusBasicTests {
     // MARK: - Test Case Definitions
 

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("String Extensions Truncate Tests")
+@Suite("String Extensions Truncate Tests", .tags(.unit, .fast))
 struct StringExtensionsTruncateTests {
     // MARK: - Parameterized Truncation Tests
 

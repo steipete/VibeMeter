@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("URLQueryItemsBasicTests")
+@Suite("URLQueryItemsBasicTests", .tags(.unit, .fast))
 struct URLQueryItemsBasicTests {
     // MARK: - Basic Functionality Tests
 

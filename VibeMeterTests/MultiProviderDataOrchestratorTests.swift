@@ -13,6 +13,7 @@ extension Date {
 }
 
 @Suite("MultiProviderDataOrchestratorTests")
+.tags(.integration, .critical)
 @MainActor
 struct MultiProviderDataOrchestratorTests {
     var orchestrator: MultiProviderDataOrchestrator

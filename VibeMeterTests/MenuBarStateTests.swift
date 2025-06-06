@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("MenuBarStateTests")
+@Suite("MenuBarStateTests", .tags(.ui, .unit, .fast))
 @MainActor
 struct MenuBarStateTests {
     // MARK: - MenuBarState Tests
@@ -55,7 +55,9 @@ struct MenuBarStateTests {
 
         // Then
         #expect(state1 == state2)
+        #expect(state3 != state1)
         #expect(state4 == state5)
+        #expect(state6 != state4)
     }
 
     @Test("data state  value clamping")

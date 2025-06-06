@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("AuthenticationTokenManager Core Tests")
+@Suite("AuthenticationTokenManager Core Tests", .tags(.authentication, .unit, .fast))
 struct AuthenticationTokenManagerCoreTests {
     private let tokenManager: AuthenticationTokenManager
     private let mockKeychainServices: [ServiceProvider: MockKeychainService]
@@ -24,8 +24,7 @@ struct AuthenticationTokenManagerCoreTests {
 
     // MARK: - Token Storage Tests
 
-    @Test("save token success")
-
+    @Test("save token success", .tags(.critical, .requiresKeychain))
     func saveTokenSuccess() {
         // Given
         let token = "test-auth-token-123"

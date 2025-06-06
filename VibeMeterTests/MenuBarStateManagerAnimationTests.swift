@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("MenuBarStateManagerAnimationTests")
+@Suite("MenuBarStateManagerAnimationTests", .tags(.ui, .unit, .performance))
 @MainActor
 struct MenuBarStateManagerAnimationTests {
     let sut: MenuBarStateManager

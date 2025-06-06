@@ -30,6 +30,7 @@ private class MockStartupManager: StartupControlling {
 // MARK: - Tests
 
 @Suite("StartupManagerTests")
+.tags(.unit, .fast)
 @MainActor
 struct StartupManagerTests {
     let sut: StartupManager
@@ -188,7 +189,9 @@ struct StartupManagerTests {
     @Test("startup manager  conforms to startup controlling")
     func startupManager_ConformsToStartupControlling() {
         // Then
-        #expect(sut as any StartupControlling is StartupControlling)
+        // Verify that StartupManager conforms to StartupControlling protocol
+        let _: any StartupControlling = sut
+        #expect(true) // If compilation succeeds, the conformance is verified
     }
 
     @Test("startup manager  is sendable")

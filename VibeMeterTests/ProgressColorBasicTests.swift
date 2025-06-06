@@ -2,7 +2,7 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-@Suite("ProgressColorBasicTests")
+@Suite("ProgressColorBasicTests", .tags(.ui, .unit, .fast))
 struct ProgressColorBasicTests {
     // MARK: - Color Threshold Tests
 

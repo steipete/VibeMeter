@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("SettingsManager Tests")
+@Suite("SettingsManager Tests", .tags(.settings, .unit, .fast))
 @MainActor
 struct SettingsManagerTests {
     let settingsManager: SettingsManager

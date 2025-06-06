@@ -74,9 +74,9 @@ struct GaugeIcon: View {
 
                 ctx.stroke(trackPath,
                            with: .conicGradient(
-                               shimmerGradient,
-                               center: center,
-                               angle: Angle(degrees: shimmerStartAngle)),
+                            shimmerGradient,
+                            center: center,
+                            angle: Angle(degrees: shimmerStartAngle)),
                            style: StrokeStyle(lineWidth: line, lineCap: .round))
             } else {
                 ctx.stroke(trackPath,
@@ -98,12 +98,12 @@ struct GaugeIcon: View {
                     let progressShimmerOpacity = colorScheme == .dark ? 0.8 : 0.3
                     ctx.stroke(shimmerPath,
                                with: .linearGradient(
-                                   Gradient(colors: [
-                                       Color.menuBarContent(for: colorScheme).opacity(progressShimmerOpacity),
-                                       Color.menuBarContent(for: colorScheme).opacity(0),
-                                   ]),
-                                   startPoint: .zero,
-                                   endPoint: CGPoint(x: size.width, y: 0)),
+                                Gradient(colors: [
+                                    Color.menuBarContent(for: colorScheme).opacity(progressShimmerOpacity),
+                                    Color.menuBarContent(for: colorScheme).opacity(0),
+                                ]),
+                                startPoint: .zero,
+                                endPoint: CGPoint(x: size.width, y: 0)),
                                style: StrokeStyle(lineWidth: line * 0.8, lineCap: .round))
                 }
 

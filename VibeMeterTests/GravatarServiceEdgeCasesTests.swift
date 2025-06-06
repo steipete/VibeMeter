@@ -2,7 +2,7 @@ import CryptoKit
 import Testing
 @testable import VibeMeter
 
-@Suite("GravatarServiceEdgeCasesTests")
+@Suite("GravatarServiceEdgeCasesTests", .tags(.network, .edgeCase))
 @MainActor
 struct GravatarServiceEdgeCasesTests {
     let sut: GravatarService

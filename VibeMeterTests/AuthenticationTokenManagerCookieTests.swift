@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("AuthenticationTokenManager Cookie Tests")
+@Suite("AuthenticationTokenManager Cookie Tests", .tags(.authentication, .unit))
 struct AuthenticationTokenManagerCookieTests {
     private let tokenManager: AuthenticationTokenManager
     private let mockKeychainServices: [ServiceProvider: MockKeychainService]

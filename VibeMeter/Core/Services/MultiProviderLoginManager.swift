@@ -211,30 +211,30 @@ public final class MultiProviderLoginManager {
     // MARK: - Test Support
 
     #if DEBUG
-        /// Test-only method to set login state directly.
-        @MainActor
-        public func _test_setLoginState(_ isLoggedIn: Bool, for provider: ServiceProvider) {
-            stateManager.setLoginState(isLoggedIn, for: provider)
-            refreshProperties()
-        }
+    /// Test-only method to set login state directly.
+    @MainActor
+    public func _test_setLoginState(_ isLoggedIn: Bool, for provider: ServiceProvider) {
+        stateManager.setLoginState(isLoggedIn, for: provider)
+        refreshProperties()
+    }
 
-        /// Test-only method to simulate login with a token.
-        @MainActor
-        public func _test_simulateLogin(for provider: ServiceProvider, withToken token: String = "test-token") {
-            _ = tokenManager.saveToken(token, for: provider)
-            stateManager.setLoginState(true, for: provider)
-            refreshProperties()
-        }
+    /// Test-only method to simulate login with a token.
+    @MainActor
+    public func _test_simulateLogin(for provider: ServiceProvider, withToken token: String = "test-token") {
+        _ = tokenManager.saveToken(token, for: provider)
+        stateManager.setLoginState(true, for: provider)
+        refreshProperties()
+    }
 
-        /// Test-only method to reset all login states.
-        @MainActor
-        public func _test_reset() {
-            for provider in ServiceProvider.allCases {
-                _ = tokenManager.deleteToken(for: provider)
-                stateManager.setLoginState(false, for: provider)
-                stateManager.clearError(for: provider)
-            }
-            refreshProperties()
+    /// Test-only method to reset all login states.
+    @MainActor
+    public func _test_reset() {
+        for provider in ServiceProvider.allCases {
+            _ = tokenManager.deleteToken(for: provider)
+            stateManager.setLoginState(false, for: provider)
+            stateManager.clearError(for: provider)
         }
+        refreshProperties()
+    }
     #endif
 }

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("BackgroundDataProcessorBasicTests")
+@Suite("BackgroundDataProcessorBasicTests", .tags(.background, .unit, .fast))
 struct BackgroundDataProcessorBasicTests {
     let processor: BackgroundDataProcessor
     let mockProvider: MockBackgroundProvider

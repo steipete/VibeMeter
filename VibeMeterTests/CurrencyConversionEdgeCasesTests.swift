@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("Currency Conversion Edge Cases Tests")
+@Suite("Currency Conversion Edge Cases Tests", .tags(.currency, .edgeCase, .unit))
 @MainActor
 struct CurrencyConversionEdgeCasesTests {
     // MARK: - Edge Cases and Error Handling

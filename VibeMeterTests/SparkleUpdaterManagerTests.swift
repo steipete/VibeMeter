@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("SparkleUpdaterManagerTests")
+.tags(.unit, .fast)
 @MainActor
 struct SparkleUpdaterManagerTests {
     let sut: SparkleUpdaterManager
@@ -129,8 +130,8 @@ struct SparkleUpdaterManagerTests {
         // In RELEASE builds, Sparkle should be enabled
 
         #if DEBUG
-            // In debug builds, Sparkle should be disabled
-            #expect(true == true)
+        // In debug builds, Sparkle should be disabled
+        #expect(true == true)
         #endif
     }
 
@@ -198,8 +199,8 @@ struct SparkleUpdaterManagerTests {
         await Task.detached {
             // These delegate methods should be nonisolated and not require MainActor
             // We're testing that they exist and can be called without crashes
-            await self.sut.standardUserDriverWillShowModalAlert()
-            await self.sut.standardUserDriverDidShowModalAlert()
+            self.sut.standardUserDriverWillShowModalAlert()
+            self.sut.standardUserDriverDidShowModalAlert()
 
             // Test passes if we can call these without deadlocks
         }.value

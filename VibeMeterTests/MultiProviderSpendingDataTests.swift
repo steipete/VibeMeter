@@ -9,7 +9,7 @@ import Testing
 /// - No complex setup or shared state
 /// - Direct testing of business logic
 /// - Clear test boundaries
-@Suite("MultiProviderSpendingDataTests")
+@Suite("MultiProviderSpendingDataTests", .tags(.integration, .unit))
 @MainActor
 struct MultiProviderSpendingDataTests {
     let spendingData: MultiProviderSpendingData

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("CurrencyManagerTests")
+@Suite("CurrencyManagerTests", .tags(.currency, .integration))
 struct CurrencyManagerTests {
     let sut: CurrencyManager
 

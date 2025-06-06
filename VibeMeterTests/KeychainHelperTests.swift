@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("Keychain Helper Tests")
+.tags(.requiresKeychain, .unit)
 struct KeychainHelperTests {
     let sut: KeychainHelper
 

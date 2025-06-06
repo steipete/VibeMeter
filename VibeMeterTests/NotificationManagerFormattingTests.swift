@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("NotificationManagerFormattingTests")
+@Suite("NotificationManagerFormattingTests", .tags(.notifications, .unit))
 @MainActor
 struct NotificationManagerFormattingTests {
     private let notificationManager: NotificationManagerMock

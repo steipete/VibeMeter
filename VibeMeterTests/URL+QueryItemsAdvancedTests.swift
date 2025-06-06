@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("URLQueryItemsAdvancedTests")
+@Suite("URLQueryItemsAdvancedTests", .tags(.unit, .edgeCase))
 struct URLQueryItemsAdvancedTests {
     // MARK: - Edge Cases Tests
 

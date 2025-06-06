@@ -217,43 +217,43 @@ extension NetworkConnectivityMonitor: NetworkStatusProvider {}
 // MARK: - Preview Support
 
 #if DEBUG
-    /// Mock network monitor for previews and testing
-    @MainActor
-    public final class MockNetworkConnectivityMonitor: NetworkStatusProvider, ObservableObject {
-        @Published
-        public var isConnected = true
-        @Published
-        public var connectionType: NWInterface.InterfaceType? = .wifi
-        @Published
-        public var isExpensive = false
-        @Published
-        public var isConstrained = false
+/// Mock network monitor for previews and testing
+@MainActor
+public final class MockNetworkConnectivityMonitor: NetworkStatusProvider, ObservableObject {
+    @Published
+    public var isConnected = true
+    @Published
+    public var connectionType: NWInterface.InterfaceType? = .wifi
+    @Published
+    public var isExpensive = false
+    @Published
+    public var isConstrained = false
 
-        public var connectivityStatus: String {
-            isConnected ? connectionType?.displayName ?? "Connected" : "Offline"
-        }
-
-        public var onNetworkRestored: (() async -> Void)?
-        public var onNetworkLost: (() async -> Void)?
-        public var onConnectionTypeChanged: ((NWInterface.InterfaceType?) async -> Void)?
-
-        public init() {}
-
-        public func simulateNetworkLoss() async {
-            isConnected = false
-            connectionType = nil
-            await onNetworkLost?()
-        }
-
-        public func simulateNetworkRestore() async {
-            isConnected = true
-            connectionType = .wifi
-            await onNetworkRestored?()
-        }
-
-        public func simulateConnectionTypeChange(to type: NWInterface.InterfaceType) async {
-            connectionType = type
-            await onConnectionTypeChanged?(type)
-        }
+    public var connectivityStatus: String {
+        isConnected ? connectionType?.displayName ?? "Connected" : "Offline"
     }
+
+    public var onNetworkRestored: (() async -> Void)?
+    public var onNetworkLost: (() async -> Void)?
+    public var onConnectionTypeChanged: ((NWInterface.InterfaceType?) async -> Void)?
+
+    public init() {}
+
+    public func simulateNetworkLoss() async {
+        isConnected = false
+        connectionType = nil
+        await onNetworkLost?()
+    }
+
+    public func simulateNetworkRestore() async {
+        isConnected = true
+        connectionType = .wifi
+        await onNetworkRestored?()
+    }
+
+    public func simulateConnectionTypeChange(to type: NWInterface.InterfaceType) async {
+        connectionType = type
+        await onConnectionTypeChanged?(type)
+    }
+}
 #endif

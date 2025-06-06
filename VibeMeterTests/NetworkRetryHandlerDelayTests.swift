@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("NetworkRetryHandlerDelayTests")
+@Suite("NetworkRetryHandlerDelayTests", .tags(.network, .unit))
 struct NetworkRetryHandlerDelayTests {
     // MARK: - Delay Calculation Tests
 

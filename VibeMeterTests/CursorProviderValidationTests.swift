@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("CursorProviderValidationTests")
+@Suite("CursorProviderValidationTests", .tags(.provider, .unit))
 struct CursorProviderValidationTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession

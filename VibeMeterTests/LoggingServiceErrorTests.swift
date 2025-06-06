@@ -3,7 +3,7 @@ import os.log
 import Testing
 @testable import VibeMeter
 
-@Suite("LoggingServiceErrorTests")
+@Suite("LoggingServiceErrorTests", .tags(.unit, .edgeCase))
 struct LoggingServiceErrorTests {
     // MARK: - Error Handling Tests
 

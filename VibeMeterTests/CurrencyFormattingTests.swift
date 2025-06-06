@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("CurrencyFormattingTests")
+@Suite("CurrencyFormattingTests", .tags(.currency, .unit, .fast))
 @MainActor
 struct CurrencyFormattingTests {
     // MARK: - Amount Formatting Tests

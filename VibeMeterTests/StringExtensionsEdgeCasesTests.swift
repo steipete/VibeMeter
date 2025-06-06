@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("StringExtensionsEdgeCasesTests")
+@Suite("StringExtensionsEdgeCasesTests", .tags(.unit, .edgeCase))
 struct StringExtensionsEdgeCasesTests {
     // MARK: - Edge Cases Tests
 

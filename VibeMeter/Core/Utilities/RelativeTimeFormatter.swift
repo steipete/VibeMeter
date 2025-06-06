@@ -91,74 +91,74 @@ public enum RelativeTimeFormatter {
 // MARK: - SwiftUI Extensions
 
 #if canImport(SwiftUI)
-    import SwiftUI
+import SwiftUI
 
-    public extension RelativeTimeFormatter {
-        /// SwiftUI color for data freshness
-        static func swiftUIFreshnessColor(for date: Date) -> Color {
-            Color(freshnessColor(for: date))
-        }
+public extension RelativeTimeFormatter {
+    /// SwiftUI color for data freshness
+    static func swiftUIFreshnessColor(for date: Date) -> Color {
+        Color(freshnessColor(for: date))
+    }
+}
+
+/// SwiftUI view for displaying relative timestamps with automatic updates
+public struct RelativeTimestampView: View {
+    let date: Date
+    let style: RelativeTimeFormatter.Style
+    let showFreshnessColor: Bool
+
+    @State
+    private var currentTime = Date()
+
+    public init(
+        date: Date,
+        style: RelativeTimeFormatter.Style = .medium,
+        showFreshnessColor: Bool = false) {
+        self.date = date
+        self.style = style
+        self.showFreshnessColor = showFreshnessColor
     }
 
-    /// SwiftUI view for displaying relative timestamps with automatic updates
-    public struct RelativeTimestampView: View {
-        let date: Date
-        let style: RelativeTimeFormatter.Style
-        let showFreshnessColor: Bool
+    public var body: some View {
+        Text(RelativeTimeFormatter.string(from: date, style: style))
+            .foregroundStyle(showFreshnessColor ? RelativeTimeFormatter
+                                .swiftUIFreshnessColor(for: date) : .secondary)
+            .onAppear {
+                startTimer()
+            }
+            .onDisappear {
+                stopTimer()
+            }
+    }
 
-        @State
-        private var currentTime = Date()
-
-        public init(
-            date: Date,
-            style: RelativeTimeFormatter.Style = .medium,
-            showFreshnessColor: Bool = false) {
-            self.date = date
-            self.style = style
-            self.showFreshnessColor = showFreshnessColor
-        }
-
-        public var body: some View {
-            Text(RelativeTimeFormatter.string(from: date, style: style))
-                .foregroundStyle(showFreshnessColor ? RelativeTimeFormatter
-                    .swiftUIFreshnessColor(for: date) : .secondary)
-                .onAppear {
-                    startTimer()
-                }
-                .onDisappear {
-                    stopTimer()
-                }
-        }
-
-        private func startTimer() {
-            Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-                Task { @MainActor in
-                    currentTime = Date()
-                }
+    private func startTimer() {
+        Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+            Task { @MainActor in
+                currentTime = Date()
             }
         }
-
-        private func stopTimer() {
-            // Timer will be deallocated automatically
-        }
     }
+
+    private func stopTimer() {
+        // Timer will be deallocated automatically
+    }
+}
 #endif
 
 // MARK: - Preview Support
 
 #if DEBUG
-    public extension RelativeTimeFormatter {
-        /// Sample dates for testing and previews
-        static var sampleDates: [(String, Date)] {
-            let now = Date()
-            return [
-                ("Just now", now.addingTimeInterval(-30)),
-                ("2 minutes ago", now.addingTimeInterval(-120)),
-                ("15 minutes ago", now.addingTimeInterval(-900)),
-                ("1 hour ago", now.addingTimeInterval(-3600)),
-                ("Yesterday", now.addingTimeInterval(-86400)),
-                ("Last week", now.addingTimeInterval(-604_800)),
-            ]
-        }
+public extension RelativeTimeFormatter {
+    /// Sample dates for testing and previews
+    static var sampleDates: [(String, Date)] {
+        let now = Date()
+        return [
+            ("Just now", now.addingTimeInterval(-30)),
+            ("2 minutes ago", now.addingTimeInterval(-120)),
+            ("15 minutes ago", now.addingTimeInterval(-900)),
+            ("1 hour ago", now.addingTimeInterval(-3600)),
+            ("Yesterday", now.addingTimeInterval(-86400)),
+            ("Last week", now.addingTimeInterval(-604_800)),
+        ]
     }
+}
 #endif

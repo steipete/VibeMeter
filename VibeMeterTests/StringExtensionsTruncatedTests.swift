@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("StringExtensionsTruncatedTests")
+@Suite("StringExtensionsTruncatedTests", .tags(.unit, .fast))
 struct StringExtensionsTruncatedTests {
     // MARK: - truncated(to:) Tests
 

@@ -2,7 +2,7 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-@Suite("ProgressColorWarningLevelTests")
+@Suite("ProgressColorWarningLevelTests", .tags(.ui, .unit))
 struct ProgressColorWarningLevelTests {
     // MARK: - Warning Level Tests
 
@@ -192,7 +192,7 @@ struct ProgressColorWarningLevelTests {
             (1.2, "20% over budget", Color.ProgressWarningLevel.high),
         ]
 
-        for (progress, scenario, expectedLevel) in scenarios {
+        for (progress, _, expectedLevel) in scenarios {
             // When
             let warningLevel = Color.ProgressWarningLevel.level(for: progress)
 

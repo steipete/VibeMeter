@@ -3,7 +3,7 @@ import Testing
 @testable import VibeMeter
 
 /// Tests for the ApplicationMover service
-@Suite("ApplicationMover Service Tests")
+@Suite("ApplicationMover Service Tests", .tags(.unit, .fast))
 @MainActor
 struct ApplicationMoverTests {
     // Using lazy initialization instead of setUp/tearDown to avoid concurrency issues

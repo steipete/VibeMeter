@@ -16,7 +16,7 @@ import UserNotifications
 @MainActor
 @Observable
 public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate,
-    UNUserNotificationCenterDelegate {
+                                    UNUserNotificationCenterDelegate {
     // MARK: - Static Logger for nonisolated methods
 
     private nonisolated static let staticLogger = Logger(subsystem: "com.steipete.vibemeter", category: "updates")
@@ -45,9 +45,9 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         // Only schedule startup update check in release builds
         #if !DEBUG
-            scheduleStartupUpdateCheck()
+        scheduleStartupUpdateCheck()
         #else
-            Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - automatic update checks disabled")
+        Self.staticLogger.info("SparkleUpdaterManager: Running in DEBUG mode - automatic update checks disabled")
         #endif
     }
 
@@ -65,14 +65,14 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
         // Enable automatic update checks only in release builds
         #if DEBUG
-            controller.updater.automaticallyChecksForUpdates = false
-            controller.updater.automaticallyDownloadsUpdates = false
-            Self.staticLogger.info("Automatic update checks disabled in DEBUG mode")
+        controller.updater.automaticallyChecksForUpdates = false
+        controller.updater.automaticallyDownloadsUpdates = false
+        Self.staticLogger.info("Automatic update checks disabled in DEBUG mode")
         #else
-            controller.updater.automaticallyChecksForUpdates = true
-            controller.updater.automaticallyDownloadsUpdates = true
-            controller.updater.updateCheckInterval = 3600 * 1 // Check every hour
-            Self.staticLogger.info("Automatic update checks and downloads enabled (interval: 1 hour)")
+        controller.updater.automaticallyChecksForUpdates = true
+        controller.updater.automaticallyDownloadsUpdates = true
+        controller.updater.updateCheckInterval = 3600 * 1 // Check every hour
+        Self.staticLogger.info("Automatic update checks and downloads enabled (interval: 1 hour)")
         #endif
 
         Self.staticLogger
@@ -127,15 +127,15 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             forName: Notification.Name("UpdateChannelChanged"),
             object: nil,
             queue: .main) { [weak self] notification in
-                guard let self,
-                      let userInfo = notification.userInfo,
-                      let channel = userInfo["channel"] as? UpdateChannel else { return }
+            guard let self,
+                  let userInfo = notification.userInfo,
+                  let channel = userInfo["channel"] as? UpdateChannel else { return }
 
-                // Update feed URL for the new channel
-                Task { @MainActor in
-                    await self.updateFeedURL(for: channel)
-                }
+            // Update feed URL for the new channel
+            Task { @MainActor in
+                await self.updateFeedURL(for: channel)
             }
+        }
 
         // Configure initial feed URL based on current settings
         Task { @MainActor in
@@ -209,8 +209,8 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
             // Check for appcast-related errors (missing file, parse errors, etc.)
             if error.domain == "SUSparkleErrorDomain",
                error.code == 2001 || // SUAppcastError
-               error.code == 2002 || // SUAppcastParseError
-               error.code == 2000 { // SUInvalidFeedURLError
+                error.code == 2002 || // SUAppcastParseError
+                error.code == 2000 { // SUInvalidFeedURLError
                 Self.staticLogger.warning("Appcast error (missing or invalid feed): \(error.localizedDescription)")
                 // Suppress the error dialog - we'll handle this silently
                 return
@@ -378,7 +378,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
             case "LATER":
                 Self.staticLogger.info("User chose to update later from notification")
-                // Do nothing - user will be reminded later
+            // Do nothing - user will be reminded later
 
             default:
                 Self.staticLogger.debug("Unknown notification action: \(actionIdentifier)")

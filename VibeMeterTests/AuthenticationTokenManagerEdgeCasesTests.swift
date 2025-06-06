@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("AuthenticationTokenManager Edge Cases Tests")
+@Suite("AuthenticationTokenManager Edge Cases Tests", .tags(.authentication, .edgeCase, .unit, .fast))
 struct AuthenticationTokenManagerEdgeCasesTests {
     private let tokenManager: AuthenticationTokenManager
     private let mockKeychainServices: [ServiceProvider: MockKeychainService]

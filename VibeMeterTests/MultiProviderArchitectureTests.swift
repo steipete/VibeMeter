@@ -4,6 +4,7 @@ import Testing
 
 /// Tests for the new multi-provider architecture to ensure basic functionality works
 @Suite("MultiProviderArchitectureTests")
+.tags(.integration, .unit)
 @MainActor
 struct MultiProviderArchitectureTests {
     @Test("service provider cases")

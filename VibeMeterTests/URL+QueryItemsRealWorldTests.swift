@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("URLQueryItemsRealWorldTests")
+@Suite("URLQueryItemsRealWorldTests", .tags(.unit, .integration))
 struct URLQueryItemsRealWorldTests {
     // MARK: - Real-World Usage Tests
 

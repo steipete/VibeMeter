@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("ExchangeRateManagerEdgeCasesTests")
+@Suite("ExchangeRateManagerEdgeCasesTests", .tags(.currency, .edgeCase))
 struct ExchangeRateManagerEdgeCasesTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager

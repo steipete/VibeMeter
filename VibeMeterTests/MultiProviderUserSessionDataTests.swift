@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("MultiProviderUserSessionDataTests")
+@Suite("MultiProviderUserSessionDataTests", .tags(.integration, .unit))
 @MainActor
 struct MultiProviderUserSessionDataTests {
     var userSession: MultiProviderUserSessionData

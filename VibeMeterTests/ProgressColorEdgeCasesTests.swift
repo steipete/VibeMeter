@@ -3,7 +3,7 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-@Suite("ProgressColorEdgeCasesTests")
+@Suite("ProgressColorEdgeCasesTests", .tags(.ui, .edgeCase, .unit))
 struct ProgressColorEdgeCasesTests {
     // MARK: - Negative Values Tests
 

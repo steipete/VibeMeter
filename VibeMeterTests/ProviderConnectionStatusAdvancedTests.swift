@@ -3,7 +3,7 @@ import SwiftUI
 import Testing
 @testable import VibeMeter
 
-@Suite("ProviderConnectionStatusAdvancedTests")
+@Suite("ProviderConnectionStatusAdvancedTests", .tags(.provider, .integration))
 struct ProviderConnectionStatusAdvancedTests {
     // MARK: - Codable Tests
 

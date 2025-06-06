@@ -16,9 +16,9 @@ extension ProcessInfo {
     /// Detects if running in debug mode (using DEBUG compilation condition)
     var isRunningInDebug: Bool {
         #if DEBUG
-            return true
+        return true
         #else
-            return false
+        return false
         #endif
     }
 }

@@ -3,7 +3,7 @@ import Testing
 @preconcurrency import UserNotifications
 @testable import VibeMeter
 
-@Suite("NotificationManagerContentTests")
+@Suite("NotificationManagerContentTests", .tags(.notifications, .unit, .fast))
 @MainActor
 struct NotificationManagerContentTests {
     private let notificationManager: TestableNotificationManager

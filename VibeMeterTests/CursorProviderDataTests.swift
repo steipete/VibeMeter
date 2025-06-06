@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("CursorProviderDataTests")
+@Suite("CursorProviderDataTests", .tags(.provider, .integration, .network))
 struct CursorProviderDataTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
@@ -31,7 +31,22 @@ struct CursorProviderDataTests {
                     {"description": "12 token-based usage calls to o3, totalling: $2.10", "cents": 210}
                 ],
                 "pricingDescription": {
-                    "description": "1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.",
+                    "description": """
+                        1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.
+                        3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.
+                        5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.
+                        6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.
+                        7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.
+                        13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.
+                        14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.
+                        """.replacingOccurrences(of: "\n                        ", with: "\n"),
                     "id": "392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"
                 }
             }
@@ -57,7 +72,7 @@ struct CursorProviderDataTests {
         #expect(invoice.items.count == 4)
         #expect(invoice.items[0].description == "112 discounted claude-4-sonnet-thinking requests")
         #expect(invoice.items[1]
-            .description == "97 extra fast premium requests beyond 500/month * 4 cents per such request")
+                    .description == "97 extra fast premium requests beyond 500/month * 4 cents per such request")
         #expect(invoice.month == 11)
         #expect(invoice.provider == .cursor)
 
@@ -74,14 +89,40 @@ struct CursorProviderDataTests {
     func fetchMonthlyInvoice_WithStoredTeamId() async throws {
         // Given
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-            provider: .cursor,
-            teamId: 999,
-            teamName: "Test Team",
-            userEmail: "test@example.com",
-            isActive: true))
+                                                    provider: .cursor,
+                                                    teamId: 999,
+                                                    teamName: "Test Team",
+                                                    userEmail: "test@example.com",
+                                                    isActive: true))
 
         let mockInvoiceData = Data("""
-             {"items":[{"description":"112 discounted claude-4-sonnet-thinking requests","cents":336},{"description":"97 extra fast premium requests beyond 500/month * 4 cents per such request","cents":388},{"description":"59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65","cents":465},{"description":"12 token-based usage calls to o3, totalling: $2.10","cents":210}],"pricingDescription":{"description":"1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.","id":"392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"}}
+            {
+                "items": [
+                    {"description": "112 discounted claude-4-sonnet-thinking requests", "cents": 336},
+                    {"description": "97 extra fast premium requests beyond 500/month * 4 cents per such request", "cents": 388},
+                    {"description": "59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65", "cents": 465},
+                    {"description": "12 token-based usage calls to o3, totalling: $2.10", "cents": 210}
+                ],
+                "pricingDescription": {
+                    "description": """
+                        1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.
+                        3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.
+                        5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.
+                        6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.
+                        7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.
+                        13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.
+                        14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.
+                        """.replacingOccurrences(of: "\n                        ", with: "\n"),
+                    "id": "392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"
+                }
+            }
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -117,7 +158,33 @@ struct CursorProviderDataTests {
     func fetchMonthlyInvoice_NoTeamIdAvailable() async throws {
         // Given - no stored team ID and none provided
         let mockInvoiceData = Data("""
-             {"items":[{"description":"112 discounted claude-4-sonnet-thinking requests","cents":336},{"description":"97 extra fast premium requests beyond 500/month * 4 cents per such request","cents":388},{"description":"59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65","cents":465},{"description":"12 token-based usage calls to o3, totalling: $2.10","cents":210}],"pricingDescription":{"description":"1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.\n2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.\n3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.\n4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.\n5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.\n6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.\n7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.\n10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.\n12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.\n13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.\n14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.","id":"392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"}}
+            {
+                "items": [
+                    {"description": "112 discounted claude-4-sonnet-thinking requests", "cents": 336},
+                    {"description": "97 extra fast premium requests beyond 500/month * 4 cents per such request", "cents": 388},
+                    {"description": "59 token-based usage calls to claude-4-sonnet-thinking, totalling: $4.65", "cents": 465},
+                    {"description": "12 token-based usage calls to o3, totalling: $2.10", "cents": 210}
+                ],
+                "pricingDescription": {
+                    "description": """
+                        1. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with claude-3-opus: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        2. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1: 40 cents per request.
+                        3. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o1-mini: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        4. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with o3: 30 cents per request.
+                        5. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with gpt-4.5-preview: 200 cents per request.
+                        6. Chat, Cmd-K, Terminal Cmd-K, and Context Chat with our MAX versions of claude-3-7-sonnet and gemini-2-5-pro-exp-max: 5 cents per request, plus 5 cents per tool call.
+                        7. Long context chat with claude-3-haiku-200k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        8. Long context chat with claude-3-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        9. Long context chat with claude-3-5-sonnet-200k: 10 requests per day included in Pro/Business, 20 cents per request after that.
+                        10. Long context chat with gemini-1.5-flash-500k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        11. Long context chat with gpt-4o-128k: 10 requests per day included in Pro/Business, 10 cents per request after that.
+                        12. Bug finder: priced upfront based on the size of the diff. Currently experimental; expect the price to go down in the future.
+                        13. Fast premium models: As many fast premium requests as are included in your plan, 4 cents per request after that.
+                        14. Fast premium models (Haiku): As many fast premium requests as are included in your plan, 1 cent per request after that.
+                        """.replacingOccurrences(of: "\n                        ", with: "\n"),
+                    "id": "392eabec215b2d0381fb87ead3be48765ced78e4acfbac7b12e862e8c426875f"
+                }
+            }
         """.utf8)
 
         let mockResponse = HTTPURLResponse(
@@ -155,7 +222,30 @@ struct CursorProviderDataTests {
     func fetchUsageData_Success() async throws {
         // Given
         let mockUsageData = Data("""
-        {"gpt-4":{"numRequests":518,"numRequestsTotal":731,"numTokens":13637151,"maxRequestUsage":500,"maxTokenUsage":null},"gpt-3.5-turbo":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":null,"maxTokenUsage":null},"gpt-4-32k":{"numRequests":0,"numRequestsTotal":0,"numTokens":0,"maxRequestUsage":50,"maxTokenUsage":null},"startOfMonth":"2025-05-28T15:57:12.000Z"}
+            {
+                "gpt-4": {
+                    "numRequests": 518,
+                    "numRequestsTotal": 731,
+                    "numTokens": 13637151,
+                    "maxRequestUsage": 500,
+                    "maxTokenUsage": null
+                },
+                "gpt-3.5-turbo": {
+                    "numRequests": 0,
+                    "numRequestsTotal": 0,
+                    "numTokens": 0,
+                    "maxRequestUsage": null,
+                    "maxTokenUsage": null
+                },
+                "gpt-4-32k": {
+                    "numRequests": 0,
+                    "numRequestsTotal": 0,
+                    "numTokens": 0,
+                    "maxRequestUsage": 50,
+                    "maxTokenUsage": null
+                },
+                "startOfMonth": "2025-05-28T15:57:12.000Z"
+            }
         """.utf8)
 
         let mockResponse = HTTPURLResponse(

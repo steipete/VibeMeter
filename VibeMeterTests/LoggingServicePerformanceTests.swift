@@ -3,7 +3,7 @@ import os.log
 import Testing
 @testable import VibeMeter
 
-@Suite("LoggingServicePerformanceTests")
+@Suite("LoggingServicePerformanceTests", .tags(.unit, .performance))
 struct LoggingServicePerformanceTests {
     // MARK: - Edge Cases Tests
 

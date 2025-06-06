@@ -175,17 +175,17 @@ public final class NetworkStateManager {
             forName: NSApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main) { [weak self] _ in
-                self?.logger.info("App became active")
-                // The actual handling will be done by the orchestrator through the callback
-            }
+            self?.logger.info("App became active")
+            // The actual handling will be done by the orchestrator through the callback
+        }
 
         // Monitor app becoming inactive (background)
         NotificationCenter.default.addObserver(
             forName: NSApplication.didResignActiveNotification,
             object: nil,
             queue: .main) { [weak self] _ in
-                self?.logger.info("App became inactive")
-            }
+            self?.logger.info("App became inactive")
+        }
     }
 
     private func checkForStaleData(

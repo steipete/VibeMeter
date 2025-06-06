@@ -3,7 +3,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("GravatarServiceHashingTests")
+@Suite("GravatarServiceHashingTests", .tags(.unit, .fast))
 @MainActor
 struct GravatarServiceHashingTests {
     let sut: GravatarService

@@ -184,9 +184,9 @@ struct SpendingLimitsView: View {
                     "(\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor."
                 return limitText
             }())
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
             Spacer()
         }
     }

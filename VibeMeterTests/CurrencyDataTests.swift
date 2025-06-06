@@ -9,7 +9,7 @@ import Testing
 /// - No external dependencies or mocks needed
 /// - Direct state verification
 /// - Clear test boundaries and responsibilities
-@Suite("CurrencyData Tests")
+@Suite("CurrencyData Tests", .tags(.currency, .unit, .fast))
 @MainActor
 struct CurrencyDataTests {
     let currencyData = CurrencyData()

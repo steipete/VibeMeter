@@ -35,8 +35,8 @@ struct VibeMeterMainView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("VibeMeter main interface")
         .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?
-            "Shows AI service spending dashboard and controls" :
-            "Shows login options for AI service providers")
+                            "Shows AI service spending dashboard and controls" :
+                            "Shows login options for AI service providers")
         .onKeyPress(.escape) {
             // Modern key handling for ESC to close menu
             // Look for any borderless window that might be our menu

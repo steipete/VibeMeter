@@ -28,8 +28,8 @@ struct GlassButtonStyle: ButtonStyle {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(configuration.isPressed ?
-                        Color.selectionBackground(for: colorScheme) :
-                        Color.hoverBackground(for: colorScheme)))
+                            Color.selectionBackground(for: colorScheme) :
+                            Color.hoverBackground(for: colorScheme)))
             .foregroundStyle(isDestructive ? .red : .primary)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
@@ -53,12 +53,12 @@ struct ProminentGlassButtonStyle: ButtonStyle {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(LinearGradient(
-                        colors: [
-                            Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.6 : 0.8),
-                            Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.4 : 0.6),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing)))
+                            colors: [
+                                Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.6 : 0.8),
+                                Color.vibeMeterAccent.opacity(configuration.isPressed ? 0.4 : 0.6),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing)))
             .foregroundStyle(Color.menuBarContent(for: colorScheme))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
@@ -88,11 +88,11 @@ struct IconButtonStyle: ButtonStyle {
             .background(
                 Circle()
                     .fill((isHovering || configuration.isPressed) ?
-                        Color.hoverBackground(for: colorScheme) :
-                        Color.clear))
+                            Color.hoverBackground(for: colorScheme) :
+                            Color.clear))
             .foregroundStyle(isDestructive ?
-                (isHovering ? .red : .red.opacity(0.8)) :
-                (isHovering ? .primary : .secondary))
+                                (isHovering ? .red : .red.opacity(0.8)) :
+                                (isHovering ? .primary : .secondary))
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
             .animation(.easeInOut(duration: 0.15), value: isHovering)

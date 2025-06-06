@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("CursorProviderNoTeamTests")
+@Suite("CursorProviderNoTeamTests", .tags(.provider, .edgeCase))
 struct CursorProviderNoTeamTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession
@@ -153,11 +153,11 @@ struct CursorProviderNoTeamTests {
         // Given - User was previously in a team but now is individual
         // First, set up a previous team session
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-            provider: .cursor,
-            teamId: 999,
-            teamName: "Old Team",
-            userEmail: "user@example.com",
-            isActive: true))
+                                                    provider: .cursor,
+                                                    teamId: 999,
+                                                    teamName: "Old Team",
+                                                    userEmail: "user@example.com",
+                                                    isActive: true))
 
         // Mock response for individual user invoice
         let mockInvoiceData = Data("""
@@ -194,11 +194,11 @@ struct CursorProviderNoTeamTests {
     func fetchMonthlyInvoice_ExplicitlyNoTeam() async throws {
         // Given - User has stored team but we want to fetch without team
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
-            provider: .cursor,
-            teamId: 888,
-            teamName: "Some Team",
-            userEmail: "user@example.com",
-            isActive: true))
+                                                    provider: .cursor,
+                                                    teamId: 888,
+                                                    teamName: "Some Team",
+                                                    userEmail: "user@example.com",
+                                                    isActive: true))
 
         // Clear the session to simulate individual user
         await mockSettingsManager.clearUserSessionData(for: .cursor)

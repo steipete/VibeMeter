@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("UserDefaultsBackedAdvancedTests")
+@Suite("UserDefaultsBackedAdvancedTests", .tags(.settings, .unit))
 struct UserDefaultsBackedAdvancedTests {
     let testUserDefaults: UserDefaults
     let testSuiteName: String
