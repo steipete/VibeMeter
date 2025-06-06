@@ -135,7 +135,7 @@ struct MultiProviderUserSessionDataTests {
         #expect(userSession.isLoggedIn(to: .cursor) == true)
 
         // Act
-        userSession.handleLogout(for: .cursor)
+        userSession.handleLogout(from: .cursor)
 
         // Assert
         #expect(userSession.isLoggedIn(to: .cursor) == false)
@@ -183,7 +183,7 @@ struct MultiProviderUserSessionDataTests {
         userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: nil, teamId: nil)
 
         // Act - Logout from cursor
-        userSession.handleLogout(for: .cursor)
+        userSession.handleLogout(from: .cursor)
 
         // Assert
         #expect(userSession.isLoggedIn(to: .cursor) == false)
@@ -206,7 +206,7 @@ struct MultiProviderUserSessionDataTests {
     @Test("set team fetch error sets specific error")
     func setTeamFetchError_SetsSpecificError() {
         // Act
-        userSession.setTeamFetchError(for: .cursor)
+        userSession.setTeamFetchError(for: .cursor, message: "Test error")
 
         // Assert
         let session = userSession.getSession(for: .cursor)

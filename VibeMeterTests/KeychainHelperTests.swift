@@ -253,9 +253,6 @@ struct KeychainHelperTests {
     
     @Test("Keychain servicing protocol conformance")
     func keychainServicingProtocolConformance() {
-        // Then
-        #expect(sut is KeychainServicing)
-        
         // Test protocol methods
         let protocolConformant: KeychainServicing = sut
         let testToken = "protocol-test-token"
