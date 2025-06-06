@@ -5,7 +5,7 @@ import Testing
 // MARK: - Mock Startup Manager
 
 private class MockStartupManager: StartupControlling {
-    let setLaunchAtLoginCalled = false
+    var setLaunchAtLoginCalled = false
     var setLaunchAtLoginEnabledValue: Bool?
     var isLaunchAtLoginEnabledValue = false
     var shouldThrowError = false
@@ -18,9 +18,12 @@ private class MockStartupManager: StartupControlling {
         setLaunchAtLoginCalled = true
         setLaunchAtLoginEnabledValue = enabled
 
-        if shouldThrowError {
+        // Only update the internal state if we're not simulating an error
+        if !shouldThrowError {
             isLaunchAtLoginEnabledValue = enabled
         }
+        // When shouldThrowError is true, the internal state is not updated,
+        // simulating a failure in the actual implementation
     }
 }
 
