@@ -174,9 +174,7 @@ struct SparkleUpdaterManagerTests {
         // Then
         // In test environment, Sparkle is disabled, so there should be no retain cycles
         // The weak reference should be nil after the manager goes out of scope
-        withKnownIssue("Memory test may be flaky due to autoreleasepool behavior") {
-            #expect(weakSUT == nil)
-        }
+        #expect(weakSUT == nil)
     }
 
     // MARK: - Error Code Validation Tests

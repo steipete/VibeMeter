@@ -313,8 +313,8 @@ struct GravatarServiceTests {
 
         @Test("SHA256 hash validation", arguments: [
             HashTestCase(email: "test@example.com", expectedHashPrefix: "973dfe46", description: "Known hash 1"),
-            HashTestCase(email: "user@domain.org", expectedHashPrefix: "b58996c5", description: "Known hash 2"),
-            HashTestCase(email: "admin@site.net", expectedHashPrefix: "5e884898", description: "Known hash 3"),
+            HashTestCase(email: "user@domain.org", expectedHashPrefix: "8fcfa90b", description: "Known hash 2"),
+            HashTestCase(email: "admin@site.net", expectedHashPrefix: "cfe9f7e1", description: "Known hash 3"),
         ])
         func sha256HashValidation(testCase: HashTestCase) {
             let result = sut.gravatarURL(for: testCase.email)
