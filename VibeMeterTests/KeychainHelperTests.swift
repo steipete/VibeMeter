@@ -17,6 +17,7 @@ struct TokenTestCase: Sendable {
 }
 
 @Suite("Keychain Helper Tests", .tags(.requiresKeychain, .unit), .serialized)
+@MainActor
 struct KeychainHelperTests {
     let sut: KeychainHelper
 

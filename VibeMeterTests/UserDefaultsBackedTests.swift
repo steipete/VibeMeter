@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("UserDefaults Backed Tests", .tags(.settings, .unit), .serialized)
+@MainActor
 struct UserDefaultsBackedTests {
     let testUserDefaults: UserDefaults
     let testSuiteName: String

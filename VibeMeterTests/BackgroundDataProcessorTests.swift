@@ -8,6 +8,7 @@ import Testing
 // MARK: - Background Data Processor Tests
 
 @Suite("Background Data Processor Tests", .tags(.background, .unit))
+@MainActor
 struct BackgroundDataProcessorTests {
     
     // MARK: - Basic Functionality

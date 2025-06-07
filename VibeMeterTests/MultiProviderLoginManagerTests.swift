@@ -62,6 +62,7 @@ struct MultiProviderLoginManagerTests {
     // MARK: - Core Tests
     
     @Suite("Core Functionality", .tags(.unit))
+    @MainActor
     struct CoreTests {
         let sut: MultiProviderLoginManager
         let mockStartupManager: StartupManagerMock
@@ -194,6 +195,7 @@ struct MultiProviderLoginManagerTests {
     // MARK: - Callback Tests
     
     @Suite("Callback Functionality", .tags(.authentication, .integration))
+    @MainActor
     struct CallbackTests {
         let sut: MultiProviderLoginManager
         let providerFactory: ProviderFactory
@@ -326,6 +328,7 @@ struct MultiProviderLoginManagerTests {
     // MARK: - Token Tests
     
     @Suite("Token Management", .tags(.authentication, .unit))
+    @MainActor
     struct TokenTests {
         let sut: MultiProviderLoginManager
         let providerFactory: ProviderFactory

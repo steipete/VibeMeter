@@ -4,6 +4,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("Provider Connection Status Tests", .tags(.provider, .unit))
+@MainActor
 struct ProviderConnectionStatusTests {
     
     @Suite("Basic Status Tests")

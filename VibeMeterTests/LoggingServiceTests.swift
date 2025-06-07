@@ -4,6 +4,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("LoggingService", .tags(.unit))
+@MainActor
 struct LoggingServiceTests {
     
     // MARK: - Core Tests

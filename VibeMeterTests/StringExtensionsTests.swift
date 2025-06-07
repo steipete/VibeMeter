@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("String Extensions Tests", .tags(.unit))
+@MainActor
 struct StringExtensionsTests {
     
     // MARK: - Truncate Method Tests

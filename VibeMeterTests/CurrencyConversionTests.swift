@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("Currency Conversion Tests", .tags(.currency, .unit))
+@MainActor
 struct CurrencyConversionTests {
     
     // MARK: - Basic Conversion Tests

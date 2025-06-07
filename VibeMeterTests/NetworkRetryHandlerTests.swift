@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("NetworkRetryHandler Tests", .tags(.network, .unit))
+@MainActor
 struct NetworkRetryHandlerTests {
     
     @Suite("Configuration Tests")

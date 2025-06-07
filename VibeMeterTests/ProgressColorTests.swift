@@ -32,6 +32,7 @@ fileprivate struct WarningLevelTestCase: Sendable {
 // MARK: - Main Test Suite
 
 @Suite("Progress Color Tests", .tags(.ui, .unit, .fast))
+@MainActor
 struct ProgressColorTests {
     
     // MARK: - Basic Color Calculation

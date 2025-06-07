@@ -3,6 +3,7 @@ import Testing
 @testable import VibeMeter
 
 @Suite("Exchange Rate Manager Tests", .tags(.currency))
+@MainActor
 struct ExchangeRateManagerTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager

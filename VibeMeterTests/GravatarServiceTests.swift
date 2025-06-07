@@ -8,6 +8,7 @@ import Testing
 struct GravatarServiceTests {
     
     @Suite("Core Functionality", .tags(.network, .unit))
+    @MainActor
     struct CoreTests {
         let sut: GravatarService
 
@@ -210,6 +211,7 @@ struct GravatarServiceTests {
     }
     
     @Suite("Edge Cases", .tags(.network, .edgeCase))
+    @MainActor
     struct EdgeCasesTests {
         let sut: GravatarService
 
@@ -327,6 +329,7 @@ struct GravatarServiceTests {
     }
     
     @Suite("Hashing", .tags(.unit, .fast))
+    @MainActor
     struct HashingTests {
         let sut: GravatarService
 

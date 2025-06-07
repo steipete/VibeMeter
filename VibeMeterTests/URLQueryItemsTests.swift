@@ -29,6 +29,7 @@ fileprivate struct EncodingTestCase: Sendable {
 // MARK: - Main Test Suite
 
 @Suite("URL Query Items Extension Tests", .tags(.unit, .fast))
+@MainActor
 struct URLQueryItemsTests {
     
     // MARK: - Basic Operations

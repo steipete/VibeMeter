@@ -69,6 +69,7 @@ struct TokenExtractionTestCase: @unchecked Sendable {
 }
 
 @Suite("CursorProvider Tests", .tags(.provider))
+@MainActor
 struct CursorProviderTests {
     private let cursorProvider: CursorProvider
     private let mockURLSession: MockURLSession

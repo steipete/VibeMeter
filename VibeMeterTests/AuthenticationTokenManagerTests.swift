@@ -5,6 +5,7 @@ import Testing
 // MARK: - Authentication Token Manager Tests
 
 @Suite("Authentication Token Manager Tests", .tags(.authentication, .unit))
+@MainActor
 struct AuthenticationTokenManagerTests {
     
     // MARK: - Core Functionality
