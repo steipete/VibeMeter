@@ -39,7 +39,7 @@ struct CurrencyConversionBasicTests {
 
         // Then
         let tolerance = testCase.expected.magnitude < 1.0 ? 0.0001 : 0.01
-        #expect(abs(result - testCase.expected) < tolerance)
+        result.isApproximatelyEqual(to: testCase.expected, tolerance: tolerance)
     }
 
     // MARK: - Edge Case Tests

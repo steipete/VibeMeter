@@ -16,8 +16,7 @@ struct CurrencyDataTests {
 
     // MARK: - Initial State Tests
 
-    @Test("initial state")
-
+    @Test("Currency data starts with USD as default")
     func initialState() {
         // Currency data should start with USD defaults
         #expect(currencyData.selectedCode == "USD")
@@ -26,26 +25,22 @@ struct CurrencyDataTests {
 
     // MARK: - Currency Selection Tests
 
-    @Test("update selected currency usd sets correct values")
-
-    func updateSelectedCurrencyUSDSetsCorrectValues() {
+    @Test("Selecting currency updates code correctly", arguments: [
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY",
+        "AUD",
+        "CAD"
+    ])
+    func selectingCurrencyUpdatesCode(currencyCode: String) {
         // Act
-        currencyData.updateSelectedCurrency("USD")
-
+        currencyData.updateSelectedCurrency(currencyCode)
+        
         // Assert
-        #expect(currencyData.selectedCode == "USD")
+        #expect(currencyData.selectedCode == currencyCode)
     }
-
-    @Test("update selected currency eur sets correct values")
-
-    func updateSelectedCurrencyEURSetsCorrectValues() {
-        // Act
-        currencyData.updateSelectedCurrency("EUR")
-
-        // Assert
-        #expect(currencyData.selectedCode == "EUR")
-    }
-
+    
     @Test("update selected currency gbp sets correct values")
 
     func updateSelectedCurrencyGBPSetsCorrectValues() {

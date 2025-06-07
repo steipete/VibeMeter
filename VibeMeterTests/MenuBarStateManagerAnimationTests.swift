@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("MenuBarStateManagerAnimationTests", .tags(.ui, .unit, .performance))
+@Suite("Menu Bar State Manager - Animation Tests", .tags(.ui, .unit, .performance))
 @MainActor
 struct MenuBarStateManagerAnimationTests {
     let sut: MenuBarStateManager
@@ -77,34 +77,27 @@ struct MenuBarStateManagerAnimationTests {
 
     // MARK: - Easing Function Tests
 
-    @Test("ease in out  boundary values")
-    func easeInOut_BoundaryValues() {
-        // Given
-        let testValues = [0.0, 0.5, 1.0]
-        let expectedResults = [0.0, 0.5, 1.0]
-
-        for (index, input) in testValues.enumerated() {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            #expect(
-                result == expectedResults[index])
-        }
+    @Test("Easing function boundary values", arguments: [
+        (0.0, 0.0),
+        (0.5, 0.5),
+        (1.0, 1.0)
+    ])
+    func easingFunctionBoundaryValues(input: Double, expected: Double) {
+        // When
+        let result = sut.easeInOut(input)
+        
+        // Then
+        #expect(result == expected)
     }
 
-    @Test("ease in out  smooth curve")
-    func easeInOut_SmoothCurve() {
-        // Given
-        let inputs = stride(from: 0.0, through: 1.0, by: 0.1)
-
-        for input in inputs {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            #expect(result >= 0.0)
-        }
+    @Test("Easing function smooth curve", arguments: stride(from: 0.0, through: 1.0, by: 0.1))
+    func easingFunctionSmoothCurve(input: Double) {
+        // When
+        let result = sut.easeInOut(input)
+        
+        // Then
+        #expect(result >= 0.0)
+        #expect(result <= 1.0)
     }
 
     @Test("ease in out  midpoint is half")
@@ -116,42 +109,40 @@ struct MenuBarStateManagerAnimationTests {
         #expect(result == 0.5)
     }
 
-    @Test("ease in out  edge cases")
-    func easeInOut_EdgeCases() {
-        // Test easing function with edge cases
-        let testCases = [
-            (-0.1, 0.02), // Below 0: 2 * (-0.1) * (-0.1) = 0.02
-            (1.1, 0.98), // Above 1: -1 + (4 - 2*1.1) * 1.1 = -1 + 1.8 * 1.1 = 0.98
-            (0.25, 0.125), // First quarter: 2 * 0.25 * 0.25 = 0.125
-            (0.75, 0.875), // Third quarter: -1 + (4 - 2*0.75) * 0.75 = -1 + 2.5 * 0.75 = 0.875
-        ]
-
-        for (input, approximateExpected) in testCases {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            #expect(
-                abs(result - approximateExpected) < 0.0001)
-        }
+    struct EasingTestCase: Sendable {
+        let input: Double
+        let expected: Double
+        let description: String
+        let tolerance: Double = 0.0001
+    }
+    
+    static let easingEdgeCases: [EasingTestCase] = [
+        EasingTestCase(input: -0.1, expected: 0.02, description: "Below 0: 2 * (-0.1) * (-0.1) = 0.02"),
+        EasingTestCase(input: 1.1, expected: 0.98, description: "Above 1: -1 + (4 - 2*1.1) * 1.1 = 0.98"),
+        EasingTestCase(input: 0.25, expected: 0.125, description: "First quarter: 2 * 0.25 * 0.25 = 0.125"),
+        EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875")
+    ]
+    
+    @Test("Easing function edge cases", arguments: easingEdgeCases)
+    func easingFunctionEdgeCases(testCase: EasingTestCase) {
+        // When
+        let result = sut.easeInOut(testCase.input)
+        
+        // Then
+        #expect(abs(result - testCase.expected) < testCase.tolerance)
     }
 
     // MARK: - Performance Tests
 
-    @Test("update animation  performance")
-    func updateAnimation_Performance() {
+    @Test("Update animation performance", .timeLimit(.seconds(1)))
+    func updateAnimationPerformance() {
         // Given
         sut.setState(.loading)
         let iterations = 10000
-
-        // When
-        let startTime = Date()
+        
+        // When/Then - Should complete within time limit
         for _ in 0 ..< iterations {
             sut.updateAnimation()
         }
-        let duration = Date().timeIntervalSince(startTime)
-
-        // Then
-        #expect(duration < 1.0)
     }
 }

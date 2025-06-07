@@ -16,7 +16,7 @@ struct TokenTestCase: Sendable {
     }
 }
 
-@Suite("Keychain Helper Tests", .tags(.requiresKeychain, .unit))
+@Suite("Keychain Helper Tests", .tags(.requiresKeychain, .unit), .serialized)
 struct KeychainHelperTests {
     let sut: KeychainHelper
 
