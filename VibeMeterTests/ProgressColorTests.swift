@@ -38,7 +38,7 @@ struct ProgressColorTests {
     
     @Suite("Basic Color Calculation")
     struct Basic {
-        static let colorThresholdCases: [ColorTestCase] = [
+        fileprivate static let colorThresholdCases: [ColorTestCase] = [
             // Below halfway (0-49.9%) = Safe
             ColorTestCase(0.0, color: .progressSafe, range: "zero"),
             ColorTestCase(0.1, color: .progressSafe, range: "below halfway"),
@@ -96,7 +96,7 @@ struct ProgressColorTests {
             #expect(color == expectedColor)
         }
         
-        static let spendingScenarios: [SpendingScenario] = [
+        fileprivate static let spendingScenarios: [SpendingScenario] = [
             SpendingScenario(progress: 0.1, description: "10% of budget", expectedColor: .progressSafe),
             SpendingScenario(progress: 0.3, description: "30% of budget", expectedColor: .progressSafe),
             SpendingScenario(progress: 0.5, description: "50% of budget", expectedColor: .progressCaution),
@@ -188,7 +188,7 @@ struct ProgressColorTests {
     
     @Suite("Warning Levels", .tags(.notifications))
     struct WarningLevels {
-        static let warningLevelCases: [WarningLevelTestCase] = [
+        fileprivate static let warningLevelCases: [WarningLevelTestCase] = [
             // Safe zone
             WarningLevelTestCase(progress: 0.0, expectedLevel: "safe", expectedColor: .progressSafe, description: "Start of budget"),
             WarningLevelTestCase(progress: 0.25, expectedLevel: "safe", expectedColor: .progressSafe, description: "Quarter of budget"),
@@ -221,7 +221,7 @@ struct ProgressColorTests {
             #expect(level == testCase.expectedLevel)
         }
         
-        @Test("Warning levels for monthly spending patterns", arguments: stride(from: 0.0, through: 31.0, by: 1.0))
+        @Test("Warning levels for monthly spending patterns", arguments: Array(stride(from: 0.0, through: 31.0, by: 1.0)))
         func monthlySpendingPattern(dayOfMonth: Double) {
             // Given
             let daysInMonth = 30.0

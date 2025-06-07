@@ -27,7 +27,8 @@ enum TestFixtures {
             items: testInvoiceItems,
             pricingDescription: ProviderPricingDescription(
                 description: "Team Pro Plan",
-                id: "team-pro"
+                id: "team-pro",
+                provider: .cursor
             ),
             provider: .cursor,
             month: 1,

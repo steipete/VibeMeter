@@ -32,7 +32,7 @@ extension Optional where Wrapped == Double {
 extension Confirmation {
     /// Expects the confirmation to be confirmed exactly once
     func expectOnce(sourceLocation: SourceLocation = #_sourceLocation) async {
-        await self(expected: expectedCount == 1, sourceLocation: sourceLocation)
+        await self.confirm()
     }
 }
 

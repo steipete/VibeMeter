@@ -17,9 +17,9 @@ struct AsyncTestHelper {
     }
     
     /// Tests that an async operation completes within a time limit
-    static func testWithTimeout<T>(
+    static func testWithTimeout<T: Sendable>(
         timeout: TimeInterval = 5.0,
-        operation: () async throws -> T
+        operation: @Sendable @escaping () async throws -> T
     ) async throws -> T {
         return try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
@@ -180,13 +180,13 @@ extension MockSettingsManager {
         warningLimit: Double = 100.0,
         upperLimit: Double = 200.0,
         session: ProviderSession? = nil
-    ) async {
-        await updateCurrency(currency)
-        await updateYearlyWarningLimit(warningLimit)
-        await updateYearlyUpperLimit(upperLimit)
+    ) {
+        self.selectedCurrencyCode = currency
+        self.warningLimitUSD = warningLimit
+        self.upperLimitUSD = upperLimit
         
         if let session {
-            await updateSession(for: session.provider, session: session)
+            updateSession(for: session.provider, session: session)
         }
     }
 }

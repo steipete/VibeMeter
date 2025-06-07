@@ -35,7 +35,7 @@ struct URLQueryItemsTests {
     
     @Suite("Basic Operations")
     struct Basic {
-        static let basicTestCases: [QueryItemTestCase] = [
+        fileprivate static let basicTestCases: [QueryItemTestCase] = [
             // Empty cases
             QueryItemTestCase("https://example.com/path", 
                             items: [], 
@@ -141,7 +141,7 @@ struct URLQueryItemsTests {
     
     @Suite("Advanced Features", .tags(.integration))
     struct Advanced {
-        static let encodingTestCases: [EncodingTestCase] = [
+        fileprivate static let encodingTestCases: [EncodingTestCase] = [
             // Special characters
             EncodingTestCase(baseURL: "https://example.com", 
                            paramName: "text", 

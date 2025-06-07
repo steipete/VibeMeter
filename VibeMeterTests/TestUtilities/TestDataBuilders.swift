@@ -4,33 +4,65 @@ import Foundation
 // MARK: - Test Data Builders
 
 /// Builder pattern for creating test provider sessions
-@MainActor
-final class ProviderSessionBuilder {
-    private var provider: ServiceProvider = .cursor
-    private var teamId: Int?
-    private var teamName: String?
-    private var userEmail: String = "test@example.com"
-    private var isActive: Bool = true
+final class ProviderSessionBuilder: Sendable {
+    private let provider: ServiceProvider
+    private let teamId: Int?
+    private let teamName: String?
+    private let userEmail: String
+    private let isActive: Bool
     
-    func with(provider: ServiceProvider) -> Self {
+    init(
+        provider: ServiceProvider = .cursor,
+        teamId: Int? = nil,
+        teamName: String? = nil,
+        userEmail: String = "test@example.com",
+        isActive: Bool = true
+    ) {
         self.provider = provider
-        return self
+        self.teamId = teamId
+        self.teamName = teamName
+        self.userEmail = userEmail
+        self.isActive = isActive
     }
     
-    func withTeam(id: Int, name: String) -> Self {
-        self.teamId = id
-        self.teamName = name
-        return self
+    func withProvider(_ provider: ServiceProvider) -> ProviderSessionBuilder {
+        ProviderSessionBuilder(
+            provider: provider,
+            teamId: teamId,
+            teamName: teamName,
+            userEmail: userEmail,
+            isActive: isActive
+        )
     }
     
-    func withEmail(_ email: String) -> Self {
-        self.userEmail = email
-        return self
+    func withTeam(id: Int, name: String) -> ProviderSessionBuilder {
+        ProviderSessionBuilder(
+            provider: provider,
+            teamId: id,
+            teamName: name,
+            userEmail: userEmail,
+            isActive: isActive
+        )
     }
     
-    func inactive() -> Self {
-        self.isActive = false
-        return self
+    func withEmail(_ email: String) -> ProviderSessionBuilder {
+        ProviderSessionBuilder(
+            provider: provider,
+            teamId: teamId,
+            teamName: teamName,
+            userEmail: email,
+            isActive: isActive
+        )
+    }
+    
+    func inactive() -> ProviderSessionBuilder {
+        ProviderSessionBuilder(
+            provider: provider,
+            teamId: teamId,
+            teamName: teamName,
+            userEmail: userEmail,
+            isActive: false
+        )
     }
     
     func build() -> ProviderSession {
@@ -45,38 +77,77 @@ final class ProviderSessionBuilder {
 }
 
 /// Builder pattern for creating test invoices
-@MainActor
-final class InvoiceBuilder {
-    private var provider: ServiceProvider = .cursor
-    private var items: [ProviderInvoiceItem] = []
-    private var pricingDescription: ProviderPricingDescription?
-    private var month: Int = 1
-    private var year: Int = 2025
+final class InvoiceBuilder: Sendable {
+    private let provider: ServiceProvider
+    private let items: [ProviderInvoiceItem]
+    private let pricingDescription: ProviderPricingDescription?
+    private let month: Int
+    private let year: Int
     
-    func for(provider: ServiceProvider) -> Self {
+    init(
+        provider: ServiceProvider = .cursor,
+        items: [ProviderInvoiceItem] = [],
+        pricingDescription: ProviderPricingDescription? = nil,
+        month: Int = 1,
+        year: Int = 2025
+    ) {
         self.provider = provider
-        return self
-    }
-    
-    func withItem(cents: Int, description: String) -> Self {
-        items.append(ProviderInvoiceItem(cents: cents, description: description, provider: provider))
-        return self
-    }
-    
-    func withItems(_ newItems: [ProviderInvoiceItem]) -> Self {
-        items.append(contentsOf: newItems)
-        return self
-    }
-    
-    func withPricing(description: String, id: String) -> Self {
-        self.pricingDescription = ProviderPricingDescription(description: description, id: id)
-        return self
-    }
-    
-    func forMonth(_ month: Int, year: Int) -> Self {
+        self.items = items
+        self.pricingDescription = pricingDescription
         self.month = month
         self.year = year
-        return self
+    }
+    
+    func withProvider(_ provider: ServiceProvider) -> InvoiceBuilder {
+        InvoiceBuilder(
+            provider: provider,
+            items: items,
+            pricingDescription: pricingDescription,
+            month: month,
+            year: year
+        )
+    }
+    
+    func withItem(cents: Int, description: String) -> InvoiceBuilder {
+        let newItem = ProviderInvoiceItem(cents: cents, description: description, provider: provider)
+        return InvoiceBuilder(
+            provider: provider,
+            items: items + [newItem],
+            pricingDescription: pricingDescription,
+            month: month,
+            year: year
+        )
+    }
+    
+    func withItems(_ newItems: [ProviderInvoiceItem]) -> InvoiceBuilder {
+        InvoiceBuilder(
+            provider: provider,
+            items: items + newItems,
+            pricingDescription: pricingDescription,
+            month: month,
+            year: year
+        )
+    }
+    
+    func withPricing(description: String, id: String) -> InvoiceBuilder {
+        let pricing = ProviderPricingDescription(description: description, id: id, provider: provider)
+        return InvoiceBuilder(
+            provider: provider,
+            items: items,
+            pricingDescription: pricing,
+            month: month,
+            year: year
+        )
+    }
+    
+    func forMonth(_ month: Int, year: Int) -> InvoiceBuilder {
+        InvoiceBuilder(
+            provider: provider,
+            items: items,
+            pricingDescription: pricingDescription,
+            month: month,
+            year: year
+        )
     }
     
     func build() -> ProviderMonthlyInvoice {
@@ -96,131 +167,262 @@ final class InvoiceBuilder {
 }
 
 /// Builder pattern for creating test spending data
-@MainActor
-final class SpendingDataBuilder {
-    private var provider: ServiceProvider = .cursor
-    private var currentSpendingUSD: Double?
-    private var displaySpending: Double?
-    private var connectionStatus: ProviderConnectionStatus = .connected
-    private var lastError: String?
-    private var invoice: ProviderMonthlyInvoice?
-    private var usageData: ProviderUsageData?
-    private var warningLimit: Double = 100.0
-    private var upperLimit: Double = 200.0
+final class SpendingDataBuilder: Sendable {
+    private let provider: ServiceProvider
+    private let currentSpendingUSD: Double?
+    private let currentSpendingConverted: Double?
+    private let connectionStatus: ProviderConnectionStatus
+    private let lastError: String?
+    private let invoice: ProviderMonthlyInvoice?
+    private let usageData: ProviderUsageData?
+    private let warningLimit: Double
+    private let upperLimit: Double
     
-    func for(provider: ServiceProvider) -> Self {
+    init(
+        provider: ServiceProvider = .cursor,
+        currentSpendingUSD: Double? = nil,
+        currentSpendingConverted: Double? = nil,
+        connectionStatus: ProviderConnectionStatus = .connected,
+        lastError: String? = nil,
+        invoice: ProviderMonthlyInvoice? = nil,
+        usageData: ProviderUsageData? = nil,
+        warningLimit: Double = 100.0,
+        upperLimit: Double = 200.0
+    ) {
         self.provider = provider
-        return self
-    }
-    
-    func withSpending(usd: Double, display: Double? = nil) -> Self {
-        self.currentSpendingUSD = usd
-        self.displaySpending = display ?? usd
-        return self
-    }
-    
-    func withStatus(_ status: ProviderConnectionStatus) -> Self {
-        self.connectionStatus = status
-        return self
-    }
-    
-    func withError(_ error: String) -> Self {
-        self.lastError = error
-        return self
-    }
-    
-    func withInvoice(_ invoice: ProviderMonthlyInvoice) -> Self {
+        self.currentSpendingUSD = currentSpendingUSD
+        self.currentSpendingConverted = currentSpendingConverted
+        self.connectionStatus = connectionStatus
+        self.lastError = lastError
         self.invoice = invoice
-        return self
+        self.usageData = usageData
+        self.warningLimit = warningLimit
+        self.upperLimit = upperLimit
     }
     
-    func withUsage(current: Int, total: Int, max: Int) -> Self {
-        self.usageData = ProviderUsageData(
+    func withProvider(_ provider: ServiceProvider) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: connectionStatus,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
+    }
+    
+    func withSpending(usd: Double, converted: Double? = nil) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: usd,
+            currentSpendingConverted: converted ?? usd,
+            connectionStatus: connectionStatus,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
+    }
+    
+    func withStatus(_ status: ProviderConnectionStatus) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: status,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
+    }
+    
+    func withError(_ error: String) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: connectionStatus,
+            lastError: error,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
+    }
+    
+    func withInvoice(_ invoice: ProviderMonthlyInvoice) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: connectionStatus,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
+    }
+    
+    func withUsage(current: Int, total: Int, max: Int) -> SpendingDataBuilder {
+        let usage = ProviderUsageData(
             currentRequests: current,
             totalRequests: total,
             maxRequests: max,
             startOfMonth: Date(),
             provider: provider
         )
-        return self
+        return SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: connectionStatus,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usage,
+            warningLimit: warningLimit,
+            upperLimit: upperLimit
+        )
     }
     
-    func withLimits(warning: Double, upper: Double) -> Self {
-        self.warningLimit = warning
-        self.upperLimit = upper
-        return self
+    func withLimits(warning: Double, upper: Double) -> SpendingDataBuilder {
+        SpendingDataBuilder(
+            provider: provider,
+            currentSpendingUSD: currentSpendingUSD,
+            currentSpendingConverted: currentSpendingConverted,
+            connectionStatus: connectionStatus,
+            lastError: lastError,
+            invoice: invoice,
+            usageData: usageData,
+            warningLimit: warning,
+            upperLimit: upper
+        )
     }
     
     func build() -> ProviderSpendingData {
         ProviderSpendingData(
             provider: provider,
             currentSpendingUSD: currentSpendingUSD,
-            currentSpendingConverted: currentSpendingUSD,
-            displaySpending: displaySpending ?? currentSpendingUSD ?? 0,
-            displayCurrency: "USD",
-            connectionStatus: connectionStatus,
-            lastUpdateTime: Date(),
-            lastError: lastError,
+            currentSpendingConverted: currentSpendingConverted,
+            warningLimitConverted: warningLimit,
+            upperLimitConverted: upperLimit,
             latestInvoiceResponse: invoice,
             usageData: usageData,
-            warningLimitConverted: warningLimit,
-            upperLimitConverted: upperLimit
+            connectionStatus: connectionStatus,
+            lastError: lastError
         )
     }
 }
 
 /// Builder pattern for creating test currency data
-@MainActor 
+@MainActor
 final class CurrencyDataBuilder {
-    private var selectedCode: String = "USD"
-    private var selectedSymbol: String = "$"
-    private var exchangeRates: [String: Double] = [:]
-    private var lastUpdated: Date = Date()
-    private var isUpdating: Bool = false
-    private var ratesAvailable: Bool = true
+    private let selectedCode: String
+    private let selectedSymbol: String
+    private let exchangeRates: [String: Double]
+    private let lastUpdated: Date
+    private let isUpdating: Bool
+    private let ratesAvailable: Bool
     
-    func withCurrency(_ code: String, symbol: String) -> Self {
-        self.selectedCode = code
-        self.selectedSymbol = symbol
-        return self
+    init(
+        selectedCode: String = "USD",
+        selectedSymbol: String = "$",
+        exchangeRates: [String: Double] = [:],
+        lastUpdated: Date = Date(),
+        isUpdating: Bool = false,
+        ratesAvailable: Bool = true
+    ) {
+        self.selectedCode = selectedCode
+        self.selectedSymbol = selectedSymbol
+        self.exchangeRates = exchangeRates
+        self.lastUpdated = lastUpdated
+        self.isUpdating = isUpdating
+        self.ratesAvailable = ratesAvailable
     }
     
-    func withRates(_ rates: [String: Double]) -> Self {
-        self.exchangeRates = rates
-        return self
+    func withCurrency(_ code: String, symbol: String) -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: code,
+            selectedSymbol: symbol,
+            exchangeRates: exchangeRates,
+            lastUpdated: lastUpdated,
+            isUpdating: isUpdating,
+            ratesAvailable: ratesAvailable
+        )
     }
     
-    func withStandardRates() -> Self {
-        self.exchangeRates = [
-            "EUR": 0.92,
-            "GBP": 0.82,
-            "JPY": 110.0,
-            "AUD": 1.35,
-            "CAD": 1.25
-        ]
-        return self
+    func withRates(_ rates: [String: Double]) -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: selectedCode,
+            selectedSymbol: selectedSymbol,
+            exchangeRates: rates,
+            lastUpdated: lastUpdated,
+            isUpdating: isUpdating,
+            ratesAvailable: ratesAvailable
+        )
     }
     
-    func updating() -> Self {
-        self.isUpdating = true
-        return self
+    func withStandardRates() -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: selectedCode,
+            selectedSymbol: selectedSymbol,
+            exchangeRates: [
+                "EUR": 0.92,
+                "GBP": 0.82,
+                "JPY": 110.0,
+                "AUD": 1.35,
+                "CAD": 1.25
+            ],
+            lastUpdated: lastUpdated,
+            isUpdating: isUpdating,
+            ratesAvailable: ratesAvailable
+        )
     }
     
-    func ratesUnavailable() -> Self {
-        self.ratesAvailable = false
-        return self
+    func updating() -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: selectedCode,
+            selectedSymbol: selectedSymbol,
+            exchangeRates: exchangeRates,
+            lastUpdated: lastUpdated,
+            isUpdating: true,
+            ratesAvailable: ratesAvailable
+        )
     }
     
-    func lastUpdated(_ date: Date) -> Self {
-        self.lastUpdated = date
-        return self
+    func ratesUnavailable() -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: selectedCode,
+            selectedSymbol: selectedSymbol,
+            exchangeRates: exchangeRates,
+            lastUpdated: lastUpdated,
+            isUpdating: isUpdating,
+            ratesAvailable: false
+        )
+    }
+    
+    func lastUpdated(_ date: Date) -> CurrencyDataBuilder {
+        CurrencyDataBuilder(
+            selectedCode: selectedCode,
+            selectedSymbol: selectedSymbol,
+            exchangeRates: exchangeRates,
+            lastUpdated: date,
+            isUpdating: isUpdating,
+            ratesAvailable: ratesAvailable
+        )
     }
     
     func build() -> CurrencyData {
         let data = CurrencyData()
         data.updateSelectedCurrency(selectedCode)
         if !exchangeRates.isEmpty {
-            data.updateExchangeRates(exchangeRates, lastUpdated: lastUpdated)
+            data.updateExchangeRates(exchangeRates)
         }
         return data
     }
@@ -228,7 +430,6 @@ final class CurrencyDataBuilder {
 
 // MARK: - Test Scenario Builders
 
-/// Creates common test scenarios for multi-provider testing
 struct TestScenarios {
     
     /// Creates a scenario with a single active provider
