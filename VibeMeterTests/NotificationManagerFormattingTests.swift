@@ -2,6 +2,52 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
+// MARK: - Test Data
+
+fileprivate struct CurrencyTestCase: Sendable {
+    let code: String
+    let symbol: String
+}
+
+fileprivate let supportedCurrencies: [CurrencyTestCase] = [
+    CurrencyTestCase(code: "USD", symbol: "$"),
+    CurrencyTestCase(code: "EUR", symbol: "€"),
+    CurrencyTestCase(code: "GBP", symbol: "£"),
+    CurrencyTestCase(code: "JPY", symbol: "¥"),
+    CurrencyTestCase(code: "AUD", symbol: "A$"),
+    CurrencyTestCase(code: "CAD", symbol: "C$"),
+    CurrencyTestCase(code: "CHF", symbol: "CHF"),
+    CurrencyTestCase(code: "CNY", symbol: "¥"),
+    CurrencyTestCase(code: "SEK", symbol: "kr"),
+    CurrencyTestCase(code: "NZD", symbol: "NZ$")
+]
+
+fileprivate struct NumberFormatTestCase: Sendable {
+    let amount: Double
+    let expectedFormat: String
+    let description: String
+}
+
+fileprivate let decimalTestCases: [NumberFormatTestCase] = [
+    NumberFormatTestCase(amount: 75.0, expectedFormat: "75.00", description: "No decimals"),
+    NumberFormatTestCase(amount: 75.5, expectedFormat: "75.50", description: "One decimal"),
+    NumberFormatTestCase(amount: 75.50, expectedFormat: "75.50", description: "One decimal with trailing zero"),
+    NumberFormatTestCase(amount: 75.123, expectedFormat: "75.12", description: "More than 2 decimals (should round)"),
+    NumberFormatTestCase(amount: 75.999, expectedFormat: "76.00", description: "Should round to 76.00")
+]
+
+fileprivate struct UpperLimitTestCase: Sendable {
+    let spending: Double
+    let limit: Double
+    let currency: String
+}
+
+fileprivate let upperLimitTestCases: [UpperLimitTestCase] = [
+    UpperLimitTestCase(spending: 150.0, limit: 100.0, currency: "USD"),
+    UpperLimitTestCase(spending: 75.5, limit: 50.0, currency: "EUR"),
+    UpperLimitTestCase(spending: 200.99, limit: 200.0, currency: "GBP")
+]
+
 @Suite("NotificationManagerFormattingTests", .tags(.notifications, .unit))
 @MainActor
 struct NotificationManagerFormattingTests {
@@ -12,27 +58,9 @@ struct NotificationManagerFormattingTests {
     }
 
     // MARK: - Currency Formatting Tests
-    
-    struct CurrencyTestCase: Sendable {
-        let code: String
-        let symbol: String
-    }
-    
-    static let supportedCurrencies: [CurrencyTestCase] = [
-        CurrencyTestCase(code: "USD", symbol: "$"),
-        CurrencyTestCase(code: "EUR", symbol: "€"),
-        CurrencyTestCase(code: "GBP", symbol: "£"),
-        CurrencyTestCase(code: "JPY", symbol: "¥"),
-        CurrencyTestCase(code: "AUD", symbol: "A$"),
-        CurrencyTestCase(code: "CAD", symbol: "C$"),
-        CurrencyTestCase(code: "CHF", symbol: "CHF"),
-        CurrencyTestCase(code: "CNY", symbol: "¥"),
-        CurrencyTestCase(code: "SEK", symbol: "kr"),
-        CurrencyTestCase(code: "NZD", symbol: "NZ$")
-    ]
 
     @Test("Currency formatting all supported currencies", arguments: supportedCurrencies)
-    func currencyFormattingAllSupportedCurrencies(currency: CurrencyTestCase) async {
+    fileprivate func currencyFormattingAllSupportedCurrencies(currency: CurrencyTestCase) async {
         // Given
         notificationManager.reset()
         
@@ -49,23 +77,9 @@ struct NotificationManagerFormattingTests {
     }
 
     // MARK: - Number Formatting Tests
-    
-    struct NumberFormatTestCase: Sendable {
-        let amount: Double
-        let expectedFormat: String
-        let description: String
-    }
-    
-    static let decimalTestCases: [NumberFormatTestCase] = [
-        NumberFormatTestCase(amount: 75.0, expectedFormat: "75.00", description: "No decimals"),
-        NumberFormatTestCase(amount: 75.5, expectedFormat: "75.50", description: "One decimal"),
-        NumberFormatTestCase(amount: 75.50, expectedFormat: "75.50", description: "One decimal with trailing zero"),
-        NumberFormatTestCase(amount: 75.123, expectedFormat: "75.12", description: "More than 2 decimals (should round)"),
-        NumberFormatTestCase(amount: 75.999, expectedFormat: "76.00", description: "Should round to 76.00")
-    ]
 
     @Test("Number formatting decimal places", arguments: decimalTestCases)
-    func numberFormattingDecimalPlaces(testCase: NumberFormatTestCase) async {
+    fileprivate func numberFormattingDecimalPlaces(testCase: NumberFormatTestCase) async {
         // When
         notificationManager.reset()
         await notificationManager.resetAllNotificationStatesForNewSession()
@@ -129,21 +143,9 @@ struct NotificationManagerFormattingTests {
     }
 
     // MARK: - Upper Limit Notification Tests
-    
-    struct UpperLimitTestCase: Sendable {
-        let spending: Double
-        let limit: Double
-        let currency: String
-    }
-    
-    static let upperLimitTestCases: [UpperLimitTestCase] = [
-        UpperLimitTestCase(spending: 150.0, limit: 100.0, currency: "USD"),
-        UpperLimitTestCase(spending: 75.5, limit: 50.0, currency: "EUR"),
-        UpperLimitTestCase(spending: 200.99, limit: 200.0, currency: "GBP")
-    ]
 
     @Test("Upper limit notification formatting", arguments: upperLimitTestCases)
-    func upperLimitNotificationFormatting(testCase: UpperLimitTestCase) async {
+    fileprivate func upperLimitNotificationFormatting(testCase: UpperLimitTestCase) async {
         // When
         notificationManager.reset()
         await notificationManager.showUpperLimitNotification(

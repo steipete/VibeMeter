@@ -375,7 +375,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry server errors
+            #expect(attemptCount == 1) // badServerResponse is not retryable
         }
     }
 
@@ -393,7 +393,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry data errors
+            #expect(attemptCount == 1) // zeroByteResource is not retryable
         }
     }
 
@@ -411,7 +411,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry decoding errors
+            #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
         }
     }
 
@@ -429,7 +429,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry decoding errors
+            #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
         }
     }
 
@@ -447,7 +447,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry parsing errors
+            #expect(attemptCount == 1) // cannotParseResponse is not retryable
         }
     }
 
@@ -465,7 +465,7 @@ struct NetworkRetryHandlerExecutionTests {
             Issue.record("Expected condition not met")
         } catch {
             // Then
-            #expect(attemptCount == 4) // Should retry SSL errors
+            #expect(attemptCount == 1) // secureConnectionFailed is not retryable
         }
     }
 

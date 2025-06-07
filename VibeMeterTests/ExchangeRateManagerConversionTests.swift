@@ -49,7 +49,7 @@ struct ExchangeRateManagerConversionTests {
         ConversionTestCase(92.0, from: "EUR", to: "GBP", rates: ["EUR": 0.92, "GBP": 0.82], expected: 82.0, "EUR to GBP via USD")
     ]
     
-    @Test("Currency conversions", arguments: conversionTestCases)
+    @Test("Currency conversions", arguments: ExchangeRateManagerConversionTests.conversionTestCases)
     func currencyConversions(testCase: ConversionTestCase) {
         // When
         let result = exchangeRateManager.convert(testCase.amount, from: testCase.from, to: testCase.to, rates: testCase.rates)
@@ -75,7 +75,7 @@ struct ExchangeRateManagerConversionTests {
         ConversionTestCase(100.0, from: "EUR", to: "USD", rates: ["EUR": -0.92], expected: nil, "negative rate")
     ]
     
-    @Test("Invalid conversions return nil", arguments: invalidConversionCases)
+    @Test("Invalid conversions return nil", arguments: ExchangeRateManagerConversionTests.invalidConversionCases)
     func invalidConversions(testCase: ConversionTestCase) {
         // When
         let result = exchangeRateManager.convert(testCase.amount, from: testCase.from, to: testCase.to, rates: testCase.rates)

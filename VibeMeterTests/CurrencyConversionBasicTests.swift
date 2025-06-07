@@ -30,7 +30,7 @@ struct CurrencyConversionBasicTests {
         ConversionTestCase(999.99, rate: 1.2345, expected: 1234.488, "precision conversion"),
     ]
 
-    @Test("Currency conversion calculations", .tags(.critical), arguments: conversionTestCases)
+    @Test("Currency conversion calculations", .tags(.critical), arguments: CurrencyConversionBasicTests.conversionTestCases)
     func conversionCalculations(testCase: ConversionTestCase) async {
         // When
         let result = await MainActor.run {
@@ -39,7 +39,7 @@ struct CurrencyConversionBasicTests {
 
         // Then
         let tolerance = testCase.expected.magnitude < 1.0 ? 0.0001 : 0.01
-        result.isApproximatelyEqual(to: testCase.expected, tolerance: tolerance)
+        #expect(abs(result - testCase.expected) < tolerance)
     }
 
     // MARK: - Edge Case Tests
@@ -80,7 +80,7 @@ struct CurrencyConversionBasicTests {
         FormattingTestCase(-50.25, symbol: "$", expected: "$-50.25", "negative amount"),
     ]
 
-    @Test("Currency formatting", arguments: formattingTestCases)
+    @Test("Currency formatting", arguments: CurrencyConversionBasicTests.formattingTestCases)
     func currencyFormatting(testCase: FormattingTestCase) async {
         // When
         let result = await MainActor.run {

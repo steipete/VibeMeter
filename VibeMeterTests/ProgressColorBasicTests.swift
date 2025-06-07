@@ -51,7 +51,7 @@ struct ProgressColorBasicTests {
         ColorTestCase(2.0, color: .progressDanger, range: "over limit")
     ]
     
-    @Test("Progress color thresholds", arguments: colorThresholdCases)
+    @Test("Progress color thresholds", arguments: ProgressColorBasicTests.colorThresholdCases)
     func progressColorThresholds(testCase: ColorTestCase) {
         // When
         let color = Color.progressColor(for: testCase.progress)
@@ -97,7 +97,7 @@ struct ProgressColorBasicTests {
         SpendingScenario(progress: 1.2, description: "20% over budget", expectedColor: .progressDanger)
     ]
     
-    @Test("Typical spending scenarios", arguments: spendingScenarios)
+    @Test("Typical spending scenarios", arguments: ProgressColorBasicTests.spendingScenarios)
     func typicalSpendingScenarios(scenario: SpendingScenario) {
         // When
         let color = Color.progressColor(for: scenario.progress)

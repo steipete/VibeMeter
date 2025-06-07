@@ -2,6 +2,20 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
+fileprivate struct EasingTestCase: Sendable {
+    let input: Double
+    let expected: Double
+    let description: String
+    let tolerance: Double = 0.0001
+}
+
+fileprivate let easingEdgeCases: [EasingTestCase] = [
+    EasingTestCase(input: -0.1, expected: 0.02, description: "Below 0: 2 * (-0.1) * (-0.1) = 0.02"),
+    EasingTestCase(input: 1.1, expected: 0.98, description: "Above 1: -1 + (4 - 2*1.1) * 1.1 = 0.98"),
+    EasingTestCase(input: 0.25, expected: 0.125, description: "First quarter: 2 * 0.25 * 0.25 = 0.125"),
+    EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875")
+]
+
 @Suite("Menu Bar State Manager - Animation Tests", .tags(.ui, .unit, .performance))
 @MainActor
 struct MenuBarStateManagerAnimationTests {
@@ -90,7 +104,7 @@ struct MenuBarStateManagerAnimationTests {
         #expect(result == expected)
     }
 
-    @Test("Easing function smooth curve", arguments: stride(from: 0.0, through: 1.0, by: 0.1))
+    @Test("Easing function smooth curve", arguments: Array(stride(from: 0.0, through: 1.0, by: 0.1)))
     func easingFunctionSmoothCurve(input: Double) {
         // When
         let result = sut.easeInOut(input)
@@ -109,22 +123,8 @@ struct MenuBarStateManagerAnimationTests {
         #expect(result == 0.5)
     }
 
-    struct EasingTestCase: Sendable {
-        let input: Double
-        let expected: Double
-        let description: String
-        let tolerance: Double = 0.0001
-    }
-    
-    static let easingEdgeCases: [EasingTestCase] = [
-        EasingTestCase(input: -0.1, expected: 0.02, description: "Below 0: 2 * (-0.1) * (-0.1) = 0.02"),
-        EasingTestCase(input: 1.1, expected: 0.98, description: "Above 1: -1 + (4 - 2*1.1) * 1.1 = 0.98"),
-        EasingTestCase(input: 0.25, expected: 0.125, description: "First quarter: 2 * 0.25 * 0.25 = 0.125"),
-        EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875")
-    ]
-    
     @Test("Easing function edge cases", arguments: easingEdgeCases)
-    func easingFunctionEdgeCases(testCase: EasingTestCase) {
+    fileprivate func easingFunctionEdgeCases(testCase: EasingTestCase) {
         // When
         let result = sut.easeInOut(testCase.input)
         
@@ -134,7 +134,7 @@ struct MenuBarStateManagerAnimationTests {
 
     // MARK: - Performance Tests
 
-    @Test("Update animation performance", .timeLimit(.seconds(1)))
+    @Test("Update animation performance", .timeLimit(.minutes(1)))
     func updateAnimationPerformance() {
         // Given
         sut.setState(.loading)

@@ -290,7 +290,7 @@ struct CursorProviderTransitionTests {
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 1, year: 2024, teamId: nil)
 
-        var requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        var requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         var bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
         await mockSettingsManager.updateSession(for: .cursor, session: ProviderSession(
@@ -312,7 +312,7 @@ struct CursorProviderTransitionTests {
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 2, year: 2024, teamId: nil)
 
-        requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 4444)
         await mockSettingsManager.clearUserSessionData(for: .cursor)
@@ -329,7 +329,7 @@ struct CursorProviderTransitionTests {
 
         _ = try await cursorProvider.fetchMonthlyInvoice(authToken: "token", month: 3, year: 2024, teamId: nil)
 
-        requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
     }
