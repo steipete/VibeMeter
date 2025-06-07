@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 @testable import VibeMeter
-import XCTest
 
 @Suite("CursorProviderTransitionTests", .tags(.provider, .integration))
 struct CursorProviderTransitionTests {
@@ -46,7 +45,7 @@ struct CursorProviderTransitionTests {
             teamId: nil)
 
         #expect(individualInvoice.totalSpendingCents == 1000)
-        let firstRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let firstRequestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let firstBodyJSON = try JSONSerialization.jsonObject(with: firstRequestBody) as? [String: Any]
         #expect(firstBodyJSON?["teamId"] == nil)
 
@@ -83,7 +82,7 @@ struct CursorProviderTransitionTests {
         #expect(teamInvoice.totalSpendingCents == 5000)
 
         // Verify stored teamId was used
-        let secondRequestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let secondRequestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let secondBodyJSON = try JSONSerialization.jsonObject(with: secondRequestBody) as? [String: Any]
         #expect(secondBodyJSON?["teamId"] as? Int == 4567)
     }
@@ -120,7 +119,7 @@ struct CursorProviderTransitionTests {
             teamId: nil)
 
         // Then - Verify no teamId in request
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
     }
@@ -156,7 +155,7 @@ struct CursorProviderTransitionTests {
             teamId: 9999) // Override with different team
 
         // Then - Verify override teamId was used
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 9999)
     }
@@ -190,7 +189,7 @@ struct CursorProviderTransitionTests {
             teamId: 0) // Explicitly set to 0
 
         // Then - Verify teamId 0 is filtered out as invalid
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] == nil)
         #expect(bodyJSON?["teamId"] as? Int != 2222)
@@ -271,7 +270,7 @@ struct CursorProviderTransitionTests {
         // Then
         #expect(invoice.items.count == 2)
         #expect(invoice.pricingDescription?.description == "Team Pro Plan")
-        let requestBody = try XCTUnwrap(mockURLSession.lastRequest?.httpBody)
+        let requestBody = try #require(mockURLSession.lastRequest?.httpBody)
         let bodyJSON = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
         #expect(bodyJSON?["teamId"] as? Int == 7777)
     }

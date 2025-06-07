@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-@Suite("ExchangeRateManagerConversionTests", .tags(.currency, .unit))
+@Suite("Exchange Rate Manager - Conversion Tests", .tags(.currency, .unit))
 struct ExchangeRateManagerConversionTests {
     private let mockURLSession: MockURLSession
     private let exchangeRateManager: ExchangeRateManager
@@ -14,148 +14,111 @@ struct ExchangeRateManagerConversionTests {
 
     // MARK: - Currency Conversion Tests
 
-    @Test("convert same currency returns original amount")
-    func convert_SameCurrency_ReturnsOriginalAmount() {
-        // Given
-        let amount = 100.0
-        let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
-
+    struct ConversionTestCase: Sendable {
+        let amount: Double
+        let from: String
+        let to: String
+        let rates: [String: Double]
+        let expected: Double?
+        let description: String
+        let tolerance: Double
+        
+        init(_ amount: Double, from: String, to: String, rates: [String: Double], expected: Double?, _ description: String, tolerance: Double = 0.01) {
+            self.amount = amount
+            self.from = from
+            self.to = to
+            self.rates = rates
+            self.expected = expected
+            self.description = description
+            self.tolerance = tolerance
+        }
+    }
+    
+    static let conversionTestCases: [ConversionTestCase] = [
+        // Same currency
+        ConversionTestCase(100.0, from: "USD", to: "USD", rates: ["EUR": 0.92], expected: 100.0, "same currency returns original"),
+        
+        // USD to other currencies
+        ConversionTestCase(100.0, from: "USD", to: "EUR", rates: ["EUR": 0.92], expected: 92.0, "USD to EUR"),
+        ConversionTestCase(100.0, from: "USD", to: "GBP", rates: ["GBP": 0.82], expected: 82.0, "USD to GBP"),
+        
+        // Other currencies to USD
+        ConversionTestCase(92.0, from: "EUR", to: "USD", rates: ["EUR": 0.92], expected: 100.0, "EUR to USD"),
+        
+        // Cross currency conversion
+        ConversionTestCase(92.0, from: "EUR", to: "GBP", rates: ["EUR": 0.92, "GBP": 0.82], expected: 82.0, "EUR to GBP via USD")
+    ]
+    
+    @Test("Currency conversions", arguments: conversionTestCases)
+    func currencyConversions(testCase: ConversionTestCase) {
         // When
-        let result = exchangeRateManager.convert(amount, from: "USD", to: "USD", rates: rates)
-
+        let result = exchangeRateManager.convert(testCase.amount, from: testCase.from, to: testCase.to, rates: testCase.rates)
+        
         // Then
-        #expect(result == amount)
+        if let expected = testCase.expected {
+            #expect(result != nil)
+            if let result {
+                #expect(abs(result - expected) < testCase.tolerance)
+            }
+        } else {
+            #expect(result == nil)
+        }
     }
 
-    func convert_USDToOtherCurrency_Success() {
-        // Given
-        let amount = 100.0
-        let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
-
+    static let invalidConversionCases: [ConversionTestCase] = [
+        // Missing currencies
+        ConversionTestCase(100.0, from: "GBP", to: "EUR", rates: ["EUR": 0.92], expected: nil, "missing source currency"),
+        ConversionTestCase(100.0, from: "EUR", to: "GBP", rates: ["EUR": 0.92], expected: nil, "missing target currency"),
+        
+        // Invalid rates
+        ConversionTestCase(100.0, from: "EUR", to: "GBP", rates: ["EUR": 0.0, "GBP": 0.82], expected: nil, "zero source rate"),
+        ConversionTestCase(100.0, from: "EUR", to: "USD", rates: ["EUR": -0.92], expected: nil, "negative rate")
+    ]
+    
+    @Test("Invalid conversions return nil", arguments: invalidConversionCases)
+    func invalidConversions(testCase: ConversionTestCase) {
         // When
-        let eurResult = exchangeRateManager.convert(amount, from: "USD", to: "EUR", rates: rates)
-        let gbpResult = exchangeRateManager.convert(amount, from: "USD", to: "GBP", rates: rates)
-
-        // Then
-        #expect(eurResult == 92.0)
-        #expect(gbpResult == 82.0)
-    }
-
-    @Test("convert other currency to usd success")
-    func convert_OtherCurrencyToUSD_Success() {
-        // Given
-        let amount = 92.0
-        let rates = ["EUR": 0.92]
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "EUR", to: "USD", rates: rates)
-
-        // Then
-        #expect(abs(result! - 100.0) < 0.01)
-    }
-
-    @Test("convert cross currency conversion success")
-    func convert_CrossCurrencyConversion_Success() {
-        // Given
-        let amount = 92.0 // 92 EUR
-        let rates: [String: Double] = ["EUR": 0.92, "GBP": 0.82]
-
-        // When - Converting EUR to GBP through USD
-        let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
-
-        // Then - 92 EUR = 100 USD = 82 GBP
-        #expect(abs(result! - 82.0) < 0.01)
-    }
-
-    @Test("convert missing source currency returns nil")
-    func convert_MissingSourceCurrency_ReturnsNil() {
-        // Given
-        let amount = 100.0
-        let rates = ["EUR": 0.92]
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "GBP", to: "EUR", rates: rates)
-
-        // Then
-        #expect(result == nil)
-    }
-
-    func convert_MissingTargetCurrency_ReturnsNil() {
-        // Given
-        let amount = 100.0
-        let rates = ["EUR": 0.92]
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
-
+        let result = exchangeRateManager.convert(testCase.amount, from: testCase.from, to: testCase.to, rates: testCase.rates)
+        
         // Then
         #expect(result == nil)
     }
-
-    func convert_ZeroSourceRate_ReturnsNil() {
+    
+    @Test("Edge case conversions", arguments: [
+        (Double.greatestFiniteMagnitude / 2, "very large number"),
+        (Double.leastNormalMagnitude, "very small number")
+    ])
+    func edgeCaseConversions(amount: Double, description: String) {
         // Given
-        let amount = 100.0
-        let rates: [String: Double] = ["EUR": 0.0, "GBP": 0.82]
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "EUR", to: "GBP", rates: rates)
-
-        // Then
-        #expect(result == nil)
-    }
-
-    func convert_NegativeRates() {
-        // Given
-        let amount = 100.0
-        let rates: [String: Double] = ["EUR": -0.92] // Invalid negative rate
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "EUR", to: "USD", rates: rates)
-
-        // Then
-        #expect(result == nil)
-    }
-
-    func convert_VeryLargeNumbers() {
-        // Given
-        let amount = Double.greatestFiniteMagnitude / 2
         let rates = ["EUR": 0.92]
-
+        
         // When
         let result = exchangeRateManager.convert(amount, from: "USD", to: "EUR", rates: rates)
-
-        // Then
-        #expect(result != nil)
-    }
-
-    @Test("convert very small numbers")
-    func convert_VerySmallNumbers() {
-        // Given
-        let amount = Double.leastNormalMagnitude
-        let rates = ["EUR": 0.92]
-
-        // When
-        let result = exchangeRateManager.convert(amount, from: "USD", to: "EUR", rates: rates)
-
+        
         // Then
         #expect(result != nil)
     }
 
     // MARK: - Currency Symbol Tests
 
-    @Test("get symbol all supported currencies")
-    func getSymbol_AllSupportedCurrencies() {
-        // When/Then
-        #expect(ExchangeRateManager.getSymbol(for: "USD") == "$")
-        #expect(ExchangeRateManager.getSymbol(for: "EUR") == "€")
-        #expect(ExchangeRateManager.getSymbol(for: "GBP") == "£")
-        #expect(ExchangeRateManager.getSymbol(for: "JPY") == "¥")
-        #expect(ExchangeRateManager.getSymbol(for: "AUD") == "A$")
-        #expect(ExchangeRateManager.getSymbol(for: "CAD") == "C$")
-        #expect(ExchangeRateManager.getSymbol(for: "CHF") == "CHF")
-        #expect(ExchangeRateManager.getSymbol(for: "CNY") == "¥")
-        #expect(ExchangeRateManager.getSymbol(for: "SEK") == "kr")
-        #expect(ExchangeRateManager.getSymbol(for: "NZD") == "NZ$")
+    @Test("Currency symbols", arguments: [
+        ("USD", "$"),
+        ("EUR", "€"),
+        ("GBP", "£"),
+        ("JPY", "¥"),
+        ("AUD", "A$"),
+        ("CAD", "C$"),
+        ("CHF", "CHF"),
+        ("CNY", "¥"),
+        ("SEK", "kr"),
+        ("NZD", "NZ$")
+    ])
+    func currencySymbols(code: String, expectedSymbol: String) {
+        // When
+        let symbol = ExchangeRateManager.getSymbol(for: code)
+        
+        // Then
+        #expect(symbol == expectedSymbol)
     }
 
     @Test("get symbol unsupported currency returns code")
@@ -167,22 +130,30 @@ struct ExchangeRateManagerConversionTests {
         #expect(result == "XXX")
     }
 
-    func fallbackRates_ContainsExpectedCurrencies() {
+    @Test("Fallback rates contain expected currencies")
+    func fallbackRatesContainExpectedCurrencies() {
         // When
         let fallbackRates = exchangeRateManager.fallbackRates
-
+        
         // Then
-        #expect(fallbackRates["EUR"] == 0.85)
-        #expect(fallbackRates["JPY"] == 110.0)
-        #expect(fallbackRates["CAD"] == 1.25)
-        #expect(fallbackRates["CNY"] == 6.45)
-        #expect(fallbackRates["NZD"] == 1.4)
+        let expectedRates: [String: Double] = [
+            "EUR": 0.85,
+            "JPY": 110.0,
+            "CAD": 1.25,
+            "CNY": 6.45,
+            "NZD": 1.4
+        ]
+        
+        for (currency, rate) in expectedRates {
+            #expect(fallbackRates[currency] == rate)
+        }
     }
 
-    func supportedCurrencies_ContainsExpectedList() {
+    @Test("Supported currencies list")
+    func supportedCurrenciesList() {
         // When
         let supportedCurrencies = exchangeRateManager.supportedCurrencies
-
+        
         // Then
         let expectedCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
         #expect(Set(supportedCurrencies) == Set(expectedCurrencies))
