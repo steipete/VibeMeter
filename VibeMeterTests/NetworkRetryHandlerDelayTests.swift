@@ -45,12 +45,12 @@ struct NetworkRetryHandlerDelayTests {
 
     @Test("max delay respected")
     func maxDelayRespected() async {
-        // Given
+        // Given - Use millisecond delays for faster tests
         let config = NetworkRetryHandler.Configuration(
             maxRetries: 5,
-            initialDelay: 1.0,
-            maxDelay: 2.0, // Low max delay
-            multiplier: 10.0, // High multiplier
+            initialDelay: 0.01,   // 10ms instead of 1s
+            maxDelay: 0.02,       // 20ms instead of 2s
+            multiplier: 10.0,     // High multiplier
             jitterFactor: 0.0)
         let handler = NetworkRetryHandler(configuration: config)
         var attemptCount = 0
@@ -65,8 +65,8 @@ struct NetworkRetryHandlerDelayTests {
         } catch {
             // Then
             let totalTime = Date().timeIntervalSince(startTime)
-            // Should be capped at maxDelay * maxRetries = 2.0 * 5 = 10.0
-            #expect(totalTime < 12.0) // Allow some margin
+            // Should be capped at maxDelay * maxRetries = 0.02 * 5 = 0.1
+            #expect(totalTime < 0.2) // Allow some margin
             #expect(attemptCount == 6) // 1 initial + 5 retries
         }
     }

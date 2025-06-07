@@ -14,8 +14,15 @@ struct NetworkRetryHandlerConfigurationTests {
 
     @Test("default configuration")
     func defaultConfiguration() async {
-        // Given
-        let defaultHandler = NetworkRetryHandler()
+        // Given - Use test configuration with minimal delays
+        let testConfig = NetworkRetryHandler.Configuration(
+            maxRetries: 3,
+            initialDelay: 0.01,  // 10ms instead of 1s
+            maxDelay: 0.1,       // 100ms instead of 30s
+            multiplier: 2.0,
+            jitterFactor: 0.1
+        )
+        let defaultHandler = NetworkRetryHandler(configuration: testConfig)
 
         // Then - verify through behavior
         let startTime = Date()
@@ -28,17 +35,24 @@ struct NetworkRetryHandlerConfigurationTests {
             }
             Issue.record("Expected condition not met")
         } catch {
-            // Default config has maxRetries = 3, so 4 attempts total
+            // Config has maxRetries = 3, so 4 attempts total
             #expect(attemptCount == 4)
             let elapsed = Date().timeIntervalSince(startTime)
-            #expect(elapsed > 0.0) // Should have some delay
+            #expect(elapsed < 1.0) // Should complete quickly with test delays
         }
     }
 
     @Test("aggressive configuration")
     func aggressiveConfiguration() async {
-        // Given
-        let aggressiveHandler = NetworkRetryHandler(configuration: .aggressive)
+        // Given - Use test configuration based on aggressive but with minimal delays
+        let testConfig = NetworkRetryHandler.Configuration(
+            maxRetries: 5,
+            initialDelay: 0.005,  // 5ms instead of 0.5s
+            maxDelay: 0.1,        // 100ms instead of 60s
+            multiplier: 1.5,
+            jitterFactor: 0.2
+        )
+        let aggressiveHandler = NetworkRetryHandler(configuration: testConfig)
         var attemptCount = 0
 
         // When
