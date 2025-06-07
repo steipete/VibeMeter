@@ -5,9 +5,8 @@ import Testing
 @Suite("String Extensions Tests", .tags(.unit))
 @MainActor
 struct StringExtensionsTests {
-    
     // MARK: - Truncate Method Tests
-    
+
     @Suite("Truncate Method Tests", .tags(.fast))
     struct TruncateTests {
         // MARK: - Parameterized Truncation Tests
@@ -60,7 +59,11 @@ struct StringExtensionsTests {
             TruncationTestCase("Hello", length: 0, expected: "", "zero length"),
             TruncationTestCase("Unicode: 🚀✨🎉", length: 12, expected: "Unicode: 🚀✨🎉", "unicode characters fit exactly"),
             TruncationTestCase("Unicode: 🚀✨🎉", length: 10, expected: "Unicode...", "unicode with truncation"),
-            TruncationTestCase("Unicode: 🚀✨🎉 test", length: 12, expected: "Unicode: ...", "unicode with more truncation"),
+            TruncationTestCase(
+                "Unicode: 🚀✨🎉 test",
+                length: 12,
+                expected: "Unicode: ...",
+                "unicode with more truncation"),
         ]
 
         @Test("String truncation", arguments: truncationTestCases)
@@ -117,7 +120,11 @@ struct StringExtensionsTests {
         }
 
         static let specialCharacterTestCases: [SpecialCharacterTestCase] = [
-            SpecialCharacterTestCase("Line 1\nLine 2\nLine 3", length: 10, expectedPrefix: "Line 1", "newline characters"),
+            SpecialCharacterTestCase(
+                "Line 1\nLine 2\nLine 3",
+                length: 10,
+                expectedPrefix: "Line 1",
+                "newline characters"),
             SpecialCharacterTestCase(
                 "Tab\tSeparated\tValues",
                 length: 15,
@@ -161,9 +168,9 @@ struct StringExtensionsTests {
             }
         }
     }
-    
+
     // MARK: - Truncated Method Tests
-    
+
     @Suite("Truncated Method Tests", .tags(.fast))
     struct TruncatedTests {
         // MARK: - truncated(to:) Tests
@@ -366,9 +373,9 @@ struct StringExtensionsTests {
             #expect(truncatedResult == "Short")
         }
     }
-    
+
     // MARK: - Edge Cases Tests
-    
+
     @Suite("Edge Cases Tests", .tags(.edgeCase))
     struct EdgeCasesTests {
         // MARK: - Edge Cases Tests

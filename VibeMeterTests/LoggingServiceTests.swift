@@ -6,9 +6,8 @@ import Testing
 @Suite("LoggingService", .tags(.unit))
 @MainActor
 struct LoggingServiceTests {
-    
     // MARK: - Core Tests
-    
+
     @Suite("Core", .tags(.fast))
     struct CoreTests {
         // MARK: - LogCategory Tests
@@ -49,7 +48,7 @@ struct LoggingServiceTests {
 
             #expect(categories.count == 12)
         }
-        
+
         // MARK: - Basic Logging Tests
 
         @Test("log  basic message  does not crash")
@@ -252,12 +251,11 @@ struct LoggingServiceTests {
             // Test passes if no exceptions are thrown
         }
     }
-    
+
     // MARK: - Error Handling Tests
-    
+
     @Suite("Error Handling", .tags(.edgeCase))
     struct ErrorHandlingTests {
-        
         @Test("log  with localized error  handles error description")
 
         func log_WithLocalizedError_HandlesErrorDescription() {
@@ -394,12 +392,11 @@ struct LoggingServiceTests {
             // Test passes if no exception is thrown
         }
     }
-    
+
     // MARK: - Edge Cases and Performance Tests
-    
+
     @Suite("Edge Cases", .tags(.performance))
     struct EdgeCasesTests {
-        
         @Test("log  empty message  handles gracefully")
 
         func log_EmptyMessage_HandlesGracefully() {

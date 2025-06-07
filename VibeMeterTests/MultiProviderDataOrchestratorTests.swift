@@ -241,7 +241,9 @@ struct MultiProviderDataOrchestratorTests {
             // The actual spending amount might vary based on implementation details
             #expect(cursorData.currentSpendingUSD != nil || cursorData.currentSpendingConverted != nil)
         } else {
-            #expect(Bool(false), "No spending data found for Cursor - spending data may not have been initialized correctly")
+            #expect(
+                Bool(false),
+                "No spending data found for Cursor - spending data may not have been initialized correctly")
         }
     }
 }

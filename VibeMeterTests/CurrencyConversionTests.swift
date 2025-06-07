@@ -5,12 +5,10 @@ import Testing
 @Suite("Currency Conversion Tests", .tags(.currency, .unit))
 @MainActor
 struct CurrencyConversionTests {
-    
     // MARK: - Basic Conversion Tests
-    
+
     @Suite("Basic Conversion", .tags(.fast, .critical))
     struct BasicConversionTests {
-        
         struct ConversionTestCase: Sendable, CustomTestStringConvertible {
             let amount: Double
             let rate: Double
@@ -23,7 +21,7 @@ struct CurrencyConversionTests {
                 self.expected = expected
                 self.description = description
             }
-            
+
             var testDescription: String { description }
         }
 
@@ -76,12 +74,11 @@ struct CurrencyConversionTests {
             result.isApproximatelyEqual(to: expectedMonthly, tolerance: 0.01)
         }
     }
-    
+
     // MARK: - Currency Formatting Tests
-    
+
     @Suite("Currency Formatting", .tags(.fast))
     struct CurrencyFormattingTests {
-        
         struct FormattingTestCase: Sendable {
             let amount: Double
             let symbol: String
@@ -138,13 +135,12 @@ struct CurrencyConversionTests {
             #expect(!result.isEmpty)
         }
     }
-    
+
     // MARK: - Edge Cases Tests
-    
+
     @Suite("Edge Cases", .tags(.edgeCase))
     @MainActor
     struct EdgeCasesTests {
-        
         @Test("convert with infinite values")
         func convertWithInfiniteValues() {
             // Given
@@ -198,7 +194,10 @@ struct CurrencyConversionTests {
             let locale = Locale(identifier: "en_US")
 
             // When
-            let result = CurrencyConversionHelper.formatAmount(nanAmount, currencySymbol: currencySymbol, locale: locale)
+            let result = CurrencyConversionHelper.formatAmount(
+                nanAmount,
+                currencySymbol: currencySymbol,
+                locale: locale)
 
             // Then
             // Should have some representation (formatter should handle this)
@@ -245,12 +244,11 @@ struct CurrencyConversionTests {
             }
         }
     }
-    
+
     // MARK: - Performance Tests
-    
+
     @Suite("Performance", .tags(.performance))
     struct PerformanceTests {
-        
         @Test("Conversion performance", .timeLimit(.minutes(1)))
         func conversionPerformance() async {
             // Given

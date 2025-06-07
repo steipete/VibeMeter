@@ -58,9 +58,8 @@ private final class MockProvider: ProviderProtocol, @unchecked Sendable {
 @Suite("MultiProviderLoginManager", .tags(.authentication))
 @MainActor
 struct MultiProviderLoginManagerTests {
-    
     // MARK: - Core Tests
-    
+
     @Suite("Core Functionality", .tags(.unit))
     @MainActor
     struct CoreTests {
@@ -191,9 +190,9 @@ struct MultiProviderLoginManagerTests {
             #expect(sut.isLoggedIn(to: .cursor) == false)
         }
     }
-    
+
     // MARK: - Callback Tests
-    
+
     @Suite("Callback Functionality", .tags(.authentication, .integration))
     @MainActor
     struct CallbackTests {
@@ -324,9 +323,9 @@ struct MultiProviderLoginManagerTests {
             }
         #endif
     }
-    
+
     // MARK: - Token Tests
-    
+
     @Suite("Token Management", .tags(.authentication, .unit))
     @MainActor
     struct TokenTests {

@@ -6,7 +6,6 @@ import Testing
 @Suite("Provider Connection Status Tests", .tags(.provider, .unit))
 @MainActor
 struct ProviderConnectionStatusTests {
-    
     @Suite("Basic Status Tests")
     struct BasicTests {
         // MARK: - Test Case Definitions

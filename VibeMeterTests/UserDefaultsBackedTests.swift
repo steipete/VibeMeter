@@ -422,7 +422,10 @@ struct UserDefaultsBackedTests {
             }
 
             // When - Create new property with same key
-            @UserDefaultsBacked(key: "persistenceTest", defaultValue: "different default", userDefaults: testUserDefaults)
+            @UserDefaultsBacked(
+                key: "persistenceTest",
+                defaultValue: "different default",
+                userDefaults: testUserDefaults)
             var newProperty: String
 
             // Then - Should retrieve previously stored value
@@ -500,7 +503,10 @@ struct UserDefaultsBackedTests {
         @Test("optional handling int optional set to nil removes from defaults")
         func optionalHandling_IntOptional_SetToNil_RemovesFromDefaults() {
             // Given
-            @UserDefaultsBacked(key: "optionalIntHandlingTest", defaultValue: nil as Int?, userDefaults: testUserDefaults)
+            @UserDefaultsBacked(
+                key: "optionalIntHandlingTest",
+                defaultValue: nil as Int?,
+                userDefaults: testUserDefaults)
             var optionalProperty: Int?
 
             // When
@@ -516,7 +522,10 @@ struct UserDefaultsBackedTests {
         @Test("optional handling array optional set to nil removes from defaults")
         func optionalHandling_ArrayOptional_SetToNil_RemovesFromDefaults() {
             // Given
-            @UserDefaultsBacked(key: "optionalArrayTest", defaultValue: nil as [String]?, userDefaults: testUserDefaults)
+            @UserDefaultsBacked(
+                key: "optionalArrayTest",
+                defaultValue: nil as [String]?,
+                userDefaults: testUserDefaults)
             var optionalProperty: [String]?
 
             // When

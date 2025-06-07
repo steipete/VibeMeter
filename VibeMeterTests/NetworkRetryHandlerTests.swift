@@ -5,7 +5,6 @@ import Testing
 @Suite("NetworkRetryHandler Tests", .tags(.network, .unit))
 @MainActor
 struct NetworkRetryHandlerTests {
-    
     @Suite("Configuration Tests")
     struct ConfigurationTests {
         let sut: NetworkRetryHandler
@@ -19,11 +18,10 @@ struct NetworkRetryHandlerTests {
             // Given - Use test configuration with minimal delays
             let testConfig = NetworkRetryHandler.Configuration(
                 maxRetries: 3,
-                initialDelay: 0.01,  // 10ms instead of 1s
-                maxDelay: 0.1,       // 100ms instead of 30s
+                initialDelay: 0.01, // 10ms instead of 1s
+                maxDelay: 0.1, // 100ms instead of 30s
                 multiplier: 2.0,
-                jitterFactor: 0.1
-            )
+                jitterFactor: 0.1)
             let defaultHandler = NetworkRetryHandler(configuration: testConfig)
 
             // Then - verify through behavior
@@ -34,7 +32,7 @@ struct NetworkRetryHandlerTests {
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
             }
-            
+
             let elapsed = Date().timeIntervalSince(startTime)
             #expect(elapsed < 1.0) // Should complete quickly with test delays
         }
@@ -44,11 +42,10 @@ struct NetworkRetryHandlerTests {
             // Given - Use test configuration based on aggressive but with minimal delays
             let testConfig = NetworkRetryHandler.Configuration(
                 maxRetries: 5,
-                initialDelay: 0.005,  // 5ms instead of 0.5s
-                maxDelay: 0.1,        // 100ms instead of 60s
+                initialDelay: 0.005, // 5ms instead of 0.5s
+                maxDelay: 0.1, // 100ms instead of 60s
                 multiplier: 1.5,
-                jitterFactor: 0.2
-            )
+                jitterFactor: 0.2)
             let aggressiveHandler = NetworkRetryHandler(configuration: testConfig)
 
             // When
@@ -83,7 +80,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             // Should have 3 attempts (initial + 2 retries)
             #expect(attemptCount == 3)
@@ -116,10 +113,9 @@ struct NetworkRetryHandlerTests {
             }
         }
     }
-    
+
     @Suite("Delay Tests")
     struct DelayTests {
-        
         @Test("exponential backoff delays")
         func exponentialBackoffDelays() async {
             // Given
@@ -162,9 +158,9 @@ struct NetworkRetryHandlerTests {
             // Given - Use millisecond delays for faster tests
             let config = NetworkRetryHandler.Configuration(
                 maxRetries: 5,
-                initialDelay: 0.01,   // 10ms instead of 1s
-                maxDelay: 0.02,       // 20ms instead of 2s
-                multiplier: 10.0,     // High multiplier
+                initialDelay: 0.01, // 10ms instead of 1s
+                maxDelay: 0.02, // 20ms instead of 2s
+                multiplier: 10.0, // High multiplier
                 jitterFactor: 0.0)
             let handler = NetworkRetryHandler(configuration: config)
             var attemptCount = 0
@@ -238,19 +234,18 @@ struct NetworkRetryHandlerTests {
             }
         }
     }
-    
+
     @Suite("Execution Tests")
     struct ExecutionTests {
         let sut: NetworkRetryHandler
-        
+
         // Test configuration with minimal delays for fast execution
         static let testConfig = NetworkRetryHandler.Configuration(
             maxRetries: 3,
-            initialDelay: 0.001,  // 1ms instead of 1s
-            maxDelay: 0.01,       // 10ms instead of 30s
+            initialDelay: 0.001, // 1ms instead of 1s
+            maxDelay: 0.01, // 10ms instead of 30s
             multiplier: 2.0,
-            jitterFactor: 0.1
-        )
+            jitterFactor: 0.1)
 
         init() {
             sut = NetworkRetryHandler(configuration: Self.testConfig)
@@ -310,7 +305,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then - Should retry maxRetries times
             #expect(attemptCount == 4) // 1 initial + 3 retries
         }
@@ -329,7 +324,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
         }
@@ -348,7 +343,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - client errors should not retry
             }
-            
+
             // Then - Client errors (4xx) should not retry
             #expect(attemptCount == 1)
         }
@@ -359,10 +354,10 @@ struct NetworkRetryHandlerTests {
             var attemptCount = 0
             let testHandler = NetworkRetryHandler(configuration: NetworkRetryHandler.Configuration(
                 maxRetries: 2,
-                initialDelay: 0.001,  // Use very short delay for tests
+                initialDelay: 0.001, // Use very short delay for tests
                 maxDelay: 0.01,
                 multiplier: 2.0,
-                jitterFactor: 0.0  // No jitter for predictable test
+                jitterFactor: 0.0 // No jitter for predictable test
             ))
 
             // When
@@ -374,7 +369,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 3) // 1 initial + 2 retries
         }
@@ -393,7 +388,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
         }
@@ -412,7 +407,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // 1 initial + 3 retries
         }
@@ -431,7 +426,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry bad URL errors
             }
-            
+
             // Then
             #expect(attemptCount == 1) // No retries for non-retryable errors
         }
@@ -456,7 +451,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry based on custom logic and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry based on custom logic
         }
@@ -477,7 +472,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry due to custom logic
             }
-            
+
             // Then
             #expect(attemptCount == 1) // No retries due to custom logic
         }
@@ -531,7 +526,7 @@ struct NetworkRetryHandlerTests {
                 // Expected - should retry and then fail
                 #expect(error is URLError)
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry network timeouts
         }
@@ -550,7 +545,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry connection errors
         }
@@ -569,7 +564,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry connection errors
         }
@@ -588,7 +583,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry DNS errors
         }
@@ -607,7 +602,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry connection errors
         }
@@ -626,7 +621,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry bad server response
             }
-            
+
             // Then
             #expect(attemptCount == 1) // badServerResponse is not retryable
         }
@@ -645,7 +640,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry zero byte resource error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // zeroByteResource is not retryable
         }
@@ -664,7 +659,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry decode error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
         }
@@ -683,7 +678,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry content decode error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
         }
@@ -702,7 +697,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry parse error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // cannotParseResponse is not retryable
         }
@@ -721,7 +716,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry security error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // secureConnectionFailed is not retryable
         }
@@ -740,7 +735,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry certificate error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // Should not retry certificate errors
         }
@@ -760,7 +755,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry 503 errors
         }
@@ -780,7 +775,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry gateway timeouts
         }
@@ -800,7 +795,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should not retry decoding error
             }
-            
+
             // Then
             #expect(attemptCount == 1) // Should not retry generic decoding errors
         }
@@ -819,7 +814,7 @@ struct NetworkRetryHandlerTests {
             } catch {
                 // Expected - should retry and then fail
             }
-            
+
             // Then
             #expect(attemptCount == 4) // Should retry generic network errors
         }

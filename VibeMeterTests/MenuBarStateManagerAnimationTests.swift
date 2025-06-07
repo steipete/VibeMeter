@@ -2,18 +2,18 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-fileprivate struct EasingTestCase: Sendable {
+private struct EasingTestCase: Sendable {
     let input: Double
     let expected: Double
     let description: String
     let tolerance: Double = 0.0001
 }
 
-fileprivate let easingEdgeCases: [EasingTestCase] = [
+private let easingEdgeCases: [EasingTestCase] = [
     EasingTestCase(input: -0.1, expected: 0.02, description: "Below 0: 2 * (-0.1) * (-0.1) = 0.02"),
     EasingTestCase(input: 1.1, expected: 0.98, description: "Above 1: -1 + (4 - 2*1.1) * 1.1 = 0.98"),
     EasingTestCase(input: 0.25, expected: 0.125, description: "First quarter: 2 * 0.25 * 0.25 = 0.125"),
-    EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875")
+    EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875"),
 ]
 
 @Suite("Menu Bar State Manager - Animation Tests", .tags(.ui, .unit, .performance))
@@ -99,7 +99,7 @@ struct MenuBarStateManagerAnimationTests {
     func easingFunctionBoundaryValues(input: Double, expected: Double) {
         // When
         let result = sut.easeInOut(input)
-        
+
         // Then
         #expect(result == expected)
     }
@@ -108,7 +108,7 @@ struct MenuBarStateManagerAnimationTests {
     func easingFunctionSmoothCurve(input: Double) {
         // When
         let result = sut.easeInOut(input)
-        
+
         // Then
         #expect(result >= 0.0)
         #expect(result <= 1.0)
@@ -124,10 +124,10 @@ struct MenuBarStateManagerAnimationTests {
     }
 
     @Test("Easing function edge cases", arguments: easingEdgeCases)
-    fileprivate func easingFunctionEdgeCases(testCase: EasingTestCase) {
+    private func easingFunctionEdgeCases(testCase: EasingTestCase) {
         // When
         let result = sut.easeInOut(testCase.input)
-        
+
         // Then
         #expect(abs(result - testCase.expected) < testCase.tolerance)
     }
@@ -139,7 +139,7 @@ struct MenuBarStateManagerAnimationTests {
         // Given
         sut.setState(.loading)
         let iterations = 10000
-        
+
         // When/Then - Should complete within time limit
         for _ in 0 ..< iterations {
             sut.updateAnimation()

@@ -10,9 +10,8 @@ import Testing
 @Suite("Background Data Processor Tests", .tags(.background, .unit))
 @MainActor
 struct BackgroundDataProcessorTests {
-    
     // MARK: - Basic Functionality
-    
+
     @Suite("Basic Functionality", .tags(.fast))
     struct Basic {
         let processor: BackgroundDataProcessor
@@ -154,8 +153,8 @@ struct BackgroundDataProcessorTests {
             // Given
             mockProvider.invoiceToReturn = ProviderMonthlyInvoice(
                 items: [
-                    ProviderInvoiceItem(cents: 999999, description: "Large Item 1", provider: .cursor),
-                    ProviderInvoiceItem(cents: 888888, description: "Large Item 2", provider: .cursor),
+                    ProviderInvoiceItem(cents: 999_999, description: "Large Item 1", provider: .cursor),
+                    ProviderInvoiceItem(cents: 888_888, description: "Large Item 2", provider: .cursor),
                 ],
                 provider: .cursor,
                 month: 12,
@@ -168,13 +167,13 @@ struct BackgroundDataProcessorTests {
                 providerClient: mockProvider)
 
             // Then
-            #expect(result.invoice.totalSpendingCents == 1888887)
+            #expect(result.invoice.totalSpendingCents == 1_888_887)
             #expect(result.invoice.items.count == 2)
         }
     }
-    
+
     // MARK: - Error Handling
-    
+
     @Suite("Error Handling", .tags(.edgeCase))
     struct ErrorHandling {
         let processor: BackgroundDataProcessor
@@ -380,7 +379,7 @@ struct BackgroundDataProcessorTests {
         func concurrentProcessingOfMultipleProviders() async throws {
             // Given
             let providers: [ServiceProvider] = [.cursor]
-            
+
             // When - Process all providers concurrently
             let results = try await withThrowingTaskGroup(of: ProviderDataResult.self) { group in
                 for provider in providers {
@@ -391,7 +390,7 @@ struct BackgroundDataProcessorTests {
                             providerClient: self.mockProvider)
                     }
                 }
-                
+
                 var collectedResults: [ProviderDataResult] = []
                 for try await result in group {
                     collectedResults.append(result)
@@ -409,6 +408,5 @@ struct BackgroundDataProcessorTests {
         }
     }
 }
-
 
 // swiftlint:enable file_length type_body_length

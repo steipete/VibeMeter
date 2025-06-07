@@ -9,9 +9,8 @@ import Testing
 @Suite("Notification Manager Tests", .tags(.notifications, .unit, .fast))
 @MainActor
 struct NotificationManagerTests {
-    
     // MARK: - Basic Tests
-    
+
     @Suite("Basic Functionality")
     struct BasicTests {
         private let notificationManager: TestableNotificationManager
@@ -184,11 +183,17 @@ struct NotificationManagerTests {
             @Test("Duplicate notification prevention for upper limits")
             func duplicateNotificationPreventionUpperLimits() async {
                 // Given - First notification
-                await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: 105.0,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
                 #expect(mockCenter.addCallCount == 1)
 
                 // When - Try to show again
-                await manager.showUpperLimitNotification(currentSpending: 110.0, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: 110.0,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
 
                 // Then - Should not trigger another notification
                 #expect(mockCenter.addCallCount == 1)
@@ -212,7 +217,10 @@ struct NotificationManagerTests {
             func resetNotificationStatesForNewSession() async {
                 // Given - Show both types of notifications
                 await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
-                await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: 105.0,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
                 #expect(mockCenter.addCallCount == 2)
 
                 // When
@@ -220,7 +228,10 @@ struct NotificationManagerTests {
 
                 // Then - Should be able to show notifications again
                 await manager.showWarningNotification(currentSpending: 75.0, limitAmount: 100.0, currencyCode: "USD")
-                await manager.showUpperLimitNotification(currentSpending: 105.0, limitAmount: 100.0, currencyCode: "USD")
+                await manager.showUpperLimitNotification(
+                    currentSpending: 105.0,
+                    limitAmount: 100.0,
+                    currencyCode: "USD")
                 #expect(mockCenter.addCallCount == 4)
             }
 
@@ -356,9 +367,9 @@ struct NotificationManagerTests {
             #expect(Bool(true))
         }
     }
-    
+
     // MARK: - Content Tests
-    
+
     @Suite("Notification Content Tests")
     struct ContentTests {
         private let notificationManager: TestableNotificationManager2
@@ -468,9 +479,9 @@ struct NotificationManagerTests {
             #expect(mockNotificationCenter.addCallCount == 1)
         }
     }
-    
+
     // MARK: - Formatting Tests
-    
+
     @Suite("Notification Formatting Tests")
     struct FormattingTests {
         private let notificationManager: NotificationManagerMock
@@ -485,14 +496,14 @@ struct NotificationManagerTests {
         fileprivate func currencyFormattingAllSupportedCurrencies(currency: CurrencyTestCase) async {
             // Given
             await notificationManager.reset()
-            
+
             // When
             await notificationManager.resetAllNotificationStatesForNewSession()
             await notificationManager.showWarningNotification(
                 currentSpending: 75.0,
                 limitAmount: 100.0,
                 currencyCode: currency.code)
-            
+
             // Then - Verify notification was called
             #expect(await notificationManager.showWarningNotificationCalled == true)
             #expect(await notificationManager.lastWarningCurrency == currency.code)
@@ -509,28 +520,28 @@ struct NotificationManagerTests {
                 currentSpending: testCase.amount,
                 limitAmount: 100.0,
                 currencyCode: "USD")
-            
+
             // Then - Verify the correct amount was passed
             #expect(await notificationManager.showWarningNotificationCalled == true)
             #expect(await notificationManager.lastWarningSpending == testCase.amount)
         }
 
         // MARK: - Large Number Formatting Tests
-        
+
         @Test("Large number formatting", arguments: [
             (1000.0, "1,000.00"),
             (10000.0, "10,000.00"),
             (1_000_000.0, "1,000,000.00"),
             (1500.50, "1,500.50")
         ])
-        func largeNumberFormatting(amount: Double, expectedFormat: String) async {
+        func largeNumberFormatting(amount: Double, expectedFormat _: String) async {
             // When
             await notificationManager.reset()
             await notificationManager.showWarningNotification(
                 currentSpending: amount,
                 limitAmount: amount + 100.0,
                 currencyCode: "USD")
-            
+
             // Then
             #expect(await notificationManager.showWarningNotificationCalled == true)
             #expect(await notificationManager.lastWarningSpending == amount)
@@ -574,7 +585,7 @@ struct NotificationManagerTests {
                 currentSpending: testCase.spending,
                 limitAmount: testCase.limit,
                 currencyCode: testCase.currency)
-            
+
             // Then
             #expect(await notificationManager.showUpperLimitNotificationCalled == true)
             #expect(await notificationManager.lastUpperLimitSpending == testCase.spending)
@@ -615,9 +626,9 @@ struct NotificationManagerTests {
             #expect(await notificationManager.lastResetCurrentSpendingUSD == 50.0)
         }
     }
-    
+
     // MARK: - State Tests
-    
+
     @Suite("Notification State Tests")
     struct StateTests {
         private let notificationManager: TestableNotificationManager3
@@ -850,12 +861,12 @@ private struct StateResetTestScenario: Sendable {
 
 // MARK: - Formatting Test Data
 
-fileprivate struct CurrencyTestCase: Sendable {
+private struct CurrencyTestCase: Sendable {
     let code: String
     let symbol: String
 }
 
-fileprivate let supportedCurrencies: [CurrencyTestCase] = [
+private let supportedCurrencies: [CurrencyTestCase] = [
     CurrencyTestCase(code: "USD", symbol: "$"),
     CurrencyTestCase(code: "EUR", symbol: "€"),
     CurrencyTestCase(code: "GBP", symbol: "£"),
@@ -865,33 +876,33 @@ fileprivate let supportedCurrencies: [CurrencyTestCase] = [
     CurrencyTestCase(code: "CHF", symbol: "CHF"),
     CurrencyTestCase(code: "CNY", symbol: "¥"),
     CurrencyTestCase(code: "SEK", symbol: "kr"),
-    CurrencyTestCase(code: "NZD", symbol: "NZ$")
+    CurrencyTestCase(code: "NZD", symbol: "NZ$"),
 ]
 
-fileprivate struct NumberFormatTestCase: Sendable {
+private struct NumberFormatTestCase: Sendable {
     let amount: Double
     let expectedFormat: String
     let description: String
 }
 
-fileprivate let decimalTestCases: [NumberFormatTestCase] = [
+private let decimalTestCases: [NumberFormatTestCase] = [
     NumberFormatTestCase(amount: 75.0, expectedFormat: "75.00", description: "No decimals"),
     NumberFormatTestCase(amount: 75.5, expectedFormat: "75.50", description: "One decimal"),
     NumberFormatTestCase(amount: 75.50, expectedFormat: "75.50", description: "One decimal with trailing zero"),
     NumberFormatTestCase(amount: 75.123, expectedFormat: "75.12", description: "More than 2 decimals (should round)"),
-    NumberFormatTestCase(amount: 75.999, expectedFormat: "76.00", description: "Should round to 76.00")
+    NumberFormatTestCase(amount: 75.999, expectedFormat: "76.00", description: "Should round to 76.00"),
 ]
 
-fileprivate struct UpperLimitTestCase: Sendable {
+private struct UpperLimitTestCase: Sendable {
     let spending: Double
     let limit: Double
     let currency: String
 }
 
-fileprivate let upperLimitTestCases: [UpperLimitTestCase] = [
+private let upperLimitTestCases: [UpperLimitTestCase] = [
     UpperLimitTestCase(spending: 150.0, limit: 100.0, currency: "USD"),
     UpperLimitTestCase(spending: 75.5, limit: 50.0, currency: "EUR"),
-    UpperLimitTestCase(spending: 200.99, limit: 200.0, currency: "GBP")
+    UpperLimitTestCase(spending: 200.99, limit: 200.0, currency: "GBP"),
 ]
 
 // MARK: - TestableNotificationManager (Basic Tests)
@@ -1046,7 +1057,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
     // Track which notifications have been shown
     private var warningNotificationShown = false
     private var upperLimitNotificationShown = false
-    
+
     // Test tracking properties
     var showWarningNotificationCalled = false
     var showUpperLimitNotificationCalled = false
@@ -1060,7 +1071,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
     init(notificationCenter: MockUNUserNotificationCenter2) {
         self.notificationCenter = notificationCenter
     }
-    
+
     func reset() async {
         showWarningNotificationCalled = false
         showUpperLimitNotificationCalled = false
@@ -1087,7 +1098,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
         lastWarningSpending = currentSpending
         lastWarningLimit = limitAmount
         lastWarningCurrency = currencyCode
-        
+
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
@@ -1121,7 +1132,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
         lastUpperLimitSpending = currentSpending
         lastUpperLimitLimit = limitAmount
         lastUpperLimitCurrency = currencyCode
-        
+
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)

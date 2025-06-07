@@ -7,9 +7,8 @@ import Testing
 @Suite("Authentication Token Manager Tests", .tags(.authentication, .unit))
 @MainActor
 struct AuthenticationTokenManagerTests {
-    
     // MARK: - Core Functionality
-    
+
     @Suite("Core Functionality", .tags(.fast))
     struct Core {
         private let tokenManager: AuthenticationTokenManager
@@ -117,9 +116,9 @@ struct AuthenticationTokenManagerTests {
             #expect(retrievedToken == nil)
         }
     }
-    
+
     // MARK: - Cookie Management
-    
+
     @Suite("Cookie Management")
     struct CookieManagement {
         private let tokenManager: AuthenticationTokenManager
@@ -246,9 +245,9 @@ struct AuthenticationTokenManagerTests {
             }
         }
     }
-    
+
     // MARK: - Edge Cases
-    
+
     @Suite("Edge Cases", .tags(.edgeCase, .fast))
     struct EdgeCases {
         private let tokenManager: AuthenticationTokenManager
@@ -384,7 +383,7 @@ struct AuthenticationTokenManagerTests {
         func concurrentAccessSimulation() {
             // Given
             let provider = ServiceProvider.cursor
-            let tokens = (1...10).map { "token-\($0)" }
+            let tokens = (1 ... 10).map { "token-\($0)" }
 
             // When - Save tokens sequentially (simulating concurrent access)
             for token in tokens {

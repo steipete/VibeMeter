@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - Test Case Data Structures
 
-struct TeamInfoTestCase: Sendable {
+struct TeamInfoTestCase: Sendable, CustomTestStringConvertible {
     let jsonResponse: String
     let expectedId: Int
     let expectedName: String?
@@ -15,6 +15,10 @@ struct TeamInfoTestCase: Sendable {
         self.expectedId = id
         self.expectedName = name
         self.description = description
+    }
+    
+    var testDescription: String {
+        "\(description): id=\(expectedId), name=\(expectedName ?? "nil")"
     }
 }
 
@@ -84,7 +88,7 @@ struct CursorProviderTests {
     }
 
     // MARK: - Basic Functionality Tests
-    
+
     @Suite("Basic Functionality", .tags(.unit, .fast))
     struct BasicFunctionality {
         let provider: CursorProvider
@@ -98,7 +102,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Team Info Tests
-        
+
         @Suite("Team Information")
         struct TeamInformation {
             let provider: CursorProvider
@@ -186,7 +190,7 @@ struct CursorProviderTests {
         }
 
         // MARK: User Info Tests
-        
+
         @Suite("User Information")
         struct UserInformation {
             let provider: CursorProvider
@@ -256,7 +260,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Authentication Tests
-        
+
         @Suite("Authentication")
         struct Authentication {
             let provider: CursorProvider
@@ -339,7 +343,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Performance Tests
-        
+
         @Test("Provider initialization performance", .timeLimit(.minutes(1)))
         func providerInitializationPerformance() async {
             // When/Then - Should initialize quickly
@@ -382,7 +386,7 @@ struct CursorProviderTests {
     }
 
     // MARK: - Data Fetching Tests
-    
+
     @Suite("Data Fetching", .tags(.integration, .network))
     struct DataFetching {
         let provider: CursorProvider
@@ -427,9 +431,8 @@ struct CursorProviderTests {
         As many fast premium requests as are included in your plan, 1 cent per request after that.
         """
 
-
         // MARK: Monthly Invoice Tests
-        
+
         @Suite("Monthly Invoice")
         struct MonthlyInvoice {
             let provider: CursorProvider
@@ -630,7 +633,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Usage Data Tests
-        
+
         @Suite("Usage Data")
         struct UsageData {
             let provider: CursorProvider
@@ -760,7 +763,7 @@ struct CursorProviderTests {
     }
 
     // MARK: - Individual User Tests
-    
+
     @Suite("Individual User Scenarios", .tags(.edgeCase))
     struct IndividualUser {
         let provider: CursorProvider
@@ -968,7 +971,7 @@ struct CursorProviderTests {
     }
 
     // MARK: - State Transition Tests
-    
+
     @Suite("State Transitions", .tags(.integration))
     struct StateTransitions {
         let provider: CursorProvider
@@ -1184,7 +1187,7 @@ struct CursorProviderTests {
     }
 
     // MARK: - Validation and Error Handling Tests
-    
+
     @Suite("Validation and Error Handling", .tags(.unit))
     struct ValidationErrorHandling {
         let provider: CursorProvider
@@ -1200,7 +1203,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Token Validation
-        
+
         @Suite("Token Validation")
         struct TokenValidation {
             let provider: CursorProvider
@@ -1273,7 +1276,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Network Errors
-        
+
         @Suite("Network Errors")
         struct NetworkErrors {
             let provider: CursorProvider
@@ -1465,7 +1468,7 @@ struct CursorProviderTests {
         }
 
         // MARK: Request Configuration
-        
+
         @Test("request configuration")
         func requestConfiguration() async throws {
             // Given

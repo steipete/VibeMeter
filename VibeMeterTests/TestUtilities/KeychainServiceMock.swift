@@ -12,10 +12,10 @@ class KeychainServiceMock: KeychainServicing {
     var saveTokenShouldSucceed = true
     var deleteTokenShouldSucceed = true
     var shouldFailSave = false
-    
+
     // For backward compatibility with tests
     var lastSavedToken: String? { storedToken }
-    
+
     // Test helper to set stored token directly without triggering save logic
     func setStoredToken(_ token: String?) {
         storedToken = token

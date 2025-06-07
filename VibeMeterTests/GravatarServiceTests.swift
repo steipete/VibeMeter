@@ -6,7 +6,6 @@ import Testing
 @Suite("GravatarService Tests")
 @MainActor
 struct GravatarServiceTests {
-    
     @Suite("Core Functionality", .tags(.network, .unit))
     @MainActor
     struct CoreTests {
@@ -209,7 +208,7 @@ struct GravatarServiceTests {
             #expect(sut.currentAvatarURL != nil)
         }
     }
-    
+
     @Suite("Edge Cases", .tags(.network, .edgeCase))
     @MainActor
     struct EdgeCasesTests {
@@ -327,7 +326,7 @@ struct GravatarServiceTests {
             #expect(urlString.hasSuffix("d=mp"))
         }
     }
-    
+
     @Suite("Hashing", .tags(.unit, .fast))
     @MainActor
     struct HashingTests {
@@ -419,7 +418,10 @@ struct GravatarServiceTests {
             #expect(duration < 1.0)
         }
 
-        @Test("SHA256 hashing performance", .timeLimit(.minutes(1)), .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+        @Test(
+            "SHA256 hashing performance",
+            .timeLimit(.minutes(1)),
+            .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
         func sHA256Hashing_Performance() {
             // Given
             let testString = "performance@test.com"

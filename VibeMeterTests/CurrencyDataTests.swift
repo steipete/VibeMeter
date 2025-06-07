@@ -36,11 +36,11 @@ struct CurrencyDataTests {
     func selectingCurrencyUpdatesCode(currencyCode: String) {
         // Act
         currencyData.updateSelectedCurrency(currencyCode)
-        
+
         // Assert
         #expect(currencyData.selectedCode == currencyCode)
     }
-    
+
     @Test("update selected currency gbp sets correct values")
 
     func updateSelectedCurrencyGBPSetsCorrectValues() {
