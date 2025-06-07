@@ -6,19 +6,36 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
+            <title>VibeMeter 1.0.0-beta.8</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.8/VibeMeter-1.0.0-beta.8.dmg</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.8</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 1.0.0-beta.8</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.8 (build 105)</p></div>
+            ]]></description>
+            <pubDate>Sat, 07 Jun 2025 12:51:50 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.8/VibeMeter-1.0.0-beta.8.dmg"
+                length="5633195"
+                type="application/octet-stream"
+                sparkle:edSignature="uNb+/LPa11eAx2CEUxh23X2yCUctiKbQPdZLRefkS0EAr2hw/7OEv7juJ8GK8E6/N+I+OSRs8Ddt1bvyWJ9EBQ=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
             <title>VibeMeter 1.0.0-beta.7</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.7/VibeMeter-1.0.0-beta.7.dmg</link>
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.7</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.7</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.7 (build 105)</p></p>
+                <h2>VibeMeter 1.0.0-beta.7</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.7 (build 105)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 21:44:22 +0100</pubDate>
             <enclosure 
                 url="https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.7/VibeMeter-1.0.0-beta.7.dmg"
                 length="5620142"
                 type="application/octet-stream"
-                sparkle:edSignature="drXBjrBro+xteyJ6z4HDY1odjZ9dEoxuKBfBQXfnRQeM7FuBNJdqTA5/K4Jq5G9OK+2DquyK+VnGkGKCkFHADg=="
+                sparkle:edSignature="eG1fv3GGCw03UJChncPYybimrkm59+b25zSWJJ7fYBGBfUkSLJF3zp6a9S+44cBTdJLqNMzo2hXz/wmwu4pWDA=="
             />
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>
@@ -28,7 +45,7 @@
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.6</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.6</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.6 (build 105)</p></p>
+                <h2>VibeMeter 1.0.0-beta.6</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.6 (build 105)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 14:14:30 +0100</pubDate>
             <enclosure 
@@ -45,7 +62,7 @@
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.5</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.5</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.5 (build 104)</p></p>
+                <h2>VibeMeter 1.0.0-beta.5</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.5 (build 104)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:21:54 +0100</pubDate>
             <enclosure 
@@ -62,7 +79,7 @@
             <sparkle:version>103</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.4</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.4</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.4 (build 103)</p></p>
+                <h2>VibeMeter 1.0.0-beta.4</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.4 (build 103)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:15:02 +0100</pubDate>
             <enclosure 
@@ -79,7 +96,7 @@
             <sparkle:version>102</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.3</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.3</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.3 (build 102)</p></p>
+                <h2>VibeMeter 1.0.0-beta.3</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.3 (build 102)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:11:01 +0100</pubDate>
             <enclosure 
@@ -96,7 +113,7 @@
             <sparkle:version>101</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.2</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.2</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.2 (build 101)</p></p>
+                <h2>VibeMeter 1.0.0-beta.2</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.2 (build 101)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 10:59:00 +0100</pubDate>
             <enclosure 
@@ -113,7 +130,7 @@
             <sparkle:version>100</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><p><p>Release 1.0.0-beta.1 (build 100)</p></p>
+                <h2>VibeMeter 1.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.1 (build 100)</p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 10:56:46 +0100</pubDate>
             <enclosure 
