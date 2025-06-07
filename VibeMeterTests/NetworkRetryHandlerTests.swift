@@ -29,18 +29,17 @@ struct NetworkRetryHandlerTests {
             let startTime = Date()
             var attemptCount = 0
 
-            do {
-                _ = try await defaultHandler.execute {
+            #expect(throws: Error.self) {
+                try await defaultHandler.execute {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
-                Issue.record("Expected condition not met")
-            } catch {
-                // Config has maxRetries = 3, so 4 attempts total
-                #expect(attemptCount == 4)
-                let elapsed = Date().timeIntervalSince(startTime)
-                #expect(elapsed < 1.0) // Should complete quickly with test delays
             }
+            
+            // Config has maxRetries = 3, so 4 attempts total
+            #expect(attemptCount == 4)
+            let elapsed = Date().timeIntervalSince(startTime)
+            #expect(elapsed < 1.0) // Should complete quickly with test delays
         }
 
         @Test("aggressive configuration")
@@ -57,16 +56,17 @@ struct NetworkRetryHandlerTests {
             var attemptCount = 0
 
             // When
-            do {
-                _ = try await aggressiveHandler.execute {
+            #expect(throws: Error.self) {
+                try await aggressiveHandler.execute {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
-                // Aggressive config has maxRetries = 5, so 6 attempts total
-                #expect(attemptCount == 6)
             }
+            
+            // Then
+            // Aggressive config has maxRetries = 5, so 6 attempts total
+            #expect(attemptCount == 6)
+        }
         }
 
         @Test("custom configuration")
@@ -90,8 +90,9 @@ struct NetworkRetryHandlerTests {
                     attemptTimes.append(Date())
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Should have 3 attempts (initial + 2 retries)
                 #expect(attemptCount == 3)
 
@@ -315,8 +316,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then - Should retry maxRetries times
                 #expect(attemptCount == 4) // 1 initial + 3 retries
             }
@@ -333,8 +335,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // 1 initial + 3 retries
             }
@@ -351,8 +354,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 404)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then - Client errors (4xx) should not retry
                 #expect(attemptCount == 1)
             }
@@ -376,8 +380,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: 0.001)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 3) // 1 initial + 2 retries
             }
@@ -394,8 +399,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.timedOut)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // 1 initial + 3 retries
             }
@@ -412,8 +418,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.networkConnectionLost)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // 1 initial + 3 retries
             }
@@ -430,8 +437,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.badURL)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // No retries for non-retryable errors
             }
@@ -454,8 +462,9 @@ struct NetworkRetryHandlerTests {
                         // Custom logic: retry any CustomError
                         error is CustomError
                     })
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry based on custom logic
             }
@@ -474,8 +483,9 @@ struct NetworkRetryHandlerTests {
                         throw NetworkRetryHandler.RetryableError.networkTimeout
                     },
                     shouldRetry: { _ in false }) // Never retry
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // No retries due to custom logic
             }
@@ -526,8 +536,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.timedOut)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry network timeouts
                 #expect(error is URLError)
@@ -545,8 +556,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.networkConnectionLost)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry connection errors
             }
@@ -563,8 +575,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.notConnectedToInternet)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry connection errors
             }
@@ -581,8 +594,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotFindHost)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry DNS errors
             }
@@ -599,8 +613,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotConnectToHost)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry connection errors
             }
@@ -617,8 +632,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.badServerResponse)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // badServerResponse is not retryable
             }
@@ -635,8 +651,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.zeroByteResource)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // zeroByteResource is not retryable
             }
@@ -653,8 +670,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotDecodeRawData)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
             }
@@ -671,8 +689,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotDecodeContentData)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
             }
@@ -689,8 +708,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotParseResponse)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // cannotParseResponse is not retryable
             }
@@ -707,8 +727,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.secureConnectionFailed)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // secureConnectionFailed is not retryable
             }
@@ -725,8 +746,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.serverCertificateNotYetValid)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // Should not retry certificate errors
             }
@@ -744,8 +766,9 @@ struct NetworkRetryHandlerTests {
                     // HTTP 503 Service Unavailable
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry 503 errors
             }
@@ -763,8 +786,9 @@ struct NetworkRetryHandlerTests {
                     // HTTP 504 Gateway Timeout
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 504)
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry gateway timeouts
             }
@@ -782,8 +806,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw DecodingError()
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 1) // Should not retry generic decoding errors
             }
@@ -800,8 +825,9 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
-                Issue.record("Expected condition not met")
-            } catch {
+            }
+            
+            // Then
                 // Then
                 #expect(attemptCount == 4) // Should retry generic network errors
             }

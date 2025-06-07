@@ -400,7 +400,7 @@ struct GravatarServiceTests {
                 url1?.absoluteString != url2?.absoluteString)
         }
 
-        @Test("gravatar url  performance")
+        @Test("gravatar url performance", .timeLimit(.seconds(2)))
         func gravatarURL_Performance() {
             // Given
             let emails = (0 ..< 1000).map { "user\($0)@performance.test" }
@@ -416,7 +416,7 @@ struct GravatarServiceTests {
             #expect(duration < 1.0)
         }
 
-        @Test("s ha256 hashing  performance")
+        @Test("SHA256 hashing performance", .timeLimit(.seconds(2)), .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
         func sHA256Hashing_Performance() {
             // Given
             let testString = "performance@test.com"

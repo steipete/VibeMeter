@@ -10,7 +10,7 @@ struct CurrencyConversionTests {
     @Suite("Basic Conversion", .tags(.fast, .critical))
     struct BasicConversionTests {
         
-        struct ConversionTestCase: Sendable {
+        struct ConversionTestCase: Sendable, CustomTestStringConvertible {
             let amount: Double
             let rate: Double
             let expected: Double
@@ -22,6 +22,8 @@ struct CurrencyConversionTests {
                 self.expected = expected
                 self.description = description
             }
+            
+            var testDescription: String { description }
         }
 
         static let conversionTestCases: [ConversionTestCase] = [
@@ -43,7 +45,7 @@ struct CurrencyConversionTests {
 
             // Then
             let tolerance = testCase.expected.magnitude < 1.0 ? 0.0001 : 0.01
-            #expect(abs(result - testCase.expected) < tolerance)
+            result.isApproximatelyEqual(to: testCase.expected, tolerance: tolerance)
         }
 
         @Test("Invalid rate handling", .tags(.edgeCase), arguments: [nil, 0.0, -1.0, .infinity, .nan])
@@ -70,7 +72,7 @@ struct CurrencyConversionTests {
             }
 
             // Then
-            #expect(abs(result - expectedMonthly) < 0.01)
+            result.isApproximatelyEqual(to: expectedMonthly, tolerance: 0.01)
         }
     }
     

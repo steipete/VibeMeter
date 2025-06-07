@@ -41,8 +41,10 @@ struct CurrencyManagerTests {
         let currencyCodes = currencies.map(\.0)
 
         // Then
-        for currency in expectedCommonCurrencies {
-            #expect(currencyCodes.contains(currency))
+        #expectAll {
+            for currency in expectedCommonCurrencies {
+                #expect(currencyCodes.contains(currency))
+            }
         }
     }
 
@@ -52,17 +54,19 @@ struct CurrencyManagerTests {
         let currencies = sut.availableCurrencies
 
         // Then
-        for (code, name) in currencies {
-            // Currency code should be 3 characters
-            #expect(code.count == 3)
-            // swiftformat:disable:next preferKeyPath
-            #expect(code.allSatisfy { $0.isUppercase })
+        #expectAll {
+            for (code, name) in currencies {
+                // Currency code should be 3 characters
+                #expect(code.count == 3)
+                // swiftformat:disable:next preferKeyPath
+                #expect(code.allSatisfy { $0.isUppercase })
 
-            // Name should contain currency symbol in parentheses
-            #expect(name.contains("("))
+                // Name should contain currency symbol in parentheses
+                #expect(name.contains("("))
 
-            // Name should be capitalized
-            #expect(name.first?.isUppercase ?? false)
+                // Name should be capitalized
+                #expect(name.first?.isUppercase ?? false)
+            }
         }
     }
 
@@ -164,7 +168,7 @@ struct CurrencyManagerTests {
         #expect(!mixedCaseValid)
     }
 
-    @Test("available currencies performance")
+    @Test("available currencies performance", .timeLimit(.seconds(5)))
     func availableCurrencies_Performance() {
         // When
         let startTime = Date()
@@ -176,7 +180,7 @@ struct CurrencyManagerTests {
         #expect(duration < 2.0)
     }
 
-    @Test("is valid currency code performance")
+    @Test("is valid currency code performance", .timeLimit(.seconds(2)))
     func isValidCurrencyCode_Performance() {
         // Given
         let testCodes = ["USD", "EUR", "GBP", "INVALID", "XYZ", "123"]
