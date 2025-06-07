@@ -262,7 +262,7 @@ struct NetworkRetryHandlerTests {
             jitterFactor: 0.1
         )
 
-        init() async throws {
+        init() {
             sut = NetworkRetryHandler(configuration: Self.testConfig)
         }
 
