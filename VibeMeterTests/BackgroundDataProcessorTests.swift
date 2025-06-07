@@ -47,55 +47,53 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.session != nil)
-            #expect(result.session?.userEmail == "test@example.com")
-            #expect(result.session?.teamName == "Test Team")
-            #expect(result.session?.teamId == 12345)
+            #expect(result.userInfo.email == "test@example.com")
+            #expect(result.teamInfo.name == "Test Team")
+            #expect(result.teamInfo.id == 12345)
 
-            #expect(result.invoice != nil)
-            #expect(result.invoice?.totalSpendingCents == 2000)
+            #expect(result.invoice.totalSpendingCents == 2000)
 
-            #expect(result.usage != nil)
-            #expect(result.usage?.currentRequests == 500)
-            #expect(result.usage?.totalRequests == 750)
+            #expect(result.usage.currentRequests == 500)
+            #expect(result.usage.totalRequests == 750)
         }
 
-        @Test("process with nil team info returns session without team name")
-        func processWithNilTeamInfo_ReturnsSessionWithoutTeamName() async throws {
+        @Test("process with nil team info returns fallback team")
+        func processWithNilTeamInfo_ReturnsFallbackTeam() async throws {
             // Given
-            mockProvider.teamInfoToReturn = nil
+            mockProvider.shouldThrowTeamInfoError = true
 
             // When
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.session != nil)
-            #expect(result.session?.userEmail == "test@example.com")
-            #expect(result.session?.teamName == nil)
-            #expect(result.session?.teamId == 12345)
+            #expect(result.userInfo.email == "test@example.com")
+            #expect(result.teamInfo.name == "Individual Account")
+            #expect(result.teamInfo.id == 0)
         }
 
-        @Test("process with nil usage data returns nil usage")
-        func processWithNilUsageData_ReturnsNilUsage() async throws {
+        @Test("process with nil usage data returns fallback usage")
+        func processWithNilUsageData_ReturnsFallbackUsage() async throws {
             // Given
-            mockProvider.usageToReturn = nil
+            mockProvider.shouldThrowUsageError = true
 
             // When
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.usage == nil)
-            #expect(result.session != nil) // Other data should still be present
-            #expect(result.invoice != nil)
+            #expect(result.usage.currentRequests == 0)
+            #expect(result.usage.totalRequests == 0)
+            #expect(result.usage.maxRequests == nil)
+            #expect(result.userInfo.email == "test@example.com") // Other data should still be present
+            #expect(result.invoice.totalSpendingCents == 2000)
         }
 
         @Test("process with empty invoice items returns valid invoice")
@@ -111,12 +109,11 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.invoice != nil)
-            #expect(result.invoice?.items.isEmpty == true)
-            #expect(result.invoice?.totalSpendingCents == 0)
+            #expect(result.invoice.items.isEmpty == true)
+            #expect(result.invoice.totalSpendingCents == 0)
         }
 
         @Test("process different providers independently")
@@ -127,16 +124,28 @@ struct BackgroundDataProcessorTests {
                 email: "cursor@test.com",
                 teamId: 111,
                 provider: .cursor)
+            cursorProvider.teamInfoToReturn = ProviderTeamInfo(id: 111, name: "Cursor Team", provider: .cursor)
+            cursorProvider.invoiceToReturn = ProviderMonthlyInvoice(
+                items: [ProviderInvoiceItem(cents: 1000, description: "Test", provider: .cursor)],
+                provider: .cursor,
+                month: 11,
+                year: 2023)
+            cursorProvider.usageToReturn = ProviderUsageData(
+                currentRequests: 100,
+                totalRequests: 200,
+                maxRequests: 1000,
+                startOfMonth: Date(),
+                provider: .cursor)
 
             // When
             let cursorResult = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "cursor-token",
-                using: cursorProvider)
+                providerClient: cursorProvider)
 
             // Then
-            #expect(cursorResult.session?.userEmail == "cursor@test.com")
-            #expect(cursorResult.session?.provider == .cursor)
+            #expect(cursorResult.userInfo.email == "cursor@test.com")
+            #expect(cursorResult.userInfo.provider == .cursor)
         }
 
         @Test("process with large spending amount")
@@ -155,11 +164,11 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.invoice?.totalSpendingCents == 1888887)
-            #expect(result.invoice?.items.count == 2)
+            #expect(result.invoice.totalSpendingCents == 1888887)
+            #expect(result.invoice.items.count == 2)
         }
     }
     
@@ -220,13 +229,13 @@ struct BackgroundDataProcessorTests {
                 _ = try await processor.processProviderData(
                     provider: .cursor,
                     authToken: "test-token",
-                    using: mockProvider)
+                    providerClient: mockProvider)
 
                 // Then
-                Issue.record("Expected error to be thrown")
+                #expect(Bool(false), "Expected TestError to be thrown")
             } catch {
                 // Verify error propagated
-                #expect(error is MockBackgroundProvider.MockError)
+                #expect(error is TestError)
             }
         }
 
@@ -239,34 +248,38 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.session != nil)
-            #expect(result.session?.teamName == nil) // Team name should be nil due to error
-            #expect(result.invoice != nil) // Other data should still be fetched
-            #expect(result.usage != nil)
+            #expect(result.userInfo.email == "test@example.com")
+            #expect(result.teamInfo.name == "Individual Account") // Fallback team should be used
+            #expect(result.teamInfo.id == 0)
+            #expect(result.invoice.totalSpendingCents == 2000) // Other data should still be fetched
+            #expect(result.usage.currentRequests == 500)
         }
 
-        @Test("invoice fetch error results in nil invoice")
-        func invoiceFetchError_ResultsInNilInvoice() async throws {
+        @Test("invoice fetch error propagates correctly")
+        func invoiceFetchError_PropagatesCorrectly() async {
             // Given
             mockProvider.shouldThrowInvoiceError = true
 
-            // When
-            let result = try await processor.processProviderData(
-                provider: .cursor,
-                authToken: "test-token",
-                using: mockProvider)
+            do {
+                // When
+                _ = try await processor.processProviderData(
+                    provider: .cursor,
+                    authToken: "test-token",
+                    providerClient: mockProvider)
 
-            // Then
-            #expect(result.session != nil) // Session should still be present
-            #expect(result.invoice == nil) // Invoice should be nil due to error
-            #expect(result.usage != nil) // Usage should still be fetched
+                // Then
+                #expect(Bool(false), "Expected TestError to be thrown")
+            } catch {
+                // Verify error propagated
+                #expect(error is TestError)
+            }
         }
 
-        @Test("usage fetch error results in nil usage")
-        func usageFetchError_ResultsInNilUsage() async throws {
+        @Test("usage fetch error results in fallback usage")
+        func usageFetchError_ResultsInFallbackUsage() async throws {
             // Given
             mockProvider.shouldThrowUsageError = true
 
@@ -274,16 +287,18 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then
-            #expect(result.session != nil) // Session should still be present
-            #expect(result.invoice != nil) // Invoice should still be present
-            #expect(result.usage == nil) // Usage should be nil due to error
+            #expect(result.userInfo.email == "test@example.com") // Session should still be present
+            #expect(result.invoice.totalSpendingCents == 2000) // Invoice should still be present
+            #expect(result.usage.currentRequests == 0) // Usage should be fallback with zero values
+            #expect(result.usage.totalRequests == 0)
+            #expect(result.usage.maxRequests == nil)
         }
 
-        @Test("multiple errors only user info error propagates")
-        func multipleErrors_OnlyUserInfoErrorPropagates() async {
+        @Test("multiple errors only critical errors propagate")
+        func multipleErrors_OnlyCriticalErrorsPropagate() async {
             // Given
             mockProvider.shouldThrowUserInfoError = true
             mockProvider.shouldThrowTeamInfoError = true
@@ -295,13 +310,13 @@ struct BackgroundDataProcessorTests {
                 _ = try await processor.processProviderData(
                     provider: .cursor,
                     authToken: "test-token",
-                    using: mockProvider)
+                    providerClient: mockProvider)
 
                 // Then
-                Issue.record("Expected error to be thrown")
+                #expect(Bool(false), "Expected critical error to be thrown")
             } catch {
-                // Only user info error should propagate as it's critical
-                #expect(error is MockBackgroundProvider.MockError)
+                // User info error should propagate first as it's called first
+                #expect(error is TestError)
             }
         }
 
@@ -317,10 +332,10 @@ struct BackgroundDataProcessorTests {
                 _ = try await processor.processProviderData(
                     provider: .cursor,
                     authToken: "test-token",
-                    using: networkProvider)
+                    providerClient: networkProvider)
 
                 // Then
-                Issue.record("Expected network error to be thrown")
+                #expect(Bool(false), "Expected network error to be thrown")
             } catch {
                 // Verify network error propagated
                 #expect(error is URLError)
@@ -333,12 +348,12 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then - Should still process normally
-            #expect(result.session != nil)
-            #expect(result.invoice != nil)
-            #expect(result.usage != nil)
+            #expect(result.userInfo.email == "test@example.com")
+            #expect(result.invoice.totalSpendingCents == 2000)
+            #expect(result.usage.currentRequests == 500)
         }
 
         @Test("malformed data handling")
@@ -353,12 +368,11 @@ struct BackgroundDataProcessorTests {
             let result = try await processor.processProviderData(
                 provider: .cursor,
                 authToken: "test-token",
-                using: mockProvider)
+                providerClient: mockProvider)
 
             // Then - Should handle gracefully
-            #expect(result.session != nil)
-            #expect(result.session?.userEmail == "")
-            #expect(result.session?.teamId == -1)
+            #expect(result.userInfo.email == "")
+            #expect(result.userInfo.teamId == -1)
         }
 
         @Test("concurrent processing of multiple providers")
@@ -367,17 +381,17 @@ struct BackgroundDataProcessorTests {
             let providers: [ServiceProvider] = [.cursor]
             
             // When - Process all providers concurrently
-            let results = try await withThrowingTaskGroup(of: BackgroundDataProcessor.ProcessedData.self) { group in
+            let results = try await withThrowingTaskGroup(of: ProviderDataResult.self) { group in
                 for provider in providers {
                     group.addTask {
                         try await self.processor.processProviderData(
                             provider: provider,
                             authToken: "token-\(provider.rawValue)",
-                            using: self.mockProvider)
+                            providerClient: self.mockProvider)
                     }
                 }
                 
-                var collectedResults: [BackgroundDataProcessor.ProcessedData] = []
+                var collectedResults: [ProviderDataResult] = []
                 for try await result in group {
                     collectedResults.append(result)
                 }
@@ -387,85 +401,13 @@ struct BackgroundDataProcessorTests {
             // Then
             #expect(results.count == providers.count)
             for result in results {
-                #expect(result.session != nil)
-                #expect(result.invoice != nil)
-                #expect(result.usage != nil)
+                #expect(result.userInfo.email == "test@example.com")
+                #expect(result.invoice.totalSpendingCents == 2000)
+                #expect(result.usage.currentRequests == 500)
             }
         }
     }
 }
 
-// MARK: - Mock Background Provider
-
-private actor MockBackgroundProvider: ProviderProtocol {
-    var lastRetrievedAuthToken: String?
-    var userInfoToReturn: ProviderUserInfo?
-    var teamInfoToReturn: ProviderTeamInfo?
-    var invoiceToReturn: ProviderMonthlyInvoice?
-    var usageToReturn: ProviderUsageData?
-    
-    var shouldThrowUserInfoError = false
-    var shouldThrowTeamInfoError = false
-    var shouldThrowInvoiceError = false
-    var shouldThrowUsageError = false
-    var shouldThrowCustomError = false
-    var customError: Error = MockError.genericError
-    
-    enum MockError: Error {
-        case genericError
-        case userInfoError
-        case teamInfoError
-        case invoiceError
-        case usageError
-    }
-    
-    func verifySessionActive(authToken: String) async throws {}
-    
-    func getUserInfo(authToken: String) async throws -> ProviderUserInfo {
-        lastRetrievedAuthToken = authToken
-        
-        if shouldThrowCustomError {
-            throw customError
-        }
-        
-        if shouldThrowUserInfoError {
-            throw MockError.userInfoError
-        }
-        
-        guard let userInfo = userInfoToReturn else {
-            throw MockError.userInfoError
-        }
-        
-        return userInfo
-    }
-    
-    func getTeamInfo(for teamId: Int, authToken: String) async throws -> ProviderTeamInfo {
-        if shouldThrowTeamInfoError {
-            throw MockError.teamInfoError
-        }
-        
-        guard let teamInfo = teamInfoToReturn else {
-            throw MockError.teamInfoError
-        }
-        
-        return teamInfo
-    }
-    
-    func getCurrentMonthInvoice(for teamId: Int?, authToken: String) async throws -> ProviderMonthlyInvoice? {
-        if shouldThrowInvoiceError {
-            throw MockError.invoiceError
-        }
-        
-        return invoiceToReturn
-    }
-    
-    func getUsageData(for teamId: Int?, authToken: String) async throws -> ProviderUsageData? {
-        if shouldThrowUsageError {
-            throw MockError.usageError
-        }
-        
-        return usageToReturn
-    }
-}
 
 // swiftlint:enable file_length type_body_length

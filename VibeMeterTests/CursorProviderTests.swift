@@ -178,13 +178,8 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchTeamInfo(authToken: "invalid-token")
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .unauthorized)
-                } catch {
-                    Issue.record("Expected condition not met")
+                #expect(throws: ProviderError.unauthorized) {
+                    try await provider.fetchTeamInfo(authToken: "invalid-token")
                 }
             }
         }
@@ -1304,13 +1299,8 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchUserInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .rateLimitExceeded)
-                } catch {
-                    Issue.record("Expected condition not met")
+                #expect(throws: ProviderError.rateLimitExceeded) {
+                    try await provider.fetchUserInfo(authToken: "test-token")
                 }
             }
 
@@ -1327,13 +1317,8 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchUserInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .serviceUnavailable)
-                } catch {
-                    Issue.record("Expected condition not met")
+                #expect(throws: ProviderError.serviceUnavailable) {
+                    try await provider.fetchUserInfo(authToken: "test-token")
                 }
             }
 
@@ -1354,15 +1339,15 @@ struct CursorProviderTests {
                 // When/Then
                 do {
                     _ = try await provider.fetchUserInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
+                    #expect(Bool(false), "Expected decodingError to be thrown")
                 } catch let error as ProviderError {
                     if case .decodingError = error {
                         // Expected
                     } else {
-                        Issue.record("Expected condition not met")
+                        #expect(Bool(false), "Expected decodingError but got different ProviderError")
                     }
                 } catch {
-                    Issue.record("Expected condition not met")
+                    #expect(Bool(false), "Expected ProviderError.decodingError")
                 }
             }
 
@@ -1394,13 +1379,8 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchTeamInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .noTeamFound)
-                } catch {
-                    Issue.record("Expected condition not met")
+                #expect(throws: ProviderError.noTeamFound) {
+                    try await provider.fetchTeamInfo(authToken: "test-token")
                 }
             }
 
@@ -1419,13 +1399,8 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchTeamInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .noTeamFound)
-                } catch {
-                    Issue.record("Expected condition not met")
+                #expect(throws: ProviderError.noTeamFound) {
+                    try await provider.fetchTeamInfo(authToken: "test-token")
                 }
             }
 
@@ -1440,15 +1415,15 @@ struct CursorProviderTests {
                 // When/Then
                 do {
                     _ = try await provider.fetchUserInfo(authToken: "test-token")
-                    Issue.record("Expected condition not met")
+                    #expect(Bool(false), "Expected networkError to be thrown")
                 } catch let error as ProviderError {
                     if case let .networkError(message, _) = error {
                         #expect(message.contains("timed out"))
                     } else {
-                        Issue.record("Expected condition not met")
+                        #expect(Bool(false), "Expected networkError with timeout message")
                     }
                 } catch {
-                    Issue.record("Expected condition not met")
+                    #expect(Bool(false), "Expected ProviderError.networkError")
                 }
             }
 
@@ -1478,15 +1453,12 @@ struct CursorProviderTests {
                     headerFields: nil)!
 
                 // When/Then
-                do {
-                    _ = try await provider.fetchMonthlyInvoice(
+                #expect(throws: ProviderError.noTeamFound) {
+                    try await provider.fetchMonthlyInvoice(
                         authToken: "token",
                         month: 6,
                         year: 2024,
                         teamId: nil)
-                    Issue.record("Expected condition not met")
-                } catch let error as ProviderError {
-                    #expect(error == .noTeamFound)
                 }
             }
         }

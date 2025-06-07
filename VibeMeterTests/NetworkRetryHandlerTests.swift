@@ -67,7 +67,6 @@ struct NetworkRetryHandlerTests {
             // Aggressive config has maxRetries = 5, so 6 attempts total
             #expect(attemptCount == 6)
         }
-        }
 
         @Test("custom configuration")
         func customConfiguration() async {
@@ -90,20 +89,21 @@ struct NetworkRetryHandlerTests {
                     attemptTimes.append(Date())
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Should have 3 attempts (initial + 2 retries)
-                #expect(attemptCount == 3)
+            // Should have 3 attempts (initial + 2 retries)
+            #expect(attemptCount == 3)
 
-                if attemptTimes.count >= 2 {
-                    let firstDelay = attemptTimes[1].timeIntervalSince(attemptTimes[0])
-                    #expect(abs(firstDelay - 0.1) < 0.05) // Allow 50ms tolerance
-                }
-                if attemptTimes.count >= 3 {
-                    let secondDelay = attemptTimes[2].timeIntervalSince(attemptTimes[1])
-                    #expect(abs(secondDelay - 0.3) < 0.05) // Allow 50ms tolerance
-                }
+            if attemptTimes.count >= 2 {
+                let firstDelay = attemptTimes[1].timeIntervalSince(attemptTimes[0])
+                #expect(abs(firstDelay - 0.1) < 0.05) // Allow 50ms tolerance
+            }
+            if attemptTimes.count >= 3 {
+                let secondDelay = attemptTimes[2].timeIntervalSince(attemptTimes[1])
+                #expect(abs(secondDelay - 0.3) < 0.05) // Allow 50ms tolerance
             }
         }
 
@@ -316,12 +316,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
-            // Then
-                // Then - Should retry maxRetries times
-                #expect(attemptCount == 4) // 1 initial + 3 retries
-            }
+            // Then - Should retry maxRetries times
+            #expect(attemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("retries server error")
@@ -335,12 +335,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // 1 initial + 3 retries
-            }
+            #expect(attemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("does not retry client error")
@@ -354,12 +354,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 404)
                 }
+            } catch {
+                // Expected - client errors should not retry
             }
             
-            // Then
-                // Then - Client errors (4xx) should not retry
-                #expect(attemptCount == 1)
-            }
+            // Then - Client errors (4xx) should not retry
+            #expect(attemptCount == 1)
         }
 
         @Test("retries rate limited error")
@@ -380,12 +380,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: 0.001)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 3) // 1 initial + 2 retries
-            }
+            #expect(attemptCount == 3) // 1 initial + 2 retries
         }
 
         @Test("retries url timeout error")
@@ -399,12 +399,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.timedOut)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // 1 initial + 3 retries
-            }
+            #expect(attemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("retries connection lost error")
@@ -418,12 +418,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.networkConnectionLost)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // 1 initial + 3 retries
-            }
+            #expect(attemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("does not retry bad url error")
@@ -437,12 +437,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.badURL)
                 }
+            } catch {
+                // Expected - should not retry bad URL errors
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // No retries for non-retryable errors
-            }
+            #expect(attemptCount == 1) // No retries for non-retryable errors
         }
 
         @Test("custom should retry logic")
@@ -462,12 +462,12 @@ struct NetworkRetryHandlerTests {
                         // Custom logic: retry any CustomError
                         error is CustomError
                     })
+            } catch {
+                // Expected - should retry based on custom logic and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry based on custom logic
-            }
+            #expect(attemptCount == 4) // Should retry based on custom logic
         }
 
         @Test("custom should not retry logic")
@@ -483,12 +483,12 @@ struct NetworkRetryHandlerTests {
                         throw NetworkRetryHandler.RetryableError.networkTimeout
                     },
                     shouldRetry: { _ in false }) // Never retry
+            } catch {
+                // Expected - should not retry due to custom logic
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // No retries due to custom logic
-            }
+            #expect(attemptCount == 1) // No retries due to custom logic
         }
 
         @Test("execute optional with nil result")
@@ -536,13 +536,13 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.timedOut)
                 }
+            } catch {
+                // Expected - should retry and then fail
+                #expect(error is URLError)
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry network timeouts
-                #expect(error is URLError)
-            }
+            #expect(attemptCount == 4) // Should retry network timeouts
         }
 
         @Test("network error connection lost")
@@ -556,12 +556,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.networkConnectionLost)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry connection errors
-            }
+            #expect(attemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error not connected")
@@ -575,12 +575,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.notConnectedToInternet)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry connection errors
-            }
+            #expect(attemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error dns lookup failed")
@@ -594,12 +594,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotFindHost)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry DNS errors
-            }
+            #expect(attemptCount == 4) // Should retry DNS errors
         }
 
         @Test("network error cannot connect")
@@ -613,12 +613,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotConnectToHost)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry connection errors
-            }
+            #expect(attemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error bad server response")
@@ -632,12 +632,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.badServerResponse)
                 }
+            } catch {
+                // Expected - should not retry bad server response
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // badServerResponse is not retryable
-            }
+            #expect(attemptCount == 1) // badServerResponse is not retryable
         }
 
         @Test("network error zero byte resource")
@@ -651,12 +651,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.zeroByteResource)
                 }
+            } catch {
+                // Expected - should not retry zero byte resource error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // zeroByteResource is not retryable
-            }
+            #expect(attemptCount == 1) // zeroByteResource is not retryable
         }
 
         @Test("network error cannot decode raw data")
@@ -670,12 +670,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotDecodeRawData)
                 }
+            } catch {
+                // Expected - should not retry decode error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
-            }
+            #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
         }
 
         @Test("network error cannot decode content data")
@@ -689,12 +689,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotDecodeContentData)
                 }
+            } catch {
+                // Expected - should not retry content decode error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
-            }
+            #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
         }
 
         @Test("network error cannot parse response")
@@ -708,12 +708,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.cannotParseResponse)
                 }
+            } catch {
+                // Expected - should not retry parse error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // cannotParseResponse is not retryable
-            }
+            #expect(attemptCount == 1) // cannotParseResponse is not retryable
         }
 
         @Test("network error secure connection failed")
@@ -727,12 +727,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.secureConnectionFailed)
                 }
+            } catch {
+                // Expected - should not retry security error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // secureConnectionFailed is not retryable
-            }
+            #expect(attemptCount == 1) // secureConnectionFailed is not retryable
         }
 
         @Test("network error server certificate invalid")
@@ -746,12 +746,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw URLError(.serverCertificateNotYetValid)
                 }
+            } catch {
+                // Expected - should not retry certificate error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // Should not retry certificate errors
-            }
+            #expect(attemptCount == 1) // Should not retry certificate errors
         }
 
         @Test("network error service unavailable")
@@ -766,12 +766,12 @@ struct NetworkRetryHandlerTests {
                     // HTTP 503 Service Unavailable
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry 503 errors
-            }
+            #expect(attemptCount == 4) // Should retry 503 errors
         }
 
         @Test("network error gateway timeout")
@@ -786,12 +786,12 @@ struct NetworkRetryHandlerTests {
                     // HTTP 504 Gateway Timeout
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 504)
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry gateway timeouts
-            }
+            #expect(attemptCount == 4) // Should retry gateway timeouts
         }
 
         @Test("network error decoding error")
@@ -806,12 +806,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw DecodingError()
                 }
+            } catch {
+                // Expected - should not retry decoding error
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 1) // Should not retry generic decoding errors
-            }
+            #expect(attemptCount == 1) // Should not retry generic decoding errors
         }
 
         @Test("network error generic network failure")
@@ -825,12 +825,12 @@ struct NetworkRetryHandlerTests {
                     attemptCount += 1
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
+            } catch {
+                // Expected - should retry and then fail
             }
             
             // Then
-                // Then
-                #expect(attemptCount == 4) // Should retry generic network errors
-            }
+            #expect(attemptCount == 4) // Should retry generic network errors
         }
     }
 }

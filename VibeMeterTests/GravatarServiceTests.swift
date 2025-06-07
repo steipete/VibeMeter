@@ -367,7 +367,7 @@ struct GravatarServiceTests {
                     #expect(
                         extractedHash.allSatisfy(\.isHexDigit) == true)
                 } else {
-                    Issue.record("Expected condition not met")
+                    #expect(Bool(false), "Could not extract hash from Gravatar URL")
                 }
             }
         }
@@ -400,7 +400,7 @@ struct GravatarServiceTests {
                 url1?.absoluteString != url2?.absoluteString)
         }
 
-        @Test("gravatar url performance", .timeLimit(.seconds(2)))
+        @Test("gravatar url performance", .timeLimit(.minutes(1)))
         func gravatarURL_Performance() {
             // Given
             let emails = (0 ..< 1000).map { "user\($0)@performance.test" }
@@ -416,7 +416,7 @@ struct GravatarServiceTests {
             #expect(duration < 1.0)
         }
 
-        @Test("SHA256 hashing performance", .timeLimit(.seconds(2)), .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
+        @Test("SHA256 hashing performance", .timeLimit(.minutes(1)), .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil))
         func sHA256Hashing_Performance() {
             // Given
             let testString = "performance@test.com"

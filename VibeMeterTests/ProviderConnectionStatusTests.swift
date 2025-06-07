@@ -113,7 +113,7 @@ struct ProviderConnectionStatusTests {
             if case let .rateLimited(until) = status {
                 #expect(until == futureDate)
             } else {
-                Issue.record("Expected condition not met")
+                #expect(Bool(false), "Expected rateLimited status with date")
             }
         }
 
@@ -151,7 +151,7 @@ struct ProviderConnectionStatusTests {
             if case let .error(message) = status {
                 #expect(message == errorMessage)
             } else {
-                Issue.record("Expected condition not met")
+                #expect(Bool(false), "Expected error status with message")
             }
         }
 

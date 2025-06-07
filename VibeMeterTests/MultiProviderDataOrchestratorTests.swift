@@ -137,7 +137,7 @@ struct MultiProviderDataOrchestratorTests {
         if let cursorData = spendingData.getSpendingData(for: .cursor) {
             #expect(abs((cursorData.currentSpendingUSD ?? 0) - 123.45) < 0.01)
         } else {
-            Issue.record("Expected condition not met")
+            #expect(Bool(false), "Expected cursor spending data to be available")
         }
     }
 
@@ -241,7 +241,7 @@ struct MultiProviderDataOrchestratorTests {
             // The actual spending amount might vary based on implementation details
             #expect(cursorData.currentSpendingUSD != nil || cursorData.currentSpendingConverted != nil)
         } else {
-            Issue.record("No spending data found for Cursor - spending data may not have been initialized correctly")
+            #expect(Bool(false), "No spending data found for Cursor - spending data may not have been initialized correctly")
         }
     }
 }
