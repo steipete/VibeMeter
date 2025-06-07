@@ -1,3 +1,6 @@
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
 import Foundation
 import Testing
 @testable import VibeMeter
@@ -52,7 +55,7 @@ struct ExchangeRateManagerTests {
             }
         }
 
-        static let conversionTestCases: [ConversionTestCase] = [
+        @Test("Currency conversions", arguments: [
             // Same currency
             ConversionTestCase(
                 100.0,
@@ -77,9 +80,7 @@ struct ExchangeRateManagerTests {
                 rates: ["EUR": 0.92, "GBP": 0.82],
                 expected: 82.0,
                 "EUR to GBP via USD"),
-        ]
-
-        @Test("Currency conversions", arguments: ConversionTests.conversionTestCases)
+        ])
         func currencyConversions(testCase: ConversionTestCase) {
             // When
             let result = exchangeRateManager.convert(
@@ -99,7 +100,7 @@ struct ExchangeRateManagerTests {
             }
         }
 
-        static let invalidConversionCases: [ConversionTestCase] = [
+        @Test("Invalid conversions return nil", arguments: [
             // Missing currencies
             ConversionTestCase(
                 100.0,
@@ -125,9 +126,7 @@ struct ExchangeRateManagerTests {
                 expected: nil,
                 "zero source rate"),
             ConversionTestCase(100.0, from: "EUR", to: "USD", rates: ["EUR": -0.92], expected: nil, "negative rate"),
-        ]
-
-        @Test("Invalid conversions return nil", arguments: ConversionTests.invalidConversionCases)
+        ])
         func invalidConversions(testCase: ConversionTestCase) {
             // When
             let result = exchangeRateManager.convert(
@@ -318,7 +317,7 @@ struct ExchangeRateManagerTests {
             }
         }
 
-        static let successfulRateTestCases: [ExchangeRateTestCase] = [
+        @Test("Exchange rate fetching success", arguments: [
             ExchangeRateTestCase(
                 rates: ["EUR": 0.92, "GBP": 0.82, "JPY": 149.50],
                 expecting: "EUR", rate: 0.92,
@@ -335,9 +334,7 @@ struct ExchangeRateManagerTests {
                 rates: ["CNY": 7.24, "INR": 83.15, "KRW": 1315.45],
                 expecting: "CNY", rate: 7.24,
                 "Asian currencies"),
-        ]
-
-        @Test("Exchange rate fetching success", arguments: successfulRateTestCases)
+        ])
         func exchangeRateFetchingSuccess(testCase: ExchangeRateTestCase) async throws {
             // Given
             let mockData = Self.createMockRatesData(rates: testCase.rates)
@@ -395,7 +392,7 @@ struct ExchangeRateManagerTests {
             }
         }
 
-        static let invalidDataTestCases: [InvalidDataTestCase] = [
+        @Test("Invalid data handling", arguments: [
             InvalidDataTestCase(jsonString: "{invalid json", "malformed JSON"),
             InvalidDataTestCase(jsonString: "{}", "empty JSON object"),
             InvalidDataTestCase(jsonString: """
@@ -408,9 +405,7 @@ struct ExchangeRateManagerTests {
             InvalidDataTestCase(jsonString: """
             {"base": "USD", "rates": {"EUR": "not a number"}}
             """, "invalid rate value"),
-        ]
-
-        @Test("Invalid data handling", arguments: invalidDataTestCases)
+        ])
         func invalidDataHandling(testCase: InvalidDataTestCase) async {
             // Given
             let mockResponse = Self.createMockResponse(statusCode: 200)

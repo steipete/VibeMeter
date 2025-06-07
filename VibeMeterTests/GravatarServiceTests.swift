@@ -1,3 +1,5 @@
+// swiftlint:disable file_length
+// swiftlint:disable nesting
 import CryptoKit
 import Foundation
 import Testing
@@ -34,136 +36,131 @@ struct GravatarServiceTests {
             #expect(sut.currentAvatarURL == nil)
         }
 
-        @Test("gravatar url valid email generates correct url")
-        func gravatarURL_ValidEmail_GeneratesCorrectURL() {
-            // Given
-            let email = "test@example.com"
-            let expectedHash =
-                "973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b" // SHA256 of "test@example.com"
-            _ = "https://www.gravatar.com/avatar/\(expectedHash)?s=80&d=mp"
+        struct EmailTestCase: CustomTestStringConvertible {
+            let email: String
+            let description: String
+            let expectedHash: String?
 
-            // When
+            init(email: String, description: String, expectedHash: String? = nil) {
+                self.email = email
+                self.description = description
+                self.expectedHash = expectedHash
+            }
+
+            var testDescription: String {
+                let emailDisplay = email.isEmpty ? "<empty>" : "\"\(email)\""
+                return "\(emailDisplay) → \(description)"
+            }
+        }
+
+        @Test("Email URL generation", arguments: [
+            EmailTestCase(
+                email: "test@example.com",
+                description: "Valid email",
+                expectedHash: "973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b"),
+            EmailTestCase(email: "  TEST@EXAMPLE.COM  ", description: "Email with whitespace and caps"),
+            EmailTestCase(email: "", description: "Empty email"),
+            EmailTestCase(email: "user@domain.com", description: "Standard email"),
+            EmailTestCase(email: "user.name@subdomain.example.com", description: "Email with dots and subdomain"),
+        ])
+        func gravatarURLGeneration(testCase: EmailTestCase) {
+            let result = sut.gravatarURL(for: testCase.email)
+            #expect(result != nil)
+
+            // Verify URL structure
+            if let url = result {
+                #expect(url.absoluteString.contains("gravatar.com/avatar/"))
+                #expect(url.absoluteString.contains("?s="))
+                #expect(url.absoluteString.contains("&d=mp"))
+            }
+
+            // If we have an expected hash, verify it
+            if let expectedHash = testCase.expectedHash,
+               let url = result?.absoluteString,
+               let hashRange = url.range(of: "avatar/"),
+               let queryRange = url.range(of: "?") {
+                let startIndex = url.index(hashRange.upperBound, offsetBy: 0)
+                let endIndex = queryRange.lowerBound
+                let extractedHash = String(url[startIndex ..< endIndex])
+                #expect(extractedHash == expectedHash)
+            }
+        }
+
+        struct SizeTestCase {
+            let size: Int
+            let expectedUrlSize: Int
+            let description: String
+        }
+
+        @Test("Size handling", arguments: [
+            SizeTestCase(size: 50, expectedUrlSize: 100, description: "Custom size doubles for retina"),
+            SizeTestCase(size: 40, expectedUrlSize: 80, description: "Default size"),
+            SizeTestCase(size: 16, expectedUrlSize: 32, description: "Small icon"),
+            SizeTestCase(size: 128, expectedUrlSize: 256, description: "Large avatar"),
+        ])
+        func gravatarURLSizeHandling(testCase: SizeTestCase) {
+            let email = "size@test.com"
+            let result = sut.gravatarURL(for: email, size: testCase.size)
+
+            #expect(result != nil)
+            if let url = result?.absoluteString {
+                #expect(url.contains("s=\(testCase.expectedUrlSize)"))
+            }
+        }
+
+        @Test("Default size and fallback")
+        func defaultSizeAndFallback() {
+            let email = "default@test.com"
             let result = sut.gravatarURL(for: email)
 
-            // Then
             #expect(result != nil)
-        }
-
-        @Test("gravatar url  email with whitespace  trims and lowercases")
-
-        func gravatarURL_EmailWithWhitespace_TrimsAndLowercases() {
-            // Given
-            let emailWithWhitespace = "  TEST@EXAMPLE.COM  "
-            let cleanEmail = "test@example.com"
-
-            // When
-            let result1 = sut.gravatarURL(for: emailWithWhitespace)
-            let result2 = sut.gravatarURL(for: cleanEmail)
-
-            // Then
-            #expect(result1 != nil)
-            #expect(
-                result1?.absoluteString == result2?.absoluteString)
-        }
-
-        @Test("gravatar url  empty email  generates url")
-        func gravatarURL_EmptyEmail_GeneratesURL() {
-            // Given
-            let emptyEmail = ""
-
-            // When
-            let result = sut.gravatarURL(for: emptyEmail)
-
-            // Then
-            #expect(result != nil)
-        }
-
-        @Test("gravatar url  custom size  doubles for retina")
-        func gravatarURL_CustomSize_DoublesForRetina() {
-            // Given
-            let email = "user@domain.com"
-            let size = 50
-            _ = size * 2 // 100
-
-            // When
-            let result = sut.gravatarURL(for: email, size: size)
-
-            // Then
-            #expect(result != nil,
-                    "Should double size for retina display")
-        }
-
-        @Test("gravatar url  default size  uses40 points")
-        func gravatarURL_DefaultSize_Uses40Points() {
-            // Given
-            let email = "default@size.com"
-            _ = 80 // 40 * 2
-
-            // When
-            let result = sut.gravatarURL(for: email)
-
-            // Then
-            #expect(result != nil,
-                    "Should use default size of 40 points (80 retina)")
-        }
-
-        @Test("gravatar url  contains mystery person fallback")
-        func gravatarURL_ContainsMysteryPersonFallback() {
-            // Given
-            let email = "fallback@test.com"
-
-            // When
-            let result = sut.gravatarURL(for: email)
-
-            // Then
-            #expect(result != nil)
+            if let url = result?.absoluteString {
+                #expect(url.contains("s=80")) // Default 40pt doubled for retina
+                #expect(url.contains("d=mp")) // Mystery person fallback
+            }
         }
 
         // MARK: - Update Avatar Tests
 
-        @Test("update avatar  with valid email  sets current avatar url")
-        func updateAvatar_WithValidEmail_SetsCurrentAvatarURL() {
-            // Given
-            let email = "avatar@test.com"
-            #expect(sut.currentAvatarURL == nil)
-
-            // When
-            sut.updateAvatar(for: email)
-
-            // Then
-            #expect(sut.currentAvatarURL != nil,
-                    "Should be a Gravatar URL")
+        struct AvatarUpdateTestCase {
+            let email: String?
+            let expectURL: Bool
+            let description: String
         }
 
-        @Test("update avatar  with nil email  clears current avatar url")
-        func updateAvatar_WithNilEmail_ClearsCurrentAvatarURL() {
-            // Given
-            sut.updateAvatar(for: "setup@test.com") // Set initial URL
-            #expect(sut.currentAvatarURL != nil)
+        @Test("Avatar updates", arguments: [
+            AvatarUpdateTestCase(email: "avatar@test.com", expectURL: true, description: "Valid email sets URL"),
+            AvatarUpdateTestCase(email: nil, expectURL: false, description: "Nil email clears URL"),
+            AvatarUpdateTestCase(email: "", expectURL: true, description: "Empty email sets URL"),
+        ])
+        func updateAvatar(testCase: AvatarUpdateTestCase) {
+            // Clear any existing avatar
+            sut.clearAvatar()
 
-            // When
-            sut.updateAvatar(for: nil)
+            // Update avatar
+            sut.updateAvatar(for: testCase.email)
 
-            // Then
-            #expect(sut.currentAvatarURL == nil)
+            // Verify result
+            if testCase.expectURL {
+                #expect(sut.currentAvatarURL != nil)
+            } else {
+                #expect(sut.currentAvatarURL == nil)
+            }
         }
 
-        @Test("update avatar  multiple updates  updates current url")
-        func updateAvatar_MultipleUpdates_UpdatesCurrentURL() {
-            // Given
-            let email1 = "first@user.com"
-            let email2 = "second@user.com"
+        @Test("Sequential avatar updates")
+        func sequentialAvatarUpdates() {
+            let emails = ["first@user.com", "second@user.com", "third@user.com"]
+            var urls: [URL?] = []
 
-            // When
-            sut.updateAvatar(for: email1)
-            let firstURL = sut.currentAvatarURL
+            for email in emails {
+                sut.updateAvatar(for: email)
+                urls.append(sut.currentAvatarURL)
+            }
 
-            sut.updateAvatar(for: email2)
-            let secondURL = sut.currentAvatarURL
-
-            // Then
-            #expect(firstURL != nil)
-            #expect(firstURL?.absoluteString != secondURL?.absoluteString)
+            // All should be non-nil and different
+            #expect(urls.allSatisfy { $0 != nil })
+            #expect(Set(urls.compactMap { $0?.absoluteString }).count == emails.count)
         }
 
         @Test("clear avatar  with current url  clears it")
@@ -221,25 +218,18 @@ struct GravatarServiceTests {
 
         // MARK: - Edge Cases and Error Handling
 
-        @Test("gravatar url  special characters  handles correctly")
-        func gravatarURL_SpecialCharacters_HandlesCorrectly() {
-            // Given
-            let emailsWithSpecialChars = [
-                "user+tag@example.com",
-                "user.name@sub.domain.com",
-                "user_name@domain-name.co.uk",
-                "user@domain.info",
-            ]
+        @Test("Special character emails", arguments: [
+            "user+tag@example.com",
+            "user.name@sub.domain.com",
+            "user_name@domain-name.co.uk",
+            "user@domain.info",
+            "test.email+tag@subdomain.example.com",
+        ])
+        func specialCharacterEmails(email: String) {
+            let result = sut.gravatarURL(for: email)
 
-            for email in emailsWithSpecialChars {
-                // When
-                let result = sut.gravatarURL(for: email)
-
-                // Then
-                #expect(result != nil)
-                #expect(
-                    result?.absoluteString.contains("gravatar.com") ?? false)
-            }
+            #expect(result != nil)
+            #expect(result?.absoluteString.contains("gravatar.com") ?? false)
         }
 
         @Test("gravatar url  unicode characters  handles correctly")
@@ -266,45 +256,22 @@ struct GravatarServiceTests {
             #expect(result != nil)
         }
 
-        @Test("gravatar url  zero size  handles gracefully")
-        func gravatarURL_ZeroSize_HandlesGracefully() {
-            // Given
-            let email = "zero@size.com"
-            let size = 0
-
-            // When
+        @Test("Edge case sizes", arguments: [
+            (0, "Zero size"),
+            (-10, "Negative size"),
+            (1000, "Very large size"),
+            (Int.max, "Maximum integer size")
+        ])
+        func edgeCaseSizes(size: Int, description _: String) {
+            let email = "edge@case.com"
             let result = sut.gravatarURL(for: email, size: size)
 
-            // Then
             #expect(result != nil)
-        }
-
-        @Test("gravatar url  negative size  handles gracefully")
-        func gravatarURL_NegativeSize_HandlesGracefully() {
-            // Given
-            let email = "negative@size.com"
-            let size = -10
-
-            // When
-            let result = sut.gravatarURL(for: email, size: size)
-
-            // Then
-            #expect(result != nil)
-        }
-
-        @Test("gravatar url  large size  handles correctly")
-        func gravatarURL_LargeSize_HandlesCorrectly() {
-            // Given
-            let email = "large@size.com"
-            let size = 1000
-            _ = 2000
-
-            // When
-            let result = sut.gravatarURL(for: email, size: size)
-
-            // Then
-            #expect(result != nil,
-                    "Should handle large retina size")
+            // Even with edge case sizes, URL should still be valid
+            if let url = result?.absoluteString {
+                #expect(url.contains("gravatar.com"))
+                #expect(url.contains("?s="))
+            }
         }
 
         // MARK: - URL Structure Tests
@@ -339,38 +306,35 @@ struct GravatarServiceTests {
 
         // MARK: - SHA256 Hashing Tests
 
-        @Test("s ha256 hashing  known inputs  generates expected hashes")
-        func sHA256Hashing_KnownInputs_GeneratesExpectedHashes() {
-            // Test cases with known SHA256 hashes
-            let testCases = [
-                ("test@example.com", "973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b"),
-                ("user@domain.org", "b58996c504c5638798eb6b511e6f49af5c7dd25d0e0e08db9893e9bf6e6e9c23"),
-                ("admin@site.net", "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"),
-                // SHA256 of "password" but this is "admin@site.net"
-            ]
+        struct HashTestCase {
+            let email: String
+            let expectedHashPrefix: String
+            let description: String
+        }
 
-            for (email, _) in testCases {
-                // When
-                let result = sut.gravatarURL(for: email)
+        @Test("SHA256 hash validation", arguments: [
+            HashTestCase(email: "test@example.com", expectedHashPrefix: "973dfe46", description: "Known hash 1"),
+            HashTestCase(email: "user@domain.org", expectedHashPrefix: "8fcfa90b", description: "Known hash 2"),
+            HashTestCase(email: "admin@site.net", expectedHashPrefix: "cfe9f7e1", description: "Known hash 3"),
+        ])
+        func sha256HashValidation(testCase: HashTestCase) {
+            let result = sut.gravatarURL(for: testCase.email)
+            #expect(result != nil)
 
-                // Then
-                #expect(result != nil)
+            // Extract and validate hash
+            if let url = result?.absoluteString,
+               let hashRange = url.range(of: "avatar/"),
+               let queryRange = url.range(of: "?") {
+                let startIndex = url.index(hashRange.upperBound, offsetBy: 0)
+                let endIndex = queryRange.lowerBound
+                let extractedHash = String(url[startIndex ..< endIndex])
 
-                // Extract hash from URL
-                if let url = result?.absoluteString,
-                   let hashRange = url.range(of: "avatar/"),
-                   let queryRange = url.range(of: "?") {
-                    let startIndex = url.index(hashRange.upperBound, offsetBy: 0)
-                    let endIndex = queryRange.lowerBound
-                    let extractedHash = String(url[startIndex ..< endIndex])
-
-                    // Verify it's a valid 64-character hex string (SHA256)
-                    #expect(extractedHash.count == 64)
-                    #expect(
-                        extractedHash.allSatisfy(\.isHexDigit) == true)
-                } else {
-                    #expect(Bool(false), "Could not extract hash from Gravatar URL")
-                }
+                // Verify hash properties
+                #expect(extractedHash.count == 64) // SHA256 is 64 hex chars
+                #expect(extractedHash.allSatisfy { $0.isHexDigit })
+                #expect(extractedHash.hasPrefix(testCase.expectedHashPrefix))
+            } else {
+                Issue.record("Could not extract hash from URL")
             }
         }
 

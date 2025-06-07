@@ -16,7 +16,7 @@ private struct QueryItemTestCase: Sendable, CustomTestStringConvertible {
         self.expected = expected
         self.description = description
     }
-    
+
     var testDescription: String {
         "\(description): \(baseURL) + \(items.count) item(s) → \(expected)"
     }
@@ -28,7 +28,7 @@ private struct EncodingTestCase: Sendable, CustomTestStringConvertible {
     let paramValue: String
     let expected: String
     let description: String
-    
+
     var testDescription: String {
         "\(description): \(paramName)=\(paramValue) → \(expected)"
     }
@@ -43,7 +43,7 @@ struct URLQueryItemsTests {
 
     @Suite("Basic Operations")
     struct Basic {
-        fileprivate static let basicTestCases: [QueryItemTestCase] = [
+        @Test("Basic query item operations", arguments: [
             // Empty cases
             QueryItemTestCase("https://example.com/path",
                               items: [],
@@ -110,9 +110,7 @@ struct URLQueryItemsTests {
                               items: [URLQueryItem(name: "ref", value: "nav")],
                               expected: "https://example.com/page?ref=nav#section",
                               "URL with fragment"),
-        ]
-
-        @Test("Basic query item operations", arguments: Basic.basicTestCases)
+        ])
         fileprivate func basicQueryItemOperations(testCase: QueryItemTestCase) {
             // Given
             let url = URL(string: testCase.baseURL)!
@@ -149,7 +147,7 @@ struct URLQueryItemsTests {
 
     @Suite("Advanced Features", .tags(.integration))
     struct Advanced {
-        fileprivate static let encodingTestCases: [EncodingTestCase] = [
+        @Test("URL encoding of special characters", arguments: [
             // Special characters
             EncodingTestCase(baseURL: "https://example.com",
                              paramName: "text",
@@ -200,9 +198,7 @@ struct URLQueryItemsTests {
                              paramValue: "what?",
                              expected: "https://example.com?question=what?",
                              description: "question mark encoded"),
-        ]
-
-        @Test("URL encoding of special characters", arguments: Advanced.encodingTestCases)
+        ])
         fileprivate func urlEncodingOfSpecialCharacters(testCase: EncodingTestCase) {
             // Given
             let url = URL(string: testCase.baseURL)!

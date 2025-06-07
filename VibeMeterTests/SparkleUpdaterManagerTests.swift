@@ -13,110 +13,131 @@ struct SparkleUpdaterManagerTests {
 
     // MARK: - Initialization Tests
 
-    @Test("initialization in environment does not crash")
-    func initialization_InTestEnvironment_DoesNotCrash() {
-        // Given/When - Initialization happens in setUp
-        // Then - Test passes if initialization completed without throwing
-        #expect(Bool(true))
+    // MARK: - Initialization Tests
+
+    @Test("Initialization checks", arguments: [
+        (check: "environment", description: "Does not crash in test environment"),
+        (check: "mainActor", description: "Is MainActor isolated"),
+        (check: "observable", description: "Is Observable"),
+        (check: "testEnvironment", description: "Skips Sparkle setup in test environment"),
+    ])
+    func initializationChecks(check: String, description _: String) {
+        switch check {
+        case "environment":
+            // Test passes if initialization completed without throwing
+            #expect(Bool(true))
+
+        case "mainActor":
+            // SparkleUpdaterManager is marked with @MainActor attribute
+            let _: SparkleUpdaterManager = sut
+            #expect(Bool(true))
+
+        case "observable":
+            // SparkleUpdaterManager uses @Observable (Swift 6 observation system)
+            let _: SparkleUpdaterManager = sut
+            #expect(Bool(true))
+
+        case "testEnvironment":
+            // We're running in test environment
+            let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            #expect(isTestEnvironment == true)
+
+        default:
+            #expect(Bool(false))
+        }
     }
 
-    @Test("initialization is main actor")
-    func initialization_IsMainActor() {
-        // Then - SparkleUpdaterManager is marked with @MainActor attribute
-        // This test ensures the class exists and can be accessed on MainActor
-        let _: SparkleUpdaterManager = sut
-        #expect(Bool(true))
-    }
+    // MARK: - Conformance Tests
 
-    @Test("initialization is observable object")
-    func initialization_IsObservableObject() {
-        // Then - SparkleUpdaterManager uses @Observable (Swift 6 observation system)
-        // The class should be observable but doesn't need to conform to ObservableObject protocol
-        let _: SparkleUpdaterManager = sut
-        #expect(Bool(true))
-    }
-
-    @Test("initialization in test environment skips sparkle setup")
-    func initialization_InTestEnvironment_SkipsSparkleSetup() {
-        // Given - We're running in test environment (XCTest)
-        let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-
-        // Then
-        #expect(isTestEnvironment == true)
-    }
-
-    @Test("sparkle updater manager conforms to SPU updater delegate")
-    func sparkleUpdaterManager_ConformsToSPUUpdaterDelegate() {
-        // Then
+    @Test("Protocol conformance", arguments: [
+        (protocol: "NSObjectProtocol", description: "Conforms to NSObjectProtocol"),
+        (protocol: "SPUUpdaterDelegate", description: "Conforms to SPU Updater Delegate"),
+        (protocol: "SPUStandardUserDriverDelegate", description: "Conforms to SPU Standard User Driver Delegate")
+    ])
+    func protocolConformance(protocol: String, description _: String) {
+        // Basic check that the manager exists and is an NSObject
         #expect(sut as NSObjectProtocol? != nil)
+
+        // For delegate methods, check selector existence
+        if `protocol` == "SPUStandardUserDriverDelegate" {
+            let hasRequiredMethods = sut
+                .responds(to: #selector(SparkleUpdaterManager.standardUserDriverWillShowModalAlert)) &&
+                sut.responds(to: #selector(SparkleUpdaterManager.standardUserDriverDidShowModalAlert))
+
+            #expect(hasRequiredMethods == true)
+        }
     }
 
-    @Test("sparkle updater manager conforms to SPU standard user driver delegate")
-    func sparkleUpdaterManager_ConformsToSPUStandardUserDriverDelegate() {
-        // Verify the class has the required delegate methods
-        let hasRequiredMethods = sut
-            .responds(to: #selector(SparkleUpdaterManager.standardUserDriverWillShowModalAlert)) &&
-            sut.responds(to: #selector(SparkleUpdaterManager.standardUserDriverDidShowModalAlert))
+    // MARK: - Error Handling Tests
 
-        #expect(hasRequiredMethods == true)
+    struct ErrorTestCase {
+        let domain: String
+        let code: Int
+        let message: String
+        let description: String
     }
 
-    @Test("error handling no update error does not crash")
-    func errorHandling_NoUpdateError_DoesNotCrash() {
+    @Test("Error handling", arguments: [
+        ErrorTestCase(
+            domain: "SUSparkleErrorDomain",
+            code: 1001,
+            message: "No update available",
+            description: "No update error"),
+        ErrorTestCase(
+            domain: "SUSparkleErrorDomain",
+            code: 2001,
+            message: "Appcast error",
+            description: "Appcast error"),
+        ErrorTestCase(
+            domain: "SUSparkleErrorDomain",
+            code: 2002,
+            message: "Download error",
+            description: "Download error"),
+        ErrorTestCase(
+            domain: "SUSparkleErrorDomain",
+            code: 3001,
+            message: "Signature error",
+            description: "Signature error"),
+        ErrorTestCase(
+            domain: "TestDomain",
+            code: 999,
+            message: "Generic error",
+            description: "Generic error"),
+    ])
+    func errorHandling(testCase: ErrorTestCase) {
         // Given - Test the error handling logic without calling actual delegate methods
-        let noUpdateError = NSError(domain: "SUSparkleErrorDomain", code: 1001, userInfo: [
-            NSLocalizedDescriptionKey: "No update available",
+        let error = NSError(domain: testCase.domain, code: testCase.code, userInfo: [
+            NSLocalizedDescriptionKey: testCase.message,
         ])
 
-        // When/Then - Should handle "no update" error gracefully
+        // When/Then - Should handle errors gracefully
         // Note: In test environment, Sparkle delegates are not called
         // This test validates that the manager exists and can handle the error pattern
-        #expect(noUpdateError.code == 1001)
+        #expect(error.code == testCase.code)
+        #expect(error.domain == testCase.domain)
+        #expect(error.localizedDescription == testCase.message)
     }
 
-    @Test("error handling appcast error does not crash")
-    func errorHandling_AppcastError_DoesNotCrash() {
-        // Given
-        let appcastError = NSError(domain: "SUSparkleErrorDomain", code: 2001, userInfo: [
-            NSLocalizedDescriptionKey: "Appcast error",
-        ])
-
-        // When/Then - Should handle appcast error gracefully
-        #expect(appcastError.code == 2001)
-    }
-
-    @Test("error handling generic error does not crash")
-    func errorHandling_GenericError_DoesNotCrash() {
-        // Given
-        let genericError = NSError(domain: "TestDomain", code: 999, userInfo: [
-            NSLocalizedDescriptionKey: "Generic error",
-        ])
-
-        // When/Then - Should handle generic error gracefully
-        #expect(genericError.code == 999)
-    }
-
-    @Test("error handling nil error handles gracefully")
-    func errorHandling_NilError_HandlesGracefully() {
-        // When/Then - Should handle nil error gracefully (success case)
+    @Test("Nil error handling")
+    func nilErrorHandling() {
         let nilError: Error? = nil
         #expect(nilError == nil)
     }
 
-    @Test("standard user driver will show modal alert handles gracefully")
-    func standardUserDriverWillShowModalAlert_HandlesGracefully() {
-        // When/Then - Should not crash when Sparkle will show modal alert
-        sut.standardUserDriverWillShowModalAlert()
+    @Test("Modal alert delegate methods", arguments: [
+        (method: "willShow", selector: #selector(SparkleUpdaterManager.standardUserDriverWillShowModalAlert)),
+        (method: "didShow", selector: #selector(SparkleUpdaterManager.standardUserDriverDidShowModalAlert))
+    ])
+    func modalAlertDelegateMethods(method: String, selector: Selector) {
+        // Verify method exists and can be called
+        #expect(sut.responds(to: selector))
 
-        // Test passes if no exception is thrown
-    }
-
-    @Test("standard user driver did show modal alert handles gracefully")
-    func standardUserDriverDidShowModalAlert_HandlesGracefully() {
-        // When/Then - Should not crash when Sparkle did show modal alert
-        sut.standardUserDriverDidShowModalAlert()
-
-        // Test passes if no exception is thrown
+        // Call the method - test passes if no exception is thrown
+        if method == "willShow" {
+            sut.standardUserDriverWillShowModalAlert()
+        } else {
+            sut.standardUserDriverDidShowModalAlert()
+        }
     }
 
     // MARK: - Debug vs Release Behavior Tests
@@ -135,7 +156,10 @@ struct SparkleUpdaterManagerTests {
 
     // MARK: - Memory Management Tests
 
-    @Test("sparkle updater manager does not retain cycles")
+    @Test(
+        "sparkle updater manager does not retain cycles",
+        .tags(.memory, .knownIssue),
+        .bug("https://github.com/example/issues/001", "Memory management validation"))
     func sparkleUpdaterManager_DoesNotRetainCycles() {
         // Given
         weak var weakSUT: SparkleUpdaterManager?

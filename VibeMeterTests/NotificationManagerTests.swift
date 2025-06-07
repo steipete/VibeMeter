@@ -1,4 +1,6 @@
 // swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
 // Consolidated comprehensive test suite for NotificationManager
 
 import Foundation
@@ -35,7 +37,7 @@ struct NotificationManagerTests {
                 self.manager = TestableNotificationManager(notificationCenter: mockCenter)
             }
 
-            static let authorizationTestCases: [AuthorizationTestCase] = [
+            static var authorizationTestCases: [AuthorizationTestCase] { [
                 AuthorizationTestCase(
                     result: .success(true),
                     expected: true,
@@ -52,7 +54,7 @@ struct NotificationManagerTests {
                     result: .failure(NSError(domain: "UNErrorDomain", code: 1, userInfo: nil)),
                     expected: false,
                     "authorization denied error"),
-            ]
+            ] }
 
             @Test("Authorization request scenarios", arguments: authorizationTestCases)
             func authorizationRequestScenarios(testCase: AuthorizationTestCase) async {
@@ -82,7 +84,7 @@ struct NotificationManagerTests {
                 self.manager = TestableNotificationManager(notificationCenter: mockCenter)
             }
 
-            static let warningNotificationTestCases: [NotificationTestCase] = [
+            static var warningNotificationTestCases: [NotificationTestCase] { [
                 NotificationTestCase(
                     spending: 75.50,
                     limit: 100.0,
@@ -106,9 +108,9 @@ struct NotificationManagerTests {
                     bodyContains: "GBP45.75",
                     category: "SPENDING_WARNING",
                     "GBP warning notification with unsupported currency symbol"),
-            ]
+            ] }
 
-            static let upperLimitNotificationTestCases: [NotificationTestCase] = [
+            static var upperLimitNotificationTestCases: [NotificationTestCase] { [
                 NotificationTestCase(
                     spending: 105.75,
                     limit: 100.0,
@@ -126,7 +128,7 @@ struct NotificationManagerTests {
                     category: "SPENDING_CRITICAL",
                     interruption: .critical,
                     "EUR upper limit notification"),
-            ]
+            ] }
 
             @Test("Warning notification display", arguments: warningNotificationTestCases)
             func warningNotificationDisplay(testCase: NotificationTestCase) async throws {

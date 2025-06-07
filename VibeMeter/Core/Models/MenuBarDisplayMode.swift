@@ -5,7 +5,7 @@ import Foundation
 /// This enum controls the appearance of the VibeMeter status item in the macOS menu bar,
 /// allowing users to customize whether they see just the gauge icon, just the cost amount,
 /// or both together. The cycling order is: icon → money → both → icon...
-public enum MenuBarDisplayMode: String, CaseIterable, Identifiable {
+public enum MenuBarDisplayMode: String, CaseIterable, Identifiable, Sendable {
     case iconOnly = "icon"
     case moneyOnly = "money"
     case both

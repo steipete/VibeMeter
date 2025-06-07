@@ -9,6 +9,7 @@ private class MockStartupManager: StartupControlling {
     var setLaunchAtLoginEnabledValue: Bool?
     var isLaunchAtLoginEnabledValue = false
     var shouldThrowError = false
+    var callHistory: [(enabled: Bool, timestamp: Date)] = []
 
     var isLaunchAtLoginEnabled: Bool {
         isLaunchAtLoginEnabledValue
@@ -17,6 +18,7 @@ private class MockStartupManager: StartupControlling {
     func setLaunchAtLogin(enabled: Bool) {
         setLaunchAtLoginCalled = true
         setLaunchAtLoginEnabledValue = enabled
+        callHistory.append((enabled: enabled, timestamp: Date()))
 
         // Only update the internal state if we're not simulating an error
         if !shouldThrowError {
@@ -65,10 +67,13 @@ struct StartupManagerTests {
 
     // MARK: - Enable/Disable Tests
 
-    @Test("set launch at login  enabled true  registers app")
-    func setLaunchAtLogin_EnabledTrue_RegistersApp() {
+    @Test("Launch at login state changes", arguments: [
+        (enabled: true, description: "Enable launch at login"),
+        (enabled: false, description: "Disable launch at login")
+    ])
+    func launchAtLoginStateChanges(enabled: Bool, description _: String) {
         // When
-        sut.setLaunchAtLogin(enabled: true)
+        sut.setLaunchAtLogin(enabled: enabled)
 
         // Then - Check actual system status
         // Note: In a sandboxed test environment, this may not actually register
@@ -78,30 +83,22 @@ struct StartupManagerTests {
         #expect(status == .enabled || status == .notRegistered || status == .requiresApproval || status == .notFound)
     }
 
-    @Test("set launch at login enabled false unregisters app")
-    func setLaunchAtLogin_EnabledFalse_UnregistersApp() {
-        // Given - First enable
-        sut.setLaunchAtLogin(enabled: true)
-
-        // When
-        sut.setLaunchAtLogin(enabled: false)
-
-        // Then - Check actual system status
-        let status = SMAppService.mainApp.status
-        // The test passes if no exception is thrown - just verify we get a valid status
-        #expect(status == .enabled || status == .notRegistered || status == .requiresApproval || status == .notFound)
-    }
-
-    @Test("set launch at login handles errors gracefully")
-    func setLaunchAtLogin_HandlesErrorsGracefully() {
-        // When - Call multiple times (which might cause errors in some conditions)
-        sut.setLaunchAtLogin(enabled: true)
-        sut.setLaunchAtLogin(enabled: true) // Duplicate enable
-        sut.setLaunchAtLogin(enabled: false)
-        sut.setLaunchAtLogin(enabled: false) // Duplicate disable
+    @Test("Duplicate state changes", arguments: [
+        (operations: [(true, "Enable"), (true, "Duplicate enable")], description: "Duplicate enable calls"),
+        (operations: [(false, "Disable"), (false, "Duplicate disable")], description: "Duplicate disable calls"),
+        (
+            operations: [(true, "Enable"), (false, "Disable"), (true, "Re-enable"), (false, "Re-disable")],
+            description: "Multiple toggles")
+    ])
+    func duplicateStateChanges(operations: [(enabled: Bool, description: String)], description _: String) {
+        // When - Perform operations
+        for (enabled, _) in operations {
+            sut.setLaunchAtLogin(enabled: enabled)
+        }
 
         // Then - No crash occurs
         // The test passes if execution reaches here
+        #expect(true)
     }
 
     // MARK: - Integration Tests with Settings
@@ -122,30 +119,22 @@ struct StartupManagerTests {
         #expect(mockStartup.setLaunchAtLoginCalled == false)
     }
 
-    @Test("mock startup manager set launch at login")
-    func mockStartupManager_SetLaunchAtLogin() {
+    @Test("Mock startup manager operations", arguments: [
+        (enable: true, expectedCalled: true, expectedEnabled: true, description: "Enable launch at login"),
+        (enable: false, expectedCalled: true, expectedEnabled: false, description: "Disable launch at login")
+    ])
+    func mockStartupManagerOperations(enable: Bool, expectedCalled: Bool, expectedEnabled: Bool,
+                                      description _: String) {
         // Given
         let mock = MockStartupManager()
 
         // When
-        mock.setLaunchAtLogin(enabled: true)
+        mock.setLaunchAtLogin(enabled: enable)
 
         // Then
-        #expect(mock.setLaunchAtLoginCalled == true)
-        #expect(mock.isLaunchAtLoginEnabled == true)
-    }
-
-    @Test("mock startup manager disable launch at login")
-    func mockStartupManager_DisableLaunchAtLogin() {
-        // Given
-        let mock = MockStartupManager()
-        mock.setLaunchAtLogin(enabled: true)
-
-        // When
-        mock.setLaunchAtLogin(enabled: false)
-
-        // Then
-        #expect(mock.setLaunchAtLoginEnabledValue == false)
+        #expect(mock.setLaunchAtLoginCalled == expectedCalled)
+        #expect(mock.isLaunchAtLoginEnabled == expectedEnabled)
+        #expect(mock.setLaunchAtLoginEnabledValue == enable)
     }
 
     @Test("mock startup manager  error simulation")

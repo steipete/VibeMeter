@@ -1,3 +1,8 @@
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
+// swiftlint:disable function_body_length
+// swiftlint:disable line_length
 import Foundation
 import Testing
 @testable import VibeMeter
@@ -16,7 +21,7 @@ struct TeamInfoTestCase: Sendable, CustomTestStringConvertible {
         self.expectedName = name
         self.description = description
     }
-    
+
     var testDescription: String {
         "\(description): id=\(expectedId), name=\(expectedName ?? "nil")"
     }
