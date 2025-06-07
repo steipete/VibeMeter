@@ -1,4 +1,4 @@
-// swiftlint:disable file_length type_body_length
+// swiftlint:disable file_length
 // Consolidated test file requires more lines
 
 import Foundation
@@ -371,7 +371,7 @@ struct BackgroundDataProcessorTests {
                 providerClient: mockProvider)
 
             // Then - Should handle gracefully
-            #expect(result.userInfo.email == "")
+            #expect(result.userInfo.email.isEmpty)
             #expect(result.userInfo.teamId == -1)
         }
 
@@ -408,5 +408,3 @@ struct BackgroundDataProcessorTests {
         }
     }
 }
-
-// swiftlint:enable file_length type_body_length

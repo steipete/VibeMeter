@@ -1,9 +1,11 @@
 import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
 // MARK: - Mock Provider for Background Processing Tests
 
+// Using a class instead of actor to maintain existing API compatibility
+// Swift Testing recommends using structured concurrency patterns
 class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
     let provider: ServiceProvider
     let lock = NSLock()
@@ -171,7 +173,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         lock.withLock { _fetchUserInfoCallCount += 1 }
 
         if userInfoDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(userInfoDelay * 1_000_000_000))
+            try await Task.sleep(for: .seconds(userInfoDelay))
         }
 
         if shouldThrowCustomError {
@@ -193,7 +195,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         lock.withLock { _fetchTeamInfoCallCount += 1 }
 
         if teamInfoDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(teamInfoDelay * 1_000_000_000))
+            try await Task.sleep(for: .seconds(teamInfoDelay))
         }
 
         if shouldThrowOnTeamInfo {
@@ -220,7 +222,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         }
 
         if invoiceDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(invoiceDelay * 1_000_000_000))
+            try await Task.sleep(for: .seconds(invoiceDelay))
         }
 
         if shouldThrowOnInvoice {
@@ -238,7 +240,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         lock.withLock { _fetchUsageDataCallCount += 1 }
 
         if usageDelay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(usageDelay * 1_000_000_000))
+            try await Task.sleep(for: .seconds(usageDelay))
         }
 
         if shouldThrowOnUsage {
@@ -284,7 +286,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
 
 // MARK: - Thread Capturing Mock Provider
 
-class ThreadCapturingProvider: MockBackgroundProvider, @unchecked Sendable {
+final class ThreadCapturingProvider: MockBackgroundProvider {
     private var _executionThread: Thread?
 
     var executionThread: Thread? {

@@ -5,211 +5,191 @@ import Testing
 @Suite("CurrencyFormattingTests", .tags(.currency, .unit, .fast))
 @MainActor
 struct CurrencyFormattingTests {
+    // MARK: - Test Data Types
+
+    struct FormattingTestCase: CustomTestStringConvertible {
+        let amount: Double
+        let currencySymbol: String
+        let localeIdentifier: String
+        let expected: String
+        let description: String
+
+        var locale: Locale { Locale(identifier: localeIdentifier) }
+
+        var testDescription: String {
+            "\(currencySymbol)\(amount) (\(localeIdentifier)) → \(expected)"
+        }
+    }
+
     // MARK: - Amount Formatting Tests
 
-    @Test("format amount  basic formatting  returns formatted string")
-
-    func formatAmount_BasicFormatting_ReturnsFormattedString() {
-        // Given
-        let amount = 123.45
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "$123.45")
+    @Test("Basic amount formatting", arguments: [
+        FormattingTestCase(
+            amount: 123.45,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$123.45",
+            description: "Basic formatting"),
+        FormattingTestCase(
+            amount: 100.0,
+            currencySymbol: "€",
+            localeIdentifier: "en_US",
+            expected: "€100",
+            description: "Whole number"),
+        FormattingTestCase(
+            amount: 42.5,
+            currencySymbol: "£",
+            localeIdentifier: "en_US",
+            expected: "£42.5",
+            description: "One decimal place"),
+        FormattingTestCase(
+            amount: 1_234_567.89,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$1,234,567.89",
+            description: "Large number with separators"),
+        FormattingTestCase(
+            amount: 0.01,
+            currencySymbol: "¢",
+            localeIdentifier: "en_US",
+            expected: "¢0.01",
+            description: "Small decimal"),
+        FormattingTestCase(
+            amount: 0.0,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$0",
+            description: "Zero amount"),
+        FormattingTestCase(
+            amount: -25.50,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$-25.5",
+            description: "Negative amount"),
+    ])
+    func formatAmount(testCase: FormattingTestCase) {
+        let result = CurrencyConversionHelper.formatAmount(
+            testCase.amount,
+            currencySymbol: testCase.currencySymbol,
+            locale: testCase.locale)
+        #expect(result == testCase.expected)
     }
 
-    @Test("format amount whole number does not show unnecessary decimals")
-    func formatAmount_WholeNumber_DoesNotShowUnnecessaryDecimals() {
-        // Given
+    @Test("Locale-specific formatting", arguments: [
+        FormattingTestCase(
+            amount: 1234.56,
+            currencySymbol: "€",
+            localeIdentifier: "en_US",
+            expected: "€1,234.56",
+            description: "US format"),
+        FormattingTestCase(
+            amount: 1234.56,
+            currencySymbol: "€",
+            localeIdentifier: "de_DE",
+            expected: "€1.234,56",
+            description: "German format"),
+        FormattingTestCase(
+            amount: 1234.56,
+            currencySymbol: "€",
+            localeIdentifier: "fr_FR",
+            expected: "€1\u{202F}234,56",
+            description: "French format")
+    ])
+    func formatAmountWithLocale(testCase: FormattingTestCase) {
+        let result = CurrencyConversionHelper.formatAmount(
+            testCase.amount,
+            currencySymbol: testCase.currencySymbol,
+            locale: testCase.locale)
+        #expect(result == testCase.expected)
+    }
+
+    @Test("Currency symbol handling", arguments: [
+        FormattingTestCase(
+            amount: 100.0,
+            currencySymbol: "",
+            localeIdentifier: "en_US",
+            expected: "100",
+            description: "Empty currency symbol"),
+        FormattingTestCase(
+            amount: 50.0,
+            currencySymbol: "USD",
+            localeIdentifier: "en_US",
+            expected: "USD50",
+            description: "Long currency symbol")
+    ])
+    func formatAmountWithSymbol(testCase: FormattingTestCase) {
+        let result = CurrencyConversionHelper.formatAmount(
+            testCase.amount,
+            currencySymbol: testCase.currencySymbol,
+            locale: testCase.locale)
+        #expect(result == testCase.expected)
+    }
+
+    @Test("Special currency symbols", arguments: ["¥", "₹", "₩", "₽", "₪", "₦", "₨"])
+    func formatAmountWithSpecialSymbol(symbol: String) {
         let amount = 100.0
-        let currencySymbol = "€"
         let locale = Locale(identifier: "en_US")
 
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
+        let result = CurrencyConversionHelper.formatAmount(
+            amount,
+            currencySymbol: symbol,
+            locale: locale)
 
-        // Then
-        #expect(result == "€100")
-    }
-
-    @Test("format amount one decimal place shows correctly")
-    func formatAmount_OneDecimalPlace_ShowsCorrectly() {
-        // Given
-        let amount = 42.5
-        let currencySymbol = "£"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "£42.5")
-    }
-
-    @Test("format amount large number formats with separators")
-    func formatAmount_LargeNumber_FormatsWithSeparators() {
-        // Given
-        let amount = 1_234_567.89
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "$1,234,567.89")
-    }
-
-    @Test("format amount small decimal handles correctly")
-    func formatAmount_SmallDecimal_HandlesCorrectly() {
-        // Given
-        let amount = 0.01
-        let currencySymbol = "¢"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "¢0.01")
-    }
-
-    @Test("format amount zero amount formats correctly")
-    func formatAmount_ZeroAmount_FormatsCorrectly() {
-        // Given
-        let amount = 0.0
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "$0")
-    }
-
-    @Test("format amount negative amount shows negative sign")
-    func formatAmount_NegativeAmount_ShowsNegativeSign() {
-        // Given
-        let amount = -25.50
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "$-25.5")
-    }
-
-    @Test("format amount different locales respects local formatting")
-    func formatAmount_DifferentLocales_RespectsLocalFormatting() {
-        // Given
-        let amount = 1234.56
-        let currencySymbol = "€"
-
-        // Test different locales
-        let testCases = [
-            (Locale(identifier: "en_US"), "€1,234.56"), // US format
-            (Locale(identifier: "de_DE"), "€1.234,56"), // German format
-            (Locale(identifier: "fr_FR"), "€1\u{202F}234,56"), // French format (narrow no-break space)
-        ]
-
-        for (locale, expectedFormat) in testCases {
-            // When
-            let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-            // Then
-            #expect(result == expectedFormat)
-        }
-    }
-
-    @Test("format amount  empty currency symbol  handles gracefully")
-
-    func formatAmount_EmptyCurrencySymbol_HandlesGracefully() {
-        // Given
-        let amount = 100.0
-        let currencySymbol = ""
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "100")
-    }
-
-    @Test("format amount long currency symbol handles correctly")
-    func formatAmount_LongCurrencySymbol_HandlesCorrectly() {
-        // Given
-        let amount = 50.0
-        let currencySymbol = "USD"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "USD50")
-    }
-
-    @Test("format amount special currency symbols handles correctly")
-    func formatAmount_SpecialCurrencySymbols_HandlesCorrectly() {
-        // Given
-        let amount = 100.0
-        let specialSymbols = ["¥", "₹", "₩", "₽", "₪", "₦", "₨"]
-        let locale = Locale(identifier: "en_US")
-
-        for symbol in specialSymbols {
-            // When
-            let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: symbol, locale: locale)
-
-            // Then
-            #expect(result.hasPrefix(symbol) == true)
-        }
+        #expect(result.hasPrefix(symbol))
     }
 
     // MARK: - Precision and Rounding Tests
 
-    @Test("format amount  rounding behavior")
+    struct RoundingTestCase: CustomTestStringConvertible {
+        let amount: Double
+        let expected: String
+        let description: String
 
-    func formatAmount_RoundingBehavior() {
-        // Given
-        let testCases = [
-            (123.456, "$123.46"), // Round up
-            (123.454, "$123.45"), // Round down
-            (123.455, "$123.46"), // Round half up (banker's rounding)
-            (0.996, "$1"), // Round to whole number
-            (0.004, "$0"), // Round to zero
-        ]
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        for (amount, expected) in testCases {
-            // When
-            let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-            // Then
-            #expect(result == expected)
+        var testDescription: String {
+            "\(amount) → \(expected) (\(description))"
         }
     }
 
-    @Test("format amount  very large numbers  handles correctly")
+    @Test("Rounding behavior", arguments: [
+        RoundingTestCase(amount: 123.456, expected: "$123.46", description: "Round up"),
+        RoundingTestCase(amount: 123.454, expected: "$123.45", description: "Round down"),
+        RoundingTestCase(amount: 123.455, expected: "$123.46", description: "Round half up"),
+        RoundingTestCase(amount: 0.996, expected: "$1", description: "Round to whole number"),
+        RoundingTestCase(amount: 0.004, expected: "$0", description: "Round to zero"),
+    ])
+    func formatAmountRounding(testCase: RoundingTestCase) {
+        let result = CurrencyConversionHelper.formatAmount(
+            testCase.amount,
+            currencySymbol: "$",
+            locale: Locale(identifier: "en_US"))
+        #expect(result == testCase.expected)
+    }
 
-    func formatAmount_VeryLargeNumbers_HandlesCorrectly() {
-        // Given
-        let amount = 999_999_999.99
-        let currencySymbol = "$"
-        let locale = Locale(identifier: "en_US")
-
-        // When
-        let result = CurrencyConversionHelper.formatAmount(amount, currencySymbol: currencySymbol, locale: locale)
-
-        // Then
-        #expect(result == "$999,999,999.99")
+    @Test("Edge case handling", arguments: [
+        FormattingTestCase(
+            amount: 999_999_999.99,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$999,999,999.99",
+            description: "Very large number"),
+        FormattingTestCase(
+            amount: Double.infinity,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$∞",
+            description: "Infinity"),
+        FormattingTestCase(
+            amount: -Double.infinity,
+            currencySymbol: "$",
+            localeIdentifier: "en_US",
+            expected: "$-∞",
+            description: "Negative infinity")
+    ])
+    func formatAmountEdgeCases(testCase: FormattingTestCase) {
+        let result = CurrencyConversionHelper.formatAmount(
+            testCase.amount,
+            currencySymbol: testCase.currencySymbol,
+            locale: testCase.locale)
+        #expect(result == testCase.expected)
     }
 }

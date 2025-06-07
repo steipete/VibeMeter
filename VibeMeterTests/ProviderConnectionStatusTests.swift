@@ -1,3 +1,4 @@
+// swiftlint:disable file_length type_body_length nesting
 import Foundation
 import SwiftUI
 import Testing
@@ -34,7 +35,7 @@ struct ProviderConnectionStatusTests {
             }
         }
 
-        static let allStatusTestCases: [StatusTestCase] = [
+        static var allStatusTestCases: [StatusTestCase] { [
             StatusTestCase(
                 .disconnected,
                 color: .secondary,
@@ -79,7 +80,7 @@ struct ProviderConnectionStatusTests {
                 icon: "clock",
                 description: "stale data state",
                 shortDesc: "Stale"),
-        ]
+        ] }
 
         // MARK: - Comprehensive Status Tests
 

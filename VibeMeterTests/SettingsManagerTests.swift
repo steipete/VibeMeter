@@ -26,146 +26,189 @@ struct SettingsManagerTests {
 
     // MARK: - Default Values Tests
 
-    @Test("default currency is usd")
-    func defaultCurrencyIsUSD() {
-        #expect(settingsManager.selectedCurrencyCode == "USD")
+    struct DefaultValueTestCase: @unchecked Sendable {
+        let name: String
+        let getValue: @MainActor (SettingsManager) -> Any
+        let expectedValue: Any
+        let compare: (Any, Any) -> Bool
     }
 
-    @Test("default warning limit")
-    func defaultWarningLimit() {
-        #expect(settingsManager.warningLimitUSD == 200.0)
+    @Test("Default values", arguments: [
+        DefaultValueTestCase(
+            name: "Currency",
+            getValue: { $0.selectedCurrencyCode },
+            expectedValue: "USD",
+            compare: { ($0 as? String) == ($1 as? String) }),
+        DefaultValueTestCase(
+            name: "Warning limit",
+            getValue: { $0.warningLimitUSD },
+            expectedValue: 200.0,
+            compare: { ($0 as? Double) == ($1 as? Double) }),
+        DefaultValueTestCase(
+            name: "Upper limit",
+            getValue: { $0.upperLimitUSD },
+            expectedValue: 1000.0,
+            compare: { ($0 as? Double) == ($1 as? Double) }),
+        DefaultValueTestCase(
+            name: "Refresh interval",
+            getValue: { $0.refreshIntervalMinutes },
+            expectedValue: 5,
+            compare: { ($0 as? Int) == ($1 as? Int) }),
+        DefaultValueTestCase(
+            name: "Launch at login",
+            getValue: { $0.launchAtLoginEnabled },
+            expectedValue: false,
+            compare: { ($0 as? Bool) == ($1 as? Bool) }),
+        DefaultValueTestCase(
+            name: "Menu bar display mode",
+            getValue: { $0.menuBarDisplayMode },
+            expectedValue: MenuBarDisplayMode.both,
+            compare: { ($0 as? MenuBarDisplayMode) == ($1 as? MenuBarDisplayMode) }),
+        DefaultValueTestCase(
+            name: "Show in dock",
+            getValue: { $0.showInDock },
+            expectedValue: false,
+            compare: { ($0 as? Bool) == ($1 as? Bool) }),
+        DefaultValueTestCase(
+            name: "Enabled providers",
+            getValue: { $0.enabledProviders },
+            expectedValue: Set([ServiceProvider.cursor]),
+            compare: { ($0 as? Set<ServiceProvider>) == ($1 as? Set<ServiceProvider>) }),
+    ])
+    func defaultValues(testCase: DefaultValueTestCase) {
+        let actualValue = testCase.getValue(settingsManager)
+        #expect(testCase.compare(actualValue, testCase.expectedValue))
     }
 
-    @Test("default upper limit")
-    func defaultUpperLimit() {
-        #expect(settingsManager.upperLimitUSD == 1000.0)
+    // MARK: - Setting Values Tests
+
+    @Test("String property updates", arguments: [
+        (property: "Currency", newValue: "EUR"),
+        (property: "Currency", newValue: "GBP"),
+        (property: "Currency", newValue: "JPY")
+    ])
+    func stringPropertyUpdates(property _: String, newValue: String) {
+        settingsManager.selectedCurrencyCode = newValue
+        #expect(settingsManager.selectedCurrencyCode == newValue)
     }
 
-    @Test("default refresh interval")
-    func defaultRefreshInterval() {
-        #expect(settingsManager.refreshIntervalMinutes == 5)
+    @Test("Warning limit updates")
+    func warningLimitUpdates() {
+        let testValues = [150.5, 0.0, 999.99]
+        for value in testValues {
+            settingsManager.warningLimitUSD = value
+            #expect(settingsManager.warningLimitUSD == value)
+        }
     }
 
-    @Test("default launch at login")
-    func defaultLaunchAtLogin() {
+    @Test("Upper limit updates")
+    func upperLimitUpdates() {
+        let testValues = [800.75, 2000.0, 100.0]
+        for value in testValues {
+            settingsManager.upperLimitUSD = value
+            #expect(settingsManager.upperLimitUSD == value)
+        }
+    }
+
+    @Test("Integer property updates", arguments: [
+        (property: "Refresh interval", value: 1),
+        (property: "Refresh interval", value: 30),
+        (property: "Refresh interval", value: 60),
+        (property: "Refresh interval", value: 240)
+    ])
+    func integerPropertyUpdates(property _: String, value: Int) {
+        settingsManager.refreshIntervalMinutes = value
+        #expect(settingsManager.refreshIntervalMinutes == value)
+    }
+
+    @Test("Launch at login updates")
+    func launchAtLoginUpdates() {
+        settingsManager.launchAtLoginEnabled = true
+        #expect(settingsManager.launchAtLoginEnabled == true)
+
+        settingsManager.launchAtLoginEnabled = false
         #expect(settingsManager.launchAtLoginEnabled == false)
     }
 
-    @Test("default menu bar display mode")
-    func defaultMenuBarDisplayMode() {
-        #expect(settingsManager.menuBarDisplayMode == .both)
-    }
+    @Test("Show in dock updates")
+    func showInDockUpdates() {
+        settingsManager.showInDock = true
+        #expect(settingsManager.showInDock == true)
 
-    @Test("default show in dock")
-    func defaultShowInDock() {
+        settingsManager.showInDock = false
         #expect(settingsManager.showInDock == false)
     }
 
-    @Test("default enabled providers")
-    func defaultEnabledProviders() {
-        #expect(settingsManager.enabledProviders == [.cursor])
+    @Test("Menu bar display mode updates", arguments: [
+        MenuBarDisplayMode.iconOnly,
+        MenuBarDisplayMode.moneyOnly,
+        MenuBarDisplayMode.both
+    ])
+    func menuBarDisplayModeUpdates(mode: MenuBarDisplayMode) {
+        settingsManager.menuBarDisplayMode = mode
+        #expect(settingsManager.menuBarDisplayMode == mode)
     }
 
-    @Test("setting selected currency")
-    func settingSelectedCurrency() {
-        let newCurrency = "EUR"
-        settingsManager.selectedCurrencyCode = newCurrency
-        #expect(settingsManager.selectedCurrencyCode == newCurrency)
+    @Test("Enabled providers updates", arguments: [
+        Set<ServiceProvider>([]),
+        Set<ServiceProvider>([.cursor]),
+        Set<ServiceProvider>([])
+    ])
+    func enabledProvidersUpdates(providers: Set<ServiceProvider>) {
+        settingsManager.enabledProviders = providers
+        #expect(settingsManager.enabledProviders == providers)
     }
 
-    @Test("setting warning limit USD")
-    func settingWarningLimitUSD() {
-        let newLimit = 150.5
-        settingsManager.warningLimitUSD = newLimit
-        #expect(settingsManager.warningLimitUSD == newLimit)
+    // MARK: - Provider Session Tests
+
+    struct SessionTestCase {
+        let provider: ServiceProvider
+        let teamId: Int
+        let teamName: String
+        let userEmail: String
+        let isActive: Bool
+        let description: String
     }
 
-    @Test("setting upper limit USD")
-    func settingUpperLimitUSD() {
-        let newLimit = 800.75
-        settingsManager.upperLimitUSD = newLimit
-        #expect(settingsManager.upperLimitUSD == newLimit)
-    }
-
-    @Test("setting refresh interval")
-    func settingRefreshInterval() {
-        let newInterval = 30
-        settingsManager.refreshIntervalMinutes = newInterval
-        #expect(settingsManager.refreshIntervalMinutes == newInterval)
-    }
-
-    @Test("setting launch at login")
-    func settingLaunchAtLogin() {
-        settingsManager.launchAtLoginEnabled = true
-        #expect(settingsManager.launchAtLoginEnabled == true)
-    }
-
-    @Test("setting menu bar display mode")
-    func settingMenuBarDisplayMode() {
-        settingsManager.menuBarDisplayMode = .iconOnly
-        #expect(
-            settingsManager.menuBarDisplayMode == .iconOnly)
-
-        settingsManager.menuBarDisplayMode = .both
-        #expect(settingsManager.menuBarDisplayMode == .both)
-    }
-
-    @Test("setting show in dock")
-    func settingShowInDock() {
-        settingsManager.showInDock = true
-        #expect(settingsManager.showInDock == true)
-    }
-
-    @Test("setting enabled providers")
-    func settingEnabledProviders() {
-        let newProviders: Set<ServiceProvider> = []
-        settingsManager.enabledProviders = newProviders
-        #expect(settingsManager.enabledProviders == newProviders)
-
-        let allProviders: Set<ServiceProvider> = [.cursor]
-        settingsManager.enabledProviders = allProviders
-        #expect(settingsManager.enabledProviders == allProviders)
-    }
-
-    @Test("provider session storage")
-    func providerSessionStorage() {
-        let session = ProviderSession(
+    @Test("Provider session operations", arguments: [
+        SessionTestCase(
             provider: .cursor,
             teamId: 12345,
             teamName: "Test Team",
             userEmail: "test@example.com",
-            isActive: true)
+            isActive: true,
+            description: "Basic session"),
+        SessionTestCase(
+            provider: .cursor,
+            teamId: 999,
+            teamName: "Another Team",
+            userEmail: "another@example.com",
+            isActive: false,
+            description: "Inactive session"),
+        SessionTestCase(
+            provider: .cursor,
+            teamId: 0,
+            teamName: "Empty Team",
+            userEmail: "empty@example.com",
+            isActive: true,
+            description: "Zero team ID"),
+    ])
+    func providerSessionOperations(testCase: SessionTestCase) {
+        let session = ProviderSession(
+            provider: testCase.provider,
+            teamId: testCase.teamId,
+            teamName: testCase.teamName,
+            userEmail: testCase.userEmail,
+            isActive: testCase.isActive)
 
-        settingsManager.updateSession(for: .cursor, session: session)
+        settingsManager.updateSession(for: testCase.provider, session: session)
 
-        let retrievedSession = settingsManager.getSession(for: .cursor)
+        let retrievedSession = settingsManager.getSession(for: testCase.provider)
         #expect(retrievedSession != nil)
-        #expect(retrievedSession?.teamId == 12345)
-        #expect(retrievedSession?.userEmail == "test@example.com")
-    }
-
-    @Test("provider session overwrite")
-    func providerSessionOverwrite() {
-        let session1 = ProviderSession(
-            provider: .cursor,
-            teamId: 111,
-            teamName: "Team 1",
-            userEmail: "user1@example.com",
-            isActive: true)
-
-        let session2 = ProviderSession(
-            provider: .cursor,
-            teamId: 222,
-            teamName: "Team 2",
-            userEmail: "user2@example.com",
-            isActive: false)
-
-        settingsManager.updateSession(for: .cursor, session: session1)
-        settingsManager.updateSession(for: .cursor, session: session2)
-
-        let retrievedSession = settingsManager.getSession(for: .cursor)
-        #expect(retrievedSession?.teamId == 222)
-        #expect(retrievedSession?.userEmail == "user2@example.com")
+        #expect(retrievedSession?.teamId == testCase.teamId)
+        #expect(retrievedSession?.teamName == testCase.teamName)
+        #expect(retrievedSession?.userEmail == testCase.userEmail)
+        #expect(retrievedSession?.isActive == testCase.isActive)
     }
 
     @Test("get session for non existent provider")

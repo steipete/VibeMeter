@@ -40,7 +40,7 @@ struct KeychainHelperTests {
             _ = keychain.deleteToken()
         }
 
-        static let tokenTestCases: [TokenTestCase] = [
+        @Test("Token save and retrieve", arguments: [
             TokenTestCase("simple-token", "simple alphanumeric token"),
             TokenTestCase("token-with-dashes-and_underscores", "token with special characters"),
             TokenTestCase("", "empty token"),
@@ -52,9 +52,7 @@ struct KeychainHelperTests {
                 "very long token"),
             TokenTestCase("🔑🚀✨", "unicode token"),
             TokenTestCase(#"{"token": "value", "expires": "2023-12-01"}"#, "JSON token"),
-        ]
-
-        @Test("Token save and retrieve", arguments: tokenTestCases)
+        ])
         func tokenSaveAndRetrieve(testCase: TokenTestCase) {
             // When
             let saveResult = keychain.saveToken(testCase.token)

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length nesting
 import Foundation
 import os.log
 import Testing

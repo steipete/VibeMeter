@@ -1,6 +1,38 @@
+// swiftlint:disable file_length type_body_length nesting
 import Foundation
 import Testing
 @testable import VibeMeter
+
+/// Actor for thread-safe state tracking in tests
+actor TestStateTracker {
+    private(set) var attemptCount: Int = 0
+    private(set) var attemptTimes: [Date] = []
+    private(set) var delays: [TimeInterval] = []
+    private(set) var startTimes: [Date] = []
+
+    func incrementAttempt() {
+        attemptCount += 1
+    }
+
+    func recordAttemptTime(_ time: Date = Date()) {
+        attemptTimes.append(time)
+    }
+
+    func recordStartTime(_ time: Date = Date()) {
+        startTimes.append(time)
+        if startTimes.count > 1 {
+            let delay = time.timeIntervalSince(startTimes[startTimes.count - 2])
+            delays.append(delay)
+        }
+    }
+
+    func reset() {
+        attemptCount = 0
+        attemptTimes.removeAll()
+        delays.removeAll()
+        startTimes.removeAll()
+    }
+}
 
 @Suite("NetworkRetryHandler Tests", .tags(.network, .unit))
 @MainActor
@@ -67,23 +99,22 @@ struct NetworkRetryHandlerTests {
                 jitterFactor: 0.0 // No jitter for predictable testing
             )
             let customHandler = NetworkRetryHandler(configuration: customConfig)
-            var attemptCount = 0
-            var attemptTimes: [Date] = []
+            let tracker = TestStateTracker()
 
-            // When
-            do {
-                _ = try await customHandler.execute {
-                    attemptCount += 1
-                    attemptTimes.append(Date())
+            // When/Then - Advanced error handling with payload inspection
+            await #expect(throws: (any Error).self) {
+                try await customHandler.execute { @Sendable in
+                    await tracker.incrementAttempt()
+                    await tracker.recordAttemptTime()
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
-            } catch {
-                // Expected - should retry and then fail
             }
 
-            // Then
-            // Should have 3 attempts (initial + 2 retries)
-            #expect(attemptCount == 3)
+            // Verify attempts were made correctly
+            let finalAttemptCount = await tracker.attemptCount
+            let attemptTimes = await tracker.attemptTimes
+            #expect(finalAttemptCount == 3) // Initial + 2 retries
+            #expect(attemptTimes.count == 3)
 
             if attemptTimes.count >= 2 {
                 let firstDelay = attemptTimes[1].timeIntervalSince(attemptTimes[0])
@@ -99,18 +130,19 @@ struct NetworkRetryHandlerTests {
         func providerSpecificRetryHandler() async {
             // Given
             let cursorHandler = NetworkRetryHandler.forProvider(.cursor)
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
-            do {
-                _ = try await cursorHandler.execute {
-                    attemptCount += 1
+            await #expect(throws: NetworkRetryHandler.RetryableError.rateLimited(retryAfter: nil)) {
+                try await cursorHandler.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: nil)
                 }
-            } catch {
-                // Then - Should use default configuration
-                #expect(attemptCount == 4) // 1 + 3 retries
             }
+
+            // Then - Should use default configuration
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // 1 + 3 retries
         }
     }
 
@@ -127,26 +159,20 @@ struct NetworkRetryHandlerTests {
                 jitterFactor: 0.0 // No jitter for predictable testing
             )
             let handler = NetworkRetryHandler(configuration: config)
-            var delays: [TimeInterval] = []
-            var startTimes: [Date] = []
+            let tracker = TestStateTracker()
 
             // When
-            do {
-                _ = try await handler.execute {
-                    let now = Date()
-                    startTimes.append(now)
-                    if startTimes.count > 1 {
-                        delays.append(now.timeIntervalSince(startTimes[startTimes.count - 2]))
-                    }
+            await #expect(throws: (any Error).self) {
+                try await handler.execute { @Sendable in
+                    await tracker.recordStartTime()
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
-            } catch {
-                // Expected to fail
             }
 
             // Then - Verify exponential backoff
             // Delays should be approximately: 0.1, 0.2, 0.4
             // Can't test exact values due to async timing, but verify increasing pattern
+            let delays = await tracker.delays
             #expect(delays.count >= 2)
             if delays.count >= 2 {
                 #expect(delays[1] > delays[0]) // Second delay should be larger
@@ -163,22 +189,23 @@ struct NetworkRetryHandlerTests {
                 multiplier: 10.0, // High multiplier
                 jitterFactor: 0.0)
             let handler = NetworkRetryHandler(configuration: config)
-            var attemptCount = 0
+            let tracker = TestStateTracker()
             let startTime = Date()
 
             // When
-            do {
-                _ = try await handler.execute {
-                    attemptCount += 1
+            await #expect(throws: (any Error).self) {
+                try await handler.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
-            } catch {
-                // Then
-                let totalTime = Date().timeIntervalSince(startTime)
-                // Should be capped at maxDelay * maxRetries = 0.02 * 5 = 0.1
-                #expect(totalTime < 0.2) // Allow some margin
-                #expect(attemptCount == 6) // 1 initial + 5 retries
             }
+
+            // Then
+            let totalTime = Date().timeIntervalSince(startTime)
+            let finalAttemptCount = await tracker.attemptCount
+            // Should be capped at maxDelay * maxRetries = 0.02 * 5 = 0.1
+            #expect(totalTime < 0.2) // Allow some margin
+            #expect(finalAttemptCount == 6) // 1 initial + 5 retries
         }
 
         @Test("retryable error conversion")
@@ -206,11 +233,12 @@ struct NetworkRetryHandlerTests {
             await withTaskGroup(of: Int?.self) { group in
                 for i in 0 ..< operationCount {
                     group.addTask {
-                        var attemptCount = 0
+                        let tracker = TestStateTracker()
                         do {
-                            return try await handler.execute {
-                                attemptCount += 1
-                                if attemptCount < 2 {
+                            return try await handler.execute { @Sendable in
+                                await tracker.incrementAttempt()
+                                let count = await tracker.attemptCount
+                                if count < 2 {
                                     throw NetworkRetryHandler.RetryableError.networkTimeout
                                 }
                                 return i
@@ -256,37 +284,40 @@ struct NetworkRetryHandlerTests {
         @Test("success on first attempt")
         func successOnFirstAttempt() async throws {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
-            let result = try await sut.execute {
-                attemptCount += 1
+            let result = try await sut.execute { @Sendable in
+                await tracker.incrementAttempt()
                 return "Success"
             }
 
             // Then
+            let finalAttemptCount = await tracker.attemptCount
             #expect(result == "Success")
-            #expect(attemptCount == 1)
+            #expect(finalAttemptCount == 1)
         }
 
         @Test("success after retries")
         func successAfterRetries() async throws {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
             let successOnAttempt = 3
 
             // When
-            let result = try await sut.execute {
-                attemptCount += 1
-                if attemptCount < successOnAttempt {
+            let result = try await sut.execute { @Sendable in
+                await tracker.incrementAttempt()
+                let count = await tracker.attemptCount
+                if count < successOnAttempt {
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
-                return attemptCount
+                return count
             }
 
             // Then
+            let finalAttemptCount = await tracker.attemptCount
             #expect(result == successOnAttempt)
-            #expect(attemptCount == successOnAttempt)
+            #expect(finalAttemptCount == successOnAttempt)
         }
 
         // MARK: - Retry Logic Tests
@@ -294,12 +325,12 @@ struct NetworkRetryHandlerTests {
         @Test("retries network timeout")
         func retriesNetworkTimeout() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.networkTimeout
                 }
             } catch {
@@ -307,18 +338,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then - Should retry maxRetries times
-            #expect(attemptCount == 4) // 1 initial + 3 retries
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("retries server error")
         func retriesServerError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
             } catch {
@@ -326,18 +358,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // 1 initial + 3 retries
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("does not retry client error")
         func doesNotRetryClientError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 404)
                 }
             } catch {
@@ -345,13 +378,14 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then - Client errors (4xx) should not retry
-            #expect(attemptCount == 1)
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1)
         }
 
         @Test("retries rate limited error")
         func retriesRateLimitedError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
             let testHandler = NetworkRetryHandler(configuration: NetworkRetryHandler.Configuration(
                 maxRetries: 2,
                 initialDelay: 0.001, // Use very short delay for tests
@@ -362,8 +396,8 @@ struct NetworkRetryHandlerTests {
 
             // When
             do {
-                _ = try await testHandler.execute {
-                    attemptCount += 1
+                _ = try await testHandler.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.rateLimited(retryAfter: 0.001)
                 }
             } catch {
@@ -371,18 +405,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 3) // 1 initial + 2 retries
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 3) // 1 initial + 2 retries
         }
 
         @Test("retries url timeout error")
         func retriesURLTimeoutError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.timedOut)
                 }
             } catch {
@@ -390,18 +425,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // 1 initial + 3 retries
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("retries connection lost error")
         func retriesConnectionLostError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.networkConnectionLost)
                 }
             } catch {
@@ -409,18 +445,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // 1 initial + 3 retries
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // 1 initial + 3 retries
         }
 
         @Test("does not retry bad url error")
         func doesNotRetryBadURLError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.badURL)
                 }
             } catch {
@@ -428,20 +465,21 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // No retries for non-retryable errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // No retries for non-retryable errors
         }
 
         @Test("custom should retry logic")
         func customShouldRetryLogic() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
             struct CustomError: Error {}
 
             // When
             do {
                 _ = try await sut.execute(
-                    operation: {
-                        attemptCount += 1
+                    operation: { @Sendable in
+                        await tracker.incrementAttempt()
                         throw CustomError()
                     },
                     shouldRetry: { error in
@@ -453,19 +491,20 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry based on custom logic
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry based on custom logic
         }
 
         @Test("custom should not retry logic")
         func customShouldNotRetryLogic() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
                 _ = try await sut.execute(
-                    operation: {
-                        attemptCount += 1
+                    operation: { @Sendable in
+                        await tracker.incrementAttempt()
                         throw NetworkRetryHandler.RetryableError.networkTimeout
                     },
                     shouldRetry: { _ in false }) // Never retry
@@ -474,39 +513,42 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // No retries due to custom logic
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // No retries due to custom logic
         }
 
         @Test("execute optional with nil result")
         func executeOptionalWithNilResult() async throws {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
-            let result = try await sut.executeOptional {
-                attemptCount += 1
+            let result = try await sut.executeOptional { @Sendable in
+                await tracker.incrementAttempt()
                 return nil as String?
             }
 
             // Then
+            let finalAttemptCount = await tracker.attemptCount
             #expect(result == nil)
-            #expect(attemptCount == 1)
+            #expect(finalAttemptCount == 1)
         }
 
         @Test("execute optional with value")
         func executeOptionalWithValue() async throws {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
-            let result = try await sut.executeOptional {
-                attemptCount += 1
+            let result = try await sut.executeOptional { @Sendable in
+                await tracker.incrementAttempt()
                 return "Optional Value" as String?
             }
 
             // Then
+            let finalAttemptCount = await tracker.attemptCount
             #expect(result == "Optional Value")
-            #expect(attemptCount == 1)
+            #expect(finalAttemptCount == 1)
         }
 
         // MARK: - Error Conversion Tests
@@ -514,12 +556,12 @@ struct NetworkRetryHandlerTests {
         @Test("network error timeout")
         func networkErrorTimeout() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.timedOut)
                 }
             } catch {
@@ -528,18 +570,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry network timeouts
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry network timeouts
         }
 
         @Test("network error connection lost")
         func networkErrorConnectionLost() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.networkConnectionLost)
                 }
             } catch {
@@ -547,18 +590,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry connection errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error not connected")
         func networkErrorNotConnected() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.notConnectedToInternet)
                 }
             } catch {
@@ -566,18 +610,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry connection errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error dns lookup failed")
         func networkErrorDNSLookupFailed() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.cannotFindHost)
                 }
             } catch {
@@ -585,18 +630,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry DNS errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry DNS errors
         }
 
         @Test("network error cannot connect")
         func networkErrorCannotConnect() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.cannotConnectToHost)
                 }
             } catch {
@@ -604,18 +650,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry connection errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry connection errors
         }
 
         @Test("network error bad server response")
         func networkErrorBadServerResponse() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.badServerResponse)
                 }
             } catch {
@@ -623,18 +670,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // badServerResponse is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // badServerResponse is not retryable
         }
 
         @Test("network error zero byte resource")
         func networkErrorZeroByteResource() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.zeroByteResource)
                 }
             } catch {
@@ -642,18 +690,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // zeroByteResource is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // zeroByteResource is not retryable
         }
 
         @Test("network error cannot decode raw data")
         func networkErrorCannotDecodeRawData() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.cannotDecodeRawData)
                 }
             } catch {
@@ -661,18 +710,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // cannotDecodeRawData is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // cannotDecodeRawData is not retryable
         }
 
         @Test("network error cannot decode content data")
         func networkErrorCannotDecodeContentData() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.cannotDecodeContentData)
                 }
             } catch {
@@ -680,18 +730,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // cannotDecodeContentData is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // cannotDecodeContentData is not retryable
         }
 
         @Test("network error cannot parse response")
         func networkErrorCannotParseResponse() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.cannotParseResponse)
                 }
             } catch {
@@ -699,18 +750,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // cannotParseResponse is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // cannotParseResponse is not retryable
         }
 
         @Test("network error secure connection failed")
         func networkErrorSecureConnectionFailed() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.secureConnectionFailed)
                 }
             } catch {
@@ -718,18 +770,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // secureConnectionFailed is not retryable
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // secureConnectionFailed is not retryable
         }
 
         @Test("network error server certificate invalid")
         func networkErrorServerCertificateInvalid() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw URLError(.serverCertificateNotYetValid)
                 }
             } catch {
@@ -737,18 +790,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // Should not retry certificate errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // Should not retry certificate errors
         }
 
         @Test("network error service unavailable")
         func networkErrorServiceUnavailable() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     // HTTP 503 Service Unavailable
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 503)
                 }
@@ -757,18 +811,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry 503 errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry 503 errors
         }
 
         @Test("network error gateway timeout")
         func networkErrorGatewayTimeout() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     // HTTP 504 Gateway Timeout
                     throw NetworkRetryHandler.RetryableError.serverError(statusCode: 504)
                 }
@@ -777,19 +832,20 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry gateway timeouts
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry gateway timeouts
         }
 
         @Test("network error decoding error")
         func networkErrorDecodingError() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
             struct DecodingError: Error {}
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw DecodingError()
                 }
             } catch {
@@ -797,18 +853,19 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 1) // Should not retry generic decoding errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 1) // Should not retry generic decoding errors
         }
 
         @Test("network error generic network failure")
         func networkErrorGenericNetworkFailure() async {
             // Given
-            var attemptCount = 0
+            let tracker = TestStateTracker()
 
             // When
             do {
-                _ = try await sut.execute {
-                    attemptCount += 1
+                _ = try await sut.execute { @Sendable in
+                    await tracker.incrementAttempt()
                     throw NetworkRetryHandler.RetryableError.connectionError
                 }
             } catch {
@@ -816,7 +873,8 @@ struct NetworkRetryHandlerTests {
             }
 
             // Then
-            #expect(attemptCount == 4) // Should retry generic network errors
+            let finalAttemptCount = await tracker.attemptCount
+            #expect(finalAttemptCount == 4) // Should retry generic network errors
         }
     }
 }

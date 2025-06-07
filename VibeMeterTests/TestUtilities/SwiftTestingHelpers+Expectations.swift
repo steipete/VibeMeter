@@ -15,7 +15,10 @@ extension Double {
         let result = difference < tolerance
         #expect(
             result,
-            "Expected \(self) to be approximately equal to \(other) within tolerance \(tolerance), but difference was \(difference)",
+            """
+            Expected \(self) to be approximately equal to \(other) within tolerance \(tolerance), \
+            but difference was \(difference)
+            """,
             sourceLocation: sourceLocation)
         return result
     }

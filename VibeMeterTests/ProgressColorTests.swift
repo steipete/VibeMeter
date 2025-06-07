@@ -14,7 +14,7 @@ private struct ColorTestCase: Sendable, CustomTestStringConvertible {
         self.expectedColor = color
         self.range = range
     }
-    
+
     var testDescription: String {
         "\(range): \(progress) → \(expectedColor)"
     }
@@ -24,7 +24,7 @@ private struct SpendingScenario: Sendable, CustomTestStringConvertible {
     let progress: Double
     let description: String
     let expectedColor: Color
-    
+
     var testDescription: String {
         "\(description): \(progress) → \(expectedColor)"
     }
@@ -35,7 +35,7 @@ private struct WarningLevelTestCase: Sendable, CustomTestStringConvertible {
     let expectedLevel: String
     let expectedColor: Color
     let description: String
-    
+
     var testDescription: String {
         "\(description): \(progress) → \(expectedLevel)/\(expectedColor)"
     }
@@ -50,7 +50,7 @@ struct ProgressColorTests {
 
     @Suite("Basic Color Calculation")
     struct Basic {
-        fileprivate static let colorThresholdCases: [ColorTestCase] = [
+        @Test("Progress color thresholds", arguments: [
             // Below halfway (0-49.9%) = Safe
             ColorTestCase(0.0, color: .progressSafe, range: "zero"),
             ColorTestCase(0.1, color: .progressSafe, range: "below halfway"),
@@ -81,9 +81,7 @@ struct ProgressColorTests {
             ColorTestCase(1.1, color: .progressDanger, range: "over limit"),
             ColorTestCase(1.5, color: .progressDanger, range: "over limit"),
             ColorTestCase(2.0, color: .progressDanger, range: "over limit"),
-        ]
-
-        @Test("Progress color thresholds", arguments: Basic.colorThresholdCases)
+        ])
         fileprivate func progressColorThresholds(testCase: ColorTestCase) {
             // When
             let color = Color.progressColor(for: testCase.progress)
@@ -108,7 +106,7 @@ struct ProgressColorTests {
             #expect(color == expectedColor)
         }
 
-        fileprivate static let spendingScenarios: [SpendingScenario] = [
+        @Test("Typical spending scenarios", arguments: [
             SpendingScenario(progress: 0.1, description: "10% of budget", expectedColor: .progressSafe),
             SpendingScenario(progress: 0.3, description: "30% of budget", expectedColor: .progressSafe),
             SpendingScenario(progress: 0.5, description: "50% of budget", expectedColor: .progressCaution),
@@ -117,9 +115,7 @@ struct ProgressColorTests {
             SpendingScenario(progress: 0.95, description: "95% of budget", expectedColor: .progressDanger),
             SpendingScenario(progress: 1.05, description: "5% over budget", expectedColor: .progressDanger),
             SpendingScenario(progress: 1.2, description: "20% over budget", expectedColor: .progressDanger),
-        ]
-
-        @Test("Typical spending scenarios", arguments: Basic.spendingScenarios)
+        ])
         fileprivate func typicalSpendingScenarios(scenario: SpendingScenario) {
             // When
             let color = Color.progressColor(for: scenario.progress)
@@ -177,6 +173,7 @@ struct ProgressColorTests {
         @Test("Progress very close to thresholds")
         func progressVeryCloseToThresholds() {
             // Test values that are extremely close to threshold boundaries
+            // swiftlint:disable:next large_tuple
             let testCases: [(Double, Color, String)] = [
                 (0.5 - Double.ulpOfOne, .progressSafe, "Just below 0.5"),
                 (0.5 + Double.ulpOfOne, .progressCaution, "Just above 0.5"),
@@ -200,7 +197,7 @@ struct ProgressColorTests {
 
     @Suite("Warning Levels", .tags(.notifications))
     struct WarningLevels {
-        fileprivate static let warningLevelCases: [WarningLevelTestCase] = [
+        @Test("Warning level thresholds", arguments: [
             // Safe zone
             WarningLevelTestCase(
                 progress: 0.0,
@@ -268,9 +265,7 @@ struct ProgressColorTests {
                 expectedLevel: "danger",
                 expectedColor: .progressDanger,
                 description: "Over budget"),
-        ]
-
-        @Test("Warning level thresholds", arguments: WarningLevels.warningLevelCases)
+        ])
         fileprivate func warningLevelThresholds(testCase: WarningLevelTestCase) {
             // When
             let color = Color.progressColor(for: testCase.progress)

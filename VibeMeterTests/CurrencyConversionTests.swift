@@ -1,3 +1,4 @@
+// swiftlint:disable nesting
 import Foundation
 import Testing
 @testable import VibeMeter
@@ -25,7 +26,7 @@ struct CurrencyConversionTests {
             var testDescription: String { description }
         }
 
-        static let conversionTestCases: [ConversionTestCase] = [
+        @Test("Currency conversion calculations", .tags(.critical), arguments: [
             ConversionTestCase(100.0, rate: 0.85, expected: 85.0, "USD to EUR conversion"),
             ConversionTestCase(0.0, rate: 0.85, expected: 0.0, "zero amount conversion"),
             ConversionTestCase(100.0, rate: 1.0, expected: 100.0, "same currency conversion"),
@@ -33,9 +34,7 @@ struct CurrencyConversionTests {
             ConversionTestCase(1_000_000.0, rate: 0.85, expected: 850_000.0, "large amount conversion"),
             ConversionTestCase(0.01, rate: 0.85, expected: 0.0085, "small amount conversion"),
             ConversionTestCase(999.99, rate: 1.2345, expected: 1234.488, "precision conversion"),
-        ]
-
-        @Test("Currency conversion calculations", .tags(.critical), arguments: BasicConversionTests.conversionTestCases)
+        ])
         func conversionCalculations(testCase: ConversionTestCase) async {
             // When
             let result = await MainActor.run {
@@ -93,16 +92,14 @@ struct CurrencyConversionTests {
             }
         }
 
-        static let formattingTestCases: [FormattingTestCase] = [
+        @Test("Currency formatting", arguments: [
             FormattingTestCase(99.99, symbol: "$", expected: "$99.99", "USD formatting"),
             FormattingTestCase(1000.0, symbol: "€", expected: "€1,000", "EUR large amount"),
             FormattingTestCase(0.5, symbol: "£", expected: "£0.5", "GBP decimal"),
             FormattingTestCase(1_234_567.89, symbol: "¥", expected: "¥1,234,567.89", "JPY very large amount"),
             FormattingTestCase(0.0, symbol: "$", expected: "$0", "zero amount"),
             FormattingTestCase(-50.25, symbol: "$", expected: "$-50.25", "negative amount"),
-        ]
-
-        @Test("Currency formatting", arguments: CurrencyFormattingTests.formattingTestCases)
+        ])
         func currencyFormatting(testCase: FormattingTestCase) async {
             // When
             let result = await MainActor.run {

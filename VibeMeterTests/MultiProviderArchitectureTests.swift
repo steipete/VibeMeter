@@ -13,75 +13,144 @@ struct MultiProviderArchitectureTests {
         #expect(allCases.contains(.cursor))
     }
 
-    @Test("service provider properties")
-    func serviceProviderProperties() {
-        let cursor = ServiceProvider.cursor
-
-        // Test basic properties
-        #expect(cursor.displayName == "Cursor")
-        #expect(cursor.supportsTeams == true)
-
-        // Test cookie properties
-        #expect(cursor.authCookieName == "WorkosCursorSessionToken")
+    struct ProviderPropertyTestCase {
+        let provider: ServiceProvider
+        let expectedDisplayName: String
+        let expectedSupportsTeams: Bool
+        let expectedAuthCookieName: String
     }
 
-    @Test("multi provider user session data")
-    func multiProviderUserSessionData() {
+    @Test("Service provider properties", arguments: [
+        ProviderPropertyTestCase(
+            provider: .cursor,
+            expectedDisplayName: "Cursor",
+            expectedSupportsTeams: true,
+            expectedAuthCookieName: "WorkosCursorSessionToken"),
+    ])
+    func serviceProviderProperties(testCase: ProviderPropertyTestCase) {
+        let provider = testCase.provider
+
+        #expect(provider.displayName == testCase.expectedDisplayName)
+        #expect(provider.supportsTeams == testCase.expectedSupportsTeams)
+        #expect(provider.authCookieName == testCase.expectedAuthCookieName)
+    }
+
+    struct SessionTestCase {
+        let provider: ServiceProvider
+        let email: String
+        let teamName: String
+        let teamId: Int
+        let description: String
+    }
+
+    @Test("User session operations", arguments: [
+        SessionTestCase(
+            provider: .cursor,
+            email: "test@example.com",
+            teamName: "Test Team",
+            teamId: 123,
+            description: "Basic session"),
+        SessionTestCase(
+            provider: .cursor,
+            email: "user@company.com",
+            teamName: "Company Team",
+            teamId: 456,
+            description: "Company session"),
+        SessionTestCase(
+            provider: .cursor,
+            email: "admin@org.com",
+            teamName: "Org Admin",
+            teamId: 789,
+            description: "Admin session"),
+    ])
+    func userSessionOperations(testCase: SessionTestCase) {
         let userSession = MultiProviderUserSessionData()
 
         // Test initial state
         #expect(userSession.isLoggedInToAnyProvider == false)
         #expect(userSession.mostRecentSession == nil)
 
-        // Add a test session
+        // Add session
         userSession.handleLoginSuccess(
-            for: .cursor,
-            email: "test@example.com",
-            teamName: "Test Team",
-            teamId: 123)
+            for: testCase.provider,
+            email: testCase.email,
+            teamName: testCase.teamName,
+            teamId: testCase.teamId)
 
         #expect(userSession.isLoggedInToAnyProvider == true)
-        #expect(userSession.loggedInProviders == [.cursor])
+        #expect(userSession.loggedInProviders == [testCase.provider])
 
-        let session = userSession.getSession(for: .cursor)
+        let session = userSession.getSession(for: testCase.provider)
         #expect(session != nil)
-        #expect(session?.teamName == "Test Team")
+        #expect(session?.teamName == testCase.teamName)
+        #expect(session?.teamId == testCase.teamId)
         #expect(session?.isLoggedIn == true)
 
         // Clear session
-        userSession.handleLogout(from: .cursor)
+        userSession.handleLogout(from: testCase.provider)
         #expect(userSession.isLoggedInToAnyProvider == false)
         #expect(userSession.loggedInProviders.isEmpty == true)
     }
 
-    @Test("multi provider spending data")
-    func multiProviderSpendingData() {
+    struct SpendingDataTestCase {
+        let provider: ServiceProvider
+        let warningUSD: Double
+        let upperUSD: Double
+        let currency: String
+        let description: String
+    }
+
+    @Test("Multi-provider spending data operations", arguments: [
+        SpendingDataTestCase(
+            provider: .cursor,
+            warningUSD: 50.0,
+            upperUSD: 100.0,
+            currency: "USD",
+            description: "Basic USD limits"),
+        SpendingDataTestCase(
+            provider: .cursor,
+            warningUSD: 100.0,
+            upperUSD: 500.0,
+            currency: "EUR",
+            description: "EUR limits"),
+        SpendingDataTestCase(
+            provider: .cursor,
+            warningUSD: 0.0,
+            upperUSD: 1000.0,
+            currency: "USD",
+            description: "Zero warning limit"),
+    ])
+    func multiProviderSpendingDataOperations(testCase: SpendingDataTestCase) {
         let spendingData = MultiProviderSpendingData()
 
         // Test initial state
         #expect(spendingData.providersWithData.isEmpty == true)
-        #expect(spendingData.getSpendingData(for: .cursor) == nil)
+        #expect(spendingData.getSpendingData(for: testCase.provider) == nil)
 
         // Test updating limits
         spendingData.updateLimits(
-            for: .cursor,
-            warningUSD: 50.0,
-            upperUSD: 100.0,
-            rates: ["USD": 1.0],
-            targetCurrency: "USD")
+            for: testCase.provider,
+            warningUSD: testCase.warningUSD,
+            upperUSD: testCase.upperUSD,
+            rates: [testCase.currency: 1.0],
+            targetCurrency: testCase.currency)
 
-        #expect(spendingData.providersWithData.contains(.cursor) == true)
-        let cursorData = spendingData.getSpendingData(for: .cursor)
-        #expect(cursorData != nil)
-        #expect(cursorData?.displayUpperLimit == 100.0)
+        #expect(spendingData.providersWithData.contains(testCase.provider) == true)
+        let providerData = spendingData.getSpendingData(for: testCase.provider)
+        #expect(providerData != nil)
+        #expect(providerData?.displayUpperLimit == testCase.upperUSD)
 
         // Clear data
-        spendingData.clear(provider: .cursor)
-        #expect(spendingData.providersWithData.contains(.cursor) == false)
+        spendingData.clear(provider: testCase.provider)
+        #expect(spendingData.providersWithData.contains(testCase.provider) == false)
     }
 
-    @Test("currency data")
-    func currencyData() {
+    @Test("Currency operations", arguments: [
+        (code: "EUR", rates: ["EUR": 1.0, "USD": 1.1], description: "EUR base"),
+        (code: "GBP", rates: ["GBP": 1.0, "USD": 1.3], description: "GBP base"),
+        (code: "JPY", rates: ["JPY": 1.0, "USD": 0.0067], description: "JPY base")
+    ])
+    func currencyOperations(code: String, rates: [String: Double], description _: String) {
         let currencyData = CurrencyData()
 
         // Test initial state
@@ -89,13 +158,12 @@ struct MultiProviderArchitectureTests {
         #expect(currencyData.exchangeRatesAvailable == true)
 
         // Test updating currency
-        currencyData.updateSelectedCurrency("EUR")
-        #expect(currencyData.selectedCode == "EUR")
+        currencyData.updateSelectedCurrency(code)
+        #expect(currencyData.selectedCode == code)
 
         // Test updating exchange rates
-        let testRates = ["EUR": 1.0, "USD": 1.1]
-        currencyData.updateExchangeRates(testRates)
-        #expect(currencyData.currentExchangeRates == testRates)
+        currencyData.updateExchangeRates(rates)
+        #expect(currencyData.currentExchangeRates == rates)
 
         // Test reset behavior
         currencyData.reset()

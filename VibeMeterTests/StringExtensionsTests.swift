@@ -1,3 +1,4 @@
+// swiftlint:disable file_length type_body_length nesting
 import Foundation
 import Testing
 @testable import VibeMeter
@@ -27,7 +28,7 @@ struct StringExtensionsTests {
             }
         }
 
-        static let truncationTestCases: [TruncationTestCase] = [
+        static var truncationTestCases: [TruncationTestCase] { [
             // Basic truncation cases
             TruncationTestCase("Short", length: 10, expected: "Short", "shorter than length"),
             TruncationTestCase("Exact", length: 5, expected: "Exact", "exact length"),
@@ -64,7 +65,7 @@ struct StringExtensionsTests {
                 length: 12,
                 expected: "Unicode: ...",
                 "unicode with more truncation"),
-        ]
+        ] }
 
         @Test("String truncation", arguments: truncationTestCases)
         func stringTruncation(testCase: TruncationTestCase) {
@@ -119,7 +120,7 @@ struct StringExtensionsTests {
             }
         }
 
-        static let specialCharacterTestCases: [SpecialCharacterTestCase] = [
+        static var specialCharacterTestCases: [SpecialCharacterTestCase] { [
             SpecialCharacterTestCase(
                 "Line 1\nLine 2\nLine 3",
                 length: 10,
@@ -132,7 +133,7 @@ struct StringExtensionsTests {
                 "tab characters"),
             SpecialCharacterTestCase("Emoji: 👨‍💻👩‍🔬🧑‍🎨", length: 12, expectedPrefix: "Emoji: 👨‍💻", "complex emoji"),
             SpecialCharacterTestCase("áéíóú ñüç ÀÈÌÒÙ", length: 10, expectedPrefix: "áéíóú ñ", "accented characters"),
-        ]
+        ] }
 
         @Test("Special character handling", arguments: specialCharacterTestCases)
         func specialCharacterHandling(testCase: SpecialCharacterTestCase) {

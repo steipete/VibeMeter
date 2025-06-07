@@ -32,27 +32,24 @@ struct CurrencyManagerTests {
         #expect(!currencies.isEmpty)
     }
 
-    @Test("available currencies contains common currencies")
-    func availableCurrencies_ContainsCommonCurrencies() {
-        // Given
-        let expectedCommonCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY"]
-
-        // When
+    @Test("Common currencies availability", arguments: [
+        "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY"
+    ])
+    func commonCurrencyAvailability(currencyCode: String) {
         let currencies = sut.availableCurrencies
         let currencyCodes = currencies.map(\.0)
-
-        // Then
-        for currency in expectedCommonCurrencies {
-            #expect(currencyCodes.contains(currency))
-        }
+        #expect(currencyCodes.contains(currencyCode))
     }
 
-    @Test("available currencies has correct format")
-    func availableCurrencies_HasCorrectFormat() {
-        // When
+    struct CurrencyFormatTestCase {
+        let code: String
+        let name: String
+    }
+
+    @Test("Currency format validation")
+    func currencyFormatValidation() {
         let currencies = sut.availableCurrencies
 
-        // Then
         for (code, name) in currencies {
             // Currency code should be 3 characters
             #expect(code.count == 3)
@@ -78,21 +75,20 @@ struct CurrencyManagerTests {
         #expect(currencyCodes.count == uniqueCodes.count)
     }
 
-    @Test("available currencies prioritizes common currencies")
-    func availableCurrencies_PrioritizesCommonCurrencies() {
-        // When
+    @Test("Currency prioritization", arguments: [
+        (currencyCode: "USD", expectedPosition: 1, description: "USD should be first"),
+        (currencyCode: "EUR", expectedPosition: 5, description: "EUR should be in top 5"),
+        (currencyCode: "GBP", expectedPosition: 5, description: "GBP should be in top 5")
+    ])
+    func currencyPrioritization(currencyCode: String, expectedPosition: Int, description _: String) {
         let currencies = sut.availableCurrencies
-        let first10Codes = Array(currencies.prefix(10)).map(\.0)
+        let codes = currencies.map(\.0)
 
-        // Then
-        // USD should be first (most common)
-        #expect(first10Codes.first == "USD")
-
-        // EUR should be in top 5
-        #expect(first10Codes.prefix(5).contains("EUR"))
-
-        // GBP should be in top 5
-        #expect(first10Codes.prefix(5).contains("GBP"))
+        if expectedPosition == 1 {
+            #expect(codes.first == currencyCode)
+        } else {
+            #expect(codes.prefix(expectedPosition).contains(currencyCode))
+        }
     }
 
     @Test("system currency code returns valid code")
@@ -120,79 +116,72 @@ struct CurrencyManagerTests {
         #expect(code1 == code2)
     }
 
-    @Test("is valid currency code valid codes returns true")
-    func isValidCurrencyCode_ValidCodes_ReturnsTrue() {
-        // Given
-        let validCodes = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD"]
+    struct CurrencyValidationTestCase: CustomTestStringConvertible {
+        let code: String
+        let expectedValid: Bool
+        let description: String
 
-        for code in validCodes {
-            // When
-            let isValid = sut.isValidCurrencyCode(code)
-
-            // Then
-            #expect(isValid)
+        var testDescription: String {
+            "\(code) → \(expectedValid ? "valid" : "invalid") (\(description))"
         }
     }
 
-    @Test("is valid currency code invalid codes returns false")
-    func isValidCurrencyCode_InvalidCodes_ReturnsFalse() {
-        // Given
-        let invalidCodes = ["INVALID", "XYZ", "123", "", "us", "USD ", " USD"]
+    nonisolated static let currencyValidationCases: [CurrencyValidationTestCase] = [
+        // Valid codes
+        CurrencyValidationTestCase(code: "USD", expectedValid: true, description: "US Dollar"),
+        CurrencyValidationTestCase(code: "EUR", expectedValid: true, description: "Euro"),
+        CurrencyValidationTestCase(code: "GBP", expectedValid: true, description: "British Pound"),
+        CurrencyValidationTestCase(code: "JPY", expectedValid: true, description: "Japanese Yen"),
+        CurrencyValidationTestCase(code: "AUD", expectedValid: true, description: "Australian Dollar"),
+        CurrencyValidationTestCase(code: "CAD", expectedValid: true, description: "Canadian Dollar"),
+        // Invalid codes
+        CurrencyValidationTestCase(code: "INVALID", expectedValid: false, description: "Invalid code"),
+        CurrencyValidationTestCase(code: "XYZ", expectedValid: false, description: "Non-existent code"),
+        CurrencyValidationTestCase(code: "123", expectedValid: false, description: "Numeric code"),
+        CurrencyValidationTestCase(code: "", expectedValid: false, description: "Empty string"),
+        CurrencyValidationTestCase(code: "us", expectedValid: false, description: "Lowercase"),
+        CurrencyValidationTestCase(code: "USD ", expectedValid: false, description: "Trailing space"),
+        CurrencyValidationTestCase(code: " USD", expectedValid: false, description: "Leading space"),
+        // Case sensitivity
+        CurrencyValidationTestCase(code: "usd", expectedValid: false, description: "All lowercase"),
+        CurrencyValidationTestCase(code: "Usd", expectedValid: false, description: "Mixed case"),
+    ]
 
-        for code in invalidCodes {
-            // When
-            let isValid = sut.isValidCurrencyCode(code)
-
-            // Then
-            #expect(!isValid)
-        }
+    @Test("Currency code validation", arguments: currencyValidationCases)
+    func currencyCodeValidation(testCase: CurrencyValidationTestCase) {
+        let isValid = sut.isValidCurrencyCode(testCase.code)
+        #expect(isValid == testCase.expectedValid)
     }
 
-    @Test("is valid currency code case sensitive")
-    func isValidCurrencyCode_CaseSensitive() {
-        // Given
-        let lowercaseCode = "usd"
-        let mixedCaseCode = "Usd"
-
-        // When
-        let lowercaseValid = sut.isValidCurrencyCode(lowercaseCode)
-        let mixedCaseValid = sut.isValidCurrencyCode(mixedCaseCode)
-        let uppercaseValid = sut.isValidCurrencyCode("USD")
-
-        // Then
-        #expect(uppercaseValid)
-        #expect(!lowercaseValid)
-        #expect(!mixedCaseValid)
-    }
-
-    @Test("available currencies performance", .timeLimit(.minutes(1)))
+    @Test("available currencies performance", .tags(.performance, .fast), .timeLimit(.minutes(1)))
     func availableCurrencies_Performance() {
         // When
         let startTime = Date()
         let currencies = sut.availableCurrencies
         let duration = Date().timeIntervalSince(startTime)
 
+        // Enhanced logging with Test.current
+        if let currentTest = Test.current {
+            print(
+                "[\(currentTest.name)] Performance test: \(currencies.count) currencies loaded in \(String(format: "%.3f", duration))s"
+            )
+        }
+
         // Then
         #expect(!currencies.isEmpty)
         #expect(duration < 2.0)
     }
 
-    @Test("is valid currency code performance", .timeLimit(.minutes(1)))
-    func isValidCurrencyCode_Performance() {
-        // Given
-        let testCodes = ["USD", "EUR", "GBP", "INVALID", "XYZ", "123"]
-
-        // When
+    @Test("Currency validation performance", arguments: ["USD", "EUR", "GBP", "INVALID", "XYZ", "123"])
+    func currencyValidationPerformance(testCode: String) {
         let startTime = Date()
-        for _ in 0 ..< 100 {
-            for code in testCodes {
-                _ = sut.isValidCurrencyCode(code)
-            }
-        }
-        let duration = Date().timeIntervalSince(startTime)
 
-        // Then
-        #expect(duration < 1.0)
+        for _ in 0 ..< 1000 {
+            _ = sut.isValidCurrencyCode(testCode)
+        }
+
+        let duration = Date().timeIntervalSince(startTime)
+        #expect(duration < 0.1) // Each code should be fast
     }
 
     @Test("available currencies no empty entries")
@@ -223,7 +212,7 @@ struct CurrencyManagerTests {
         #expect(Bool(true)) // Test passes if it compiles
     }
 
-    @Test("concurrent access thread safety")
+    @Test("concurrent access thread safety", .tags(.concurrent, .critical))
     func concurrentAccess_ThreadSafety() async {
         // Given
         let taskCount = 20

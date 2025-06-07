@@ -1,3 +1,4 @@
+// swiftlint:disable nesting
 import Foundation
 import Testing
 @testable import VibeMeter
@@ -16,104 +17,83 @@ struct AuthenticationTokenManagerTests {
 
         init() {
             var mockServices: [ServiceProvider: KeychainServiceMock] = [:]
-            for provider in ServiceProvider.allCases {
-                mockServices[provider] = KeychainServiceMock()
-            }
-            self.mockKeychainServices = mockServices
-
-            // Create token manager with mock keychain services
             var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
+
             for provider in ServiceProvider.allCases {
-                keychainHelpers[provider] = mockServices[provider]
+                let mock = KeychainServiceMock()
+                mockServices[provider] = mock
+                keychainHelpers[provider] = mock
             }
+
+            self.mockKeychainServices = mockServices
             self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
         }
 
         // MARK: - Token Storage Tests
 
-        @Test("save token success", .tags(.critical, .requiresKeychain))
-        func saveTokenSuccess() {
-            // Given
-            let token = "test-auth-token-123"
-            let provider = ServiceProvider.cursor
-
-            // When
-            let result = tokenManager.saveToken(token, for: provider)
-
-            // Then
-            #expect(result == true)
-            // Verify token was saved (mock doesn't expose lastSavedToken, but save was called)
-            #expect(mockKeychainServices[provider]?.saveTokenCalled == true)
+        struct TokenOperationTestCase {
+            let provider: ServiceProvider
+            let token: String
+            let description: String
         }
 
-        @Test("save token failure")
-        func saveTokenFailure() {
-            // Given
-            let token = "test-auth-token-123"
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.saveTokenShouldSucceed = false
+        @Test(
+            "Save and retrieve tokens",
+            .tags(.critical, .requiresKeychain),
+            arguments: ServiceProvider.allCases.map { provider in
+                TokenOperationTestCase(
+                    provider: provider,
+                    token: "test-token-\(provider.rawValue)",
+                    description: "\(provider.rawValue) provider")
+            })
+        func saveAndRetrieveTokens(testCase: TokenOperationTestCase) {
+            // Save token
+            let saveResult = tokenManager.saveToken(testCase.token, for: testCase.provider)
+            #expect(saveResult == true)
+            #expect(mockKeychainServices[testCase.provider]?.saveTokenCalled == true)
 
-            // When
-            let result = tokenManager.saveToken(token, for: provider)
+            // Retrieve token
+            let retrievedToken = tokenManager.getAuthToken(for: testCase.provider)
+            #expect(retrievedToken == testCase.token)
 
-            // Then
-            #expect(result == false)
-            #expect(mockKeychainServices[provider]?.saveTokenCalled == true)
+            // Delete token
+            let deleteResult = tokenManager.deleteToken(for: testCase.provider)
+            #expect(deleteResult == true)
+            #expect(mockKeychainServices[testCase.provider]?.deleteTokenCalled == true)
+
+            // Verify deletion
+            let afterDelete = tokenManager.getAuthToken(for: testCase.provider)
+            #expect(afterDelete == nil)
         }
 
-        @Test("retrieve saved token")
-        func retrieveSavedToken() {
-            // Given
-            let token = "test-token-456"
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.setStoredToken(token)
-
-            // When
-            let retrievedToken = tokenManager.getAuthToken(for: provider)
-
-            // Then
-            #expect(retrievedToken == token)
+        struct ErrorTestCase {
+            let operation: String
+            let shouldSucceed: Bool
+            let description: String
         }
 
-        @Test("delete token success")
-        func deleteTokenSuccess() {
-            // Given
-            let token = "token-to-delete"
+        @Test("Token operation failures", arguments: [
+            ErrorTestCase(operation: "save", shouldSucceed: false, description: "Save failure"),
+            ErrorTestCase(operation: "delete", shouldSucceed: false, description: "Delete failure"),
+        ])
+        func tokenOperationFailures(testCase: ErrorTestCase) {
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.setStoredToken(token)
 
-            // When
-            let result = tokenManager.deleteToken(for: provider)
+            switch testCase.operation {
+            case "save":
+                mockKeychainServices[provider]?.saveTokenShouldSucceed = testCase.shouldSucceed
+                let result = tokenManager.saveToken("test-token", for: provider)
+                #expect(result == testCase.shouldSucceed)
+                #expect(mockKeychainServices[provider]?.saveTokenCalled == true)
 
-            // Then
-            #expect(result == true)
-            #expect(mockKeychainServices[provider]?.deleteTokenCalled == true)
-        }
+            case "delete":
+                mockKeychainServices[provider]?.deleteTokenShouldSucceed = testCase.shouldSucceed
+                let result = tokenManager.deleteToken(for: provider)
+                #expect(result == testCase.shouldSucceed)
 
-        @Test("delete token failure")
-        func deleteTokenFailure() {
-            // Given
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.deleteTokenShouldSucceed = false
-
-            // When
-            let result = tokenManager.deleteToken(for: provider)
-
-            // Then
-            #expect(result == false)
-        }
-
-        @Test("retrieve non-existent token")
-        func retrieveNonExistentToken() {
-            // Given
-            let provider = ServiceProvider.cursor
-            // No token stored
-
-            // When
-            let retrievedToken = tokenManager.getAuthToken(for: provider)
-
-            // Then
-            #expect(retrievedToken == nil)
+            default:
+                Issue.record("Unknown operation: \(testCase.operation)")
+            }
         }
     }
 
@@ -126,122 +106,86 @@ struct AuthenticationTokenManagerTests {
 
         init() {
             var services: [ServiceProvider: KeychainServiceMock] = [:]
-            for provider in ServiceProvider.allCases {
-                services[provider] = KeychainServiceMock()
-            }
-            self.mockKeychainServices = services
-
-            // Create token manager with mock keychain services
             var keychainHelpers: [ServiceProvider: KeychainServicing] = [:]
+
             for provider in ServiceProvider.allCases {
-                keychainHelpers[provider] = services[provider]
+                let mock = KeychainServiceMock()
+                services[provider] = mock
+                keychainHelpers[provider] = mock
             }
+
+            self.mockKeychainServices = services
             self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
         }
 
         // MARK: - Cookie Generation Tests
 
-        @Test("get cookies success")
-        func getCookiesSuccess() {
-            // Given
-            let token = "auth-token-for-cookies"
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.setStoredToken(token)
+        struct CookieTestCase: CustomTestStringConvertible {
+            let provider: ServiceProvider
+            let token: String?
+            let expectCookie: Bool
 
-            // When
-            let cookies = tokenManager.getCookies(for: provider)
-
-            // Then
-            #expect(cookies != nil)
-
-            if let cookie = cookies?.first {
-                #expect(cookie.name == provider.authCookieName)
-                #expect(cookie.domain == provider.cookieDomain)
-                #expect(cookie.isSecure == true)
-
-                // Check expiry is approximately 30 days from now (allowing 1 minute tolerance)
-                let expectedExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30)
-                let timeDifference = abs(cookie.expiresDate!.timeIntervalSince(expectedExpiry))
-                #expect(timeDifference < 60)
+            var testDescription: String {
+                "\(provider.rawValue): \(token != nil ? "with token" : "without token")"
             }
         }
 
-        @Test("get cookies without token")
-        func getCookiesWithoutToken() {
-            // Given
-            let provider = ServiceProvider.cursor
-            // No token stored
+        @Test("Cookie generation for providers", arguments: [
+            CookieTestCase(provider: .cursor, token: "cursor-token", expectCookie: true),
+            CookieTestCase(provider: .cursor, token: nil, expectCookie: false),
+        ])
+        func cookieGeneration(testCase: CookieTestCase) throws {
+            // Setup
+            if let token = testCase.token {
+                mockKeychainServices[testCase.provider]?.setStoredToken(token)
+            }
 
-            // When
-            let cookies = tokenManager.getCookies(for: provider)
+            // Get cookies
+            let cookies = tokenManager.getCookies(for: testCase.provider)
 
-            // Then
-            #expect(cookies == nil)
-        }
+            if testCase.expectCookie {
+                #expect(cookies != nil)
+                let cookie = try #require(cookies?.first)
 
-        @Test("cookie properties validation")
-        func cookiePropertiesValidation() {
-            // Given
-            let token = "secure-token"
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.setStoredToken(token)
-
-            // When
-            let cookies = tokenManager.getCookies(for: provider)
-
-            // Then
-            #expect(cookies?.count == 1)
-
-            if let cookie = cookies?.first {
+                // Validate cookie properties
+                #expect(cookie.name == testCase.provider.authCookieName)
+                #expect(cookie.domain == testCase.provider.cookieDomain)
+                #expect(cookie.isSecure == true)
                 #expect(cookie.isHTTPOnly == false)
-                #expect(cookie.isSecure == true)
-                // Note: sameSitePolicy may be nil on some platforms
-                #expect(cookie.sameSitePolicy == .sameSiteStrict || cookie.sameSitePolicy == nil)
                 #expect(cookie.path == "/")
-                #expect(cookie.value.isEmpty == false)
+                #expect(!cookie.value.isEmpty)
+
+                // Validate expiry (30 days ± 1 minute)
+                if let expiryDate = cookie.expiresDate {
+                    let expectedExpiry = Date(timeIntervalSinceNow: 3600 * 24 * 30)
+                    let timeDifference = abs(expiryDate.timeIntervalSince(expectedExpiry))
+                    #expect(timeDifference < 60)
+                }
+
+                // Validate sameSitePolicy (may be nil on some platforms)
+                #expect(cookie.sameSitePolicy == .sameSiteStrict || cookie.sameSitePolicy == nil)
+            } else {
+                #expect(cookies == nil)
             }
         }
 
-        @Test("cookie expiry time")
-        func cookieExpiryTime() {
-            // Given
-            let token = "expiry-test-token"
-            let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.setStoredToken(token)
+        @Test("Cookie isolation between providers", arguments: ServiceProvider.allCases)
+        func cookieIsolation(activeProvider: ServiceProvider) {
+            // Set token only for the active provider
+            let token = "\(activeProvider.rawValue)-isolation-token"
+            mockKeychainServices[activeProvider]?.setStoredToken(token)
 
-            // When
-            let cookies = tokenManager.getCookies(for: provider)
+            // Verify cookies for all providers
+            for provider in ServiceProvider.allCases {
+                let cookies = tokenManager.getCookies(for: provider)
 
-            // Then
-            if let cookie = cookies?.first,
-               let expiryDate = cookie.expiresDate {
-                let thirtyDaysFromNow = Date(timeIntervalSinceNow: 3600 * 24 * 30)
-                let timeDifference = abs(expiryDate.timeIntervalSince(thirtyDaysFromNow))
-
-                // Should be within 1 minute of 30 days from now
-                #expect(timeDifference < 60)
-            }
-        }
-
-        @Test("multiple providers cookie isolation")
-        func multipleProvidersCookieIsolation() {
-            // Given
-            let cursorToken = "cursor-cookie-token"
-            let cursorProvider = ServiceProvider.cursor
-
-            mockKeychainServices[cursorProvider]?.setStoredToken(cursorToken)
-
-            // When
-            let cursorCookies = tokenManager.getCookies(for: cursorProvider)
-
-            // Then
-            #expect(cursorCookies != nil)
-            #expect(cursorCookies?.count == 1)
-
-            // Other providers should not have cookies
-            for provider in ServiceProvider.allCases where provider != cursorProvider {
-                let otherCookies = tokenManager.getCookies(for: provider)
-                #expect(otherCookies == nil)
+                if provider == activeProvider {
+                    #expect(cookies != nil)
+                    #expect(cookies?.count == 1)
+                    #expect(cookies?.first?.value == token)
+                } else {
+                    #expect(cookies == nil)
+                }
             }
         }
     }
@@ -268,83 +212,49 @@ struct AuthenticationTokenManagerTests {
             self.tokenManager = AuthenticationTokenManager(keychainHelpers: keychainHelpers)
         }
 
-        // MARK: - Provider Isolation Tests
+        // MARK: - Edge Cases
 
-        @Test("provider isolation")
-        func providerIsolation() {
-            // Given
-            let cursorToken = "cursor-token"
-            let cursorProvider = ServiceProvider.cursor
+        struct EdgeCaseToken: CustomTestStringConvertible {
+            let token: String
+            let description: String
 
-            // When
-            let cursorSaved = tokenManager.saveToken(cursorToken, for: cursorProvider)
+            var testDescription: String { description }
+        }
 
-            // Then
-            #expect(cursorSaved == true)
-            #expect(tokenManager.getAuthToken(for: cursorProvider) == cursorToken)
+        @Test("Provider isolation", arguments: ServiceProvider.allCases)
+        func providerIsolation(targetProvider: ServiceProvider) {
+            let token = "\(targetProvider.rawValue)-isolation-test"
 
-            // Other providers should not have this token
-            for provider in ServiceProvider.allCases where provider != cursorProvider {
+            // Save token for target provider
+            let saved = tokenManager.saveToken(token, for: targetProvider)
+            #expect(saved == true)
+            #expect(tokenManager.getAuthToken(for: targetProvider) == token)
+
+            // Verify other providers don't have this token
+            for provider in ServiceProvider.allCases where provider != targetProvider {
                 #expect(tokenManager.getAuthToken(for: provider) == nil)
             }
         }
 
-        // MARK: - Edge Cases
-
-        @Test("save empty token")
-        func saveEmptyToken() {
-            // Given
-            let emptyToken = ""
+        @Test("Special token handling", arguments: [
+            EdgeCaseToken(token: "", description: "Empty token"),
+            EdgeCaseToken(token: String(repeating: "a", count: 10000), description: "Very long token"),
+            EdgeCaseToken(token: "test!@#$%^&*()_+-=[]{}|;':\",./<>?", description: "Special characters"),
+            EdgeCaseToken(token: "test-👋-🌍-😀-token", description: "Unicode characters"),
+            EdgeCaseToken(token: "  token with spaces  ", description: "Token with spaces"),
+            EdgeCaseToken(token: "\n\t\rtoken\nwith\nwhitespace\t", description: "Token with whitespace")
+        ])
+        func specialTokenHandling(testCase: EdgeCaseToken) {
             let provider = ServiceProvider.cursor
 
-            // When
-            let result = tokenManager.saveToken(emptyToken, for: provider)
+            // Save token
+            let saveResult = tokenManager.saveToken(testCase.token, for: provider)
+            #expect(saveResult == true)
+            #expect(mockKeychainServices[provider]?.lastSavedToken == testCase.token)
 
-            // Then
-            #expect(result == true)
-            #expect(mockKeychainServices[provider]?.lastSavedToken == emptyToken)
-        }
-
-        @Test("save very long token")
-        func saveVeryLongToken() {
-            // Given
-            let longToken = String(repeating: "a", count: 10000)
-            let provider = ServiceProvider.cursor
-
-            // When
-            let result = tokenManager.saveToken(longToken, for: provider)
-
-            // Then
-            #expect(result == true)
-            #expect(mockKeychainServices[provider]?.lastSavedToken == longToken)
-        }
-
-        @Test("save special characters token")
-        func saveSpecialCharactersToken() {
-            // Given
-            let specialToken = "test!@#$%^&*()_+-=[]{}|;':\",./<>?"
-            let provider = ServiceProvider.cursor
-
-            // When
-            let result = tokenManager.saveToken(specialToken, for: provider)
-
-            // Then
-            #expect(result == true)
-            #expect(mockKeychainServices[provider]?.lastSavedToken == specialToken)
-        }
-
-        @Test("save unicode token")
-        func saveUnicodeToken() {
-            // Given
-            let unicodeToken = "test-👋-🌍-😀-token"
-            let provider = ServiceProvider.cursor
-
-            // When
-            let result = tokenManager.saveToken(unicodeToken, for: provider)
-
-            // Then
-            #expect(result == true)
-            #expect(mockKeychainServices[provider]?.lastSavedToken == unicodeToken)
+            // Retrieve token
+            let retrieved = tokenManager.getAuthToken(for: provider)
+            #expect(retrieved == testCase.token)
         }
 
         @Test("update existing token")
