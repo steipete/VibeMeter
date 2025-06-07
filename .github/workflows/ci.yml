@@ -1,0 +1,250 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a release after successful build'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s $DEVELOPER_DIR
+        xcodebuild -version
+        swift --version
+
+    - name: Cache build dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/DerivedData
+          ~/.tuist/Cache
+          ~/Library/Caches/tuist
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift', '.mise.toml') }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift', '.mise.toml') }}-
+          ${{ runner.os }}-build-
+
+    - name: Install build tools
+      run: |
+        # Install mise if not present
+        if ! command -v mise &> /dev/null; then
+          curl https://mise.run | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
+        
+        # Install Tuist via mise
+        mise install
+        eval "$(mise activate bash)"
+        
+        # Install other required tools
+        brew install xcbeautify swiftlint swiftformat
+
+    - name: Generate Xcode project
+      run: |
+        eval "$(mise activate bash)"
+        ./scripts/generate-xcproj.sh
+
+    - name: Lint code
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "::group::SwiftFormat Check"
+        swiftformat --lint . --config .swiftformat || true
+        echo "::endgroup::"
+        
+        echo "::group::SwiftLint"
+        swiftlint lint --reporter github-actions-logging || true
+        echo "::endgroup::"
+
+    - name: Build app
+      id: build
+      run: |
+        echo "::group::Building VibeMeter"
+        
+        # Get version info
+        VERSION=$(defaults read "$(pwd)/VibeMeter/Info.plist" CFBundleShortVersionString)
+        BUILD=$(defaults read "$(pwd)/VibeMeter/Info.plist" CFBundleVersion)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "BUILD=$BUILD" >> $GITHUB_OUTPUT
+        echo "Building VibeMeter v$VERSION ($BUILD)"
+        
+        # Build the app
+        xcodebuild build \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -configuration Release \
+          -derivedDataPath build/DerivedData \
+          -destination 'platform=macOS,arch=arm64' \
+          | xcbeautify
+        
+        # Copy built app
+        cp -R "build/DerivedData/Build/Products/Release/VibeMeter.app" "build/"
+        echo "::endgroup::"
+
+    - name: Run tests
+      id: test
+      run: |
+        echo "::group::Running Tests"
+        
+        # Determine test mode based on event
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          TEST_MODE="quick"
+          echo "Running quick tests for PR"
+        else
+          TEST_MODE="all"
+          echo "Running full test suite"
+        fi
+        
+        # Run tests with unified runner
+        ./test-runner.sh $TEST_MODE --junit-output test-results.xml
+        
+        echo "::endgroup::"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.sha }}
+        path: |
+          test-results.xcresult
+          test-results.xml
+        retention-days: 7
+
+    - name: Publish test report
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: Test Results
+        path: test-results.xml
+        reporter: java-junit
+        fail-on-error: false
+
+    - name: Code sign and notarize
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      id: notarize
+      env:
+        APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      run: |
+        echo "::group::Code Signing and Notarization"
+        
+        if [[ -n "$APP_STORE_CONNECT_API_KEY_P8" ]]; then
+          ./scripts/sign-and-notarize.sh --sign-and-notarize
+          echo "NOTARIZED=true" >> $GITHUB_OUTPUT
+        else
+          echo "Skipping notarization (no credentials)"
+          echo "NOTARIZED=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Create DMG
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      id: dmg
+      run: |
+        echo "::group::Creating DMG"
+        ./scripts/create-dmg.sh
+        DMG_PATH=$(find . -name "VibeMeter-*.dmg" -type f | head -1)
+        echo "DMG_PATH=$DMG_PATH" >> $GITHUB_OUTPUT
+        echo "Created DMG: $DMG_PATH"
+        echo "::endgroup::"
+
+    - name: Upload artifacts
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: VibeMeter-${{ steps.build.outputs.VERSION }}-${{ steps.build.outputs.BUILD }}
+        path: |
+          build/VibeMeter.app
+          ${{ steps.dmg.outputs.DMG_PATH }}
+          build/VibeMeter-notarized.zip
+        retention-days: 14
+
+    - name: Find Comment
+      if: github.event_name == 'pull_request'
+      uses: peter-evans/find-comment@v3
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: <!-- ci-status -->
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && always()
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          <!-- ci-status -->
+          ### ${{ job.status == 'success' && '✅' || '❌' }} ${{ job.status == 'success' && 'Build and Tests Successful!' || 'Build or Tests Failed!' }}
+          
+          **Version:** ${{ steps.build.outputs.VERSION }} (${{ steps.build.outputs.BUILD }})
+          **Commit:** ${{ github.sha }}
+          **Status:** ${{ job.status == 'success' && 'All checks passed successfully.' || format('Some checks failed. Check the [workflow logs](https://github.com/{0}/{1}/actions/runs/{2}) for details.', github.repository_owner, github.event.repository.name, github.run_id) }}
+          
+          ${{ github.event_name == 'pull_request' && 'This PR ran quick tests. Full test suite runs on merge to main.' || '' }}
+          
+          [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        edit-mode: replace
+
+    - name: Create Release
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' && success()
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.build.outputs.VERSION }}
+        name: VibeMeter v${{ steps.build.outputs.VERSION }}
+        body: |
+          ## VibeMeter v${{ steps.build.outputs.VERSION }}
+          
+          ### Changes
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          
+          ### Downloads
+          - **DMG**: Direct download below
+          - **App**: Available in artifacts
+          
+          ### Installation
+          1. Download the DMG
+          2. Open and drag VibeMeter to Applications
+          3. Launch from Applications folder
+        files: |
+          ${{ steps.dmg.outputs.DMG_PATH }}
+          build/VibeMeter-notarized.zip
+        draft: true
+        prerelease: false

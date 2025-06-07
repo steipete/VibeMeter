@@ -126,6 +126,9 @@ let project = Project(
                         "-Xfrontend", "-warn-long-function-bodies=500",
                         "-Xfrontend", "-warn-long-expression-type-checking=500",
                     ],
+                    // Suppress AppIntents metadata extraction warning
+                    "SKIP_INSTALL": false,
+                    "APPINTENTS_METADATA_EXTRACTION": "NO",
                 ])),
         .target(
             name: "VibeMeterTests",

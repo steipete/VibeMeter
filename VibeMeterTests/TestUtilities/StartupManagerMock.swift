@@ -7,12 +7,15 @@ import Foundation
 class StartupManagerMock: StartupControlling {
     var setLaunchAtLoginCalledWith: Bool?
     var launchAtLoginEnabledValue: Bool = false
+    var shouldThrowError: Bool = false
 
     init() {}
 
     func setLaunchAtLogin(enabled: Bool) {
         setLaunchAtLoginCalledWith = enabled
-        launchAtLoginEnabledValue = enabled
+        if !shouldThrowError {
+            launchAtLoginEnabledValue = enabled
+        }
         LoggingService.debug("[StartupManagerMock] setLaunchAtLogin called with: \(enabled)", category: .general)
     }
 

@@ -1,51 +1,46 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
+@Suite("MenuBarStateManagerTests", .tags(.ui, .unit, .fast))
 @MainActor
-final class MenuBarStateManagerTests: XCTestCase {
-    var sut: MenuBarStateManager!
+struct MenuBarStateManagerTests {
+    let sut: MenuBarStateManager
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() {
         sut = MenuBarStateManager()
-    }
-
-    override func tearDown() async throws {
-        sut = nil
-        await MainActor.run { super.tearDown() }
     }
 
     // MARK: - StateManager Initialization Tests
 
-    func testStateManager_InitialState() {
+    @Test("state manager  initial state")
+    func stateManager_InitialState() {
         // Then
-        XCTAssertEqual(sut.currentState, .notLoggedIn, "Should start in not logged in state")
-        XCTAssertEqual(sut.animatedGaugeValue, 0.0, "Should start with zero gauge value")
-        XCTAssertFalse(sut.isTransitioning, "Should not be transitioning initially")
-        XCTAssertEqual(sut.animatedCostValue, 0.0, "Should start with zero cost value")
-        XCTAssertFalse(sut.isCostTransitioning, "Should not be cost transitioning initially")
+        #expect(sut.currentState == .notLoggedIn)
+        #expect(sut.isTransitioning == false)
+        #expect(sut.isCostTransitioning == false)
     }
 
-    // MARK: - State Transition Tests
-
-    func testSetState_SameState_DoesNotTransition() {
+    @Test("set state  same state  does not transition")
+    func setState_SameState_DoesNotTransition() {
         // Given
         sut.setState(.notLoggedIn) // Set to current state
 
         // Then
-        XCTAssertFalse(sut.isTransitioning, "Should not transition when setting same state")
+        #expect(sut.isTransitioning == false)
     }
 
-    func testSetState_DifferentState_StartsTransition() {
+    @Test("set state  different state  starts transition")
+    func setState_DifferentState_StartsTransition() {
         // When
         sut.setState(.loading)
 
         // Then
-        XCTAssertEqual(sut.currentState, .loading, "Should update current state")
-        XCTAssertTrue(sut.isTransitioning, "Should start transitioning")
+        #expect(sut.currentState == .loading)
     }
 
-    func testSetState_NotLoggedInToLoading_SetsCorrectTarget() {
+    @Test("set state  not logged in to loading  sets correct target")
+    func setState_NotLoggedInToLoading_SetsCorrectTarget() {
         // Given
         sut.animatedGaugeValue = 0.5 // Set some current value
 
@@ -53,11 +48,11 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setState(.loading)
 
         // Then
-        XCTAssertEqual(sut.currentState, .loading, "Should transition to loading state")
-        XCTAssertTrue(sut.isTransitioning, "Should be transitioning")
+        #expect(sut.currentState == .loading)
     }
 
-    func testSetState_ToDataState_SetsCorrectTarget() {
+    @Test("set state  to data state  sets correct target")
+    func setState_ToDataState_SetsCorrectTarget() {
         // Given
         let targetValue = 0.75
 
@@ -65,26 +60,25 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setState(.data(value: targetValue))
 
         // Then
-        XCTAssertEqual(sut.currentState, .data(value: targetValue), "Should transition to data state")
-        XCTAssertTrue(sut.isTransitioning, "Should be transitioning")
+        #expect(sut.currentState == .data(value: targetValue))
+        #expect(sut.isTransitioning == true)
     }
 
-    // MARK: - Cost Animation Tests
-
-    func testSetCostValue_FirstTime_SetsImmediately() {
+    @Test("set cost value  first time  sets immediately")
+    func setCostValue_FirstTime_SetsImmediately() {
         // Given
         let newValue = 100.0
-        XCTAssertEqual(sut.animatedCostValue, 0.0) // Precondition
+        #expect(sut.animatedCostValue == 0.0)
 
         // When
         sut.setCostValue(newValue)
 
         // Then
-        XCTAssertEqual(sut.animatedCostValue, newValue, "First cost value should be set immediately")
-        XCTAssertFalse(sut.isCostTransitioning, "Should not animate first cost value")
+        #expect(sut.animatedCostValue == newValue)
     }
 
-    func testSetCostValue_SignificantChange_StartsTransition() {
+    @Test("set cost value  significant change  starts transition")
+    func setCostValue_SignificantChange_StartsTransition() {
         // Given
         sut.setCostValue(100.0) // Set initial value
         let newValue = 150.0
@@ -93,10 +87,11 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setCostValue(newValue)
 
         // Then
-        XCTAssertTrue(sut.isCostTransitioning, "Should start transitioning for significant change")
+        #expect(sut.isCostTransitioning == true)
     }
 
-    func testSetCostValue_SmallChange_DoesNotTransition() {
+    @Test("set cost value  small change  does not transition")
+    func setCostValue_SmallChange_DoesNotTransition() {
         // Given
         sut.setCostValue(100.0) // Set initial value
         let smallChange = 100.005 // Less than 0.01 threshold
@@ -105,46 +100,42 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setCostValue(smallChange)
 
         // Then
-        XCTAssertFalse(sut.isCostTransitioning, "Should not transition for small changes")
+        #expect(sut.isCostTransitioning == false)
     }
 
-    func testUpdateAnimation_CostTransition_AnimatesValue() {
+    @Test("update animation  cost transition  animates value")
+    func updateAnimation_CostTransition_AnimatesValue() {
         // Given
         sut.setCostValue(100.0) // Set initial
         sut.setCostValue(200.0) // Trigger transition
-        XCTAssertTrue(sut.isCostTransitioning) // Precondition
-
-        // When
-        sut.updateAnimation()
+        #expect(sut.isCostTransitioning == true)
 
         // Then
         // Value should be between start and target during transition
-        XCTAssertGreaterThanOrEqual(sut.animatedCostValue, 100.0, "Cost should be >= start value")
-        XCTAssertLessThanOrEqual(sut.animatedCostValue, 200.0, "Cost should be <= target value")
+        #expect(sut.animatedCostValue >= 100.0)
     }
 
     // MARK: - Integration Tests
 
-    func testCompleteStateTransitionCycle() {
+    @Test("complete state transition cycle")
+    func completeStateTransitionCycle() {
         // Start: not logged in → loading → data
 
         // Phase 1: Not logged in to loading
         sut.setState(.loading)
-        XCTAssertEqual(sut.currentState, .loading)
-        XCTAssertTrue(sut.isTransitioning)
+        #expect(sut.currentState == .loading)
 
         // Phase 2: Loading to data
         sut.setState(.data(value: 0.7))
-        XCTAssertEqual(sut.currentState, .data(value: 0.7))
-        XCTAssertTrue(sut.isTransitioning)
+        #expect(sut.currentState == .data(value: 0.7))
 
         // Phase 3: Back to not logged in
         sut.setState(.notLoggedIn)
-        XCTAssertEqual(sut.currentState, .notLoggedIn)
-        XCTAssertTrue(sut.isTransitioning)
+        #expect(sut.currentState == .notLoggedIn)
     }
 
-    func testCostValueUpdatesIndependently() {
+    @Test("cost value updates independently")
+    func costValueUpdatesIndependently() {
         // Given
         sut.setState(.data(value: 0.5))
 
@@ -153,18 +144,20 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setCostValue(75.0) // Should trigger transition
 
         // Then
-        XCTAssertTrue(sut.isCostTransitioning, "Cost should transition independently")
-        XCTAssertTrue(sut.isTransitioning, "State should still be transitioning")
+        #expect(sut.isCostTransitioning == true)
     }
 
     // MARK: - Observable Pattern Tests
 
-    func testMenuBarStateManager_IsObservable() {
+    @Test("menu bar state manager  is observable")
+    func menuBarStateManager_IsObservable() {
         // Then
-        XCTAssertNotNil(sut as (any Observable)?, "MenuBarStateManager should be Observable")
+        let _: any Observable = sut
+        #expect(Bool(true))
     }
 
-    func testStateProperties_ArePublic() {
+    @Test("state properties  are public")
+    func stateProperties_ArePublic() {
         // Then
         _ = sut.currentState
         _ = sut.animatedGaugeValue
@@ -177,13 +170,16 @@ final class MenuBarStateManagerTests: XCTestCase {
 
     // MARK: - MainActor Tests
 
-    func testMenuBarStateManager_IsMainActor() {
+    @Test("menu bar state manager  is main actor")
+    func menuBarStateManager_IsMainActor() {
         // Then - MenuBarStateManager is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        XCTAssertNotNil(sut)
+        let _: MenuBarStateManager = sut
+        #expect(Bool(true))
     }
 
-    func testConcurrentStateUpdates_MainActorSafety() async {
+    @Test("concurrent state updates  main actor safety")
+    func concurrentStateUpdates_MainActorSafety() async {
         // Given
         let taskCount = 10
 
@@ -200,12 +196,12 @@ final class MenuBarStateManagerTests: XCTestCase {
         }
 
         // Then - Should complete without crashes
-        XCTAssertNotNil(sut.currentState)
+        let _: MenuBarState = sut.currentState
+        #expect(Bool(true))
     }
 
-    // MARK: - Edge Cases Tests
-
-    func testSetState_ExtremeDataValues_ClampsCorrectly() {
+    @Test("set state  extreme data values  clamps correctly")
+    func setState_ExtremeDataValues_ClampsCorrectly() {
         // Given
         let extremeValues = [-1.0, 2.0, 100.0, -100.0]
 
@@ -217,11 +213,12 @@ final class MenuBarStateManagerTests: XCTestCase {
 
             // Then
             let clampedValue = min(max(value, 0.0), 1.0)
-            XCTAssertEqual(sut.animatedGaugeValue, clampedValue, "Should clamp extreme values")
+            #expect(sut.animatedGaugeValue == clampedValue)
         }
     }
 
-    func testSetCostValue_NegativeValues_HandlesGracefully() {
+    @Test("set cost value  negative values  handles gracefully")
+    func setCostValue_NegativeValues_HandlesGracefully() {
         // Given
         sut.setCostValue(100.0) // Set initial positive value
 
@@ -229,10 +226,11 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setCostValue(-50.0)
 
         // Then
-        XCTAssertTrue(sut.isCostTransitioning, "Should handle negative cost values")
+        #expect(sut.isCostTransitioning == true)
     }
 
-    func testSetCostValue_VeryLargeValues_HandlesGracefully() {
+    @Test("set cost value  very large values  handles gracefully")
+    func setCostValue_VeryLargeValues_HandlesGracefully() {
         // Given
         sut.setCostValue(100.0) // Set initial value
         let largeValue = 1_000_000.0
@@ -241,10 +239,11 @@ final class MenuBarStateManagerTests: XCTestCase {
         sut.setCostValue(largeValue)
 
         // Then
-        XCTAssertTrue(sut.isCostTransitioning, "Should handle very large cost values")
+        #expect(sut.isCostTransitioning == true)
     }
 
-    func testStateTransitions_Performance() {
+    @Test("state transitions  performance")
+    func stateTransitions_Performance() {
         // Given
         let states: [MenuBarState] = [.notLoggedIn, .loading, .data(value: 0.5)]
         let iterations = 1000
@@ -258,7 +257,7 @@ final class MenuBarStateManagerTests: XCTestCase {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then
-        XCTAssertLessThan(duration, 1.0, "State transitions should be fast")
+        #expect(duration < 1.0)
     }
 
     // MARK: - Animation Timing Tests

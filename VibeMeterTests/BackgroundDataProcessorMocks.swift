@@ -1,3 +1,4 @@
+import Foundation
 @testable import VibeMeter
 import XCTest
 
@@ -18,7 +19,9 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
     private var _shouldThrowOnTeamInfo = false
     private var _shouldThrowOnInvoice = false
     private var _shouldThrowOnUsage = false
+    private var _shouldThrowCustomError = false
     private var _errorToThrow: Error = TestError.networkFailure
+    private var _customError: Error = TestError.networkFailure
 
     // Timing simulation
     private var _userInfoDelay: TimeInterval = 0
@@ -81,6 +84,37 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
         set { lock.withLock { _errorToThrow = newValue } }
     }
 
+    var shouldThrowCustomError: Bool {
+        get { lock.withLock { _shouldThrowCustomError } }
+        set { lock.withLock { _shouldThrowCustomError = newValue } }
+    }
+
+    var customError: Error {
+        get { lock.withLock { _customError } }
+        set { lock.withLock { _customError = newValue } }
+    }
+
+    // Aliases for compatibility with tests
+    var shouldThrowUserInfoError: Bool {
+        get { shouldThrowOnUserInfo }
+        set { shouldThrowOnUserInfo = newValue }
+    }
+
+    var shouldThrowTeamInfoError: Bool {
+        get { shouldThrowOnTeamInfo }
+        set { shouldThrowOnTeamInfo = newValue }
+    }
+
+    var shouldThrowInvoiceError: Bool {
+        get { shouldThrowOnInvoice }
+        set { shouldThrowOnInvoice = newValue }
+    }
+
+    var shouldThrowUsageError: Bool {
+        get { shouldThrowOnUsage }
+        set { shouldThrowOnUsage = newValue }
+    }
+
     var userInfoDelay: TimeInterval {
         get { lock.withLock { _userInfoDelay } }
         set { lock.withLock { _userInfoDelay = newValue } }
@@ -138,6 +172,10 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
 
         if userInfoDelay > 0 {
             try await Task.sleep(nanoseconds: UInt64(userInfoDelay * 1_000_000_000))
+        }
+
+        if shouldThrowCustomError {
+            throw customError
         }
 
         if shouldThrowOnUserInfo {

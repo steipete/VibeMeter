@@ -1,271 +1,329 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
-final class KeychainHelperTests: XCTestCase, @unchecked Sendable {
-    var sut: KeychainHelper!
+// MARK: - Test Case Data Structures
 
-    override func setUp() {
-        super.setUp()
-        // Use a unique service ID for each test to avoid interference
-        sut = KeychainHelper(service: "com.vibemeter.test.\(UUID().uuidString)")
+struct TokenTestCase: Sendable {
+    let token: String
+    let description: String
+    let shouldSucceed: Bool
+
+    init(_ token: String, shouldSucceed: Bool = true, _ description: String) {
+        self.token = token
+        self.shouldSucceed = shouldSucceed
+        self.description = description
     }
+}
 
-    override func tearDown() {
-        // Clean up any stored tokens
+@Suite("Keychain Helper Tests", .tags(.requiresKeychain, .unit), .serialized)
+@MainActor
+struct KeychainHelperTests {
+    let sut: KeychainHelper
+
+    init() {
+        // Use a unique service name for testing with current timestamp to avoid conflicts
+        let uniqueService = "com.vibemeter.test.keychain.\(Date().timeIntervalSince1970)"
+        sut = KeychainHelper(service: uniqueService)
+        // Clear any existing test data
         _ = sut.deleteToken()
-        sut = nil
-        super.tearDown()
     }
 
-    // MARK: - Token Storage Tests
+    // MARK: - Basic Token Operations
 
-    func testSaveToken_WithValidToken_ReturnsTrue() {
-        // When
-        let result = sut.saveToken("test-token-123")
+    @Suite("Token Storage Operations")
+    struct TokenStorageTests {
+        let keychain: KeychainHelper
 
-        // Then
-        XCTAssertTrue(result)
+        init() {
+            keychain = KeychainHelper(service: "com.vibemeter.test.storage.\(UUID().uuidString)")
+            _ = keychain.deleteToken()
+        }
+
+        static let tokenTestCases: [TokenTestCase] = [
+            TokenTestCase("simple-token", "simple alphanumeric token"),
+            TokenTestCase("token-with-dashes-and_underscores", "token with special characters"),
+            TokenTestCase("", "empty token"),
+            TokenTestCase("jwt.eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0", "JWT-like token"),
+            TokenTestCase(
+                String((0 ..< 1000).compactMap { _ in
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()
+                }),
+                "very long token"),
+            TokenTestCase("🔑🚀✨", "unicode token"),
+            TokenTestCase(#"{"token": "value", "expires": "2023-12-01"}"#, "JSON token"),
+        ]
+
+        @Test("Token save and retrieve", arguments: tokenTestCases)
+        func tokenSaveAndRetrieve(testCase: TokenTestCase) {
+            // When
+            let saveResult = keychain.saveToken(testCase.token)
+
+            // Then
+            #expect(saveResult == testCase.shouldSucceed)
+
+            if testCase.shouldSucceed {
+                let retrievedToken = keychain.getToken()
+                #expect(retrievedToken == testCase.token)
+            }
+        }
+
+        @Test("Token deletion")
+        func tokenDeletion() {
+            // Given
+            let token = "token-to-delete"
+            _ = keychain.saveToken(token)
+            #expect(keychain.getToken() == token)
+
+            // When
+            let deleteResult = keychain.deleteToken()
+
+            // Then
+            #expect(deleteResult == true)
+            #expect(keychain.getToken() == nil)
+        }
+
+        @Test("Token overwrite")
+        func tokenOverwrite() {
+            // Given
+            let firstToken = "first-token"
+            let secondToken = "second-token"
+
+            // When
+            _ = keychain.saveToken(firstToken)
+            _ = keychain.saveToken(secondToken)
+
+            // Then
+            #expect(keychain.getToken() == secondToken)
+        }
     }
 
-    func testGetToken_AfterSaving_ReturnsStoredToken() {
+    // MARK: - Multiple Instance Tests
+
+    @Test("Service isolation", arguments: [
+        "service.one",
+        "service.two",
+        "service.three",
+    ])
+    func serviceIsolation(serviceName: String) {
         // Given
-        let testToken = "test-token-value-456"
-        _ = sut.saveToken(testToken)
+        let keychain = KeychainHelper(service: serviceName)
+        let uniqueToken = "token-for-\(serviceName)"
 
         // When
-        let retrievedToken = sut.getToken()
+        _ = keychain.saveToken(uniqueToken)
 
         // Then
-        XCTAssertEqual(retrievedToken, testToken)
+        #expect(keychain.getToken() == uniqueToken)
+
+        // Cleanup
+        _ = keychain.deleteToken()
     }
 
-    func testGetToken_WithoutSaving_ReturnsNil() {
-        // When
-        let token = sut.getToken()
-
-        // Then
-        XCTAssertNil(token)
-    }
-
-    func testDeleteToken_AfterSaving_RemovesToken() {
+    @Test("Cross-service isolation")
+    func crossServiceIsolation() {
         // Given
-        _ = sut.saveToken("token-to-delete")
+        let service1 = KeychainHelper(service: "com.test.service1.\(UUID().uuidString)")
+        let service2 = KeychainHelper(service: "com.test.service2.\(UUID().uuidString)")
+
+        let token1 = "token-for-service1"
+        let token2 = "token-for-service2"
 
         // When
-        let deleteResult = sut.deleteToken()
-        let retrievedToken = sut.getToken()
+        _ = service1.saveToken(token1)
+        _ = service2.saveToken(token2)
 
         // Then
-        XCTAssertTrue(deleteResult)
-        XCTAssertNil(retrievedToken)
+        #expect(service1.getToken() == token1)
+        #expect(service2.getToken() == token2)
+
+        // When one service deletes its token
+        _ = service1.deleteToken()
+
+        // Then the other service should be unaffected
+        #expect(service1.getToken() == nil)
+        #expect(service2.getToken() == token2)
+
+        // Cleanup
+        _ = service2.deleteToken()
     }
 
-    func testDeleteToken_WithoutSaving_ReturnsTrue() {
+    // MARK: - Edge Cases and Error Handling
+
+    @Test("Delete non-existent token")
+    func deleteNonExistentToken() {
+        // Given - Fresh keychain with no tokens
+        let keychain = KeychainHelper(service: "com.test.empty.\(UUID().uuidString)")
+
         // When
-        let result = sut.deleteToken()
+        let result = keychain.deleteToken()
 
-        // Then
-        XCTAssertTrue(result, "Deleting non-existent token should still return true")
+        // Then - Should handle gracefully
+        #expect(result == true)
     }
 
-    // MARK: - Token Update Tests
-
-    func testSaveToken_OverwritesExistingToken() {
-        // Given
-        _ = sut.saveToken("old-token")
+    @Test("Retrieve from empty keychain")
+    func retrieveFromEmptyKeychain() {
+        // Given - Fresh keychain
+        let keychain = KeychainHelper(service: "com.test.retrieve.\(UUID().uuidString)")
 
         // When
-        _ = sut.saveToken("new-token")
-        let retrievedToken = sut.getToken()
+        let token = keychain.getToken()
 
         // Then
-        XCTAssertEqual(retrievedToken, "new-token")
+        #expect(token == nil)
     }
 
-    func testMultipleUpdates_PreservesLatestToken() {
+    @Test("Multiple operations sequence")
+    func multipleOperationsSequence() {
         // Given
         let tokens = ["token1", "token2", "token3", "final-token"]
 
-        // When
+        // When - Perform multiple save/get operations
         for token in tokens {
-            _ = sut.saveToken(token)
+            let saveResult = sut.saveToken(token)
+            #expect(saveResult == true)
+
+            let retrievedToken = sut.getToken()
+            #expect(retrievedToken == token)
         }
-        let retrievedToken = sut.getToken()
 
-        // Then
-        XCTAssertEqual(retrievedToken, "final-token")
-    }
-
-    // MARK: - Service Isolation Tests
-
-    func testDifferentServices_HaveIsolatedStorage() {
-        // Given
-        let service1 = KeychainHelper(service: "com.test.service1")
-        let service2 = KeychainHelper(service: "com.test.service2")
-
-        // When
-        _ = service1.saveToken("token-for-service1")
-        _ = service2.saveToken("token-for-service2")
-
-        let token1 = service1.getToken()
-        let token2 = service2.getToken()
-
-        // Then
-        XCTAssertEqual(token1, "token-for-service1")
-        XCTAssertEqual(token2, "token-for-service2")
-
-        // Cleanup
-        _ = service1.deleteToken()
-        _ = service2.deleteToken()
-    }
-
-    func testDeleteToken_DoesNotAffectOtherServices() {
-        // Given
-        let service1 = KeychainHelper(service: "com.test.service3")
-        let service2 = KeychainHelper(service: "com.test.service4")
-        _ = service1.saveToken("token1")
-        _ = service2.saveToken("token2")
-
-        // When
-        _ = service1.deleteToken()
-
-        // Then
-        XCTAssertNil(service1.getToken())
-        XCTAssertEqual(service2.getToken(), "token2")
-
-        // Cleanup
-        _ = service2.deleteToken()
-    }
-
-    // MARK: - Edge Cases
-
-    func testSaveToken_WithEmptyString_StoresSuccessfully() {
-        // When
-        let result = sut.saveToken("")
-        let retrievedToken = sut.getToken()
-
-        // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(retrievedToken, "")
-    }
-
-    func testSaveToken_WithVeryLongToken_StoresSuccessfully() {
-        // Given
-        let longToken = String(repeating: "a", count: 10000)
-
-        // When
-        let result = sut.saveToken(longToken)
-        let retrievedToken = sut.getToken()
-
-        // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(retrievedToken, longToken)
-    }
-
-    func testSaveToken_WithSpecialCharacters_StoresSuccessfully() {
-        // Given
-        let specialToken = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-
-        // When
-        let result = sut.saveToken(specialToken)
-        let retrievedToken = sut.getToken()
-
-        // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(retrievedToken, specialToken)
-    }
-
-    func testSaveToken_WithUnicodeCharacters_StoresSuccessfully() {
-        // Given
-        let unicodeToken = "🔑Token-with-emoji-🚀-and-中文"
-
-        // When
-        let result = sut.saveToken(unicodeToken)
-        let retrievedToken = sut.getToken()
-
-        // Then
-        XCTAssertTrue(result)
-        XCTAssertEqual(retrievedToken, unicodeToken)
+        // Then - Final token should be the last one saved
+        #expect(sut.getToken() == tokens.last)
     }
 
     // MARK: - Concurrent Access Tests
 
-    func testConcurrentAccess_MaintainsDataIntegrity() {
+    @Test("Concurrent operations thread safety")
+    func concurrentOperationsThreadSafety() async {
         // Given
-        let expectation = expectation(description: "Concurrent operations complete")
-        expectation.expectedFulfillmentCount = 100
-        let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+        let iterations = 50
 
-        // When
-        for i in 0 ..< 100 {
-            queue.async {
-                let token = "token-\(i)"
-                _ = self.sut.saveToken(token)
-                _ = self.sut.getToken()
-                if i % 2 == 0 {
-                    _ = self.sut.deleteToken()
+        // When - Perform concurrent operations
+        await withTaskGroup(of: Void.self) { group in
+            for i in 0 ..< iterations {
+                group.addTask {
+                    let token = "concurrent-token-\(i)"
+                    _ = self.sut.saveToken(token)
+                    _ = self.sut.getToken()
+                    if i % 2 == 0 {
+                        _ = self.sut.deleteToken()
+                    }
                 }
-                expectation.fulfill()
             }
         }
 
-        // Then
-        wait(for: [expectation], timeout: 5.0)
-        // Test passes if no crashes occur during concurrent access
+        // Then - Operations should complete without crashes
+        #expect(Bool(true))
     }
 
-    // MARK: - Shared Instance Tests
+    // MARK: - Performance Tests
 
-    func testSharedInstance_UsesCorrectService() {
+    @Test("Token operations performance", .timeLimit(.minutes(1)))
+    func tokenOperationsPerformance() {
         // Given
-        let shared = KeychainHelper.shared
+        let iterations = 1000
 
-        // When
-        _ = shared.saveToken("shared-token")
-        let token = shared.getToken()
+        // When/Then - Should complete within time limit
+        for i in 0 ..< iterations {
+            let token = "perf-token-\(i)"
+            _ = sut.saveToken(token)
+            _ = sut.getToken()
+            if i % 10 == 0 {
+                _ = sut.deleteToken()
+                _ = sut.saveToken(token) // Save again for next iteration
+            }
+        }
+    }
+
+    @Test("Large token performance")
+    func largeTokenPerformance() async {
+        // Given - Very large token (1MB)
+        let largeToken = String(repeating: "large ", count: 50000)
+
+        // When/Then - Should handle large tokens efficiently
+        let startSave = Date()
+        _ = sut.saveToken(largeToken)
+        let saveTime = Date().timeIntervalSince(startSave)
+
+        let startRetrieve = Date()
+        let retrievedToken = sut.getToken()
+        let retrieveTime = Date().timeIntervalSince(startRetrieve)
 
         // Then
-        XCTAssertEqual(token, "shared-token")
-
-        // Cleanup
-        _ = shared.deleteToken()
+        #expect(retrievedToken == largeToken)
+        #expect(saveTime < 1.0)
+        #expect(retrieveTime < 1.0)
     }
 
     // MARK: - Protocol Conformance Tests
 
-    func testKeychainHelper_ConformsToKeychainServicing() {
-        // Then
-        XCTAssertTrue((sut as Any) is KeychainServicing)
+    @Test("Keychain servicing protocol conformance")
+    func keychainServicingProtocolConformance() {
+        // Test protocol methods
+        let protocolConformant: KeychainServicing = sut
+        let testToken = "protocol-test-token"
+
+        #expect(protocolConformant.saveToken(testToken) == true)
+        #expect(protocolConformant.getToken() == testToken)
+        #expect(protocolConformant.deleteToken() == true)
     }
 
-    func testKeychainHelper_IsSendable() {
-        // Given
-        let helper = KeychainHelper(service: "test.sendable")
-
-        // When/Then - This compiles because KeychainHelper is Sendable
+    @Test("Sendable conformance")
+    func sendableConformance() {
+        // When/Then - Should compile and work across actor boundaries
         Task {
-            _ = helper.saveToken("sendable-test")
+            let token = "sendable-test-token"
+            _ = self.sut.saveToken(token)
+            #expect(self.sut.getToken() == token)
         }
     }
 
-    // MARK: - Debug Storage Tests (when in DEBUG mode)
+    // MARK: - Shared Instance Tests
 
-    #if DEBUG
-        func testDebugStorage_PersistsAcrossInstances() {
-            // Given
-            let service = "com.test.debug.persistence"
-            let helper1 = KeychainHelper(service: service)
-            _ = helper1.saveToken("persisted-token")
+    @Test("Shared instance consistency")
+    func sharedInstanceConsistency() {
+        // Given
+        let shared1 = KeychainHelper.shared
+        let shared2 = KeychainHelper.shared
 
-            // When
-            let helper2 = KeychainHelper(service: service)
-            let token = helper2.getToken()
+        // Then
+        #expect(shared1 === shared2)
 
-            // Then
-            XCTAssertEqual(token, "persisted-token")
+        // When
+        let testToken = "shared-instance-token"
+        _ = shared1.saveToken(testToken)
 
-            // Cleanup
-            _ = helper2.deleteToken()
-        }
-    #endif
+        // Then
+        #expect(shared2.getToken() == testToken)
+
+        // Cleanup
+        _ = shared1.deleteToken()
+    }
+
+    // MARK: - Integration Tests
+
+    @Test("Real keychain integration")
+    func realKeychainIntegration() {
+        // This test verifies actual keychain integration
+        // Using a test-specific service to avoid conflicts
+
+        // Given
+        let integrationKeychain = KeychainHelper(service: "com.vibemeter.integration.test")
+        let testToken = "integration-test-token-\(Date().timeIntervalSince1970)"
+
+        // When
+        let saveResult = integrationKeychain.saveToken(testToken)
+
+        // Then
+        #expect(saveResult == true)
+
+        let retrievedToken = integrationKeychain.getToken()
+        #expect(retrievedToken == testToken)
+
+        // Cleanup
+        let deleteResult = integrationKeychain.deleteToken()
+        #expect(deleteResult == true)
+        #expect(integrationKeychain.getToken() == nil)
+    }
 }

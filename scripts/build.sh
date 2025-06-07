@@ -76,6 +76,13 @@ mkdir -p "$BUILD_DIR"
 # Build the app
 cd "$PROJECT_DIR"
 
+# Use CI-specific configuration if in CI environment
+XCCONFIG_ARG=""
+if [[ "${CI:-false}" == "true" ]] && [[ -f "$PROJECT_DIR/.xcode-ci-config.xcconfig" ]]; then
+    echo "Using CI-specific build configuration"
+    XCCONFIG_ARG="-xcconfig $PROJECT_DIR/.xcode-ci-config.xcconfig"
+fi
+
 # Check if xcbeautify is available
 if command -v xcbeautify &> /dev/null; then
     echo "🔨 Building with xcbeautify..."
@@ -85,6 +92,7 @@ if command -v xcbeautify &> /dev/null; then
         -configuration "$CONFIGURATION" \
         -derivedDataPath "$BUILD_DIR" \
         -destination "platform=macOS" \
+        $XCCONFIG_ARG \
         build | xcbeautify
 else
     echo "🔨 Building (install xcbeautify for cleaner output)..."
@@ -94,6 +102,7 @@ else
         -configuration "$CONFIGURATION" \
         -derivedDataPath "$BUILD_DIR" \
         -destination "platform=macOS" \
+        $XCCONFIG_ARG \
         build
 fi
 

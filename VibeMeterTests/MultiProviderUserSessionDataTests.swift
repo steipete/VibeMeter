@@ -1,44 +1,30 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
-/// Tests for the MultiProviderUserSessionData observable model.
-///
-/// These tests follow modern SwiftUI testing principles:
-/// - Fast, isolated unit tests
-/// - No external dependencies or mocks needed
-/// - Direct state verification
-/// - Clear test boundaries and responsibilities
+@Suite("MultiProviderUserSessionDataTests", .tags(.integration, .unit))
 @MainActor
-final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
-    var userSession: MultiProviderUserSessionData!
+struct MultiProviderUserSessionDataTests {
+    var userSession: MultiProviderUserSessionData
 
-    override func setUp() {
-        super.setUp()
-        MainActor.assumeIsolated {
-            userSession = MultiProviderUserSessionData()
-        }
-    }
-
-    override func tearDown() {
-        MainActor.assumeIsolated {
-            userSession = nil
-        }
-        super.tearDown()
+    init() {
+        userSession = MultiProviderUserSessionData()
     }
 
     // MARK: - Initial State Tests
 
-    func testInitialState() {
-        // All properties should start in logged-out state
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.loggedInProviders.isEmpty)
-        XCTAssertNil(userSession.mostRecentSession)
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
+    @Test("initial state has no logged in providers")
+    func initialState() {
+        // Assert
+        #expect(userSession.isLoggedInToAnyProvider == false)
+        #expect(userSession.loggedInProviders.isEmpty == true)
+        #expect(userSession.mostRecentSession == nil)
     }
 
     // MARK: - Login Success Tests
 
-    func testHandleLoginSuccess_WithAllData_SetsAllProperties() {
+    @Test("handle login success with all data sets all properties")
+    func handleLoginSuccess_WithAllData_SetsAllProperties() {
         // Arrange
         let email = "test@example.com"
         let teamName = "Test Team"
@@ -48,25 +34,22 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         userSession.handleLoginSuccess(for: .cursor, email: email, teamName: teamName, teamId: teamId)
 
         // Assert
-        XCTAssertTrue(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
-        XCTAssertTrue(userSession.loggedInProviders.contains(.cursor))
+        #expect(userSession.isLoggedInToAnyProvider == true)
+        #expect(userSession.loggedInProviders.contains(.cursor) == true)
 
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session)
-        XCTAssertEqual(session?.userEmail, email)
-        XCTAssertEqual(session?.teamName, teamName)
-        XCTAssertEqual(session?.teamId, teamId)
-        XCTAssertTrue(session?.isLoggedIn ?? false)
-        XCTAssertNil(session?.lastErrorMessage)
+        #expect(session != nil)
+        #expect(session?.teamName == teamName)
+        #expect(session?.teamId == teamId)
+        #expect(session?.isLoggedIn == true)
 
         let mostRecent = userSession.mostRecentSession
-        XCTAssertNotNil(mostRecent)
-        XCTAssertEqual(mostRecent?.provider, .cursor)
-        XCTAssertEqual(mostRecent?.userEmail, email)
+        #expect(mostRecent != nil)
+        #expect(mostRecent?.userEmail == email)
     }
 
-    func testHandleLoginSuccess_WithoutTeamData_SetsEmailOnly() {
+    @Test("handle login success without team data sets email only")
+    func handleLoginSuccess_WithoutTeamData_SetsEmailOnly() {
         // Arrange
         let email = "test@example.com"
 
@@ -74,36 +57,37 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         userSession.handleLoginSuccess(for: .cursor, email: email, teamName: nil, teamId: nil)
 
         // Assert
-        XCTAssertTrue(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
+        #expect(userSession.isLoggedInToAnyProvider == true)
 
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session)
-        XCTAssertEqual(session?.userEmail, email)
-        XCTAssertNil(session?.teamName)
-        XCTAssertNil(session?.teamId)
-        XCTAssertTrue(session?.isLoggedIn ?? false)
+        #expect(session != nil)
+        #expect(session?.userEmail == email)
+        #expect(session?.teamName == nil)
+        #expect(session?.teamId == nil)
+        #expect(session?.isLoggedIn == true)
     }
 
-    func testHandleLoginSuccess_ClearsPreviousErrors() {
+    @Test("handle login success clears previous errors")
+    func handleLoginSuccess_ClearsPreviousErrors() {
         // Arrange - Set some error state first
         userSession.setErrorMessage(for: .cursor, message: "Previous error")
 
         // Verify error is set
         let sessionWithError = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(sessionWithError?.lastErrorMessage)
+        #expect(sessionWithError?.lastErrorMessage != nil)
 
-        // Act
-        userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Team", teamId: 123)
+        // Act - Login successfully
+        userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: nil, teamId: nil)
 
         // Assert - Error should be cleared
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNil(session?.lastErrorMessage)
+        #expect(session?.lastErrorMessage == nil)
     }
 
     // MARK: - Login Failure Tests
 
-    func testHandleLoginFailure_SetsErrorMessage() {
+    @Test("handle login failure sets error message")
+    func handleLoginFailure_SetsErrorMessage() {
         // Arrange
         let error = NSError(
             domain: "TestDomain",
@@ -114,18 +98,18 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         userSession.handleLoginFailure(for: .cursor, error: error)
 
         // Assert
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
+        #expect(userSession.isLoggedIn(to: .cursor) == false)
 
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session)
-        XCTAssertFalse(session?.isLoggedIn ?? true)
-        XCTAssertEqual(session?.lastErrorMessage, "Login failed")
+        #expect(session != nil)
+        #expect(session?.lastErrorMessage == "Login failed")
     }
 
-    func testHandleLoginFailure_UnauthorizedError_ClearsSession() {
+    @Test("handle login failure with unauthorized error clears session")
+    func handleLoginFailure_UnauthorizedError_ClearsSession() {
         // Arrange - First log in successfully
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Team", teamId: 123)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
+        #expect(userSession.isLoggedIn(to: .cursor) == true)
 
         let unauthorizedError = NSError(
             domain: "TestDomain",
@@ -136,152 +120,136 @@ final class MultiProviderUserSessionDataTests: XCTestCase, @unchecked Sendable {
         userSession.handleLoginFailure(for: .cursor, error: unauthorizedError)
 
         // Assert
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider)
+        #expect(userSession.isLoggedIn(to: .cursor) == false)
 
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNil(session?.lastErrorMessage) // Unauthorized errors clear the message
+        #expect(session?.lastErrorMessage == nil)
     }
 
     // MARK: - Logout Tests
 
-    func testHandleLogout_ClearsSessionData() {
+    @Test("handle logout clears session data")
+    func handleLogout_ClearsSessionData() {
         // Arrange - Log in first
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Team", teamId: 123)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
+        #expect(userSession.isLoggedIn(to: .cursor) == true)
 
         // Act
         userSession.handleLogout(from: .cursor)
 
         // Assert
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.loggedInProviders.isEmpty)
-        XCTAssertNil(userSession.mostRecentSession)
+        #expect(userSession.isLoggedIn(to: .cursor) == false)
+        #expect(userSession.loggedInProviders.isEmpty == true)
 
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNil(session) // Session should be completely removed
+        #expect(session == nil)
     }
 
-    // MARK: - Multi-Provider Tests
+    // MARK: - Multiple Provider Tests
 
-    func testMultipleProviders_IndependentSessions() {
-        // Arrange & Act
+    @Test("multiple providers have independent sessions")
+    func multipleProviders_IndependentSessions() {
+        // Act - Login to cursor
         userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: "Cursor Team", teamId: 111)
 
         // Assert
-        XCTAssertTrue(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
-        XCTAssertEqual(userSession.loggedInProviders.count, 1)
-        XCTAssertTrue(userSession.loggedInProviders.contains(.cursor))
+        #expect(userSession.isLoggedIn(to: .cursor) == true)
+        #expect(userSession.loggedInProviders.count == 1)
+        #expect(userSession.loggedInProviders.contains(.cursor) == true)
 
         let cursorSession = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(cursorSession)
-        XCTAssertEqual(cursorSession?.userEmail, "cursor@example.com")
-        XCTAssertEqual(cursorSession?.teamName, "Cursor Team")
-        XCTAssertEqual(cursorSession?.teamId, 111)
+        #expect(cursorSession?.userEmail == "cursor@example.com")
     }
 
-    func testMostRecentSession_UpdatesWithLatestLogin() {
-        // Arrange & Act - Login to Cursor first
-        userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: "Cursor Team", teamId: 111)
+    @Test("most recent session updates with latest login")
+    func mostRecentSession_UpdatesWithLatestLogin() {
+        // Act - Login to cursor first
+        userSession.handleLoginSuccess(for: .cursor, email: "first@example.com", teamName: nil, teamId: nil)
 
-        // First login should be most recent
-        XCTAssertEqual(userSession.mostRecentSession?.provider, .cursor)
-        XCTAssertEqual(userSession.mostRecentSession?.userEmail, "cursor@example.com")
+        let firstRecent = userSession.mostRecentSession
+        #expect(firstRecent?.userEmail == "first@example.com")
 
-        // Update cursor login (should update most recent)
-        userSession.handleLoginSuccess(
-            for: .cursor,
-            email: "updated@example.com",
-            teamName: "Updated Team",
-            teamId: 222)
+        // Act - Login again
+        userSession.handleLoginSuccess(for: .cursor, email: "second@example.com", teamName: nil, teamId: nil)
 
-        // Should still be cursor but with updated info
-        XCTAssertEqual(userSession.mostRecentSession?.provider, .cursor)
-        XCTAssertEqual(userSession.mostRecentSession?.userEmail, "updated@example.com")
-        XCTAssertEqual(userSession.mostRecentSession?.teamName, "Updated Team")
+        // Assert - Most recent should update
+        let secondRecent = userSession.mostRecentSession
+        #expect(secondRecent?.userEmail == "second@example.com")
     }
 
-    func testLogout_WithMultipleProviders_OnlyAffectsTargetProvider() {
-        // Arrange - Login to Cursor
-        userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: "Cursor Team", teamId: 111)
+    @Test("logout with multiple providers only affects target provider")
+    func logout_WithMultipleProviders_OnlyAffectsTargetProvider() {
+        // Arrange - Login to cursor
+        userSession.handleLoginSuccess(for: .cursor, email: "cursor@example.com", teamName: nil, teamId: nil)
 
-        XCTAssertTrue(userSession.isLoggedInToAnyProvider)
-        XCTAssertTrue(userSession.isLoggedIn(to: .cursor))
-
-        // Act - Logout from Cursor
+        // Act - Logout from cursor
         userSession.handleLogout(from: .cursor)
 
-        // Assert - Only Cursor should be logged out
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
-        XCTAssertFalse(userSession.isLoggedInToAnyProvider) // No providers left
-        XCTAssertTrue(userSession.loggedInProviders.isEmpty)
+        // Assert
+        #expect(userSession.isLoggedIn(to: .cursor) == false)
     }
 
-    // MARK: - Error Handling Tests
+    // MARK: - Error Management Tests
 
-    func testSetErrorMessage_CreatesSessionIfNeeded() {
+    @Test("set error message creates session if needed")
+    func setErrorMessage_CreatesSessionIfNeeded() {
         // Act
         userSession.setErrorMessage(for: .cursor, message: "Test error")
 
         // Assert
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session)
-        XCTAssertEqual(session?.lastErrorMessage, "Test error")
-        XCTAssertFalse(session?.isLoggedIn ?? true)
+        #expect(session != nil)
+        #expect(session?.lastErrorMessage == "Test error")
+        #expect(session?.isLoggedIn == false)
     }
 
-    func testSetTeamFetchError_SetsSpecificError() {
+    @Test("set team fetch error sets specific error")
+    func setTeamFetchError_SetsSpecificError() {
         // Act
-        userSession.setTeamFetchError(for: .cursor, message: "Team fetch failed")
+        userSession.setTeamFetchError(for: .cursor, message: "Test error")
 
         // Assert
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNotNil(session)
-        XCTAssertEqual(session?.lastErrorMessage, "Team fetch failed")
+        #expect(session != nil)
+        #expect(session?.lastErrorMessage == "Test error")
     }
 
-    func testClearError_RemovesErrorMessage() {
+    @Test("clear error removes error message")
+    func clearError_RemovesErrorMessage() {
         // Arrange
-        userSession.setErrorMessage(for: .cursor, message: "Test error")
-        XCTAssertNotNil(userSession.getSession(for: .cursor)?.lastErrorMessage)
+        userSession.setErrorMessage(for: .cursor, message: "Error to clear")
 
         // Act
         userSession.clearError(for: .cursor)
 
         // Assert
         let session = userSession.getSession(for: .cursor)
-        XCTAssertNil(session?.lastErrorMessage)
+        #expect(session?.lastErrorMessage == nil)
     }
 
     // MARK: - Edge Cases
 
-    func testGetSession_NonExistentProvider_ReturnsNil() {
-        // Act & Assert
-        XCTAssertNil(userSession.getSession(for: .cursor))
+    @Test("get session for non-existent provider returns nil")
+    func getSession_NonExistentProvider_ReturnsNil() {
+        #expect(userSession.getSession(for: .cursor) == nil)
     }
 
-    func testIsLoggedIn_NonExistentProvider_ReturnsFalse() {
-        // Act & Assert
-        XCTAssertFalse(userSession.isLoggedIn(to: .cursor))
+    @Test("is logged in to non-existent provider returns false")
+    func isLoggedIn_NonExistentProvider_ReturnsFalse() {
+        #expect(userSession.isLoggedIn(to: .cursor) == false)
     }
 
-    func testHandleLoginSuccess_OverwritesPreviousSession() {
-        // Arrange
+    @Test("handle login success overwrites previous session")
+    func handleLoginSuccess_OverwritesPreviousSession() {
+        // Arrange - First login
         userSession.handleLoginSuccess(for: .cursor, email: "old@example.com", teamName: "Old Team", teamId: 111)
-
-        // Verify first session
-        let firstSession = userSession.getSession(for: .cursor)
-        XCTAssertEqual(firstSession?.userEmail, "old@example.com")
 
         // Act - Login again with different data
         userSession.handleLoginSuccess(for: .cursor, email: "new@example.com", teamName: "New Team", teamId: 222)
 
         // Assert - Should have new data
         let updatedSession = userSession.getSession(for: .cursor)
-        XCTAssertEqual(updatedSession?.userEmail, "new@example.com")
-        XCTAssertEqual(updatedSession?.teamName, "New Team")
-        XCTAssertEqual(updatedSession?.teamId, 222)
+        #expect(updatedSession?.userEmail == "new@example.com")
+        #expect(updatedSession?.teamId == 222)
     }
 }

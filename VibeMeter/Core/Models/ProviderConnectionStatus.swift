@@ -76,17 +76,19 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
     public var displayColor: Color {
         switch self {
         case .disconnected:
-            .gray
-        case .connecting, .syncing:
+            .secondary
+        case .connecting:
+            .orange
+        case .syncing:
             .blue
         case .connected:
             .green
         case .error:
             .red
         case .rateLimited:
-            .orange
-        case .stale:
             .yellow
+        case .stale:
+            .orange
         }
     }
 
@@ -95,16 +97,18 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
         switch self {
         case .disconnected:
             "circle"
-        case .connecting, .syncing:
-            "arrow.2.circlepath"
+        case .connecting:
+            "circle.dotted"
+        case .syncing:
+            "arrow.triangle.2.circlepath"
         case .connected:
-            "checkmark.circle.fill"
+            "circle.fill"
         case .error:
-            "exclamationmark.triangle.fill"
+            "exclamationmark.circle.fill"
         case .rateLimited:
             "clock.fill"
         case .stale:
-            "exclamationmark.circle"
+            "clock"
         }
     }
 
@@ -137,17 +141,17 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
     public var shortDescription: String {
         switch self {
         case .disconnected:
-            "Offline"
+            "Disconnected"
         case .connecting:
             "Connecting"
         case .syncing:
             "Syncing"
         case .connected:
-            "Online"
+            "Connected"
         case .error:
             "Error"
         case .rateLimited:
-            "Limited"
+            "Rate Limited"
         case .stale:
             "Stale"
         }
@@ -155,6 +159,16 @@ public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
 
     /// Whether this status indicates an active operation.
     public var isActive: Bool {
+        switch self {
+        case .connecting, .syncing:
+            true
+        default:
+            false
+        }
+    }
+
+    /// Whether this status should show a progress indicator.
+    public var shouldShowProgress: Bool {
         switch self {
         case .connecting, .syncing:
             true

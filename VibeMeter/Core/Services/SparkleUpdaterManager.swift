@@ -198,7 +198,10 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
         if let error = error as NSError? {
             Self.staticLogger
                 .error(
-                    "Update cycle finished with error - Domain: \(error.domain, privacy: .public), Code: \(error.code, privacy: .public), Description: \(error.localizedDescription, privacy: .public)")
+                    """
+                    Update cycle finished with error - Domain: \(error.domain, privacy: .public), \
+                    Code: \(error.code, privacy: .public), Description: \(error.localizedDescription, privacy: .public)
+                    """)
 
             // Check if it's a "no update found" error - this is normal and shouldn't be logged as an error
             if error.domain == "SUSparkleErrorDomain", error.code == 1001 {
@@ -378,7 +381,7 @@ public class SparkleUpdaterManager: NSObject, SPUUpdaterDelegate, SPUStandardUse
 
             case "LATER":
                 Self.staticLogger.info("User chose to update later from notification")
-                // Do nothing - user will be reminded later
+            // Do nothing - user will be reminded later
 
             default:
                 Self.staticLogger.debug("Unknown notification action: \(actionIdentifier)")

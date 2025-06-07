@@ -1,0 +1,25 @@
+// CI-specific build settings to improve test stability
+
+// Disable code coverage to speed up tests
+CLANG_ENABLE_CODE_COVERAGE = NO
+
+// Disable parallelization that can cause issues
+SWIFT_COMPILATION_MODE = wholemodule
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+
+// Disable sanitizers that can cause hangs
+CLANG_ADDRESS_SANITIZER = NO
+CLANG_THREAD_SANITIZER = NO
+CLANG_UNDEFINED_BEHAVIOR_SANITIZER = NO
+
+// Test configuration
+ENABLE_TESTABILITY = YES
+TEST_RUNNER_SUPPORTS_INTERRUPTION_REQUESTS = NO
+
+// Reduce diagnostic output
+CLANG_WARN_DOCUMENTATION_COMMENTS = NO
+RUN_DOCUMENTATION_COMPILER = NO
+
+// Speed optimizations
+COMPILER_INDEX_STORE_ENABLE = NO
+SWIFT_INDEX_STORE_ENABLE = NO

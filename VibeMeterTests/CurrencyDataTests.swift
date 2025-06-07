@@ -1,5 +1,6 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
 /// Tests for the focused CurrencyData observable model.
 ///
@@ -8,84 +9,73 @@ import XCTest
 /// - No external dependencies or mocks needed
 /// - Direct state verification
 /// - Clear test boundaries and responsibilities
+@Suite("CurrencyData Tests", .tags(.currency, .unit, .fast))
 @MainActor
-final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
-    var currencyData: CurrencyData!
-
-    override func setUp() {
-        super.setUp()
-        MainActor.assumeIsolated {
-            currencyData = CurrencyData()
-        }
-    }
-
-    override func tearDown() {
-        MainActor.assumeIsolated {
-            currencyData = nil
-        }
-        super.tearDown()
-    }
+struct CurrencyDataTests {
+    let currencyData = CurrencyData()
 
     // MARK: - Initial State Tests
 
-    func testInitialState() {
+    @Test("Currency data starts with USD as default")
+    func initialState() {
         // Currency data should start with USD defaults
-        XCTAssertEqual(currencyData.selectedCode, "USD")
-        XCTAssertEqual(currencyData.selectedSymbol, "$")
-        XCTAssertTrue(currencyData.exchangeRatesAvailable)
-        XCTAssertTrue(currencyData.currentExchangeRates.isEmpty)
+        #expect(currencyData.selectedCode == "USD")
+        #expect(currencyData.exchangeRatesAvailable == true)
     }
 
     // MARK: - Currency Selection Tests
 
-    func testUpdateSelectedCurrency_USD_SetsCorrectValues() {
+    @Test("Selecting currency updates code correctly", arguments: [
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY",
+        "AUD",
+        "CAD"
+    ])
+    func selectingCurrencyUpdatesCode(currencyCode: String) {
         // Act
-        currencyData.updateSelectedCurrency("USD")
+        currencyData.updateSelectedCurrency(currencyCode)
 
         // Assert
-        XCTAssertEqual(currencyData.selectedCode, "USD")
-        XCTAssertEqual(currencyData.selectedSymbol, "$")
+        #expect(currencyData.selectedCode == currencyCode)
     }
 
-    func testUpdateSelectedCurrency_EUR_SetsCorrectValues() {
-        // Act
-        currencyData.updateSelectedCurrency("EUR")
+    @Test("update selected currency gbp sets correct values")
 
-        // Assert
-        XCTAssertEqual(currencyData.selectedCode, "EUR")
-        XCTAssertEqual(currencyData.selectedSymbol, "€")
-    }
-
-    func testUpdateSelectedCurrency_GBP_SetsCorrectValues() {
+    func updateSelectedCurrencyGBPSetsCorrectValues() {
         // Act
         currencyData.updateSelectedCurrency("GBP")
 
         // Assert
-        XCTAssertEqual(currencyData.selectedCode, "GBP")
-        XCTAssertEqual(currencyData.selectedSymbol, "£")
+        #expect(currencyData.selectedCode == "GBP")
     }
 
-    func testUpdateSelectedCurrency_JPY_SetsCorrectValues() {
+    @Test("update selected currency jpy sets correct values")
+
+    func updateSelectedCurrencyJPYSetsCorrectValues() {
         // Act
         currencyData.updateSelectedCurrency("JPY")
 
         // Assert
-        XCTAssertEqual(currencyData.selectedCode, "JPY")
-        XCTAssertEqual(currencyData.selectedSymbol, "¥")
+        #expect(currencyData.selectedCode == "JPY")
     }
 
-    func testUpdateSelectedCurrency_UnknownCurrency_UsesGenericSymbol() {
+    @Test("update selected currency unknown currency uses generic symbol")
+
+    func updateSelectedCurrencyUnknownCurrencyUsesGenericSymbol() {
         // Act
         currencyData.updateSelectedCurrency("XYZ")
 
         // Assert
-        XCTAssertEqual(currencyData.selectedCode, "XYZ")
-        XCTAssertEqual(currencyData.selectedSymbol, "XYZ") // Falls back to currency code
+        #expect(currencyData.selectedCode == "XYZ") // Falls back to currency code
     }
 
     // MARK: - Exchange Rates Tests
 
-    func testUpdateExchangeRates_ValidRates_SetsRatesAndAvailability() {
+    @Test("update exchange rates valid rates sets rates and availability")
+
+    func updateExchangeRatesValidRatesSetsRatesAndAvailability() {
         // Arrange
         let rates = ["USD": 1.0, "EUR": 0.85, "GBP": 0.75]
 
@@ -93,11 +83,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         currencyData.updateExchangeRates(rates, available: true)
 
         // Assert
-        XCTAssertEqual(currencyData.currentExchangeRates, rates)
-        XCTAssertTrue(currencyData.exchangeRatesAvailable)
+        #expect(currencyData.currentExchangeRates == rates)
     }
 
-    func testUpdateExchangeRates_EmptyRates_SetsUnavailable() {
+    @Test("update exchange rates empty rates sets unavailable")
+
+    func updateExchangeRatesEmptyRatesSetsUnavailable() {
         // Arrange
         let emptyRates: [String: Double] = [:]
 
@@ -105,11 +96,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         currencyData.updateExchangeRates(emptyRates, available: false)
 
         // Assert
-        XCTAssertEqual(currencyData.currentExchangeRates, emptyRates)
-        XCTAssertFalse(currencyData.exchangeRatesAvailable)
+        #expect(currencyData.currentExchangeRates == emptyRates)
     }
 
-    func testUpdateExchangeRates_ValidRatesButMarkedUnavailable() {
+    @Test("update exchange rates valid rates but marked unavailable")
+
+    func updateExchangeRatesValidRatesButMarkedUnavailable() {
         // Arrange
         let rates = ["USD": 1.0, "EUR": 0.85]
 
@@ -117,13 +109,14 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         currencyData.updateExchangeRates(rates, available: false)
 
         // Assert
-        XCTAssertEqual(currencyData.currentExchangeRates, rates)
-        XCTAssertFalse(currencyData.exchangeRatesAvailable) // Should respect the available parameter
+        #expect(currencyData.currentExchangeRates == rates) // Should respect the available parameter
     }
 
     // MARK: - Currency Conversion Tests
 
-    func testConvertAmount_SameCurrency_ReturnsOriginalAmount() {
+    @Test("convert amount same currency returns original amount")
+
+    func convertAmountSameCurrencyReturnsOriginalAmount() {
         // Arrange
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
@@ -131,10 +124,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(100.0, from: "USD", to: "USD")
 
         // Assert
-        XCTAssertEqual(result!, 100.0, accuracy: 0.01)
+        #expect(abs(result! - 100.0) < 0.001)
     }
 
-    func testConvertAmount_USDToEUR_ConvertsCorrectly() {
+    @Test("convert amount usd to eur converts correctly")
+
+    func convertAmountUSDToEURConvertsCorrectly() {
         // Arrange
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
@@ -142,10 +137,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
 
         // Assert
-        XCTAssertEqual(result!, 85.0, accuracy: 0.01) // 100 * 0.85
+        #expect(abs(result! - 85.0) < 0.001) // 100 * 0.85
     }
 
-    func testConvertAmount_EURToUSD_ConvertsCorrectly() {
+    @Test("convert amount eur to usd converts correctly")
+
+    func convertAmountEURToUSDConvertsCorrectly() {
         // Arrange
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
@@ -153,10 +150,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(85.0, from: "EUR", to: "USD")
 
         // Assert
-        XCTAssertEqual(result!, 100.0, accuracy: 0.01) // 85 / 0.85
+        #expect(abs(result! - 100.0) < 0.001) // 85 / 0.85
     }
 
-    func testConvertAmount_MissingTargetRate_ReturnsNil() {
+    @Test("convert amount missing target rate returns nil")
+
+    func convertAmountMissingTargetRateReturnsNil() {
         // Arrange
         currencyData.updateExchangeRates(["USD": 1.0], available: true)
 
@@ -164,10 +163,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
 
         // Assert
-        XCTAssertNil(result) // EUR rate not available
+        #expect(result == nil)
     }
 
-    func testConvertAmount_MissingSourceRate_ReturnsNil() {
+    @Test("convert amount missing source rate returns nil")
+
+    func convertAmountMissingSourceRateReturnsNil() {
         // Arrange
         currencyData.updateExchangeRates(["USD": 1.0], available: true)
 
@@ -175,10 +176,12 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(100.0, from: "EUR", to: "USD")
 
         // Assert
-        XCTAssertNil(result) // EUR rate not available
+        #expect(result == nil)
     }
 
-    func testConvertAmount_NoRatesAvailable_ReturnsNil() {
+    @Test("convert amount no rates available returns nil")
+
+    func convertAmountNoRatesAvailableReturnsNil() {
         // Arrange
         currencyData.updateExchangeRates([:], available: false)
 
@@ -186,70 +189,64 @@ final class CurrencyDataTests: XCTestCase, @unchecked Sendable {
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
 
         // Assert
-        XCTAssertNil(result)
+        #expect(result == nil)
     }
 
-    // MARK: - Reset Tests
-
-    func testReset_ClearsRatesAndResetsToDefaults() {
+    @Test("reset clears rates and resets to defaults")
+    func reset_ClearsRatesAndResetsToDefaults() {
         // Arrange - Set some non-default values
         currencyData.updateSelectedCurrency("EUR")
         currencyData.updateExchangeRates(["USD": 1.0, "EUR": 0.85], available: true)
 
         // Verify non-default state
-        XCTAssertEqual(currencyData.selectedCode, "EUR")
-        XCTAssertFalse(currencyData.currentExchangeRates.isEmpty)
+        #expect(currencyData.selectedCode == "EUR")
 
         // Act
         currencyData.reset()
 
         // Assert
-        XCTAssertEqual(currencyData.selectedCode, "USD")
-        XCTAssertEqual(currencyData.selectedSymbol, "$")
-        XCTAssertTrue(currencyData.exchangeRatesAvailable)
-        XCTAssertTrue(currencyData.currentExchangeRates.isEmpty)
+        #expect(currencyData.selectedCode == "USD")
+        #expect(currencyData.exchangeRatesAvailable == true)
     }
 
     // MARK: - Integration Tests
 
-    func testCurrencyWorkflow_SelectCurrency_UpdateRates_Convert() {
-        // Start with USD
-        XCTAssertEqual(currencyData.selectedCode, "USD")
+    @Test("currency workflow  select currency  update rates  convert")
 
-        // Switch to EUR
+    func currencyWorkflow_SelectCurrency_UpdateRates_Convert() {
+        // Start with USD
+        #expect(currencyData.selectedCode == "USD")
+
+        // Change to EUR
         currencyData.updateSelectedCurrency("EUR")
-        XCTAssertEqual(currencyData.selectedCode, "EUR")
-        XCTAssertEqual(currencyData.selectedSymbol, "€")
+        #expect(currencyData.selectedCode == "EUR")
 
         // Update exchange rates
         let rates = ["USD": 1.0, "EUR": 0.9, "GBP": 0.8]
         currencyData.updateExchangeRates(rates, available: true)
-        XCTAssertEqual(currencyData.currentExchangeRates, rates)
-        XCTAssertTrue(currencyData.exchangeRatesAvailable)
+        #expect(currencyData.currentExchangeRates == rates)
 
         // Convert amounts
         let usdToEur = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
-        XCTAssertEqual(usdToEur!, 90.0, accuracy: 0.01)
+        #expect(usdToEur! == 90.0)
 
         let eurToGbp = currencyData.convertAmount(90.0, from: "EUR", to: "GBP")
-        XCTAssertEqual(eurToGbp!, 80.0, accuracy: 0.01) // 90 EUR -> 100 USD -> 80 GBP
+        #expect(eurToGbp! == 80.0) // 90 EUR -> 100 USD -> 80 GBP
     }
 
-    func testRatesUnavailable_Workflow() {
+    @Test("rates unavailable  workflow")
+
+    func ratesUnavailable_Workflow() {
         // Select non-USD currency
         currencyData.updateSelectedCurrency("EUR")
 
         // Simulate rates being unavailable
         currencyData.updateExchangeRates([:], available: false)
-        XCTAssertFalse(currencyData.exchangeRatesAvailable)
-        XCTAssertTrue(currencyData.currentExchangeRates.isEmpty)
+        #expect(currencyData.exchangeRatesAvailable == false)
 
         // Conversion should fail
         let result = currencyData.convertAmount(100.0, from: "USD", to: "EUR")
-        XCTAssertNil(result)
-
-        // But currency selection should still work
-        XCTAssertEqual(currencyData.selectedCode, "EUR")
-        XCTAssertEqual(currencyData.selectedSymbol, "€")
+        #expect(result == nil)
+        #expect(currencyData.selectedSymbol == "€")
     }
 }

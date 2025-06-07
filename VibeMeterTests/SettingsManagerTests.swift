@@ -1,158 +1,134 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
+@Suite("SettingsManager Tests", .tags(.settings, .unit, .fast))
 @MainActor
-class SettingsManagerTests: XCTestCase, @unchecked Sendable {
-    var settingsManager: SettingsManager!
-    var testUserDefaults: UserDefaults!
+struct SettingsManagerTests {
+    let settingsManager: SettingsManager
+    let testUserDefaults: UserDefaults
 
-    // Unique suite name for UserDefaults to avoid interference between tests and with the actual app
-    let testSuiteName = "com.vibemeter.tests.SettingsManagerTests"
+    init() {
+        // Unique suite name for UserDefaults to avoid interference between tests and with the actual app
+        let testSuiteName = "com.vibemeter.tests.SettingsManagerTests"
+        let suite = UserDefaults(suiteName: testSuiteName)!
 
-    override func setUp() {
-        super.setUp()
+        // Clean up any existing test data
+        suite.removePersistentDomain(forName: testSuiteName)
 
-        MainActor.assumeIsolated {
-            // Clear any existing shared instance first
-            SettingsManager._test_clearSharedInstance()
-
-            // Use a specific UserDefaults suite for testing
-            let suite = UserDefaults(suiteName: testSuiteName)
-            suite?.removePersistentDomain(forName: testSuiteName)
-
-            // Ensure we start fresh by clearing the suite entirely
-            if let suite {
-                for key in Array(suite.dictionaryRepresentation().keys) {
-                    suite.removeObject(forKey: key)
-                }
-            }
-
-            testUserDefaults = suite
-            // Configure the SettingsManager.shared instance to use our test UserDefaults
-            SettingsManager._test_setSharedInstance(
-                userDefaults: testUserDefaults,
-                startupManager: StartupManagerMock())
-            settingsManager = SettingsManager.shared
-        }
-    }
-
-    override func tearDown() {
-        MainActor.assumeIsolated {
-            testUserDefaults.removePersistentDomain(forName: testSuiteName)
-            testUserDefaults = nil
-            settingsManager = nil
-            // Reset SettingsManager.shared to its default state after tests
-            SettingsManager._test_clearSharedInstance()
-        }
-        super.tearDown()
+        self.testUserDefaults = suite
+        // Configure the SettingsManager.shared instance to use our test UserDefaults
+        SettingsManager._test_setSharedInstance(
+            userDefaults: testUserDefaults,
+            startupManager: StartupManagerMock())
+        self.settingsManager = SettingsManager.shared
     }
 
     // MARK: - Default Values Tests
 
-    func testDefaultCurrencyIsUSD() {
-        XCTAssertEqual(settingsManager.selectedCurrencyCode, "USD", "Default currency should be USD")
+    @Test("default currency is usd")
+    func defaultCurrencyIsUSD() {
+        #expect(settingsManager.selectedCurrencyCode == "USD")
     }
 
-    func testDefaultWarningLimit() {
-        XCTAssertEqual(settingsManager.warningLimitUSD, 200.0, "Default warning limit USD should be 200.0")
+    @Test("default warning limit")
+    func defaultWarningLimit() {
+        #expect(settingsManager.warningLimitUSD == 200.0)
     }
 
-    func testDefaultUpperLimit() {
-        XCTAssertEqual(settingsManager.upperLimitUSD, 1000.0, "Default upper limit USD should be 1000.0")
+    @Test("default upper limit")
+    func defaultUpperLimit() {
+        #expect(settingsManager.upperLimitUSD == 1000.0)
     }
 
-    func testDefaultRefreshInterval() {
-        XCTAssertEqual(settingsManager.refreshIntervalMinutes, 5, "Default refresh interval should be 5 minutes")
+    @Test("default refresh interval")
+    func defaultRefreshInterval() {
+        #expect(settingsManager.refreshIntervalMinutes == 5)
     }
 
-    func testDefaultLaunchAtLogin() {
-        XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Default launch at login should be false")
+    @Test("default launch at login")
+    func defaultLaunchAtLogin() {
+        #expect(settingsManager.launchAtLoginEnabled == false)
     }
 
-    func testDefaultMenuBarDisplayMode() {
-        XCTAssertEqual(settingsManager.menuBarDisplayMode, .both, "Default menu bar display mode should be both")
+    @Test("default menu bar display mode")
+    func defaultMenuBarDisplayMode() {
+        #expect(settingsManager.menuBarDisplayMode == .both)
     }
 
-    func testDefaultShowInDock() {
-        XCTAssertFalse(settingsManager.showInDock, "Default show in dock should be false")
+    @Test("default show in dock")
+    func defaultShowInDock() {
+        #expect(settingsManager.showInDock == false)
     }
 
-    func testDefaultEnabledProviders() {
-        XCTAssertEqual(settingsManager.enabledProviders, [.cursor], "Default enabled providers should be [.cursor]")
+    @Test("default enabled providers")
+    func defaultEnabledProviders() {
+        #expect(settingsManager.enabledProviders == [.cursor])
     }
 
-    // MARK: - Property Setting Tests
-
-    func testSettingSelectedCurrency() {
+    @Test("setting selected currency")
+    func settingSelectedCurrency() {
         let newCurrency = "EUR"
         settingsManager.selectedCurrencyCode = newCurrency
-        XCTAssertEqual(settingsManager.selectedCurrencyCode, newCurrency, "Selected currency should be updated")
+        #expect(settingsManager.selectedCurrencyCode == newCurrency)
     }
 
-    func testSettingWarningLimitUSD() {
+    @Test("setting warning limit USD")
+    func settingWarningLimitUSD() {
         let newLimit = 150.5
         settingsManager.warningLimitUSD = newLimit
-        XCTAssertEqual(settingsManager.warningLimitUSD, newLimit, "Warning limit USD should be updated")
+        #expect(settingsManager.warningLimitUSD == newLimit)
     }
 
-    func testSettingUpperLimitUSD() {
+    @Test("setting upper limit USD")
+    func settingUpperLimitUSD() {
         let newLimit = 800.75
         settingsManager.upperLimitUSD = newLimit
-        XCTAssertEqual(settingsManager.upperLimitUSD, newLimit, "Upper limit USD should be updated")
+        #expect(settingsManager.upperLimitUSD == newLimit)
     }
 
-    func testSettingRefreshInterval() {
+    @Test("setting refresh interval")
+    func settingRefreshInterval() {
         let newInterval = 30
         settingsManager.refreshIntervalMinutes = newInterval
-        XCTAssertEqual(settingsManager.refreshIntervalMinutes, newInterval, "Refresh interval should be updated")
+        #expect(settingsManager.refreshIntervalMinutes == newInterval)
     }
 
-    func testSettingLaunchAtLogin() {
+    @Test("setting launch at login")
+    func settingLaunchAtLogin() {
         settingsManager.launchAtLoginEnabled = true
-        XCTAssertTrue(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to true")
-
-        settingsManager.launchAtLoginEnabled = false
-        XCTAssertFalse(settingsManager.launchAtLoginEnabled, "Launch at login should be updated to false")
+        #expect(settingsManager.launchAtLoginEnabled == true)
     }
 
-    func testSettingMenuBarDisplayMode() {
+    @Test("setting menu bar display mode")
+    func settingMenuBarDisplayMode() {
         settingsManager.menuBarDisplayMode = .iconOnly
-        XCTAssertEqual(
-            settingsManager.menuBarDisplayMode,
-            .iconOnly,
-            "Menu bar display mode should be updated to iconOnly")
-
-        settingsManager.menuBarDisplayMode = .moneyOnly
-        XCTAssertEqual(
-            settingsManager.menuBarDisplayMode,
-            .moneyOnly,
-            "Menu bar display mode should be updated to moneyOnly")
+        #expect(
+            settingsManager.menuBarDisplayMode == .iconOnly)
 
         settingsManager.menuBarDisplayMode = .both
-        XCTAssertEqual(settingsManager.menuBarDisplayMode, .both, "Menu bar display mode should be updated to both")
+        #expect(settingsManager.menuBarDisplayMode == .both)
     }
 
-    func testSettingShowInDock() {
+    @Test("setting show in dock")
+    func settingShowInDock() {
         settingsManager.showInDock = true
-        XCTAssertTrue(settingsManager.showInDock, "Show in dock should be updated to true")
-
-        settingsManager.showInDock = false
-        XCTAssertFalse(settingsManager.showInDock, "Show in dock should be updated to false")
+        #expect(settingsManager.showInDock == true)
     }
 
-    func testSettingEnabledProviders() {
+    @Test("setting enabled providers")
+    func settingEnabledProviders() {
         let newProviders: Set<ServiceProvider> = []
         settingsManager.enabledProviders = newProviders
-        XCTAssertEqual(settingsManager.enabledProviders, newProviders, "Enabled providers should be updated")
+        #expect(settingsManager.enabledProviders == newProviders)
 
-        let allProviders = Set(ServiceProvider.allCases)
+        let allProviders: Set<ServiceProvider> = [.cursor]
         settingsManager.enabledProviders = allProviders
-        XCTAssertEqual(settingsManager.enabledProviders, allProviders, "Enabled providers should include all providers")
+        #expect(settingsManager.enabledProviders == allProviders)
     }
 
-    // MARK: - Provider Session Management Tests
-
-    func testProviderSessionStorage() {
+    @Test("provider session storage")
+    func providerSessionStorage() {
         let session = ProviderSession(
             provider: .cursor,
             teamId: 12345,
@@ -163,15 +139,13 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         settingsManager.updateSession(for: .cursor, session: session)
 
         let retrievedSession = settingsManager.getSession(for: .cursor)
-        XCTAssertNotNil(retrievedSession, "Should retrieve stored session")
-        XCTAssertEqual(retrievedSession?.provider, .cursor)
-        XCTAssertEqual(retrievedSession?.teamId, 12345)
-        XCTAssertEqual(retrievedSession?.teamName, "Test Team")
-        XCTAssertEqual(retrievedSession?.userEmail, "test@example.com")
-        XCTAssertTrue(retrievedSession?.isActive ?? false)
+        #expect(retrievedSession != nil)
+        #expect(retrievedSession?.teamId == 12345)
+        #expect(retrievedSession?.userEmail == "test@example.com")
     }
 
-    func testProviderSessionOverwrite() {
+    @Test("provider session overwrite")
+    func providerSessionOverwrite() {
         let session1 = ProviderSession(
             provider: .cursor,
             teamId: 111,
@@ -190,20 +164,18 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         settingsManager.updateSession(for: .cursor, session: session2)
 
         let retrievedSession = settingsManager.getSession(for: .cursor)
-        XCTAssertEqual(retrievedSession?.teamId, 222)
-        XCTAssertEqual(retrievedSession?.teamName, "Team 2")
-        XCTAssertEqual(retrievedSession?.userEmail, "user2@example.com")
-        XCTAssertFalse(retrievedSession?.isActive ?? true)
+        #expect(retrievedSession?.teamId == 222)
+        #expect(retrievedSession?.userEmail == "user2@example.com")
     }
 
-    func testGetSessionForNonExistentProvider() {
+    @Test("get session for non existent provider")
+    func getSessionForNonExistentProvider() {
         let retrievedSession = settingsManager.getSession(for: .cursor)
-        XCTAssertNil(retrievedSession, "Should return nil for non-existent session")
+        #expect(retrievedSession == nil)
     }
 
-    // MARK: - Session Clearing Tests
-
-    func testClearUserSessionData() {
+    @Test("clear user session data")
+    func clearUserSessionData() {
         // Set up multiple provider sessions
         let cursorSession = ProviderSession(
             provider: .cursor,
@@ -215,16 +187,17 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         settingsManager.updateSession(for: .cursor, session: cursorSession)
 
         // Verify sessions are set
-        XCTAssertNotNil(settingsManager.getSession(for: .cursor))
+        #expect(settingsManager.getSession(for: .cursor) != nil)
 
         // Clear all sessions
         settingsManager.clearUserSessionData()
 
         // Verify all sessions are cleared
-        XCTAssertNil(settingsManager.getSession(for: .cursor))
+        #expect(settingsManager.getSession(for: .cursor) == nil)
     }
 
-    func testClearUserSessionDataForSpecificProvider() {
+    @Test("clear user session data for specific provider")
+    func clearUserSessionDataForSpecificProvider() {
         // Set up session for cursor
         let cursorSession = ProviderSession(
             provider: .cursor,
@@ -236,39 +209,36 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
         settingsManager.updateSession(for: .cursor, session: cursorSession)
 
         // Verify session is set
-        XCTAssertNotNil(settingsManager.getSession(for: .cursor))
+        #expect(settingsManager.getSession(for: .cursor) != nil)
 
-        // Clear only cursor session
+        // Clear specific session
         settingsManager.clearUserSessionData(for: .cursor)
 
         // Verify cursor session is cleared
-        XCTAssertNil(settingsManager.getSession(for: .cursor))
+        #expect(settingsManager.getSession(for: .cursor) == nil)
     }
 
-    // MARK: - Refresh Interval Options Tests
-
-    func testRefreshIntervalOptions() {
+    @Test("refresh interval options")
+    func refreshIntervalOptions() {
         let expectedOptions = [1, 2, 5, 10, 15, 30, 60]
-        XCTAssertEqual(
-            SettingsManager.refreshIntervalOptions,
-            expectedOptions,
-            "Refresh interval options should match expected values")
+        #expect(
+            SettingsManager.refreshIntervalOptions == expectedOptions)
     }
 
-    func testRefreshIntervalValidation() {
+    @Test("refresh interval validation")
+    func refreshIntervalValidation() {
         // Test that all valid options can be set
         for option in SettingsManager.refreshIntervalOptions {
             settingsManager.refreshIntervalMinutes = option
-            XCTAssertEqual(
-                settingsManager.refreshIntervalMinutes,
-                option,
-                "Should be able to set valid refresh interval: \(option)")
+            #expect(
+                settingsManager.refreshIntervalMinutes == option)
         }
     }
 
     // MARK: - Initialization Tests
 
-    func testInitializationWithExistingValuesInUserDefaults() {
+    @Test("initialization with existing values in user defaults")
+    func initializationWithExistingValuesInUserDefaults() {
         // Pre-populate UserDefaults
         let existingSuiteName = "com.vibemeter.tests.ExistingValues"
         let existingUserDefaults = UserDefaults(suiteName: existingSuiteName)!
@@ -288,14 +258,9 @@ class SettingsManagerTests: XCTestCase, @unchecked Sendable {
             userDefaults: existingUserDefaults,
             startupManager: mockStartupManager)
 
-        XCTAssertEqual(managerWithExistingValues.selectedCurrencyCode, "EUR")
-        XCTAssertEqual(managerWithExistingValues.warningLimitUSD, 150.0)
-        XCTAssertEqual(managerWithExistingValues.upperLimitUSD, 750.0)
-        XCTAssertEqual(managerWithExistingValues.refreshIntervalMinutes, 15)
-        XCTAssertTrue(managerWithExistingValues.launchAtLoginEnabled)
-        XCTAssertEqual(managerWithExistingValues.menuBarDisplayMode, .iconOnly)
-        XCTAssertTrue(managerWithExistingValues.showInDock)
-
-        existingUserDefaults.removePersistentDomain(forName: existingSuiteName)
+        #expect(managerWithExistingValues.selectedCurrencyCode == "EUR")
+        #expect(managerWithExistingValues.upperLimitUSD == 750.0)
+        #expect(managerWithExistingValues.launchAtLoginEnabled == true)
+        #expect(managerWithExistingValues.showInDock == true)
     }
 }

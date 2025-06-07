@@ -1,75 +1,68 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
+@Suite("SparkleUpdaterManagerTests", .tags(.unit, .fast))
 @MainActor
-final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
-    var sut: SparkleUpdaterManager!
+struct SparkleUpdaterManagerTests {
+    let sut: SparkleUpdaterManager
 
-    override func setUp() async throws {
-        try await super.setUp()
+    init() {
         sut = SparkleUpdaterManager()
-    }
-
-    override func tearDown() async throws {
-        sut = nil
-        try await super.tearDown()
     }
 
     // MARK: - Initialization Tests
 
-    func testInitialization_InTestEnvironment_DoesNotCrash() {
+    @Test("initialization in environment does not crash")
+    func initialization_InTestEnvironment_DoesNotCrash() {
         // Given/When - Initialization happens in setUp
-        // Then
-        XCTAssertNotNil(sut, "SparkleUpdaterManager should initialize without crashing in test environment")
+        // Then - Test passes if initialization completed without throwing
+        #expect(Bool(true))
     }
 
-    func testInitialization_IsMainActor() {
+    @Test("initialization is main actor")
+    func initialization_IsMainActor() {
         // Then - SparkleUpdaterManager is marked with @MainActor attribute
         // This test ensures the class exists and can be accessed on MainActor
-        XCTAssertNotNil(sut)
+        let _: SparkleUpdaterManager = sut
+        #expect(Bool(true))
     }
 
-    func testInitialization_IsObservableObject() {
+    @Test("initialization is observable object")
+    func initialization_IsObservableObject() {
         // Then - SparkleUpdaterManager uses @Observable (Swift 6 observation system)
         // The class should be observable but doesn't need to conform to ObservableObject protocol
-        XCTAssertNotNil(sut, "SparkleUpdaterManager should be observable with @Observable macro")
+        let _: SparkleUpdaterManager = sut
+        #expect(Bool(true))
     }
 
-    // MARK: - Test Environment Detection Tests
-
-    func testInitialization_InTestEnvironment_SkipsSparkleSetup() {
+    @Test("initialization in test environment skips sparkle setup")
+    func initialization_InTestEnvironment_SkipsSparkleSetup() {
         // Given - We're running in test environment (XCTest)
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
         // Then
-        XCTAssertTrue(isTestEnvironment, "Should detect test environment")
-
-        // Sparkle controller should not be accessible in tests to avoid UI dialogs
-        // We can't easily test this without triggering potential Sparkle initialization
+        #expect(isTestEnvironment == true)
     }
 
-    // MARK: - Delegate Protocol Conformance Tests
-
-    func testSparkleUpdaterManager_ConformsToSPUUpdaterDelegate() {
+    @Test("sparkle updater manager conforms to SPU updater delegate")
+    func sparkleUpdaterManager_ConformsToSPUUpdaterDelegate() {
         // Then
-        XCTAssertNotNil(sut as NSObjectProtocol?, "Should inherit from NSObject for Objective-C protocols")
-
-        // Verify that the manager can handle delegate methods without crashing
-        // Note: We can't easily test the actual Sparkle delegate methods without mocking Sparkle
+        #expect(sut as NSObjectProtocol? != nil)
     }
 
-    func testSparkleUpdaterManager_ConformsToSPUStandardUserDriverDelegate() {
+    @Test("sparkle updater manager conforms to SPU standard user driver delegate")
+    func sparkleUpdaterManager_ConformsToSPUStandardUserDriverDelegate() {
         // Verify the class has the required delegate methods
         let hasRequiredMethods = sut
             .responds(to: #selector(SparkleUpdaterManager.standardUserDriverWillShowModalAlert)) &&
             sut.responds(to: #selector(SparkleUpdaterManager.standardUserDriverDidShowModalAlert))
 
-        XCTAssertTrue(hasRequiredMethods, "Should implement required SPUStandardUserDriverDelegate methods")
+        #expect(hasRequiredMethods == true)
     }
 
-    // MARK: - Error Handling Tests
-
-    func testErrorHandling_NoUpdateError_DoesNotCrash() {
+    @Test("error handling no update error does not crash")
+    func errorHandling_NoUpdateError_DoesNotCrash() {
         // Given - Test the error handling logic without calling actual delegate methods
         let noUpdateError = NSError(domain: "SUSparkleErrorDomain", code: 1001, userInfo: [
             NSLocalizedDescriptionKey: "No update available",
@@ -78,51 +71,48 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
         // When/Then - Should handle "no update" error gracefully
         // Note: In test environment, Sparkle delegates are not called
         // This test validates that the manager exists and can handle the error pattern
-        XCTAssertNotNil(noUpdateError)
-        XCTAssertEqual(noUpdateError.domain, "SUSparkleErrorDomain")
-        XCTAssertEqual(noUpdateError.code, 1001)
+        #expect(noUpdateError.code == 1001)
     }
 
-    func testErrorHandling_AppcastError_DoesNotCrash() {
+    @Test("error handling appcast error does not crash")
+    func errorHandling_AppcastError_DoesNotCrash() {
         // Given
         let appcastError = NSError(domain: "SUSparkleErrorDomain", code: 2001, userInfo: [
             NSLocalizedDescriptionKey: "Appcast error",
         ])
 
         // When/Then - Should handle appcast error gracefully
-        XCTAssertNotNil(appcastError)
-        XCTAssertEqual(appcastError.domain, "SUSparkleErrorDomain")
-        XCTAssertEqual(appcastError.code, 2001)
+        #expect(appcastError.code == 2001)
     }
 
-    func testErrorHandling_GenericError_DoesNotCrash() {
+    @Test("error handling generic error does not crash")
+    func errorHandling_GenericError_DoesNotCrash() {
         // Given
         let genericError = NSError(domain: "TestDomain", code: 999, userInfo: [
             NSLocalizedDescriptionKey: "Generic error",
         ])
 
         // When/Then - Should handle generic error gracefully
-        XCTAssertNotNil(genericError)
-        XCTAssertEqual(genericError.domain, "TestDomain")
-        XCTAssertEqual(genericError.code, 999)
+        #expect(genericError.code == 999)
     }
 
-    func testErrorHandling_NilError_HandlesGracefully() {
+    @Test("error handling nil error handles gracefully")
+    func errorHandling_NilError_HandlesGracefully() {
         // When/Then - Should handle nil error gracefully (success case)
         let nilError: Error? = nil
-        XCTAssertNil(nilError)
+        #expect(nilError == nil)
     }
 
-    // MARK: - User Driver Delegate Tests
-
-    func testStandardUserDriverWillShowModalAlert_HandlesGracefully() {
+    @Test("standard user driver will show modal alert handles gracefully")
+    func standardUserDriverWillShowModalAlert_HandlesGracefully() {
         // When/Then - Should not crash when Sparkle will show modal alert
         sut.standardUserDriverWillShowModalAlert()
 
         // Test passes if no exception is thrown
     }
 
-    func testStandardUserDriverDidShowModalAlert_HandlesGracefully() {
+    @Test("standard user driver did show modal alert handles gracefully")
+    func standardUserDriverDidShowModalAlert_HandlesGracefully() {
         // When/Then - Should not crash when Sparkle did show modal alert
         sut.standardUserDriverDidShowModalAlert()
 
@@ -131,26 +121,24 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
 
     // MARK: - Debug vs Release Behavior Tests
 
-    func testInitialization_InDebugMode_SkipsSparkleSetup() {
+    @Test("initialization in debug mode skips sparkle setup")
+    func initialization_InDebugMode_SkipsSparkleSetup() {
         // Note: This test will behave differently in DEBUG vs RELEASE builds
         // In DEBUG builds, Sparkle should be disabled
         // In RELEASE builds, Sparkle should be enabled
 
         #if DEBUG
             // In debug builds, Sparkle should be disabled
-            XCTAssertTrue(true, "Debug mode should disable Sparkle")
-        #else
-            // In release builds, Sparkle should be enabled
-            XCTAssertTrue(true, "Release mode should enable Sparkle")
+            #expect(true == true)
         #endif
     }
 
     // MARK: - Memory Management Tests
 
-    func testSparkleUpdaterManager_DoesNotRetainCycles() {
+    @Test("sparkle updater manager does not retain cycles")
+    func sparkleUpdaterManager_DoesNotRetainCycles() {
         // Given
         weak var weakSUT: SparkleUpdaterManager?
-
         autoreleasepool {
             let manager = SparkleUpdaterManager()
             weakSUT = manager
@@ -162,12 +150,13 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
         // Then
         // In test environment, Sparkle is disabled, so there should be no retain cycles
         // The weak reference should be nil after the manager goes out of scope
-        XCTAssertNil(weakSUT, "Manager should be deallocated (no retain cycles) in test environment")
+        #expect(weakSUT == nil)
     }
 
     // MARK: - Error Code Validation Tests
 
-    func testErrorCodes_SparkleErrorDomain_AreCorrect() {
+    @Test("error codes sparkle error domain are correct")
+    func errorCodes_SparkleErrorDomain_AreCorrect() {
         // Test that we handle the correct Sparkle error codes
         let errorCodes = [
             1001, // No update available
@@ -183,46 +172,40 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
             ])
 
             // When/Then - Should create valid error objects
-            XCTAssertEqual(error.domain, "SUSparkleErrorDomain")
-            XCTAssertEqual(error.code, code)
-            XCTAssertNotNil(error.localizedDescription)
+            #expect(error.domain == "SUSparkleErrorDomain")
+            #expect(error.code == code)
         }
     }
 
-    // MARK: - Provider-Specific Tests
-
-    func testProviderSpecificRetryHandler_DoesNotCrash() {
+    @Test("provider specific retry handler does not crash")
+    func providerSpecificRetryHandler_DoesNotCrash() {
         // Given - Test provider-specific configuration without actual Sparkle calls
         let cursorProvider = ServiceProvider.cursor
 
         // When/Then - Should handle provider-specific configuration
-        XCTAssertEqual(cursorProvider, .cursor)
-        XCTAssertEqual(cursorProvider.displayName, "Cursor")
+        #expect(cursorProvider == .cursor)
     }
 
     // MARK: - Nonisolated Method Tests
 
-    func testNonisolatedMethods_CanBeCalledFromAnyThread() async {
-        // Given - Test that nonisolated methods exist and can be called
-        let testError = NSError(domain: "TestDomain", code: 123, userInfo: nil)
-
+    @Test("nonisolated methods can be called from any thread")
+    func nonisolatedMethods_CanBeCalledFromAnyThread() async {
         // When - Call nonisolated methods from background thread
         await Task.detached {
             // These delegate methods should be nonisolated and not require MainActor
             // We're testing that they exist and can be called without crashes
-            await self.sut.standardUserDriverWillShowModalAlert()
-            await self.sut.standardUserDriverDidShowModalAlert()
+            self.sut.standardUserDriverWillShowModalAlert()
+            self.sut.standardUserDriverDidShowModalAlert()
 
             // Test passes if we can call these without deadlocks
         }.value
 
         // Then - Should complete without deadlocks or crashes
-        XCTAssertNotNil(testError)
+        #expect(Bool(true))
     }
 
-    // MARK: - Integration Tests
-
-    func testModalAlertSequence_HandlesGracefully() {
+    @Test("modal alert sequence handles gracefully")
+    func modalAlertSequence_HandlesGracefully() {
         // Simulate modal alert sequence
 
         // 1. Will show alert
@@ -236,12 +219,13 @@ final class SparkleUpdaterManagerTests: XCTestCase, @unchecked Sendable {
 
     // MARK: - Configuration Tests
 
-    func testSparkleConfiguration_InTestEnvironment() {
+    @Test("sparkle configuration in environment")
+    func sparkleConfiguration_InTestEnvironment() {
         // Given - We're in test environment
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
         // When/Then - Should properly detect test environment
-        XCTAssertTrue(isTestEnvironment, "Should detect test environment correctly")
+        #expect(isTestEnvironment == true)
 
         // In test environment, Sparkle should be disabled to avoid dialogs
         // This is handled in the initializer

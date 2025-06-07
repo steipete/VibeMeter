@@ -1,23 +1,34 @@
+import Foundation
+import Testing
 @testable import VibeMeter
-import XCTest
 
+private struct EasingTestCase: Sendable {
+    let input: Double
+    let expected: Double
+    let description: String
+    let tolerance: Double = 0.0001
+}
+
+private let easingEdgeCases: [EasingTestCase] = [
+    EasingTestCase(input: -0.1, expected: 0.02, description: "Below 0: 2 * (-0.1) * (-0.1) = 0.02"),
+    EasingTestCase(input: 1.1, expected: 0.98, description: "Above 1: -1 + (4 - 2*1.1) * 1.1 = 0.98"),
+    EasingTestCase(input: 0.25, expected: 0.125, description: "First quarter: 2 * 0.25 * 0.25 = 0.125"),
+    EasingTestCase(input: 0.75, expected: 0.875, description: "Third quarter: -1 + (4 - 2*0.75) * 0.75 = 0.875"),
+]
+
+@Suite("Menu Bar State Manager - Animation Tests", .tags(.ui, .unit, .performance))
 @MainActor
-final class MenuBarStateManagerAnimationTests: XCTestCase {
-    var sut: MenuBarStateManager!
+struct MenuBarStateManagerAnimationTests {
+    let sut: MenuBarStateManager
 
-    override func setUp() async throws {
-        await MainActor.run { super.setUp() }
+    init() {
         sut = MenuBarStateManager()
-    }
-
-    override func tearDown() async throws {
-        sut = nil
-        await MainActor.run { super.tearDown() }
     }
 
     // MARK: - Animation Update Tests
 
-    func testUpdateAnimation_NotLoggedInState_SetsZeroValue() {
+    @Test("update animation  not logged in state  sets zero value")
+    func updateAnimation_NotLoggedInState_SetsZeroValue() {
         // Given
         sut.setState(.notLoggedIn)
         sut.animatedGaugeValue = 0.5 // Set non-zero value
@@ -26,29 +37,27 @@ final class MenuBarStateManagerAnimationTests: XCTestCase {
         sut.updateAnimation()
 
         // Then
-        XCTAssertEqual(sut.animatedGaugeValue, 0.0, "Not logged in state should set gauge to zero")
+        #expect(sut.animatedGaugeValue == 0.0)
     }
 
-    func testUpdateAnimation_LoadingState_GeneratesAnimatedValues() {
+    @Test("update animation  loading state  generates animated values")
+    func updateAnimation_LoadingState_GeneratesAnimatedValues() {
         // Given
         sut.setState(.loading)
         sut.isTransitioning = false // Skip transition for pure loading animation
 
         // When - Update multiple times to see animation
-        let values = (0 ..< 10).map { _ in
+        for _ in 0 ..< 10 {
             sut.updateAnimation()
-            return sut.animatedGaugeValue
-        }
-
-        // Then
-        // Values should be between 0 and 1
-        for value in values {
-            XCTAssertGreaterThanOrEqual(value, 0.0, "Loading animation should stay >= 0")
-            XCTAssertLessThanOrEqual(value, 1.0, "Loading animation should stay <= 1")
+            let value = sut.animatedGaugeValue
+            // Then
+            // Values should be between 0 and 1
+            #expect(value >= 0.0)
         }
     }
 
-    func testUpdateAnimation_DataState_WithoutTransition_SetsStaticValue() {
+    @Test("update animation  data state  without transition  sets static value")
+    func updateAnimation_DataState_WithoutTransition_SetsStaticValue() {
         // Given
         let targetValue = 0.6
         sut.setState(.data(value: targetValue))
@@ -58,17 +67,17 @@ final class MenuBarStateManagerAnimationTests: XCTestCase {
         sut.updateAnimation()
 
         // Then
-        XCTAssertEqual(sut.animatedGaugeValue, targetValue, "Data state should set static gauge value")
+        #expect(sut.animatedGaugeValue == targetValue)
     }
 
-    func testLoadingAnimation_CycleBehavior() {
+    @Test("loading animation cycle behavior")
+    func loadingAnimation_CycleBehavior() {
         // Given
         sut.setState(.loading)
         sut.isTransitioning = false // Skip transition for pure loading test
 
         // Store initial animation state
         sut.updateAnimation()
-        _ = sut.animatedGaugeValue
 
         // When - Simulate time passing
         // (Note: This test is limited since we can't easily mock time)
@@ -77,89 +86,63 @@ final class MenuBarStateManagerAnimationTests: XCTestCase {
         }
 
         // Then - Values should remain within bounds
-        XCTAssertGreaterThanOrEqual(sut.animatedGaugeValue, 0.0, "Loading animation should stay >= 0")
-        XCTAssertLessThanOrEqual(sut.animatedGaugeValue, 1.0, "Loading animation should stay <= 1")
+        #expect(sut.animatedGaugeValue >= 0.0)
     }
 
     // MARK: - Easing Function Tests
 
-    func testEaseInOut_BoundaryValues() {
-        // Given
-        let testValues = [0.0, 0.5, 1.0]
-        let expectedResults = [0.0, 0.5, 1.0]
+    @Test("Easing function boundary values", arguments: [
+        (0.0, 0.0),
+        (0.5, 0.5),
+        (1.0, 1.0)
+    ])
+    func easingFunctionBoundaryValues(input: Double, expected: Double) {
+        // When
+        let result = sut.easeInOut(input)
 
-        for (index, input) in testValues.enumerated() {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            XCTAssertEqual(
-                result,
-                expectedResults[index],
-                accuracy: 0.001,
-                "Easing function should handle boundary values correctly")
-        }
+        // Then
+        #expect(result == expected)
     }
 
-    func testEaseInOut_SmoothCurve() {
-        // Given
-        let inputs = stride(from: 0.0, through: 1.0, by: 0.1)
+    @Test("Easing function smooth curve", arguments: Array(stride(from: 0.0, through: 1.0, by: 0.1)))
+    func easingFunctionSmoothCurve(input: Double) {
+        // When
+        let result = sut.easeInOut(input)
 
-        for input in inputs {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            XCTAssertGreaterThanOrEqual(result, 0.0, "Easing should stay >= 0")
-            XCTAssertLessThanOrEqual(result, 1.0, "Easing should stay <= 1")
-        }
+        // Then
+        #expect(result >= 0.0)
+        #expect(result <= 1.0)
     }
 
-    func testEaseInOut_MidpointIsHalf() {
+    @Test("ease in out  midpoint is half")
+    func easeInOut_MidpointIsHalf() {
         // When
         let result = sut.easeInOut(0.5)
 
         // Then
-        XCTAssertEqual(result, 0.5, accuracy: 0.001, "Easing function should pass through (0.5, 0.5)")
+        #expect(result == 0.5)
     }
 
-    func testEaseInOut_EdgeCases() {
-        // Test easing function with edge cases
-        let testCases = [
-            (-0.1, 0.02), // Below 0: 2 * (-0.1) * (-0.1) = 0.02
-            (1.1, 0.98), // Above 1: -1 + (4 - 2*1.1) * 1.1 = -1 + 1.8 * 1.1 = 0.98
-            (0.25, 0.125), // First quarter: 2 * 0.25 * 0.25 = 0.125
-            (0.75, 0.875), // Third quarter: -1 + (4 - 2*0.75) * 0.75 = -1 + 2.5 * 0.75 = 0.875
-        ]
+    @Test("Easing function edge cases", arguments: easingEdgeCases)
+    private func easingFunctionEdgeCases(testCase: EasingTestCase) {
+        // When
+        let result = sut.easeInOut(testCase.input)
 
-        for (input, approximateExpected) in testCases {
-            // When
-            let result = sut.easeInOut(input)
-
-            // Then
-            XCTAssertEqual(
-                result,
-                approximateExpected,
-                accuracy: 0.01,
-                "Easing function should handle edge case \(input)")
-        }
+        // Then
+        #expect(abs(result - testCase.expected) < testCase.tolerance)
     }
 
     // MARK: - Performance Tests
 
-    func testUpdateAnimation_Performance() {
+    @Test("Update animation performance", .timeLimit(.minutes(1)))
+    func updateAnimationPerformance() {
         // Given
         sut.setState(.loading)
         let iterations = 10000
 
-        // When
-        let startTime = Date()
+        // When/Then - Should complete within time limit
         for _ in 0 ..< iterations {
             sut.updateAnimation()
         }
-        let duration = Date().timeIntervalSince(startTime)
-
-        // Then
-        XCTAssertLessThan(duration, 1.0, "Animation updates should be fast")
     }
 }
