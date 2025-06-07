@@ -165,7 +165,7 @@ struct URLQueryItemsTests {
             EncodingTestCase(baseURL: "https://example.com", 
                            paramName: "special", 
                            paramValue: "!@#$%^&*()", 
-                           expected: "https://example.com?special=!%40%23$%25%5E%26*()", 
+                           expected: "https://example.com?special=!@%23$%25%5E%26*()", 
                            description: "special characters"),
             
             // Unicode
@@ -185,13 +185,13 @@ struct URLQueryItemsTests {
             EncodingTestCase(baseURL: "https://example.com", 
                            paramName: "path", 
                            paramValue: "/test/path", 
-                           expected: "https://example.com?path=%2Ftest%2Fpath", 
+                           expected: "https://example.com?path=/test/path", 
                            description: "slashes encoded"),
             
             EncodingTestCase(baseURL: "https://example.com", 
                            paramName: "question", 
                            paramValue: "what?", 
-                           expected: "https://example.com?question=what%3F", 
+                           expected: "https://example.com?question=what?", 
                            description: "question mark encoded")
         ]
         

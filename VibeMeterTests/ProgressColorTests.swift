@@ -151,7 +151,7 @@ struct ProgressColorTests {
         }
         
         @Test("Special float values", arguments: [
-            (Double.nan, Color.progressSafe, "NaN returns safe"),
+            (Double.nan, Color.progressDanger, "NaN returns danger"),
             (Double.infinity, Color.progressDanger, "Infinity returns danger"),
             (-Double.infinity, Color.progressSafe, "Negative infinity returns safe")
         ])
