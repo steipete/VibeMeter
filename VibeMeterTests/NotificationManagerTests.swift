@@ -365,9 +365,8 @@ struct NotificationManagerTests {
         private let mockNotificationCenter: MockUNUserNotificationCenter2
 
         init() async throws {
-            await MainActor.run {}
             mockNotificationCenter = MockUNUserNotificationCenter2()
-            notificationManager = TestableNotificationManager2(notificationCenter: mockNotificationCenter)
+            notificationManager = await TestableNotificationManager2(notificationCenter: mockNotificationCenter)
         }
 
         // MARK: - Notification Content Tests
@@ -485,7 +484,7 @@ struct NotificationManagerTests {
         @Test("Currency formatting all supported currencies", arguments: supportedCurrencies)
         fileprivate func currencyFormattingAllSupportedCurrencies(currency: CurrencyTestCase) async {
             // Given
-            notificationManager.reset()
+            await notificationManager.reset()
             
             // When
             await notificationManager.resetAllNotificationStatesForNewSession()
@@ -495,8 +494,8 @@ struct NotificationManagerTests {
                 currencyCode: currency.code)
             
             // Then - Verify notification was called
-            #expect(notificationManager.showWarningNotificationCalled == true)
-            #expect(notificationManager.lastWarningCurrency == currency.code)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.lastWarningCurrency == currency.code)
         }
 
         // MARK: - Number Formatting Tests
@@ -504,7 +503,7 @@ struct NotificationManagerTests {
         @Test("Number formatting decimal places", arguments: decimalTestCases)
         fileprivate func numberFormattingDecimalPlaces(testCase: NumberFormatTestCase) async {
             // When
-            notificationManager.reset()
+            await notificationManager.reset()
             await notificationManager.resetAllNotificationStatesForNewSession()
             await notificationManager.showWarningNotification(
                 currentSpending: testCase.amount,
@@ -512,8 +511,8 @@ struct NotificationManagerTests {
                 currencyCode: "USD")
             
             // Then - Verify the correct amount was passed
-            #expect(notificationManager.showWarningNotificationCalled == true)
-            #expect(notificationManager.lastWarningSpending == testCase.amount)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.lastWarningSpending == testCase.amount)
         }
 
         // MARK: - Large Number Formatting Tests
@@ -526,15 +525,15 @@ struct NotificationManagerTests {
         ])
         func largeNumberFormatting(amount: Double, expectedFormat: String) async {
             // When
-            notificationManager.reset()
+            await notificationManager.reset()
             await notificationManager.showWarningNotification(
                 currentSpending: amount,
                 limitAmount: amount + 100.0,
                 currencyCode: "USD")
             
             // Then
-            #expect(notificationManager.showWarningNotificationCalled == true)
-            #expect(notificationManager.lastWarningSpending == amount)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.lastWarningSpending == amount)
         }
 
         // MARK: - Zero and Negative Value Tests
@@ -548,8 +547,8 @@ struct NotificationManagerTests {
                 currencyCode: "USD")
 
             // Then
-            #expect(notificationManager.showWarningNotificationCalled == true)
-            #expect(notificationManager.lastWarningSpending == 0.0)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.lastWarningSpending == 0.0)
         }
 
         @Test("negative value formatting")
@@ -561,8 +560,8 @@ struct NotificationManagerTests {
                 currencyCode: "USD")
 
             // Then
-            #expect(notificationManager.showWarningNotificationCalled == true)
-            #expect(notificationManager.lastWarningSpending == -50.0)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.lastWarningSpending == -50.0)
         }
 
         // MARK: - Upper Limit Notification Tests
@@ -570,17 +569,17 @@ struct NotificationManagerTests {
         @Test("Upper limit notification formatting", arguments: upperLimitTestCases)
         fileprivate func upperLimitNotificationFormatting(testCase: UpperLimitTestCase) async {
             // When
-            notificationManager.reset()
+            await notificationManager.reset()
             await notificationManager.showUpperLimitNotification(
                 currentSpending: testCase.spending,
                 limitAmount: testCase.limit,
                 currencyCode: testCase.currency)
             
             // Then
-            #expect(notificationManager.showUpperLimitNotificationCalled == true)
-            #expect(notificationManager.lastUpperLimitSpending == testCase.spending)
-            #expect(notificationManager.lastUpperLimitAmount == testCase.limit)
-            #expect(notificationManager.lastUpperLimitCurrency == testCase.currency)
+            #expect(await notificationManager.showUpperLimitNotificationCalled == true)
+            #expect(await notificationManager.lastUpperLimitSpending == testCase.spending)
+            #expect(await notificationManager.lastUpperLimitAmount == testCase.limit)
+            #expect(await notificationManager.lastUpperLimitCurrency == testCase.currency)
         }
 
         // MARK: - Notification Reset Tests
@@ -592,13 +591,13 @@ struct NotificationManagerTests {
                 currentSpending: 75.0,
                 limitAmount: 100.0,
                 currencyCode: "USD")
-            #expect(notificationManager.showWarningNotificationCalled == true)
+            #expect(await notificationManager.showWarningNotificationCalled == true)
 
             // When
             await notificationManager.resetAllNotificationStatesForNewSession()
 
             // Then
-            #expect(notificationManager.resetAllNotificationStatesCalled == true)
+            #expect(await notificationManager.resetAllNotificationStatesCalled == true)
         }
 
         @Test("conditional notification reset")
@@ -611,9 +610,9 @@ struct NotificationManagerTests {
                 upperLimitUSD: 200.0)
 
             // Then
-            #expect(notificationManager.resetNotificationStateIfBelowCalled == true)
-            #expect(notificationManager.lastResetLimitType == .warning)
-            #expect(notificationManager.lastResetCurrentSpendingUSD == 50.0)
+            #expect(await notificationManager.resetNotificationStateIfBelowCalled == true)
+            #expect(await notificationManager.lastResetLimitType == .warning)
+            #expect(await notificationManager.lastResetCurrentSpendingUSD == 50.0)
         }
     }
     
@@ -626,7 +625,7 @@ struct NotificationManagerTests {
 
         init() async throws {
             mockNotificationCenter = MockUNUserNotificationCenter3()
-            notificationManager = TestableNotificationManager3(notificationCenter: mockNotificationCenter)
+            notificationManager = await TestableNotificationManager3(notificationCenter: mockNotificationCenter)
         }
 
         // MARK: - Notification State Reset Tests
@@ -1040,15 +1039,39 @@ private final class MockUNUserNotificationCenter: @unchecked Sendable {
 
 // MARK: - TestableNotificationManager2 (Content Tests)
 
+@MainActor
 private final class TestableNotificationManager2: NotificationManagerProtocol, @unchecked Sendable {
     private let notificationCenter: MockUNUserNotificationCenter2
 
     // Track which notifications have been shown
     private var warningNotificationShown = false
     private var upperLimitNotificationShown = false
+    
+    // Test tracking properties
+    var showWarningNotificationCalled = false
+    var showUpperLimitNotificationCalled = false
+    var lastWarningSpending: Double?
+    var lastWarningLimit: Double?
+    var lastWarningCurrency: String?
+    var lastUpperLimitSpending: Double?
+    var lastUpperLimitLimit: Double?
+    var lastUpperLimitCurrency: String?
 
     init(notificationCenter: MockUNUserNotificationCenter2) {
         self.notificationCenter = notificationCenter
+    }
+    
+    func reset() async {
+        showWarningNotificationCalled = false
+        showUpperLimitNotificationCalled = false
+        lastWarningSpending = nil
+        lastWarningLimit = nil
+        lastWarningCurrency = nil
+        lastUpperLimitSpending = nil
+        lastUpperLimitLimit = nil
+        lastUpperLimitCurrency = nil
+        warningNotificationShown = false
+        upperLimitNotificationShown = false
     }
 
     func requestAuthorization() async -> Bool {
@@ -1060,6 +1083,11 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
     }
 
     func showWarningNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+        showWarningNotificationCalled = true
+        lastWarningSpending = currentSpending
+        lastWarningLimit = limitAmount
+        lastWarningCurrency = currencyCode
+        
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
@@ -1089,6 +1117,11 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
     }
 
     func showUpperLimitNotification(currentSpending: Double, limitAmount: Double, currencyCode: String) async {
+        showUpperLimitNotificationCalled = true
+        lastUpperLimitSpending = currentSpending
+        lastUpperLimitLimit = limitAmount
+        lastUpperLimitCurrency = currencyCode
+        
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)

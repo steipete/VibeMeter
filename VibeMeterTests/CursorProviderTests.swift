@@ -179,7 +179,7 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                #expect(throws: ProviderError.unauthorized) {
+                await #expect(throws: ProviderError.unauthorized) { @Sendable in
                     try await provider.fetchTeamInfo(authToken: "invalid-token")
                 }
             }
@@ -1300,7 +1300,7 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                #expect(throws: ProviderError.rateLimitExceeded) {
+                await #expect(throws: ProviderError.rateLimitExceeded) { @Sendable in
                     try await provider.fetchUserInfo(authToken: "test-token")
                 }
             }
@@ -1318,7 +1318,7 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                #expect(throws: ProviderError.serviceUnavailable) {
+                await #expect(throws: ProviderError.serviceUnavailable) { @Sendable in
                     try await provider.fetchUserInfo(authToken: "test-token")
                 }
             }
@@ -1380,7 +1380,7 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                #expect(throws: ProviderError.noTeamFound) {
+                await #expect(throws: ProviderError.noTeamFound) { @Sendable in
                     try await provider.fetchTeamInfo(authToken: "test-token")
                 }
             }
@@ -1400,7 +1400,7 @@ struct CursorProviderTests {
                 mockSession.nextResponse = mockResponse
 
                 // When/Then
-                #expect(throws: ProviderError.noTeamFound) {
+                await #expect(throws: ProviderError.noTeamFound) { @Sendable in
                     try await provider.fetchTeamInfo(authToken: "test-token")
                 }
             }
@@ -1454,7 +1454,7 @@ struct CursorProviderTests {
                     headerFields: nil)!
 
                 // When/Then
-                #expect(throws: ProviderError.noTeamFound) {
+                await #expect(throws: ProviderError.noTeamFound) { @Sendable in
                     try await provider.fetchMonthlyInvoice(
                         authToken: "token",
                         month: 6,

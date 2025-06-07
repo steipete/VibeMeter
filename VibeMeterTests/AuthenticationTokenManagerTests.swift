@@ -59,7 +59,7 @@ struct AuthenticationTokenManagerTests {
 
             // Then
             #expect(result == false)
-            #expect(mockKeychainServices[provider]?.saveTokenCalled == 1)
+            #expect(mockKeychainServices[provider]?.saveTokenCalled == true)
         }
 
         @Test("retrieve saved token")
@@ -67,7 +67,7 @@ struct AuthenticationTokenManagerTests {
             // Given
             let token = "test-token-456"
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.getToken() = token
+            mockKeychainServices[provider]?.setStoredToken(token)
 
             // When
             let retrievedToken = tokenManager.getAuthToken(for: provider)
@@ -81,7 +81,7 @@ struct AuthenticationTokenManagerTests {
             // Given
             let token = "token-to-delete"
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.getToken() = token
+            mockKeychainServices[provider]?.setStoredToken(token)
 
             // When
             let result = tokenManager.deleteToken(for: provider)
@@ -95,7 +95,7 @@ struct AuthenticationTokenManagerTests {
         func deleteTokenFailure() {
             // Given
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.deleteTokenShouldSucceed = false = true
+            mockKeychainServices[provider]?.deleteTokenShouldSucceed = false
 
             // When
             let result = tokenManager.deleteToken(for: provider)
@@ -147,7 +147,7 @@ struct AuthenticationTokenManagerTests {
             // Given
             let token = "auth-token-for-cookies"
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.getToken() = token
+            mockKeychainServices[provider]?.setStoredToken(token)
 
             // When
             let cookies = tokenManager.getCookies(for: provider)
@@ -185,7 +185,7 @@ struct AuthenticationTokenManagerTests {
             // Given
             let token = "secure-token"
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.getToken() = token
+            mockKeychainServices[provider]?.setStoredToken(token)
 
             // When
             let cookies = tokenManager.getCookies(for: provider)
@@ -207,7 +207,7 @@ struct AuthenticationTokenManagerTests {
             // Given
             let token = "expiry-test-token"
             let provider = ServiceProvider.cursor
-            mockKeychainServices[provider]?.getToken() = token
+            mockKeychainServices[provider]?.setStoredToken(token)
 
             // When
             let cookies = tokenManager.getCookies(for: provider)
@@ -229,7 +229,7 @@ struct AuthenticationTokenManagerTests {
             let cursorToken = "cursor-cookie-token"
             let cursorProvider = ServiceProvider.cursor
 
-            mockKeychainServices[cursorProvider]?.getToken() = cursorToken
+            mockKeychainServices[cursorProvider]?.setStoredToken(cursorToken)
 
             // When
             let cursorCookies = tokenManager.getCookies(for: cursorProvider)
@@ -354,7 +354,7 @@ struct AuthenticationTokenManagerTests {
             let originalToken = "original-token"
             let updatedToken = "updated-token"
 
-            mockKeychainServices[provider]?.getToken() = originalToken
+            mockKeychainServices[provider]?.setStoredToken(originalToken)
 
             // When
             let result = tokenManager.saveToken(updatedToken, for: provider)
