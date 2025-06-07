@@ -1,4 +1,5 @@
-// swiftlint:disable file_length nesting
+// swiftlint:disable file_length
+// swiftlint:disable nesting
 import CryptoKit
 import Foundation
 import Testing

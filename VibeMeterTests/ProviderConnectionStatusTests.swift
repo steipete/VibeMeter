@@ -1,4 +1,6 @@
-// swiftlint:disable file_length type_body_length nesting
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
 import Foundation
 import SwiftUI
 import Testing

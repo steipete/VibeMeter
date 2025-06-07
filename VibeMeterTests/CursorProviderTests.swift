@@ -1,4 +1,8 @@
-// swiftlint:disable file_length type_body_length nesting function_body_length line_length
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
+// swiftlint:disable function_body_length
+// swiftlint:disable line_length
 import Foundation
 import Testing
 @testable import VibeMeter

@@ -1,4 +1,6 @@
-// swiftlint:disable file_length type_body_length nesting
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable nesting
 // Consolidated comprehensive test suite for NotificationManager
 
 import Foundation
