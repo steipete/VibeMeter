@@ -102,7 +102,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Simple, direct window ordering approach
         alphaValue = 0
-        orderFront(nil)
+        makeKeyAndOrderFront(nil)
 
         // Animate in with fade
         NSAnimationContext.runAnimationGroup { context in
