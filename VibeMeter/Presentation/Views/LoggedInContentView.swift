@@ -29,7 +29,7 @@ struct LoggedInContentView: View {
         VStack(spacing: 0) {
             // Header section - better spacing
             UserHeaderView(userSessionData: userSessionData)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 8)
                 .padding(.top, 12)
                 .padding(.bottom, 10)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -44,7 +44,7 @@ struct LoggedInContentView: View {
             VStack(spacing: 6) {
                 CostTableView(settingsManager: settingsManager, loginManager: loginManager, showTimestamps: false)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 8)
             .padding(.vertical, 8)
             .transition(.opacity.combined(with: .scale(scale: 0.98)))
             .accessibilityElement(children: .contain)
@@ -64,7 +64,7 @@ struct LoggedInContentView: View {
 
                         Spacer()
                     }
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                 }
             }
@@ -75,7 +75,7 @@ struct LoggedInContentView: View {
                     .overlay(Color.secondaryDivider(for: colorScheme))
 
                 ActionButtonsView(onRefresh: onRefresh)
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 10)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel("Action buttons")

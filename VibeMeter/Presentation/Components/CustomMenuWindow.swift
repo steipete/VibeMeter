@@ -34,6 +34,7 @@ final class CustomMenuWindow: NSPanel {
         // Configure window appearance
         isOpaque = false
         backgroundColor = .clear
+        hasShadow = true
         level = .popUpMenu // Use popUpMenu level for menu bar dropdowns
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         isMovableByWindowBackground = false
@@ -57,9 +58,9 @@ final class CustomMenuWindow: NSPanel {
 
             // Add subtle shadow
             contentView.shadow = NSShadow()
-            contentView.shadow?.shadowOffset = NSSize(width: 0, height: -2)
-            contentView.shadow?.shadowBlurRadius = 8
-            contentView.shadow?.shadowColor = NSColor.black.withAlphaComponent(0.2)
+            contentView.shadow?.shadowOffset = NSSize(width: 0, height: -1)
+            contentView.shadow?.shadowBlurRadius = 12
+            contentView.shadow?.shadowColor = NSColor.black.withAlphaComponent(0.3)
         }
 
         // Event monitoring is set up after showing the window
@@ -242,7 +243,7 @@ struct CustomMenuContainer<Content: View>: View {
         content
             // Let both width and height be dictated by the intrinsic size
             .fixedSize()
-            .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }
 

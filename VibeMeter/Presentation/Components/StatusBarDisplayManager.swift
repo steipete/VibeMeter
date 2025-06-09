@@ -146,7 +146,21 @@ final class StatusBarDisplayManager {
         let totalSpendingUSD = hasData ? spendingData.totalSpendingConverted(
             to: "USD",
             rates: currencyData.effectiveRates) : 0.0
-        let gaugeValue = hasData ? min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0) : 0.0
+        
+        // Calculate gauge value based on whether money has been spent
+        let gaugeValue: Double
+        if hasData {
+            if totalSpendingUSD > 0 {
+                // Money has been spent - show spending as percentage of limit
+                gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+            } else {
+                // No money spent - show requests used as percentage of total
+                let requestPercentage = calculateRequestUsagePercentage()
+                gaugeValue = requestPercentage
+            }
+        } else {
+            gaugeValue = 0.0
+        }
         let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let displayMode = settingsManager.menuBarDisplayMode
 
@@ -291,7 +305,21 @@ final class StatusBarDisplayManager {
             // Use new logic: icon is shown when there's no data OR user setting shows icon
             let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
             let spacingPrefix = shouldShowIcon ? "  " : ""
-            let displayValue = stateManager.animatedCostValue.formatted(.number.precision(.fractionLength(2)))
+            
+            // Format the display value without unnecessary decimals
+            let displayValue: String
+            if stateManager.animatedCostValue == 0 {
+                // Show just "0" for zero amounts
+                displayValue = "0"
+            } else {
+                // Show 0-2 decimal places as needed, no grouping separators
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .decimal
+                formatter.minimumFractionDigits = 0
+                formatter.maximumFractionDigits = 2
+                formatter.usesGroupingSeparator = false
+                displayValue = formatter.string(from: NSNumber(value: stateManager.animatedCostValue)) ?? "0"
+            }
 
             let titleText = "\(spacingPrefix)\(state.currencySymbol)\(displayValue)"
             button.title = titleText
@@ -313,6 +341,37 @@ final class StatusBarDisplayManager {
         if accessibility != lastAccessibilityDescription {
             button.setAccessibilityValue(accessibility)
             lastAccessibilityDescription = accessibility
+        }
+    }
+    
+    /// Calculates the request usage percentage across all providers
+    private func calculateRequestUsagePercentage() -> Double {
+        let providers = spendingData.providersWithData
+        
+        // If we have multiple providers, we'll average their request percentages
+        var totalPercentage: Double = 0.0
+        var providerCount = 0
+        
+        for provider in providers {
+            if let providerData = spendingData.getSpendingData(for: provider),
+               let usageData = providerData.usageData {
+                // Calculate percentage of requests used
+                let requestsUsed = usageData.currentRequests
+                let totalRequests = usageData.totalRequests
+                
+                if totalRequests > 0 {
+                    let percentage = Double(requestsUsed) / Double(totalRequests)
+                    totalPercentage += percentage
+                    providerCount += 1
+                }
+            }
+        }
+        
+        // Return average percentage across all providers
+        if providerCount > 0 {
+            return min(max(totalPercentage / Double(providerCount), 0.0), 1.0)
+        } else {
+            return 0.0
         }
     }
 }

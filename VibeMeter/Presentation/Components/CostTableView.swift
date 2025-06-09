@@ -56,13 +56,11 @@ struct CostTableView: View {
 
     private var totalSpendingSection: some View {
         HStack(alignment: .center) {
-            Spacer()
-
             Text("Total Spending")
                 .font(.body.weight(.medium))
                 .foregroundStyle(.primary.opacity(0.8))
 
-            Spacer(minLength: 20)
+            Spacer()
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
@@ -80,8 +78,6 @@ struct CostTableView: View {
                     .foregroundStyle(.tertiary)
                     .accessibilityLabel("No spending data available")
             }
-
-            Spacer()
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
@@ -95,11 +91,9 @@ struct CostTableView: View {
 
     private var spendingLimitsSection: some View {
         HStack(alignment: .center) {
-            Spacer()
             limitsLabel
-            Spacer(minLength: 20)
-            limitsValues
             Spacer()
+            limitsValues
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)

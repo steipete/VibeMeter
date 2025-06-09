@@ -39,6 +39,15 @@ Vibe Meter connects securely to your Cursor AI account and monitors your monthly
 - **Progress Notifications** - Alerts at 80% and 100% of your warning threshold
 - **Currency Conversion** - Real-time exchange rates for accurate international tracking
 
+### 📊 Gauge Behavior
+
+The gauge icon in the menu bar adapts its display based on your usage:
+
+- **No Money Spent** - When you haven't spent any money yet (but have used requests), the gauge shows the percentage of API requests used. For example, if you've used 3 out of 500 requests, the gauge shows 0.6% filled.
+- **Money Spent** - Once you start spending money, the gauge switches to show spending as a percentage of your upper limit. For example, if you've spent $15 out of a $30 limit, the gauge shows 50% filled.
+
+This intelligent behavior ensures the gauge always provides meaningful feedback about your usage, whether you're on a free tier using requests or actively spending on premium features.
+
 ## ⚙️ Configuration
 
 ### Spending Limits
