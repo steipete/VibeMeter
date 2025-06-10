@@ -13,7 +13,7 @@ public final class SessionStateManager {
 
     private let loginManager: MultiProviderLoginManager
     private let settingsManager: any SettingsManagerProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "SessionStateManager")
+    private let logger = Logger.vibeMeter(category: "SessionStateManager")
 
     // MARK: - Callbacks
 
@@ -62,7 +62,7 @@ public final class SessionStateManager {
                 teamName: nil,
                 teamId: nil)
         }
-        
+
         // Special handling for Claude - check folder access
         Task { @MainActor in
             if ClaudeLogManager.shared.hasAccess {

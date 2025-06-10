@@ -157,10 +157,7 @@ final class StatusBarMenuManager {
                         to: displayCurrency,
                         rates: currencyData.effectiveRates)
 
-                    let formatter = NumberFormatter()
-                    formatter.numberStyle = .currency
-                    formatter.currencyCode = displayCurrency
-                    formatter.maximumFractionDigits = 2
+                    let formatter = NumberFormatter.vibeMeterCurrency(with: displayCurrency)
 
                     let formattedAmount = formatter
                         .string(from: NSNumber(value: totalSpendingDisplay)) ?? "\(displayCurrency) 0.00"

@@ -1,33 +1,36 @@
 import AppKit
+import CryptoKit
 import Foundation
 import os.log
-import CryptoKit
 
 // MARK: - Background Actor for Log Processing
 
 /// Actor that handles background processing of Claude log files
 actor ClaudeLogProcessor {
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ClaudeLogProcessor")
+    private let logger = Logger.vibeMeter(category: "ClaudeLogProcessor")
     private let fileManager = FileManager.default
-    
+
     /// Process all log files and return daily usage
-    func processLogFiles(_ fileURLs: [URL], usingCache cache: [String: Data]) async -> (entries: [Date: [ClaudeLogEntry]], updatedCache: [String: Data]) {
+    func processLogFiles(_ fileURLs: [URL],
+                         usingCache cache: [String: Data]) async -> (entries: [Date: [ClaudeLogEntry]], updatedCache: [
+        String: Data
+    ]) {
         var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
         var updatedCache = cache
-        
+
         await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self) { group in
             for fileURL in fileURLs {
                 group.addTask(priority: .utility) {
                     await self.processFile(fileURL, existingCache: cache)
                 }
             }
-            
+
             // Collect results
             for await result in group {
                 if let (entries, fileKey, fileHash) = result {
                     // Update cache
                     updatedCache[fileKey] = fileHash
-                    
+
                     // Group by day
                     for entry in entries {
                         let day = Calendar.current.startOfDay(for: entry.timestamp)
@@ -36,13 +39,13 @@ actor ClaudeLogProcessor {
                 }
             }
         }
-        
+
         return (dailyUsage, updatedCache)
     }
-    
+
     private func processFile(_ fileURL: URL, existingCache: [String: Data]) async -> ([ClaudeLogEntry], String, Data)? {
         let fileKey = fileURL.lastPathComponent
-        
+
         do {
             // Skip small files (optimization #6)
             let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
@@ -51,83 +54,95 @@ actor ClaudeLogProcessor {
                 logger.trace("Skipping tiny file: \(fileKey) (\(fileSize) bytes)")
                 return nil
             }
-            
+
             // Use memory-mapped files for better performance (optimization #4)
             let fileData = try Data(contentsOf: fileURL, options: .mappedIfSafe)
-            
+
             // Calculate SHA-256 hash
             let hash = SHA256.hash(data: fileData)
             let hashData = Data(hash)
-            
+
             // Check if file hasn't changed
             if let cachedHash = existingCache[fileKey], cachedHash == hashData {
                 logger.debug("Skipping unchanged file: \(fileKey)")
                 return nil
             }
-            
+
             // Parse the file
             let entries = parseFileData(fileData)
             logger.debug("Parsed \(entries.count) entries from \(fileKey)")
-            
+
             return (entries, fileKey, hashData)
         } catch {
             logger.error("Failed to process file \(fileKey): \(error)")
             return nil
         }
     }
-    
+
     private func parseFileData(_ data: Data) -> [ClaudeLogEntry] {
         var entries: [ClaudeLogEntry] = []
-        var buffer = Data()
-        
-        // Process data in chunks
-        let chunkSize = 65536 // 64KB
-        var offset = 0
-        
-        while offset < data.count {
-            let end = min(offset + chunkSize, data.count)
-            let chunk = data.subdata(in: offset..<end)
-            buffer.append(chunk)
-            offset = end
-            
-            // Process complete lines
-            while let newlineRange = buffer.range(of: Data("\n".utf8)) {
-                let lineData = buffer.subdata(in: 0..<newlineRange.lowerBound)
-                buffer.removeSubrange(0...newlineRange.lowerBound)
-                
-                if let entry = parseLogLine(lineData) {
-                    entries.append(entry)
+
+        // Use autoreleasepool for better memory management with large files
+        autoreleasepool {
+            var buffer = Data()
+
+            // Process data in chunks for memory efficiency
+            let chunkSize = 65536 // 64KB
+            var offset = 0
+
+            // Pre-allocate capacity based on estimated entries per chunk
+            // Assuming average line size of ~500 bytes
+            let estimatedEntriesPerChunk = chunkSize / 500
+            entries.reserveCapacity(estimatedEntriesPerChunk * (data.count / chunkSize + 1))
+
+            while offset < data.count {
+                // Use autoreleasepool for each chunk to free memory immediately
+                autoreleasepool {
+                    let end = min(offset + chunkSize, data.count)
+                    let chunk = data.subdata(in: offset ..< end)
+                    buffer.append(chunk)
+                    offset = end
+
+                    // Process complete lines
+                    while let newlineRange = buffer.range(of: Data("\n".utf8)) {
+                        let lineData = buffer.subdata(in: 0 ..< newlineRange.lowerBound)
+                        buffer.removeSubrange(0 ... newlineRange.lowerBound)
+
+                        if let entry = parseLogLine(lineData) {
+                            entries.append(entry)
+                        }
+                    }
                 }
             }
+
+            // Process any remaining data
+            if !buffer.isEmpty, let entry = parseLogLine(buffer) {
+                entries.append(entry)
+            }
         }
-        
-        // Process any remaining data
-        if !buffer.isEmpty, let entry = parseLogLine(buffer) {
-            entries.append(entry)
-        }
-        
+
         return entries
     }
-    
+
     private func parseLogLine(_ data: Data) -> ClaudeLogEntry? {
         guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !line.isEmpty else { return nil }
-        
+
         // Use FastScanner for efficient parsing
         let scanner = FastScanner(string: line)
-        
+
         // Quick check for required fields using Scanner
         var inputTokens: Int?
         var outputTokens: Int?
-        
+
         // Scan for "message" field
         if scanner.scanUpTo(string: "\"message\"") != nil {
             scanner.location += 9 // Skip past "message"
-            
+
             // Scan for "usage" within message
             if scanner.scanUpTo(string: "\"usage\"") != nil {
                 scanner.location += 7 // Skip past "usage"
-                
+
                 // Scan for input_tokens
                 if scanner.scanUpTo(string: "\"input_tokens\"") != nil {
                     scanner.location += 14 // Skip past "input_tokens"
@@ -135,9 +150,9 @@ actor ClaudeLogProcessor {
                     scanner.location += 1 // Skip colon
                     inputTokens = scanner.scanInteger() as Int?
                 }
-                
+
                 // Scan for output_tokens
-                if inputTokens != nil && scanner.scanUpTo(string: "\"output_tokens\"") != nil {
+                if inputTokens != nil, scanner.scanUpTo(string: "\"output_tokens\"") != nil {
                     scanner.location += 15 // Skip past "output_tokens"
                     _ = scanner.scanUpTo(string: ":") // Skip to colon
                     scanner.location += 1 // Skip colon
@@ -145,21 +160,21 @@ actor ClaudeLogProcessor {
                 }
             }
         }
-        
+
         // Skip if we don't have both tokens
         guard inputTokens != nil && outputTokens != nil else {
             return nil
         }
-        
+
         // Skip summary and other non-usage entries
-        if line.contains("\"type\":\"summary\"") || 
-           line.contains("\"type\":\"user\"") ||
-           line.contains("\"leafUuid\"") ||
-           line.contains("\"sessionId\"") ||
-           line.contains("\"parentUuid\"") {
+        if line.contains("\"type\":\"summary\"") ||
+            line.contains("\"type\":\"user\"") ||
+            line.contains("\"leafUuid\"") ||
+            line.contains("\"sessionId\"") ||
+            line.contains("\"parentUuid\"") {
             return nil
         }
-        
+
         // Now do full JSON decode since we know it's valid
         if let jsonData = line.data(using: .utf8) {
             do {
@@ -168,7 +183,7 @@ actor ClaudeLogProcessor {
                 // Silently skip malformed entries
             }
         }
-        
+
         return nil
     }
 }
@@ -206,7 +221,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ClaudeLogManager")
+    private let logger = Logger.vibeMeter(category: "ClaudeLogManager")
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let logDirectoryName = ".claude/projects"
@@ -225,12 +240,12 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             hasAccess = bookmarkData != nil
         }
     }
-    
+
     // Cache keys for UserDefaults
     private let cacheKey = "com.vibemeter.claudeLogCache"
     private let cacheTimestampKey = "com.vibemeter.claudeLogCacheTimestamp"
     private let fileHashCacheKey = "com.vibemeter.claudeFileHashCache"
-    
+
     // Cache for parsed usage data
     private var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
         get {
@@ -249,7 +264,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             }
         }
     }
-    
+
     private var cacheTimestamp: Date? {
         get {
             userDefaults.object(forKey: cacheTimestampKey) as? Date
@@ -258,7 +273,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             userDefaults.set(newValue, forKey: cacheTimestampKey)
         }
     }
-    
+
     // File hash cache for detecting changes
     private var fileHashCache: [String: Data] {
         get {
@@ -268,7 +283,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             userDefaults.set(newValue, forKey: fileHashCacheKey)
         }
     }
-    
+
     private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
 
     private lazy var tiktoken: Tiktoken? = {
@@ -295,7 +310,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             if !ProviderRegistry.shared.isEnabled(.claude) {
                 ProviderRegistry.shared.enableProvider(.claude)
             }
-            
+
             // Clear any error messages since we have valid access
             Task { @MainActor in
                 if let orchestrator = (NSApp.delegate as? AppDelegate)?.multiProviderOrchestrator {
@@ -327,7 +342,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         // In a sandboxed app, NSHomeDirectory() returns the container, so we construct the path manually
         let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
         openPanel.directoryURL = actualHomeDir
-        openPanel.showsHiddenFiles = true  // Show hidden files like .claude
+        openPanel.showsHiddenFiles = true // Show hidden files like .claude
 
         let response = await withCheckedContinuation { continuation in
             openPanel.begin { response in
@@ -344,12 +359,12 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         logger.info("Validating selected directory: \(url.path)")
         logger.info("Expected home directory: \(actualHomeDir.path)")
         logger.info("NSUserName: \(NSUserName())")
-        
+
         // Check if Claude logs directory exists at the expected location
         let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
         let canAccessClaudeLogs = fileManager.fileExists(atPath: claudeLogsPath.path) ||
-                                 url.path == actualHomeDir.path // Accept home directory even if .claude doesn't exist yet
-        
+            url.path == actualHomeDir.path // Accept home directory even if .claude doesn't exist yet
+
         guard canAccessClaudeLogs else {
             logger.warning("Selected directory doesn't contain Claude logs: \(url.path)")
             logger.warning("Expected to find logs at: \(claudeLogsPath.path)")
@@ -357,7 +372,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             await MainActor.run {
                 let alert = NSAlert()
                 alert.messageText = "Claude Logs Not Found"
-                alert.informativeText = "Please select your home directory (\(NSHomeDirectory())) to grant access to Claude logs located in ~/.claude/projects"
+                alert
+                    .informativeText =
+                    "Please select your home directory (\(NSHomeDirectory())) to grant access to Claude logs located in ~/.claude/projects"
                 alert.alertStyle = .warning
                 alert.addButton(withTitle: "OK")
                 alert.runModal()
@@ -375,7 +392,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
             // Save a dummy token to indicate Claude is "logged in"
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
-            
+
             // Enable Claude provider if not already enabled
             if !ProviderRegistry.shared.isEnabled(.claude) {
                 ProviderRegistry.shared.enableProvider(.claude)
@@ -412,7 +429,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             logger.info("ClaudeLogManager: Returning cached data")
             return cachedData
         }
-        
+
         isProcessing = true
         defer {
             isProcessing = false
@@ -441,18 +458,18 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         // Process files using the background actor
         let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(jsonlFiles, usingCache: fileHashCache)
-        
+
         let totalEntries = dailyUsage.values.flatMap(\.self).count
         logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
-        
+
         // Update caches
         self.cachedDailyUsage = dailyUsage
         self.cacheTimestamp = Date()
         self.fileHashCache = updatedHashCache
-        
+
         return dailyUsage
     }
-    
+
     /// Invalidate the cache to force a refresh on next access
     public func invalidateCache() {
         cachedDailyUsage = nil
@@ -476,7 +493,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         // Get account type from settings
         let accountType = SettingsManager.shared.sessionSettingsManager.claudeAccountType
-        
+
         // For Pro/Team accounts, calculate based on message count approximation
         // Since we don't have exact token limits, we'll estimate based on messages
         if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
@@ -484,10 +501,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             // Average message might be ~2000 tokens input + ~1000 tokens output
             let avgTokensPerMessage = 3000
             let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
-            
+
             let totalTokensUsed = totalInputTokens + totalOutputTokens
             let usageRatio = Double(totalTokensUsed) / Double(estimatedTokenLimit)
-            
+
             return FiveHourWindow(
                 used: min(usageRatio * 100, 100),
                 total: 100,
@@ -500,11 +517,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             let todayEntries = dailyUsage.values
                 .flatMap(\.self)
                 .filter { $0.timestamp >= startOfDay }
-            
+
             let messageCount = todayEntries.count
             let dailyLimit = accountType.dailyMessageLimit ?? 50
             let usageRatio = Double(messageCount) / Double(dailyLimit)
-            
+
             // Reset at midnight PT
             var nextResetComponents = calendar.dateComponents([.year, .month, .day], from: now)
             nextResetComponents.day! += 1
@@ -512,7 +529,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             nextResetComponents.minute = 0
             nextResetComponents.timeZone = TimeZone(identifier: "America/Los_Angeles")
             let resetDate = calendar.date(from: nextResetComponents) ?? now
-            
+
             return FiveHourWindow(
                 used: min(usageRatio * 100, 100),
                 total: 100,
@@ -530,7 +547,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private func findJSONLFiles(in directory: URL) -> [URL] {
         var jsonlFiles: [URL] = []
         let cutoffDate = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
-        
+
         // Date formatter for parsing filenames (optimization #9)
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -540,11 +557,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         if let enumerator = fileManager.enumerator(
             at: directory,
             includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey, .fileSizeKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) {
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
             for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
                 let filename = fileURL.lastPathComponent
-                
+
                 // Try to extract date from filename first (optimization #9)
                 if let dateRange = filename.range(of: #"\d{4}-\d{2}-\d{2}"#, options: .regularExpression) {
                     let dateString = String(filename[dateRange])
@@ -562,7 +578,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                         continue
                     }
                 }
-                
+
                 jsonlFiles.append(fileURL)
                 logger.debug("ClaudeLogManager: Found JSONL file: \(fileURL.path)")
             }
@@ -572,8 +588,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         // Sort by modification date (newest first) for better cache hits
         jsonlFiles.sort { url1, url2 in
-            let date1 = (try? fileManager.attributesOfItem(atPath: url1.path)[.modificationDate] as? Date) ?? Date.distantPast
-            let date2 = (try? fileManager.attributesOfItem(atPath: url2.path)[.modificationDate] as? Date) ?? Date.distantPast
+            let date1 = (try? fileManager.attributesOfItem(atPath: url1.path)[.modificationDate] as? Date) ?? Date
+                .distantPast
+            let date2 = (try? fileManager.attributesOfItem(atPath: url2.path)[.modificationDate] as? Date) ?? Date
+                .distantPast
             return date1 > date2
         }
 
@@ -614,7 +632,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             logger.info("Expected home directory: \(NSHomeDirectory())")
 
             let data = try Data(contentsOf: url)
-            
+
             // Validate the bookmark points to the home directory
             if let validatedURL = validateBookmark(data) {
                 self.bookmarkData = data
@@ -628,9 +646,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 if ProviderRegistry.shared.isEnabled(.claude) {
                     ProviderRegistry.shared.disableProvider(.claude)
                 }
-                
+
                 // Log the issue prominently
-                logger.error("IMPORTANT: Claude bookmark was pointing to wrong directory and has been invalidated. User needs to grant access again.")
+                logger
+                    .error(
+                        "IMPORTANT: Claude bookmark was pointing to wrong directory and has been invalidated. User needs to grant access again.")
             }
         } catch {
             logger.error("Failed to load bookmark: \(error.localizedDescription)")
@@ -652,18 +672,18 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 bookmarkDataIsStale: &isStale)
 
             logger.debug("Resolved bookmark URL: \(url.path)")
-            
+
             // Check if Claude logs exist at this location
             let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
             logger.debug("Checking for Claude logs at: \(claudeLogsPath.path)")
-            
+
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
-            let isValidLocation = url.path == actualHomeDir.path || 
-                                fileManager.fileExists(atPath: claudeLogsPath.path)
-            
+            let isValidLocation = url.path == actualHomeDir.path ||
+                fileManager.fileExists(atPath: claudeLogsPath.path)
+
             guard isValidLocation else {
                 logger.error("Bookmark points to invalid directory: \(url.path)")
                 logger.error("Expected home directory: \(NSHomeDirectory())")
@@ -705,32 +725,32 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 options: .withSecurityScope,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
-            
+
             logger.debug("Validating bookmark URL: \(url.path)")
-            
+
             // Check if Claude logs exist at this location
             let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
-            
+
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
-            let isValidLocation = url.path == actualHomeDir.path || 
-                                fileManager.fileExists(atPath: claudeLogsPath.path)
-            
+            let isValidLocation = url.path == actualHomeDir.path ||
+                fileManager.fileExists(atPath: claudeLogsPath.path)
+
             guard isValidLocation else {
                 logger.warning("Bookmark points to invalid directory: \(url.path)")
                 logger.warning("Expected home directory: \(NSHomeDirectory()) or directory containing .claude/projects")
                 return nil
             }
-            
+
             // Try to access it to ensure it's valid
             guard url.startAccessingSecurityScopedResource() else {
                 logger.error("Failed to access security-scoped resource for validation")
                 return nil
             }
             url.stopAccessingSecurityScopedResource()
-            
+
             return url
         } catch {
             logger.error("Failed to validate bookmark: \(error.localizedDescription)")

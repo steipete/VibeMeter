@@ -28,15 +28,12 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
 
         // Decode timestamp with robust date formatting
         let dateString = try container.decode(String.self, forKey: .timestamp)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
-        if let date = formatter.date(from: dateString) {
+        if let date = ISO8601DateFormatter.vibeMeterDefault.date(from: dateString) {
             self.timestamp = date
         } else {
             // Try without fractional seconds
-            formatter.formatOptions = [.withInternetDateTime]
-            if let date = formatter.date(from: dateString) {
+            if let date = ISO8601DateFormatter.vibeMeterStandard.date(from: dateString) {
                 self.timestamp = date
             } else {
                 throw DecodingError.dataCorruptedError(
@@ -54,21 +51,19 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         self.inputTokens = try usageContainer.decode(Int.self, forKey: .inputTokens)
         self.outputTokens = try usageContainer.decode(Int.self, forKey: .outputTokens)
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        
+
         // Encode timestamp as ISO8601 string
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let dateString = formatter.string(from: timestamp)
+        let dateString = ISO8601DateFormatter.vibeMeterDefault.string(from: timestamp)
         try container.encode(dateString, forKey: .timestamp)
-        
+
         try container.encodeIfPresent(model, forKey: .model)
-        
+
         var messageContainer = container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         var usageContainer = messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
-        
+
         try usageContainer.encode(inputTokens, forKey: .inputTokens)
         try usageContainer.encode(outputTokens, forKey: .outputTokens)
     }
@@ -137,8 +132,8 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     case pro = "Pro"
     case max100 = "Max100"
     case max200 = "Max200"
-    
-    public var displayName: String { 
+
+    public var displayName: String {
         switch self {
         case .free: "Free"
         case .pro: "Pro ($20/mo)"
@@ -146,7 +141,7 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
         case .max200: "Max 20× ($200/mo)"
         }
     }
-    
+
     /// Monthly price in USD
     public var monthlyPrice: Double? {
         switch self {
@@ -172,7 +167,7 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
         case .pro, .max100, .max200: true
         }
     }
-    
+
     /// Approximate messages per 5-hour window
     public var messagesPerFiveHours: Int? {
         switch self {
@@ -182,12 +177,12 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
         case .max200: 900 // 20× Pro usage
         }
     }
-    
+
     /// Context window in tokens
     public var contextWindowTokens: Int {
         200_000 // All tiers have 200K token context window
     }
-    
+
     /// Description for UI
     public var description: String {
         switch self {

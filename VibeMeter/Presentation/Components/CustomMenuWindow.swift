@@ -88,17 +88,17 @@ final class CustomMenuWindow: NSPanel {
             let buttonBounds = statusItemButton.bounds
             let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
             let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
-            
+
             // Check if the button frame is valid and visible
             // When the icon is hidden by apps like Ice, the frame might have zero width/height
             // or be positioned off-screen. In these cases, we need to fall back to a fixed
             // position at the top right of the screen.
-            if buttonFrameInScreen.width > 0 && buttonFrameInScreen.height > 0 {
+            if buttonFrameInScreen.width > 0, buttonFrameInScreen.height > 0 {
                 // Normal case: Calculate optimal position relative to the status bar icon
                 let targetFrame = calculateOptimalFrame(
                     relativeTo: buttonFrameInScreen,
                     preferredSize: preferredSize)
-                
+
                 setFrame(targetFrame, display: false)
             } else {
                 // Fallback case: Icon is hidden by menu bar management apps
@@ -241,7 +241,7 @@ final class CustomMenuWindow: NSPanel {
             origin: NSPoint(x: x, y: finalY),
             size: preferredSize)
     }
-    
+
     /// Shows the window at the top right of the screen as a fallback position.
     ///
     /// This fallback is used when the menu bar icon cannot be located, typically when:
@@ -254,20 +254,20 @@ final class CustomMenuWindow: NSPanel {
     /// menu bar icon is not visible.
     private func showAtTopRightFallback(withSize preferredSize: NSSize) {
         guard let screen = NSScreen.main else { return }
-        
+
         let screenFrame = screen.visibleFrame
         let menuBarHeight: CGFloat = 25 // Standard menu bar height
         let rightMargin: CGFloat = 10
         let gap: CGFloat = 5
-        
+
         // Position at top right, just below the menu bar
         let x = screenFrame.maxX - preferredSize.width - rightMargin
         let y = screenFrame.maxY - menuBarHeight - preferredSize.height - gap
-        
+
         let fallbackFrame = NSRect(
             origin: NSPoint(x: x, y: y),
             size: preferredSize)
-        
+
         setFrame(fallbackFrame, display: false)
     }
 
@@ -277,7 +277,7 @@ final class CustomMenuWindow: NSPanel {
         teardownEventMonitoring()
         onHide?()
     }
-    
+
     override func orderOut(_ sender: Any?) {
         super.orderOut(sender)
         // Ensure onHide is called even if window is closed by system

@@ -11,7 +11,7 @@ struct VibeMeterMainView: View {
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager
     let onRefresh: () async -> Void
-    
+
     @StateObject
     private var claudeLogManager = ClaudeLogManager.shared
 
@@ -120,7 +120,7 @@ private extension VibeMeterMainView {
     func openSettingsToProvidersTab() {
         // Open settings window first
         NSApp.openSettings()
-        
+
         // Post notification to switch to providers tab after a brief delay
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(150))
