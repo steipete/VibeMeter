@@ -29,6 +29,14 @@ public final class MultiProviderLoginManager {
     private let webViewManager: LoginWebViewManager
     private let providerFactory: ProviderFactory
     private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderLogin")
+    
+    // Weak reference to orchestrator to avoid retain cycles
+    public weak var orchestrator: MultiProviderDataOrchestrator?
+    
+    // Internal method to attempt automatic re-authentication
+    func attemptAutomaticReauthentication(for provider: ServiceProvider, completion: @escaping (Bool) -> Void) {
+        webViewManager.attemptAutomaticReauthentication(for: provider, completion: completion)
+    }
 
     // MARK: - Initialization
 

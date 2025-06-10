@@ -7,16 +7,18 @@ import os.log
 ///
 /// This handler centralizes error processing logic for all provider types,
 /// ensuring consistent error handling and appropriate status updates.
-final class MultiProviderErrorHandler: Sendable {
+final class MultiProviderErrorHandler {
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderErrorHandler")
     private let sessionStateManager: SessionStateManager
+    private weak var loginManager: MultiProviderLoginManager?
 
     // MARK: - Initialization
 
-    init(sessionStateManager: SessionStateManager) {
+    init(sessionStateManager: SessionStateManager, loginManager: MultiProviderLoginManager? = nil) {
         self.sessionStateManager = sessionStateManager
+        self.loginManager = loginManager
     }
 
     // MARK: - Public Methods
@@ -71,13 +73,42 @@ final class MultiProviderErrorHandler: Sendable {
         logger.warning("\(errorMessage) for \(provider.displayName)")
 
         if error == .unauthorized {
-            logger.warning("Clearing session data due to authentication failure")
-            spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
-            sessionStateManager.handleAuthenticationError(
-                for: provider,
-                error: error,
-                userSessionData: userSessionData,
-                spendingData: spendingData)
+            logger.warning("Authentication failed for \(provider.displayName)")
+            
+            // Attempt automatic re-authentication for Cursor
+            if provider == .cursor, let loginManager = loginManager {
+                logger.info("Attempting automatic re-authentication for Cursor")
+                spendingData.updateConnectionStatus(for: provider, status: .syncing)
+                
+                loginManager.attemptAutomaticReauthentication(for: provider) { [weak self] success in
+                    guard let self else { return }
+                    Task { @MainActor in
+                        if success {
+                            self.logger.info("Automatic re-authentication successful for Cursor")
+                            // Trigger data refresh after successful re-auth
+                            if let orchestrator = loginManager.orchestrator {
+                                await orchestrator.refreshData(for: provider, showSyncedMessage: false)
+                            }
+                        } else {
+                            self.logger.warning("Automatic re-authentication failed for Cursor")
+                            spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
+                            self.sessionStateManager.handleAuthenticationError(
+                                for: provider,
+                                error: error,
+                                userSessionData: userSessionData,
+                                spendingData: spendingData)
+                        }
+                    }
+                }
+            } else {
+                // For other providers or if auto-auth not available
+                spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
+                sessionStateManager.handleAuthenticationError(
+                    for: provider,
+                    error: error,
+                    userSessionData: userSessionData,
+                    spendingData: spendingData)
+            }
         } else {
             logger.info("Team data unavailable but user remains authenticated")
             spendingData.updateConnectionStatus(for: provider, status: .connected)

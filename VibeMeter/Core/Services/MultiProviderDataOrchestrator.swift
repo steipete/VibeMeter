@@ -86,7 +86,7 @@ public final class MultiProviderDataOrchestrator {
             notificationManager: notificationManager,
             settingsManager: settingsManager,
             currencyData: currencyData)
-        self.errorHandler = MultiProviderErrorHandler(sessionStateManager: sessionStateManager)
+        self.errorHandler = MultiProviderErrorHandler(sessionStateManager: sessionStateManager, loginManager: loginManager)
         self.dataProcessor = MultiProviderDataProcessor(
             sessionStateManager: sessionStateManager,
             currencyOrchestrator: currencyOrchestrator,
@@ -98,6 +98,9 @@ public final class MultiProviderDataOrchestrator {
             logger.info("Set isRefreshing=false for \(provider.displayName)")
         }
 
+        // Set orchestrator reference in login manager
+        loginManager.orchestrator = self
+        
         setupManagerCallbacks()
         setupRefreshTimers()
 

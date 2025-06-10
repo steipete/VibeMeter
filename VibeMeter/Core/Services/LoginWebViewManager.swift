@@ -1,6 +1,8 @@
 import AppKit
 import Foundation
+import KeychainAccess
 import os.log
+import UserNotifications
 import WebKit
 
 /// Manages WebView windows and navigation for provider authentication.
@@ -23,6 +25,62 @@ final class LoginWebViewManager: NSObject {
     var onLoginDismiss: LoginDismissHandler?
 
     // MARK: - Public Methods
+    
+    /// Attempts automatic re-authentication for Cursor using stored credentials
+    func attemptAutomaticReauthentication(for provider: ServiceProvider, completion: @escaping (Bool) -> Void) {
+        guard provider == .cursor else {
+            completion(false)
+            return
+        }
+        
+        Task { @MainActor in
+            do {
+                // Retrieve stored credentials
+                let credentialKeychain = Keychain(service: "com.vibemeter.cursor.credentials")
+                guard let email = try credentialKeychain.get("cursor_email"),
+                      let password = try credentialKeychain.get("cursor_password") else {
+                    logger.info("No stored credentials found for automatic re-authentication")
+                    completion(false)
+                    return
+                }
+                
+                logger.info("Attempting automatic re-authentication for Cursor")
+                
+                // Create hidden WebView for automatic login
+                let webViewConfiguration = WKWebViewConfiguration()
+                let autoLoginScript = WKUserScript(
+                    source: getAutoLoginScript(email: email, password: password),
+                    injectionTime: .atDocumentEnd,
+                    forMainFrameOnly: true
+                )
+                webViewConfiguration.userContentController.addUserScript(autoLoginScript)
+                
+                // Add CAPTCHA detection
+                webViewConfiguration.userContentController.add(self, name: "captchaDetected")
+                
+                let webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
+                webView.navigationDelegate = self
+                self.webViews[provider] = webView
+                
+                // Load login page
+                webView.load(URLRequest(url: provider.authenticationURL))
+                
+                // Set timeout for auto-login attempt
+                Task {
+                    try? await Task.sleep(for: .seconds(30))
+                    if self.webViews[provider] != nil {
+                        logger.warning("Auto-login timeout reached")
+                        self.webViews[provider] = nil
+                        completion(false)
+                    }
+                }
+                
+            } catch {
+                logger.error("Failed to retrieve credentials for auto-login: \(error)")
+                completion(false)
+            }
+        }
+    }
 
     /// Shows login window for a specific provider.
     func showLoginWindow(for provider: ServiceProvider) {
@@ -35,8 +93,22 @@ final class LoginWebViewManager: NSObject {
             return
         }
 
-        // Create provider-specific WebView
+        // Create provider-specific WebView with JavaScript injection
         let webViewConfiguration = WKWebViewConfiguration()
+        
+        // Add user script to capture login credentials
+        if provider == .cursor {
+            let credentialCaptureScript = WKUserScript(
+                source: getCursorCredentialCaptureScript(),
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true
+            )
+            webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
+            
+            // Add message handler for credential capture
+            webViewConfiguration.userContentController.add(self, name: "credentialCapture")
+        }
+        
         let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 480, height: 640), configuration: webViewConfiguration)
         webView.navigationDelegate = self
         webViews[provider] = webView
@@ -175,10 +247,221 @@ extension LoginWebViewManager: NSWindowDelegate {
 
         logger.info("Login window closing for \(provider.displayName)")
 
+        // Clean up message handler
+        if provider == .cursor {
+            webViews[provider]?.configuration.userContentController.removeScriptMessageHandler(forName: "credentialCapture")
+        }
+
         webViews[provider]?.stopLoading()
         webViews[provider] = nil
         loginWindows[provider] = nil
 
         onLoginDismiss?(provider)
+    }
+}
+
+// MARK: - WKScriptMessageHandler
+
+extension LoginWebViewManager: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        switch message.name {
+        case "credentialCapture":
+            handleCredentialCapture(message: message)
+        case "captchaDetected":
+            handleCaptchaDetected()
+        default:
+            break
+        }
+    }
+    
+    private func handleCredentialCapture(message: WKScriptMessage) {
+        guard let messageBody = message.body as? [String: String],
+              let email = messageBody["email"],
+              let password = messageBody["password"] else {
+            return
+        }
+        
+        logger.info("Captured credentials for Cursor login")
+        
+        // Store credentials in keychain
+        Task {
+            do {
+                let credentialKeychain = Keychain(service: "com.vibemeter.cursor.credentials")
+                
+                // Store email
+                try credentialKeychain.set(email, key: "cursor_email")
+                
+                // Store password
+                try credentialKeychain.set(password, key: "cursor_password")
+                
+                logger.info("Successfully stored Cursor credentials in keychain")
+            } catch {
+                logger.error("Failed to store Cursor credentials: \(error)")
+            }
+        }
+    }
+    
+    private func handleCaptchaDetected() {
+        logger.warning("CAPTCHA detected during automatic login")
+        
+        // Show notification that manual intervention is required
+        Task { @MainActor in
+            // Show notification using system notifications
+            let content = UNMutableNotificationContent()
+            content.title = "Cursor Login Requires Attention"
+            content.body = "Please complete the CAPTCHA to continue."
+            content.sound = .default
+            
+            let request = UNNotificationRequest(
+                identifier: "cursor-captcha-required",
+                content: content,
+                trigger: nil
+            )
+            
+            try? await UNUserNotificationCenter.current().add(request)
+            
+            // Show the login window for manual CAPTCHA completion
+            showLoginWindow(for: .cursor)
+        }
+    }
+}
+
+// MARK: - JavaScript Injection
+
+private extension LoginWebViewManager {
+    func getCursorCredentialCaptureScript() -> String {
+        """
+        (function() {
+            // Wait for the login form to be available
+            function captureCredentials() {
+                // Look for email/username and password fields
+                const emailField = document.querySelector('input[type="email"], input[name="email"], input[name="username"], input[id="email"], input[id="username"]');
+                const passwordField = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
+                
+                if (!emailField || !passwordField) {
+                    // Retry after a short delay if fields not found
+                    setTimeout(captureCredentials, 500);
+                    return;
+                }
+                
+                // Capture on form submission
+                const form = emailField.closest('form') || passwordField.closest('form');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        const email = emailField.value;
+                        const password = passwordField.value;
+                        
+                        if (email && password) {
+                            // Send credentials to native app
+                            window.webkit.messageHandlers.credentialCapture.postMessage({
+                                email: email,
+                                password: password
+                            });
+                        }
+                    }, true);
+                }
+                
+                // Also capture on button clicks (in case form submission is prevented)
+                const submitButtons = document.querySelectorAll('button[type="submit"], button:contains("Log in"), button:contains("Sign in")');
+                submitButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        setTimeout(() => {
+                            const email = emailField.value;
+                            const password = passwordField.value;
+                            
+                            if (email && password) {
+                                window.webkit.messageHandlers.credentialCapture.postMessage({
+                                    email: email,
+                                    password: password
+                                });
+                            }
+                        }, 100);
+                    }, true);
+                });
+            }
+            
+            // Start capture process
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', captureCredentials);
+            } else {
+                captureCredentials();
+            }
+        })();
+        """
+    }
+    
+    func getAutoLoginScript(email: String, password: String) -> String {
+        // Escape special characters in credentials
+        let escapedEmail = email.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+        let escapedPassword = password.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+        
+        return """
+        (function() {
+            let loginAttempted = false;
+            
+            function attemptAutoLogin() {
+                if (loginAttempted) return;
+                
+                // Check for CAPTCHA elements
+                const captchaElements = document.querySelectorAll(
+                    'div[class*="captcha"], iframe[src*="recaptcha"], div[id*="captcha"], .g-recaptcha'
+                );
+                
+                if (captchaElements.length > 0) {
+                    window.webkit.messageHandlers.captchaDetected.postMessage({});
+                    return;
+                }
+                
+                // Find email and password fields
+                const emailField = document.querySelector('input[type="email"], input[name="email"], input[name="username"], input[id="email"], input[id="username"]');
+                const passwordField = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
+                
+                if (!emailField || !passwordField) {
+                    setTimeout(attemptAutoLogin, 500);
+                    return;
+                }
+                
+                // Fill in credentials
+                emailField.value = '\(escapedEmail)';
+                passwordField.value = '\(escapedPassword)';
+                
+                // Trigger input events to ensure form validation
+                emailField.dispatchEvent(new Event('input', { bubbles: true }));
+                emailField.dispatchEvent(new Event('change', { bubbles: true }));
+                passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+                passwordField.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Find and click submit button
+                const submitButton = document.querySelector(
+                    'button[type="submit"], button:contains("Log in"), button:contains("Sign in"), input[type="submit"]'
+                );
+                
+                if (submitButton) {
+                    loginAttempted = true;
+                    setTimeout(() => {
+                        submitButton.click();
+                    }, 500);
+                } else {
+                    // Try form submission
+                    const form = emailField.closest('form') || passwordField.closest('form');
+                    if (form) {
+                        loginAttempted = true;
+                        setTimeout(() => {
+                            form.submit();
+                        }, 500);
+                    }
+                }
+            }
+            
+            // Start auto-login process
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', attemptAutoLogin);
+            } else {
+                attemptAutoLogin();
+            }
+        })();
+        """
     }
 }
