@@ -16,7 +16,7 @@ public actor CursorProvider: ProviderProtocol {
     // MARK: - Properties
 
     private let settingsManager: any SettingsManagerProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "CursorProvider")
+    private let logger = Logger.vibeMeter(category: "CursorProvider")
 
     // MARK: - Component Dependencies
 

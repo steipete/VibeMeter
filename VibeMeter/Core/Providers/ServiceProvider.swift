@@ -174,7 +174,7 @@ public final class ProviderRegistry {
     // MARK: - Private Properties
 
     private let userDefaults: UserDefaults
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ProviderRegistry")
+    private let logger = Logger.vibeMeter(category: "ProviderRegistry")
 
     // MARK: - Constants
 

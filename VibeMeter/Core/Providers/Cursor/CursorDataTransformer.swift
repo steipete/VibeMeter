@@ -6,7 +6,7 @@ import os.log
 /// This transformer handles the conversion from Cursor-specific API responses
 /// to generic provider models used throughout the application.
 enum CursorDataTransformer {
-    private static let logger = Logger(subsystem: "com.vibemeter", category: "CursorDataTransformer")
+    private static let logger = Logger.vibeMeter(category: "CursorDataTransformer")
 
     // MARK: - Transformation Methods
 
@@ -82,9 +82,7 @@ enum CursorDataTransformer {
     static func transformUsageData(from response: CursorUsageResponse) throws -> ProviderUsageData {
         let primaryUsage = response.gpt4
 
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let startOfMonth = dateFormatter.date(from: response.startOfMonth) ?? Date()
+        let startOfMonth = ISO8601DateFormatter.vibeMeterDefault.date(from: response.startOfMonth) ?? Date()
 
         let usageInfo = "Successfully transformed Cursor usage: " +
             "\(primaryUsage.numRequests)/\(primaryUsage.maxRequestUsage ?? 0) requests"

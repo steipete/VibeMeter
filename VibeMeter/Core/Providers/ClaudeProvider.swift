@@ -9,9 +9,10 @@ public actor ClaudeProvider: ProviderProtocol {
     // MARK: - Properties
 
     public let provider: ServiceProvider = .claude
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ClaudeProvider")
+    private let logger = Logger.vibeMeter(category: "ClaudeProvider")
     private let logManager: any ClaudeLogManagerProtocol
     private let settingsManager: any SettingsManagerProtocol
+    private let pricingManager = PricingDataManager.shared
 
     // Cache for performance
     private var cachedDailyUsage: [Date: [ClaudeLogEntry]]?
@@ -88,13 +89,33 @@ public actor ClaudeProvider: ProviderProtocol {
             SettingsManager.shared.sessionSettingsManager.claudeAccountType
         }
 
+        // Group entries by model for analytics (if needed later)
+        let allEntries = monthlyEntries.flatMap(\.1)
+        let entriesByModel = Dictionary(grouping: allEntries) { $0.model ?? "claude-3-5-sonnet" }
+
         for (date, entries) in monthlyEntries {
             let dailyUsage = ClaudeDailyUsage(date: date, entries: entries)
-            let costUSD = calculateCost(for: dailyUsage, accountType: accountType)
 
-            if costUSD > 0 {
+            // Calculate cost using the new pricing manager with smart mode selection
+            var totalDailyCost = 0.0
+
+            for entry in entries {
+                let tokens = TokenUsage(
+                    inputTokens: entry.inputTokens,
+                    outputTokens: entry.outputTokens)
+
+                // Calculate cost based on model
+                let cost = await pricingManager.calculateCost(
+                    tokens: tokens,
+                    model: entry.model ?? "claude-3-5-sonnet",
+                    mode: .calculate)
+
+                totalDailyCost += cost
+            }
+
+            if totalDailyCost > 0 {
                 let item = ProviderInvoiceItem(
-                    cents: Int(costUSD * 100),
+                    cents: Int(totalDailyCost * 100),
                     description: "Claude usage on \(formatDate(date))",
                     provider: .claude)
                 invoiceItems.append(item)
@@ -107,21 +128,27 @@ public actor ClaudeProvider: ProviderProtocol {
             true // Items are already in order from the loop
         }
 
-        // Calculate total tokens for the month
+        // Calculate total tokens for the month using efficient aggregation
         var totalInputTokens = 0
         var totalOutputTokens = 0
         var totalCost = 0.0
-        for (date, entries) in monthlyEntries {
-            let dailyUsage = ClaudeDailyUsage(date: date, entries: entries)
-            totalInputTokens += dailyUsage.totalInputTokens
-            totalOutputTokens += dailyUsage.totalOutputTokens
 
-            let dailyCost = calculateCost(for: dailyUsage, accountType: accountType)
-            totalCost += dailyCost
+        for (_, entries) in monthlyEntries {
+            for entry in entries {
+                totalInputTokens += entry.inputTokens
+                totalOutputTokens += entry.outputTokens
 
-            logger
-                .debug(
-                    "Claude: Day \(self.formatDate(date)) - Input: \(dailyUsage.totalInputTokens), Output: \(dailyUsage.totalOutputTokens), Cost: $\(dailyCost)")
+                let tokens = TokenUsage(
+                    inputTokens: entry.inputTokens,
+                    outputTokens: entry.outputTokens)
+
+                let cost = await pricingManager.calculateCost(
+                    tokens: tokens,
+                    model: entry.model ?? "claude-3-5-sonnet",
+                    mode: .calculate)
+
+                totalCost += cost
+            }
         }
 
         logger
@@ -136,15 +163,25 @@ public actor ClaudeProvider: ProviderProtocol {
         let inputStr = formatter.string(from: NSNumber(value: totalInputTokens)) ?? "\(totalInputTokens)"
         let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
 
-        // Calculate individual costs
-        let (inputPrice, outputPrice) = getPricing(for: accountType)
-        let inputCost = Double(totalInputTokens) / 1_000_000 * inputPrice
-        let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPrice
+        // Calculate individual costs using pricing manager
+        // For display purposes, use estimated costs based on Claude 3.5 Sonnet
+        let defaultModel = "claude-3-5-sonnet"
+        let inputTokenUsage = TokenUsage(inputTokens: 1_000_000, outputTokens: 0)
+        let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: 1_000_000)
 
-        let costFormatter = NumberFormatter()
-        costFormatter.numberStyle = .currency
-        costFormatter.currencyCode = "USD"
-        costFormatter.maximumFractionDigits = 2
+        let inputPricePerMillion = await pricingManager.calculateCost(
+            tokens: inputTokenUsage,
+            model: defaultModel,
+            mode: .calculate)
+        let outputPricePerMillion = await pricingManager.calculateCost(
+            tokens: outputTokenUsage,
+            model: defaultModel,
+            mode: .calculate)
+
+        let inputCost = Double(totalInputTokens) / 1_000_000 * inputPricePerMillion
+        let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPricePerMillion
+
+        let costFormatter = NumberFormatter.vibeMeterCurrency(with: "USD")
 
         let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
         let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
@@ -182,7 +219,7 @@ public actor ClaudeProvider: ProviderProtocol {
             currentRequests: currentRequests,
             totalRequests: currentRequests,
             maxRequests: maxRequests,
-            startOfMonth: Date().startOfMonth(),
+            startOfMonth: Date().startOfMonth,
             provider: .claude)
     }
 
@@ -255,39 +292,10 @@ public actor ClaudeProvider: ProviderProtocol {
         return usage
     }
 
-    private func calculateCost(for dailyUsage: ClaudeDailyUsage, accountType: ClaudePricingTier) -> Double {
-        // Pricing based on account type
-        let (inputPrice, outputPrice) = getPricing(for: accountType)
-        return dailyUsage.calculateCost(
-            inputPricePerMillion: inputPrice,
-            outputPricePerMillion: outputPrice)
-    }
-
-    private func getPricing(for accountType: ClaudePricingTier) -> (input: Double, output: Double) {
-        switch accountType {
-        case .free:
-            // Free tier has no cost
-            (0, 0)
-        case .pro, .max100, .max200:
-            // All paid tiers use the same Claude 3.5 Sonnet pricing
-            (3.0, 15.0) // $3/$15 per million tokens
-        }
-    }
-
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
-    }
-}
-
-// MARK: - Date Extensions
-
-private extension Date {
-    func startOfMonth() -> Date {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month], from: self)
-        return calendar.date(from: components) ?? self
     }
 }

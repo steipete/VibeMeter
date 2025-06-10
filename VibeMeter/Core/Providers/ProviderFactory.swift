@@ -10,7 +10,7 @@ import os.log
 public final class ProviderFactory: @unchecked Sendable {
     private let settingsManager: any SettingsManagerProtocol
     private let urlSession: URLSessionProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ProviderFactory")
+    private let logger = Logger.vibeMeter(category: "ProviderFactory")
 
     public init(
         settingsManager: any SettingsManagerProtocol,

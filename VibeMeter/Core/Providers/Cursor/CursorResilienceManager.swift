@@ -8,7 +8,7 @@ import os.log
 actor CursorResilienceManager {
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "CursorResilienceManager")
+    private let logger = Logger.vibeMeter(category: "CursorResilienceManager")
 
     // MARK: - Public Methods
 

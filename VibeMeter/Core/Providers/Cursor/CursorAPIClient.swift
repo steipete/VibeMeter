@@ -9,7 +9,7 @@ actor CursorAPIClient {
     // MARK: - Properties
 
     private let urlSession: URLSessionProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "CursorAPIClient")
+    private let logger = Logger.vibeMeter(category: "CursorAPIClient")
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
