@@ -146,17 +146,26 @@ final class StatusBarController: NSObject {
         } else if !hasData {
             stateManager.setState(.loading)
         } else {
-            let totalSpendingUSD = spendingData.totalSpendingConverted(
-                to: "USD",
-                rates: currencyData.effectiveRates)
-
-            // Calculate gauge value based on whether money has been spent
-            let gaugeValue: Double = if totalSpendingUSD > 0 {
-                // Money has been spent - show spending as percentage of limit
-                min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+            // Check if we should display Claude quota instead of spending
+            let gaugeValue: Double
+            if settingsManager.displaySettingsManager.gaugeRepresentation == .claudeQuota,
+               userSession.isLoggedIn(to: .claude) {
+                // Calculate Claude 5-hour window usage
+                gaugeValue = calculateClaudeQuotaPercentage()
             } else {
-                // No money spent - show requests used as percentage of available limit
-                calculateRequestUsagePercentage()
+                // Original logic for total spending
+                let totalSpendingUSD = spendingData.totalSpendingConverted(
+                    to: "USD",
+                    rates: currencyData.effectiveRates)
+
+                // Calculate gauge value based on whether money has been spent
+                if totalSpendingUSD > 0 {
+                    // Money has been spent - show spending as percentage of limit
+                    gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+                } else {
+                    // No money spent - show requests used as percentage of available limit
+                    gaugeValue = calculateRequestUsagePercentage()
+                }
             }
 
             // Only set new data state if the value has changed significantly
@@ -247,45 +256,59 @@ final class StatusBarController: NSObject {
         return 0.0
     }
 
+    /// Calculates the Claude 5-hour window quota percentage
+    private func calculateClaudeQuotaPercentage() -> Double {
+        // Get Claude provider data
+        guard let claudeData = spendingData.getSpendingData(for: .claude),
+              let usageData = claudeData.usageData else {
+            return 0.0
+        }
+
+        // For Claude, currentRequests represents the percentage used
+        // in the 5-hour window (0-100)
+        let percentageUsed = Double(usageData.currentRequests) / 100.0
+        return min(max(percentageUsed, 0.0), 1.0)
+    }
+
     private func setupTrackingArea(for button: NSStatusBarButton) {
         // Remove existing tracking area if any
         if let existingTrackingArea = trackingArea {
             button.removeTrackingArea(existingTrackingArea)
         }
-        
+
         // Create new tracking area
         trackingArea = NSTrackingArea(
             rect: button.bounds,
             options: [.activeAlways, .mouseEnteredAndExited],
             owner: self,
-            userInfo: nil
-        )
-        
-        if let trackingArea = trackingArea {
+            userInfo: nil)
+
+        if let trackingArea {
             button.addTrackingArea(trackingArea)
         }
     }
-    
-    @objc func mouseEntered(_ event: NSEvent) {
+
+    @objc
+    func mouseEntered(_: NSEvent) {
         // Force tooltip update when mouse enters the status bar button
         updateTooltipOnDemand()
     }
-    
-    @objc func mouseExited(_ event: NSEvent) {
+
+    @objc
+    func mouseExited(_: NSEvent) {
         // Optional: Could implement if we want to do something on exit
     }
-    
+
     private func updateTooltipOnDemand() {
         guard let button = statusItem?.button else { return }
-        
+
         // Create tooltip provider and get fresh tooltip text
         let tooltipProvider = StatusBarTooltipProvider(
             userSession: userSession,
             spendingData: spendingData,
             currencyData: currencyData,
-            settingsManager: settingsManager
-        )
-        
+            settingsManager: settingsManager)
+
         let freshTooltip = tooltipProvider.createTooltipText()
         button.toolTip = freshTooltip
     }
@@ -296,9 +319,9 @@ final class StatusBarController: NSObject {
         MainActor.assumeIsolated {
             animationController.stopTimers()
             observer.stopObserving()
-            
+
             // Clean up tracking area
-            if let button = statusItem?.button, let trackingArea = trackingArea {
+            if let button = statusItem?.button, let trackingArea {
                 button.removeTrackingArea(trackingArea)
             }
         }

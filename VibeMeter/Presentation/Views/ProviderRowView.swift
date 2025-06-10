@@ -36,7 +36,18 @@ struct ProviderRowView: View {
                 Text(provider.displayName)
                     .font(.headline)
 
-                if let session, isLoggedIn {
+                if provider == .claude {
+                    // Claude shows folder access status
+                    if ClaudeLogManager.shared.hasAccess {
+                        Text("Folder access granted")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("No folder access")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                } else if let session, isLoggedIn {
                     Text(session.userEmail ?? "Unknown user")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -72,18 +83,36 @@ struct ProviderRowView: View {
 
             // Action buttons
             HStack(spacing: 8) {
-                if isEnabled, !isLoggedIn {
-                    Button("Login") {
-                        loginManager.showLoginWindow(for: provider)
+                if provider == .claude {
+                    // Claude uses folder access instead of login
+                    if !ClaudeLogManager.shared.hasAccess {
+                        Button("Grant Access") {
+                            Task {
+                                _ = await ClaudeLogManager.shared.requestLogAccess()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        Button("Revoke Access") {
+                            ClaudeLogManager.shared.revokeAccess()
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.borderedProminent)
-                }
+                } else {
+                    // Other providers use login
+                    if isEnabled, !isLoggedIn {
+                        Button("Login") {
+                            loginManager.showLoginWindow(for: provider)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
 
-                if isLoggedIn {
-                    Button("Logout") {
-                        loginManager.logOut(from: provider)
+                    if isLoggedIn {
+                        Button("Logout") {
+                            loginManager.logOut(from: provider)
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
                 }
 
                 Button("Details") {
@@ -97,6 +126,8 @@ struct ProviderRowView: View {
     private var statusColor: Color {
         if !isEnabled {
             .gray
+        } else if provider == .claude {
+            ClaudeLogManager.shared.hasAccess ? .green : .orange
         } else if isLoggedIn {
             .green
         } else {

@@ -9,15 +9,17 @@ import os.log
 /// Each provider has unique authentication methods, API endpoints, and data structures.
 public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     case cursor
+    case claude
     // Future providers can be added here:
     // case openai = "openai"
-    // case anthropic = "anthropic"
 
     /// Human-readable display name for the provider.
     public var displayName: String {
         switch self {
         case .cursor:
             "Cursor"
+        case .claude:
+            "Claude"
         }
     }
 
@@ -26,6 +28,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://cursor.com")!
+        case .claude:
+            URL(string: "https://claude.ai")!
         }
     }
 
@@ -34,6 +38,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/analytics")!
+        case .claude:
+            URL(string: "https://claude.ai/usage")!
         }
     }
 
@@ -42,6 +48,9 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://authenticator.cursor.sh/")!
+        case .claude:
+            // Claude uses local file access, no web authentication needed
+            URL(string: "file://localhost")!
         }
     }
 
@@ -50,6 +59,9 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/api")!
+        case .claude:
+            // Claude uses local file access, no API needed
+            URL(string: "file://localhost")!
         }
     }
 
@@ -58,6 +70,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             ".cursor.com"
+        case .claude:
+            "" // No cookies needed for local file access
         }
     }
 
@@ -66,6 +80,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "WorkosCursorSessionToken"
+        case .claude:
+            "" // No cookies needed for local file access
         }
     }
 
@@ -74,6 +90,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "com.steipete.vibemeter.cursor"
+        case .claude:
+            "com.steipete.vibemeter.claude"
         }
     }
 
@@ -82,6 +100,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "USD" // Cursor bills in USD
+        case .claude:
+            "USD" // Claude bills in USD
         }
     }
 
@@ -90,6 +110,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             true
+        case .claude:
+            false // Claude is individual accounts only
         }
     }
 
@@ -98,6 +120,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "cursor"
+        case .claude:
+            "bubble.right" // SF Symbol for Claude
         }
     }
 
@@ -106,6 +130,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "#000000" // Cursor's black theme
+        case .claude:
+            "#D97757" // Claude's orange/terracotta color
         }
     }
 }

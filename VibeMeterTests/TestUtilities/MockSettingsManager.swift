@@ -17,6 +17,10 @@ final class MockSettingsManager: SettingsManagerProtocol {
     var enabledProviders: Set<ServiceProvider> = [.cursor]
     var menuBarDisplayMode: MenuBarDisplayMode = .both
     var updateChannel: UpdateChannel = .stable
+    
+    // Sub-managers for protocol compliance
+    lazy var displaySettingsManager = DisplaySettingsManager(userDefaults: UserDefaults())
+    lazy var sessionSettingsManager = SessionSettingsManager(userDefaults: UserDefaults())
 
     init(
         selectedCurrencyCode: String = "USD",

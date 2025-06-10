@@ -18,6 +18,7 @@ public final class SessionSettingsManager {
     private enum Keys {
         static let providerSessions = "providerSessions"
         static let enabledProviders = "enabledProviders"
+        static let claudeAccountType = "claudeAccountType"
     }
 
     // MARK: - Session Data
@@ -46,6 +47,14 @@ public final class SessionSettingsManager {
         }
     }
 
+    /// Claude account type (Pro or Free)
+    public var claudeAccountType: ClaudePricingTier {
+        didSet {
+            userDefaults.set(claudeAccountType.rawValue, forKey: Keys.claudeAccountType)
+            logger.debug("Claude account type set to: \(self.claudeAccountType.displayName)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -64,6 +73,14 @@ public final class SessionSettingsManager {
             self.enabledProviders = Set(enabledArray.compactMap(ServiceProvider.init))
         } else {
             self.enabledProviders = [.cursor] // Default to Cursor enabled
+        }
+
+        // Load Claude account type
+        if let savedAccountType = userDefaults.string(forKey: Keys.claudeAccountType),
+           let accountType = ClaudePricingTier(rawValue: savedAccountType) {
+            self.claudeAccountType = accountType
+        } else {
+            self.claudeAccountType = .pro // Default to Pro
         }
 
         logger.info("SessionSettingsManager initialized with \(self.providerSessions.count) provider sessions")

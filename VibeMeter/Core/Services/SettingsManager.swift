@@ -32,6 +32,10 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     func clearUserSessionData(for provider: ServiceProvider)
     func getSession(for provider: ServiceProvider) -> ProviderSession?
     func updateSession(for provider: ServiceProvider, session: ProviderSession)
+    
+    // Access to sub-managers
+    var displaySettingsManager: DisplaySettingsManager { get }
+    var sessionSettingsManager: SessionSettingsManager { get }
 }
 
 // MARK: - Modern Settings Manager
@@ -59,6 +63,11 @@ public final class SettingsManager: SettingsManagerProtocol {
     private let displayManager: DisplaySettingsManager
     private let limitsManager: SpendingLimitsManager
     private let behaviorManager: AppBehaviorSettingsManager
+
+    // Public access to session settings manager for Claude account type
+    public var sessionSettingsManager: SessionSettingsManager { sessionManager }
+    // Public access to display settings manager for gauge representation
+    public var displaySettingsManager: DisplaySettingsManager { displayManager }
 
     private let logger = Logger(subsystem: "com.vibemeter", category: "Settings")
 

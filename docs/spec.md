@@ -7,7 +7,7 @@ https://www.cursor.com/settings
 
 **1. Overview & Purpose**
 
-VibeMeter is a macOS menu bar application designed with a **multi-provider architecture** to monitor monthly spending across multiple AI service providers. While currently supporting only Cursor AI, the application is architected to easily add support for OpenAI, Anthropic, GitHub Copilot, and other services. It provides at-a-glance cost information via an animated gauge icon, configurable spending limits with system notifications, multi-currency support, and a modern SwiftUI-based interface. The application uses provider-specific authentication methods (WebKit-based OAuth flows) to obtain session tokens for secure API access.
+VibeMeter is a macOS menu bar application designed with a **multi-provider architecture** to monitor monthly spending across multiple AI service providers. Currently supporting Cursor AI and Claude (via local log file analysis), the application is architected to easily add support for OpenAI, GitHub Copilot, and other services. It provides at-a-glance cost information via an animated gauge icon, configurable spending limits with system notifications, multi-currency support, and a modern SwiftUI-based interface. The application uses provider-specific authentication methods (WebKit-based OAuth flows for Cursor, local file access for Claude) to obtain necessary access.
 
 **2. Target Platform**
 
@@ -23,7 +23,7 @@ VibeMeter is a macOS menu bar application designed with a **multi-provider archi
 The application uses a provider-agnostic architecture enabling support for multiple AI services:
 
 *   **ProviderProtocol:** Generic interface that all service providers must implement
-*   **ServiceProvider Enum:** Defines supported providers (currently: .cursor, extensible for others)
+*   **ServiceProvider Enum:** Defines supported providers (currently: .cursor, .claude, extensible for others)
 *   **ProviderFactory:** Creates provider instances based on service type
 *   **ProviderRegistry:** Manages enabled/disabled state of providers
 *   **Multi-Provider Models:** Observable models that maintain state for all providers simultaneously
@@ -205,6 +205,26 @@ The application uses a provider-agnostic architecture enabling support for multi
 *   **Single Instance:** Ensures only one app instance runs at a time
 *   **Analytics WebView:** Opens provider dashboards in external browser
 
+**4.10. Claude-Specific Features**
+
+**Authentication & Access:**
+*   **Local File Access:** Reads usage logs from ~/.claude/projects/
+*   **Sandbox Security:** Uses security-scoped bookmarks for folder access
+*   **No Login Required:** User selects account type (Free/Pro) in settings
+
+**Unique Functionality:**
+*   **Dual-Mode Menu Bar Gauge:**
+    *   Total monthly spending across all providers (default)
+    *   Claude 5-hour window quota remaining (Claude Pro only)
+*   **5-Hour Window Tracking:** Real-time monitoring of Claude Pro's rolling quota
+*   **Token Counting:** Integrated Tiktoken library with o200k_base encoding
+*   **Daily Usage Breakdown:** Detailed view showing token usage per day
+
+**UI Components:**
+*   **ClaudeQuotaView:** Shows 5-hour window progress bar in popover
+*   **ClaudeDetailView:** Table view with daily token usage breakdown
+*   **Gauge Representation Setting:** Toggle between spending/quota display
+
 **5. Data Storage & Persistence**
 
 **macOS Keychain (per provider):**
@@ -221,6 +241,8 @@ The application uses a provider-agnostic architecture enabling support for multi
 *   `launchAtLoginEnabled`: Bool
 *   `showCostInMenuBar`: Bool (default: false)
 *   `showInDock`: Bool (default: false)
+*   `gaugeRepresents`: String (default: "totalSpending", options: "claudeQuota")
+*   `claudeAccountType`: String (default: "Pro", options: "Free")
 
 **6. Error Handling**
 
@@ -274,6 +296,7 @@ VibeMeter/
 │   │   ├── Color+Theme.swift
 │   │   └── URL+QueryItems.swift
 │   ├── Models/            # Data models (@Observable)
+│   │   ├── ClaudeUsageData.swift
 │   │   ├── CurrencyData.swift
 │   │   ├── MenuBarDisplayMode.swift
 │   │   ├── MultiProviderUserSession.swift
@@ -289,12 +312,14 @@ VibeMeter/
 │   │   │   ├── CursorDataTransformer.swift
 │   │   │   ├── CursorResilienceManager.swift
 │   │   │   └── CursorResponseModels.swift
+│   │   ├── ClaudeProvider.swift
 │   │   ├── CursorProvider.swift
 │   │   ├── ProviderProtocol.swift
 │   │   └── ServiceProvider.swift
 │   ├── Services/          # Business logic services
 │   │   ├── AuthenticationTokenManager.swift
 │   │   ├── BackgroundDataProcessor.swift
+│   │   ├── ClaudeLogManager.swift
 │   │   ├── CurrencyManager.swift
 │   │   ├── CurrencyOrchestrator.swift
 │   │   ├── ExchangeRateManager.swift
@@ -325,6 +350,11 @@ VibeMeter/
 │       ├── RelativeTimeFormatter.swift
 │       ├── StringExtensions+MenuBar.swift
 │       ├── StringExtensions.swift
+│       ├── Tiktoken/        # Token counting library
+│       │   ├── CoreBPE.swift
+│       │   ├── Encoding.swift
+│       │   ├── FileDecoder.swift
+│       │   └── Tiktoken.swift
 │       └── UserDefaultsBacked.swift
 ├── Presentation/
 │   ├── Components/        # Reusable UI components
@@ -360,6 +390,8 @@ VibeMeter/
 │   └── Views/             # SwiftUI views
 │       ├── AboutView.swift
 │       ├── AnalyticsWebView.swift
+│       ├── ClaudeDetailView.swift
+│       ├── ClaudeQuotaView.swift
 │       ├── GeneralSettingsView.swift
 │       ├── LoggedInContentView.swift
 │       ├── LoggedOutContentView.swift
@@ -372,6 +404,7 @@ VibeMeter/
 │       └── VibeMeterMainView.swift
 └── Resources/             # Assets and configs
     ├── Assets.xcassets/
+    ├── o200k_base.tiktoken   # Claude tokenizer vocabulary
     └── VibeMeter.entitlements
 ```
 

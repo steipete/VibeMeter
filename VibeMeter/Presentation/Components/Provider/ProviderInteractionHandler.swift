@@ -25,6 +25,9 @@ enum ProviderInteractionHandler {
                 // Fallback to opening dashboard without auth
                 BrowserAuthenticationHelper.openURL(provider.dashboardURL)
             }
+        case .claude:
+            // Claude doesn't use authentication tokens for dashboard
+            BrowserAuthenticationHelper.openURL(provider.dashboardURL)
         }
     }
 }

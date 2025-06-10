@@ -23,9 +23,25 @@ public final class DisplaySettingsManager {
         static let selectedCurrencyCode = "selectedCurrencyCode"
         static let refreshIntervalMinutes = "refreshIntervalMinutes"
         static let menuBarDisplayMode = "menuBarDisplayMode"
+        static let gaugeRepresents = "gaugeRepresents"
     }
 
     // MARK: - Display Preferences
+
+    /// What the gauge icon represents
+    public enum GaugeRepresentation: String, CaseIterable, Identifiable, Sendable {
+        case totalSpending
+        case claudeQuota
+
+        public var id: String { rawValue }
+
+        public var displayName: String {
+            switch self {
+            case .totalSpending: "Total Monthly Spending"
+            case .claudeQuota: "Claude 5-Hour Quota"
+            }
+        }
+    }
 
     /// Selected currency code for display
     public var selectedCurrencyCode: String {
@@ -51,6 +67,14 @@ public final class DisplaySettingsManager {
         }
     }
 
+    /// What the gauge icon represents (total spending or Claude quota)
+    public var gaugeRepresentation: GaugeRepresentation {
+        didSet {
+            userDefaults.set(gaugeRepresentation.rawValue, forKey: Keys.gaugeRepresents)
+            logger.debug("Gauge representation set to: \(self.gaugeRepresentation.displayName)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -66,6 +90,14 @@ public final class DisplaySettingsManager {
             menuBarDisplayMode = displayMode
         } else {
             menuBarDisplayMode = .both // Default to "both" (icon + money)
+        }
+
+        // Initialize gauge representation
+        if let gaugeRepString = userDefaults.string(forKey: Keys.gaugeRepresents),
+           let gaugeRep = GaugeRepresentation(rawValue: gaugeRepString) {
+            gaugeRepresentation = gaugeRep
+        } else {
+            gaugeRepresentation = .totalSpending // Default to total spending
         }
 
         // Validate refresh interval

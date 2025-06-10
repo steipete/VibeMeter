@@ -169,6 +169,9 @@ extension NetworkRetryHandler {
         case .cursor:
             // Cursor has aggressive rate limiting, use conservative retry
             NetworkRetryHandler(configuration: .default)
+        case .claude:
+            // Claude uses local files, no network retry needed
+            NetworkRetryHandler(configuration: .default)
         }
     }
 }

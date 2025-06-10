@@ -5,7 +5,8 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 ## ✨ Features
 
 - **📊 Real-time Spending Tracking** - Monitor your AI service costs directly from your menu bar
-- **🔄 Multi-Provider Support** - Currently supports Cursor AI with extensible architecture for future services
+- **🔄 Multi-Provider Support** - Supports Cursor AI and Claude with extensible architecture for future services
+- **🎭 Claude Integration** - Track Claude usage via local log file analysis with 5-hour window quota monitoring
 - **💰 Multi-Currency Support** - View spending in USD, EUR, GBP, JPY, and 20+ other currencies
 - **🔔 Smart Notifications** - Customizable spending limit alerts to keep you on budget
 - **🎨 Animated Gauge Display** - Beautiful visual indicator showing spending progress
@@ -27,26 +28,43 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 ## 📋 Requirements
 
 - **macOS 15.0** or later (Sequoia)
-- **Cursor AI account** (free or paid)
+- **Cursor AI account** (free or paid) and/or **Claude** (desktop or VS Code extension)
 - **Internet connection** for real-time data sync
 
 ## 🎯 How It Works
 
-Vibe Meter connects securely to your Cursor AI account and monitors your monthly usage:
+Vibe Meter monitors your AI service usage through different methods:
 
+### Cursor AI
+- **Secure Login** - Connects via official web authentication
+- **API Integration** - Fetches usage data directly from Cursor's servers
 - **Automatic Sync** - Updates spending data every 5 minutes
+
+### Claude
+- **Local Log Analysis** - Reads usage data from `~/.claude/projects/` with your permission
+- **No Login Required** - Select your account type (Free/Pro) in settings
+- **5-Hour Window Tracking** - Monitors Claude Pro's rolling quota in real-time
+- **Token Counting** - Uses OpenAI's o200k_base encoding for accurate calculations
+
+### All Providers
 - **Visual Indicators** - Gauge fills up as you approach your spending limits
 - **Progress Notifications** - Alerts at 80% and 100% of your warning threshold
 - **Currency Conversion** - Real-time exchange rates for accurate international tracking
 
 ### 📊 Gauge Behavior
 
-The gauge icon in the menu bar adapts its display based on your usage:
+The gauge icon in the menu bar has two display modes:
 
+#### Total Spending Mode (Default)
 - **No Money Spent** - When you haven't spent any money yet (but have used requests), the gauge shows the percentage of API requests used. For example, if you've used 3 out of 500 requests, the gauge shows 0.6% filled.
 - **Money Spent** - Once you start spending money, the gauge switches to show spending as a percentage of your upper limit. For example, if you've spent $15 out of a $30 limit, the gauge shows 50% filled.
 
-This intelligent behavior ensures the gauge always provides meaningful feedback about your usage, whether you're on a free tier using requests or actively spending on premium features.
+#### Claude Quota Mode (Optional)
+- **5-Hour Window** - For Claude Pro users, the gauge can show your remaining quota in the 5-hour rolling window
+- **Real-time Updates** - The gauge updates as you use Claude, showing how much of your quota remains
+- **Toggle in Settings** - Switch between spending and quota display modes in General Settings
+
+This intelligent behavior ensures the gauge always provides meaningful feedback about your usage, whether you're tracking overall spending or Claude's specific quota limits.
 
 ## ⚙️ Configuration
 
@@ -58,6 +76,8 @@ This intelligent behavior ensures the gauge always provides meaningful feedback 
 - **Show Cost in Menu Bar** - Toggle cost display next to the icon
 - **Currency Selection** - Choose from 20+ supported currencies
 - **Notification Preferences** - Customize alert frequency and triggers
+- **Gauge Representation** - Choose between total spending or Claude quota display
+- **Claude Account Type** - Select Free or Pro for accurate cost calculations
 
 ## 🛠️ Development
 
