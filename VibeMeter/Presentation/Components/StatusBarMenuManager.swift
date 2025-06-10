@@ -19,6 +19,7 @@ final class StatusBarMenuManager {
 
     // Custom window management
     private var customWindow: CustomMenuWindow?
+    private weak var statusBarButton: NSStatusBarButton?
 
     // MARK: - Initialization
 
@@ -56,10 +57,8 @@ final class StatusBarMenuManager {
     func toggleCustomWindow(relativeTo button: NSStatusBarButton) {
         if let window = customWindow, window.isVisible {
             hideCustomWindow()
-            button.highlight(false)
         } else {
             showCustomWindow(relativeTo: button)
-            button.highlight(true)
         }
     }
 
@@ -70,6 +69,9 @@ final class StatusBarMenuManager {
               let spendingData,
               let currencyData,
               let orchestrator else { return }
+
+        // Store button reference
+        self.statusBarButton = button
 
         // Hide any existing context menu first
         // Note: Context menu hiding is handled by the StatusBarController
@@ -97,8 +99,8 @@ final class StatusBarMenuManager {
             customWindow = CustomMenuWindow(contentView: containerView)
 
             // Set up callback to unhighlight button when window hides
-            customWindow?.onHide = { [weak button] in
-                button?.highlight(false)
+            customWindow?.onHide = { [weak self] in
+                self?.statusBarButton?.highlight(false)
             }
         }
 

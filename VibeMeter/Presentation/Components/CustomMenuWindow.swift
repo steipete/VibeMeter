@@ -234,6 +234,14 @@ final class CustomMenuWindow: NSPanel {
         teardownEventMonitoring()
         onHide?()
     }
+    
+    override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
+        // Ensure onHide is called even if window is closed by system
+        if isVisible == false {
+            onHide?()
+        }
+    }
 
     private func setupEventMonitoring() {
         // Ensure we don't have duplicate monitors
