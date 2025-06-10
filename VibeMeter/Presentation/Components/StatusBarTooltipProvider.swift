@@ -77,12 +77,11 @@ final class StatusBarTooltipProvider {
             .max()
 
         guard let lastRefresh = mostRecentRefresh else {
-            return "🔴 Never updated"
+            return "Never updated"
         }
 
         let refreshText = RelativeTimeFormatter.string(from: lastRefresh, style: .withPrefix)
-        let freshnessIndicator = RelativeTimeFormatter.isFresh(lastRefresh) ? "🟢" : "🟡"
-        var refreshInfo = "\(freshnessIndicator) \(refreshText)"
+        var refreshInfo = refreshText
 
         // Add data freshness context
         if !RelativeTimeFormatter.isFresh(lastRefresh, withinMinutes: 15) {
