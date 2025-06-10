@@ -39,6 +39,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
     private let logDirectoryName = ".claude/projects"
+    private let authTokenManager = AuthenticationTokenManager()
 
     @Published
     public private(set) var hasAccess = false
@@ -69,6 +70,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.fileManager = fileManager
         self.userDefaults = userDefaults
         loadBookmark()
+        
+        // If we have access, ensure we have a token saved
+        if hasAccess {
+            _ = authTokenManager.saveToken("claude_local_access", for: .claude)
+        }
     }
 
     // Convenience init for singleton
@@ -108,6 +114,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 relativeTo: nil)
             saveBookmark(data: bookmark)
             logger.info("Successfully created security-scoped bookmark for folder access")
+            
+            // Save a dummy token to indicate Claude is "logged in"
+            _ = authTokenManager.saveToken("claude_local_access", for: .claude)
+            
             return true
         } catch {
             logger.error("Failed to create bookmark: \(error.localizedDescription)")
@@ -122,6 +132,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         do {
             try fileManager.removeItem(at: bookmarkFileURL())
             logger.info("Successfully revoked Claude log access")
+            
+            // Remove the dummy token to indicate Claude is "logged out"
+            _ = authTokenManager.deleteToken(for: .claude)
         } catch {
             logger.error("Failed to remove bookmark file: \(error.localizedDescription)")
         }

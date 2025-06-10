@@ -199,7 +199,7 @@ public final class ProviderRegistry {
         if let savedEnabledRaw = userDefaults.array(forKey: Keys.enabledProviders) as? [String] {
             self.enabledProviders = Set(savedEnabledRaw.compactMap(ServiceProvider.init))
         } else {
-            self.enabledProviders = [.cursor] // Default to Cursor enabled
+            self.enabledProviders = [.cursor, .claude] // Default to Cursor and Claude enabled
         }
 
         // Load provider configurations
