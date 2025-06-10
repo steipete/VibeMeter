@@ -25,7 +25,7 @@
         <item>
             <title>VibeMeter 1.0.0-beta.8</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.8/VibeMeter-1.0.0-beta.8.dmg</link>
-            <sparkle:version>1</sparkle:version>
+            <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.8</sparkle:shortVersionString>
             <description><![CDATA[
                 <h2>VibeMeter 1.0.0-beta.8</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.8 (build 105)</p></div>
@@ -42,7 +42,7 @@
         <item>
             <title>VibeMeter 1.0.0-beta.7</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.7/VibeMeter-1.0.0-beta.7.dmg</link>
-            <sparkle:version>1</sparkle:version>
+            <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.7</sparkle:shortVersionString>
             <description><![CDATA[
                 <h2>VibeMeter 1.0.0-beta.7</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.7 (build 105)</p></div>
@@ -59,7 +59,7 @@
         <item>
             <title>VibeMeter 1.0.0-beta.6</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.6/VibeMeter-1.0.0-beta.6.dmg</link>
-            <sparkle:version>1</sparkle:version>
+            <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.6</sparkle:shortVersionString>
             <description><![CDATA[
                 <h2>VibeMeter 1.0.0-beta.6</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.6 (build 105)</p></div>
@@ -76,7 +76,7 @@
         <item>
             <title>VibeMeter 1.0.0-beta.5</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.0.0-beta.5/VibeMeter-1.0.0-beta.5.dmg</link>
-            <sparkle:version>1</sparkle:version>
+            <sparkle:version>104</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.5</sparkle:shortVersionString>
             <description><![CDATA[
                 <h2>VibeMeter 1.0.0-beta.5</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.5 (build 104)</p></div>
