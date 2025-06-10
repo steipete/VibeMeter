@@ -9,15 +9,15 @@ import os.log
 /// Each provider has unique authentication methods, API endpoints, and data structures.
 public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     case cursor
-    // Future providers can be added here:
-    // case openai = "openai"
-    // case anthropic = "anthropic"
+    case claude // Added Claude provider
 
     /// Human-readable display name for the provider.
     public var displayName: String {
         switch self {
         case .cursor:
             "Cursor"
+        case .claude:
+            "Claude"
         }
     }
 
@@ -26,6 +26,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://cursor.com")!
+        case .claude:
+            URL(string: "https://claude.com")!
         }
     }
 
@@ -34,6 +36,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/analytics")!
+        case .claude:
+            URL(string: "https://www.claude.com/analytics")!
         }
     }
 
@@ -42,6 +46,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://authenticator.cursor.sh/")!
+        case .claude:
+            URL(string: "https://authenticator.claude.sh/")!
         }
     }
 
@@ -50,6 +56,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/api")!
+        case .claude:
+            URL(string: "https://www.claude.com/api")!
         }
     }
 
@@ -58,6 +66,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             ".cursor.com"
+        case .claude:
+            ".claude.com"
         }
     }
 
@@ -66,6 +76,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "WorkosCursorSessionToken"
+        case .claude:
+            "WorkosClaudeSessionToken"
         }
     }
 
@@ -74,6 +86,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "com.steipete.vibemeter.cursor"
+        case .claude:
+            "com.steipete.vibemeter.claude"
         }
     }
 
@@ -82,6 +96,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "USD" // Cursor bills in USD
+        case .claude:
+            "USD" // Claude bills in USD
         }
     }
 
@@ -89,6 +105,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     public var supportsTeams: Bool {
         switch self {
         case .cursor:
+            true
+        case .claude:
             true
         }
     }
@@ -98,6 +116,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "cursor"
+        case .claude:
+            "claude"
         }
     }
 
@@ -106,6 +126,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "#000000" // Cursor's black theme
+        case .claude:
+            "#000000" // Claude's black theme
         }
     }
 }

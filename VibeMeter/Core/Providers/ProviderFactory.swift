@@ -28,6 +28,8 @@ public final class ProviderFactory: @unchecked Sendable {
             CursorProvider(
                 settingsManager: settingsManager,
                 urlSession: urlSession)
+        case .claude:
+            ClaudeProvider()
         }
     }
 
