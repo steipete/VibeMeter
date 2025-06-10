@@ -231,7 +231,6 @@ final class StatusBarDisplayManager {
                     switch stateManager.currentState {
                     case .notLoggedIn:
                         GaugeIcon(value: 0, isLoading: false, isDisabled: true, animateOnAppear: shouldAnimate)
-                            .frame(width: 18, height: 18)
                             .environment(\.colorScheme, colorScheme)
                     case .loading:
                         GaugeIcon(
@@ -239,7 +238,6 @@ final class StatusBarDisplayManager {
                             isLoading: true,
                             isDisabled: false,
                             animateOnAppear: shouldAnimate)
-                            .frame(width: 18, height: 18)
                             .environment(\.colorScheme, colorScheme)
                     case .data:
                         GaugeIcon(
@@ -247,7 +245,6 @@ final class StatusBarDisplayManager {
                             isLoading: false,
                             isDisabled: false,
                             animateOnAppear: shouldAnimate)
-                            .frame(width: 18, height: 18)
                             .environment(\.colorScheme, colorScheme)
                     }
                 }

@@ -125,7 +125,7 @@ struct GaugeIcon: View {
                            style: StrokeStyle(lineWidth: line * 0.5, lineCap: .round))
             }
         }
-        .frame(width: 22, height: 22) // menu-bar size (@1×; doubles on Retina)
+        .frame(width: 18, height: 18) // menu-bar size (@1×; doubles on Retina)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(accessibilityValue)
