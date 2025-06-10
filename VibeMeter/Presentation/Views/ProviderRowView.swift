@@ -91,7 +91,14 @@ struct ProviderRowView: View {
                     if !claudeLogManager.hasAccess {
                         Button("Grant Access") {
                             Task {
-                                _ = await claudeLogManager.requestLogAccess()
+                                let granted = await claudeLogManager.requestLogAccess()
+                                if granted {
+                                    // Trigger login success flow for Claude
+                                    loginManager.handleAuthenticationResponse(
+                                        ["provider": "claude"],
+                                        for: .claude
+                                    )
+                                }
                             }
                         }
                         .buttonStyle(.borderedProminent)
