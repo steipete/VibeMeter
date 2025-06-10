@@ -28,30 +28,30 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
     // MARK: - ClaudeLogManagerProtocol
 
     func requestLogAccess() async -> Bool {
-        recordCall(#function)
+        recordCall("requestLogAccess")
         return requestLogAccessResult
     }
 
     func revokeAccess() {
-        recordCall(#function)
+        recordCall("revokeAccess")
         hasAccess = false
     }
 
     func getDailyUsage() async -> [Date: [ClaudeLogEntry]] {
-        recordCall(#function)
+        recordCall("getDailyUsage")
         isProcessing = true
         defer { isProcessing = false }
         return getDailyUsageResult
     }
 
     func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
-        recordCall(#function)
+        recordCall("calculateFiveHourWindow")
         capturedCalculateFiveHourWindowUsage = dailyUsage
         return calculateFiveHourWindowResult
     }
 
     func countTokens(in text: String) -> Int {
-        recordCall(#function)
+        recordCall("countTokens")
         capturedCountTokensText = text
         return countTokensResult
     }

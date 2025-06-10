@@ -180,9 +180,14 @@ struct AuthenticationTokenManagerTests {
                 let cookies = tokenManager.getCookies(for: provider)
 
                 if provider == activeProvider {
-                    #expect(cookies != nil)
-                    #expect(cookies?.count == 1)
-                    #expect(cookies?.first?.value == token)
+                    // Claude doesn't use cookies (local file access)
+                    if provider == .claude {
+                        #expect(cookies == nil)
+                    } else {
+                        #expect(cookies != nil)
+                        #expect(cookies?.count == 1)
+                        #expect(cookies?.first?.value == token)
+                    }
                 } else {
                     #expect(cookies == nil)
                 }

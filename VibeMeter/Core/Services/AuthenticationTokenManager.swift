@@ -29,6 +29,9 @@ final class AuthenticationTokenManager: @unchecked Sendable {
     /// Gets authentication cookies for a specific provider.
     func getCookies(for provider: ServiceProvider) -> [HTTPCookie]? {
         guard let token = getAuthToken(for: provider) else { return nil }
+        
+        // Claude doesn't use cookies (uses local file access)
+        guard !provider.authCookieName.isEmpty && !provider.cookieDomain.isEmpty else { return nil }
 
         var cookieProperties = [HTTPCookiePropertyKey: Any]()
         cookieProperties[.name] = provider.authCookieName

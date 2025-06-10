@@ -8,6 +8,7 @@ import Testing
 struct ClaudeProviderTests {
     // MARK: - Mock Settings Manager
 
+    @MainActor
     private func createMockSettingsManager() -> any SettingsManagerProtocol {
         MockSettingsManager()
     }
