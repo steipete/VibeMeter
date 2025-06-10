@@ -19,5 +19,9 @@
 		<string>com.steipete.vibemeter-spks</string>
 		<string>com.steipete.vibemeter-spki</string>
 	</array>
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+	<array>
+		<string>Library/Logs/Claude/</string>
+	</array>
 </dict>
 </plist>
