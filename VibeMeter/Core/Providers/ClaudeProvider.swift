@@ -89,10 +89,43 @@ public actor ClaudeProvider: ProviderProtocol {
             true // Items are already in order from the loop
         }
 
+        // Calculate total tokens for the month
+        var totalInputTokens = 0
+        var totalOutputTokens = 0
+        for (_, entries) in monthlyEntries {
+            let dailyUsage = ClaudeDailyUsage(date: Date(), entries: entries)
+            totalInputTokens += dailyUsage.totalInputTokens
+            totalOutputTokens += dailyUsage.totalOutputTokens
+        }
+        
+        // Create pricing description with token counts and cost breakdown
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = ","
+        
+        let inputStr = formatter.string(from: NSNumber(value: totalInputTokens)) ?? "\(totalInputTokens)"
+        let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
+        
+        // Calculate individual costs
+        let (inputPrice, outputPrice) = getPricing(for: accountType)
+        let inputCost = Double(totalInputTokens) / 1_000_000 * inputPrice
+        let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPrice
+        
+        let costFormatter = NumberFormatter()
+        costFormatter.numberStyle = .currency
+        costFormatter.currencyCode = "USD"
+        costFormatter.maximumFractionDigits = 2
+        
+        let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
+        let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
+        
+        let pricingDescription = "\(inputStr) input (\(inputCostStr)), \(outputStr) output (\(outputCostStr))"
+
         logger.info("Fetched monthly invoice for Claude: \(invoiceItems.count) items, month: \(month + 1)/\(year)")
 
         return ProviderMonthlyInvoice(
             items: invoiceItems,
+            pricingDescription: pricingDescription,
             provider: .claude,
             month: month,
             year: year)

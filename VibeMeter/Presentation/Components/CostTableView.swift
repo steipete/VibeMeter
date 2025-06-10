@@ -265,9 +265,62 @@ struct CostTableView: View {
 
     @ViewBuilder
     private func providerUsageBar(for provider: ServiceProvider) -> some View {
-        if let providerData = spendingData.getSpendingData(for: provider),
-           let usageData = providerData.usageData,
-           let maxRequests = usageData.maxRequests {
+        if provider == .claude {
+            // For Claude, show token usage information
+            if let providerData = spendingData.getSpendingData(for: provider) {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Show token counts if available
+                    if let description = providerData.invoiceData?.pricingDescription {
+                        // Split the description to show input and output on separate lines
+                        let components = description.components(separatedBy: ", ")
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(components, id: \.self) { component in
+                                Text(component)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.leading, 32)
+                    }
+                    
+                    // Show 5-hour window usage for Pro accounts
+                    if let usageData = providerData.usageData {
+                        HStack(spacing: 8) {
+                            Text("5-hour window:")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            
+                            GeometryReader { geometry in
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.secondary.opacity(0.2))
+                                        .frame(height: 6)
+
+                                    if let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                                        let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                                        RoundedRectangle(cornerRadius: 3)
+                                            .fill(progress > 0.8 ? Color.orange : Color.accentColor)
+                                            .frame(width: geometry.size.width * progress, height: 6)
+                                    }
+                                }
+                            }
+                            .frame(height: 6)
+
+                            if let maxRequests = usageData.maxRequests {
+                                Text("\(usageData.currentRequests)/\(maxRequests) messages")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize()
+                            }
+                        }
+                        .padding(.leading, 32)
+                    }
+                }
+            }
+        } else if let providerData = spendingData.getSpendingData(for: provider),
+                  let usageData = providerData.usageData,
+                  let maxRequests = usageData.maxRequests {
+            // Original implementation for other providers
             HStack(spacing: 8) {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
