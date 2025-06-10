@@ -40,7 +40,7 @@ struct ProviderUsageBadgeView: View {
         let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
         let percentUsed = Int(progress * 100)
 
-        return HStack(spacing: 6) {
+        return HStack(alignment: .center, spacing: 6) {
             progressBar(progress: progress)
             usageText(current: usageData.currentRequests, max: maxRequests)
             Spacer()

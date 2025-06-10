@@ -35,12 +35,12 @@ struct ProviderSpendingRowView: View {
             mainProviderRow
 
             // Show usage data and optionally last refresh on second line
-            HStack {
+            HStack(alignment: .center) {
                 // Align with icon column above (20px wide from mainProviderRow)
                 Color.clear
                     .frame(width: 20)
 
-                // Usage data badge with extended progress bar
+                // Usage data badge with extended progress bar - centered vertically
                 ProviderUsageBadgeView(
                     provider: provider,
                     spendingData: spendingData,
@@ -60,7 +60,7 @@ struct ProviderSpendingRowView: View {
                         .foregroundStyle(.quaternary)
                 }
             }
-            .frame(minHeight: showTimestamp ? 12 : 16) // Slightly taller when no timestamp
+            .frame(minHeight: showTimestamp ? 18 : 20) // Increase height for better centering
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2) // Reduce vertical padding
