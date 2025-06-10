@@ -108,6 +108,7 @@ let project = Project(
             ],
             resources: [
                 .glob(pattern: "VibeMeter/Assets.xcassets", excluding: []),
+                .glob(pattern: "VibeMeter/Resources/*.tiktoken", excluding: []),
             ],
             entitlements: .file(path: "VibeMeter/VibeMeter.entitlements"),
             dependencies: [
