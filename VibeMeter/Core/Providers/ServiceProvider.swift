@@ -121,7 +121,7 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         case .cursor:
             "cursor"
         case .claude:
-            "bubble.right" // SF Symbol for Claude
+            "claude" // Custom Claude app icon
         }
     }
 

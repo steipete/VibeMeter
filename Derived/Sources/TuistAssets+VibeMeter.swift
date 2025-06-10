@@ -19,6 +19,7 @@
 
 public enum VibeMeterAsset: Sendable {
   public static let accentColor = VibeMeterColors(name: "AccentColor")
+  public static let claude = VibeMeterImages(name: "claude")
   public static let cursor = VibeMeterImages(name: "cursor")
 }
 
