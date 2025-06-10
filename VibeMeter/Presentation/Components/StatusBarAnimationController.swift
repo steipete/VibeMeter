@@ -14,7 +14,7 @@ final class StatusBarAnimationController {
     private var periodicTimer: Timer?
     private let stateManager: MenuBarStateManager
     private var lastRenderedValue: Double = 0
-    private let logger = Logger(subsystem: "com.vibemeter", category: "StatusBarAnimationController")
+    private let logger = Logger.vibeMeter(category: "StatusBarAnimationController")
 
     // MARK: - Callbacks
 

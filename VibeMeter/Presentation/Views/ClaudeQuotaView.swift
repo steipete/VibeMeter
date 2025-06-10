@@ -11,7 +11,7 @@ struct ClaudeQuotaView: View {
 
     @State
     private var provider: ClaudeProvider?
-    
+
     @State
     private var showUsageReport = false
 
@@ -35,7 +35,7 @@ struct ClaudeQuotaView: View {
                     .foregroundStyle(.primary)
 
                 Spacer()
-                
+
                 // Info button to show usage report
                 Button(action: {
                     openUsageReport()
@@ -148,7 +148,7 @@ struct ClaudeQuotaView: View {
             ClaudeUsageReportView()
         }
     }
-    
+
     private func openUsageReport() {
         showUsageReport = true
     }

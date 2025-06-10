@@ -51,7 +51,8 @@ struct ProvidersSettingsView: View {
                 } footer: {
                     HStack {
                         Spacer()
-                        Text("Currently supporting Cursor AI and Claude subscriptions. Support for more providers is coming soon.")
+                        Text(
+                            "Currently supporting Cursor AI and Claude subscriptions. Support for more providers is coming soon.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -96,7 +97,7 @@ struct ProvidersSettingsView: View {
                 teamId: nil)
             return
         }
-        
+
         guard let token = loginManager.getAuthToken(for: provider) else {
             userSessionData.handleLoginFailure(for: provider,
                                                error: NSError(domain: "SettingsView", code: 1,

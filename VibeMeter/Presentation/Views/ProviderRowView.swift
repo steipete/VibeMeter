@@ -42,7 +42,7 @@ struct ProviderRowView: View {
             ))
             .toggleStyle(.switch)
             .labelsHidden()
-            
+
             // Provider icon
             providerIcon(for: provider)
                 .foregroundStyle(isEnabled ? .primary : .secondary)
@@ -112,7 +112,7 @@ struct ProviderRowView: View {
                                 if !isEnabled {
                                     ProviderRegistry.shared.enableProvider(provider)
                                 }
-                                
+
                                 let granted = await claudeLogManager.requestLogAccess()
                                 if granted {
                                     // Trigger login success flow for Claude

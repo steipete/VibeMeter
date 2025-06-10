@@ -304,18 +304,12 @@ final class StatusBarDisplayManager {
             let spacingPrefix = shouldShowIcon ? "  " : ""
 
             // Format the display value without unnecessary decimals
-            let displayValue: String
-            if stateManager.animatedCostValue == 0 {
+            let displayValue: String = if stateManager.animatedCostValue == 0 {
                 // Show just "0" for zero amounts
-                displayValue = "0"
+                "0"
             } else {
                 // Show 0-2 decimal places as needed, no grouping separators
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .decimal
-                formatter.minimumFractionDigits = 0
-                formatter.maximumFractionDigits = 2
-                formatter.usesGroupingSeparator = false
-                displayValue = formatter.string(from: NSNumber(value: stateManager.animatedCostValue)) ?? "0"
+                NumberFormatter.vibeMeterCurrency.string(from: NSNumber(value: stateManager.animatedCostValue)) ?? "0"
             }
 
             let titleText = "\(spacingPrefix)\(state.currencySymbol)\(displayValue)"

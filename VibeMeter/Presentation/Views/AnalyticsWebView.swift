@@ -32,7 +32,7 @@ struct AnalyticsWebView: NSViewRepresentable {
 
         // Load the analytics page
         if let url = URL(string: "https://www.cursor.com/analytics") {
-            let request = URLRequest(url: url)
+            let request = URLRequest.vibeMeter(url: url)
             webView.load(request)
         }
 

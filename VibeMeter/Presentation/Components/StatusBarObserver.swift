@@ -15,7 +15,7 @@ final class StatusBarObserver {
     private let spendingData: MultiProviderSpendingData
     private let currencyData: CurrencyData
     private let settingsManager: any SettingsManagerProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "StatusBarObserver")
+    private let logger = Logger.vibeMeter(category: "StatusBarObserver")
 
     // State tracking for change detection
     private var lastObservedState: ObservedState?

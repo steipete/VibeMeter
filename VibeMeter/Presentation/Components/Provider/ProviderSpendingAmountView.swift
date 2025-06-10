@@ -45,11 +45,7 @@ struct ProviderSpendingAmountView: View {
         if convertedSpending == 0 {
             formattedAmount = "\(currencyData.selectedSymbol)0"
         } else {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            formatter.minimumFractionDigits = 0
-            formatter.maximumFractionDigits = 2
-            formatter.usesGroupingSeparator = false
+            let formatter = NumberFormatter.vibeMeterCurrency
             let amount = formatter.string(from: NSNumber(value: convertedSpending)) ?? "0"
             formattedAmount = "\(currencyData.selectedSymbol)\(amount)"
         }

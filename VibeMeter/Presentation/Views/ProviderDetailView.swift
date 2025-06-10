@@ -5,14 +5,14 @@ import SwiftUI
 private struct RadioButton: View {
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             ZStack {
                 Circle()
                     .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.5), lineWidth: 2)
                     .frame(width: 16, height: 16)
-                
+
                 if isSelected {
                     Circle()
                         .fill(Color.accentColor)
@@ -39,13 +39,13 @@ struct ProviderDetailView: View {
     private var dismiss
     @State
     private var customSettings: [String: String] = [:]
-    
+
     @State
     private var claudeAccountType: ClaudePricingTier = .pro
-    
+
     @State
     private var showUsageReport = false
-    
+
     @StateObject
     private var claudeLogManager = ClaudeLogManager.shared
 
@@ -117,10 +117,11 @@ struct ProviderDetailView: View {
         .task {
             // Load custom settings when view appears
             customSettings = providerRegistry.configuration(for: provider).customSettings
-            
+
             // Load Claude account type if applicable
             if provider == .claude {
-                claudeAccountType = (settingsManager as? SettingsManager)?.sessionSettingsManager.claudeAccountType ?? .pro
+                claudeAccountType = (settingsManager as? SettingsManager)?.sessionSettingsManager
+                    .claudeAccountType ?? .pro
             }
         }
         .onChange(of: provider) { _, newProvider in
@@ -211,34 +212,34 @@ struct ProviderDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
-                
+
                 // Claude-specific settings
                 if provider == .claude {
                     Divider()
                         .padding(.vertical, 4)
-                    
+
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Subscription Tier")
                             .font(.headline)
-                        
+
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(ClaudePricingTier.allCases, id: \.self) { tier in
                                 HStack(alignment: .top, spacing: 12) {
                                     RadioButton(isSelected: claudeAccountType == tier) {
                                         claudeAccountType = tier
                                     }
-                                    
+
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(tier.displayName)
                                             .font(.system(.body))
                                             .fontWeight(claudeAccountType == tier ? .medium : .regular)
-                                        
+
                                         Text(tier.description)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
-                                    
+
                                     Spacer()
                                 }
                                 .contentShape(Rectangle())
@@ -248,12 +249,12 @@ struct ProviderDetailView: View {
                             }
                         }
                         .padding(.leading, 4)
-                        
+
                         // Usage Report button
                         if claudeLogManager.hasAccess {
                             Divider()
                                 .padding(.vertical, 4)
-                            
+
                             Button(action: {
                                 showUsageReport = true
                             }) {
@@ -297,9 +298,9 @@ struct ProviderDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func saveClaudeAccountType(_ accountType: ClaudePricingTier) {
         if let settingsManager = settingsManager as? SettingsManager {
             settingsManager.sessionSettingsManager.claudeAccountType = accountType

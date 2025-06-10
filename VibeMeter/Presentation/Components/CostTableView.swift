@@ -17,7 +17,7 @@ struct CostTableView: View {
 
     @State
     private var selectedProvider: ServiceProvider?
-    
+
     @State
     private var showClaudeUsageReport = false
 
@@ -85,8 +85,7 @@ struct CostTableView: View {
                     .accessibilityLabel("No spending data available")
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 16)
+        .standardPadding(vertical: 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.primary.opacity(0.03)))
@@ -101,8 +100,7 @@ struct CostTableView: View {
             Spacer()
             limitsValues
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 16)
+        .standardPadding(vertical: 10)
         .background(limitsBackground)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Spending limits")
@@ -172,11 +170,7 @@ struct CostTableView: View {
         if totalSpending == 0 {
             return "\(currencyData.selectedSymbol)0"
         } else {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            formatter.minimumFractionDigits = 0
-            formatter.maximumFractionDigits = 2
-            formatter.usesGroupingSeparator = false
+            let formatter = NumberFormatter.vibeMeterCurrency
             let formattedAmount = formatter.string(from: NSNumber(value: totalSpending)) ?? "0"
             return "\(currencyData.selectedSymbol)\(formattedAmount)"
         }
@@ -232,8 +226,7 @@ struct CostTableView: View {
             providerHeaderRow(for: provider)
             providerUsageBar(for: provider)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
+        .standardPadding(vertical: 12)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.primary.opacity(0.05)))
@@ -321,7 +314,7 @@ struct CostTableView: View {
                         }
                         .padding(.leading, 32)
                     }
-                    
+
                     // Add button to view detailed usage report if we have access
                     if ClaudeLogManager.shared.hasAccess {
                         HStack {
