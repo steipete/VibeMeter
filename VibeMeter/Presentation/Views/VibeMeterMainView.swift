@@ -21,12 +21,10 @@ struct VibeMeterMainView: View {
                     loginManager: loginManager,
                     onRefresh: onRefresh)
             } else {
-                LoggedOutContentView(
-                    loginManager: loginManager,
-                    userSessionData: userSessionData,
-                    onLoginTrigger: {
-                        // Open login in separate window
-                        loginManager.showLoginWindow(for: .cursor)
+                NoProvidersConfiguredView(
+                    onConfigureProviders: {
+                        // Open settings window to the providers tab
+                        openSettingsToProvidersTab()
                     })
             }
         }
@@ -114,5 +112,15 @@ private extension VibeMeterMainView {
             }
         }
         return .ignored
+    }
+
+    func openSettingsToProvidersTab() {
+        // Post notification to open providers tab
+        NotificationCenter.default.post(
+            name: .openSettingsTab,
+            object: MultiProviderSettingsTab.providers)
+
+        // Open settings window
+        NSApp.openSettings()
     }
 }

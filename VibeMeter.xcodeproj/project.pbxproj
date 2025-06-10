@@ -100,6 +100,7 @@
 		8B30F40E713D481998D105A3 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015331CD42B541280D9A9665 /* StatusBarController.swift */; };
 		8B440C4339F736C465A3A5A4 /* StatusBarMenuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0C2D9BC11AE1486876B5DF /* StatusBarMenuManager.swift */; };
 		8B7BBA0B84FA4422F19E235D /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986ECB90B7DB0B478BBB0FCE /* StringExtensions.swift */; };
+		8C27833072B5EFEFA339047F /* NoProvidersConfiguredView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FF385A9B8A1BC823BF0A12 /* NoProvidersConfiguredView.swift */; };
 		8C5D3D470091F659361CB34F /* CursorProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812BAD18182FE9FFC1F6857C /* CursorProviderTests.swift */; };
 		8E7CD9EC492E5FA16F083AE7 /* CurrencyOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA9D480170CD60AB4088A4E /* CurrencyOrchestrator.swift */; };
 		8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */; };
@@ -318,6 +319,7 @@
 		908F6A61E97329D239ABE126 /* CursorAPIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorAPIConstants.swift; sourceTree = "<group>"; };
 		92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDataProcessorTests.swift; sourceTree = "<group>"; };
 		93A0E5910E69B56D05D2C196 /* VibeMeterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeMeterApp.swift; sourceTree = "<group>"; };
+		93FF385A9B8A1BC823BF0A12 /* NoProvidersConfiguredView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoProvidersConfiguredView.swift; sourceTree = "<group>"; };
 		9595CD1AD619E6C481437036 /* ExchangeRateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateManager.swift; sourceTree = "<group>"; };
 		96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderStatusBadge.swift; sourceTree = "<group>"; };
 		973D8091B71A54D16E72575D /* TuistAssets+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistAssets+VibeMeter.swift"; sourceTree = "<group>"; };
@@ -638,6 +640,7 @@
 				A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */,
 				2CACAE5664463A40F689320E /* LoggedOutContentView.swift */,
 				386B1E107BB8459764931771 /* MultiProviderSettingsView.swift */,
+				93FF385A9B8A1BC823BF0A12 /* NoProvidersConfiguredView.swift */,
 				2A7B27A5840D363DC7593601 /* ProviderDetailView.swift */,
 				8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */,
 				B591A044220230D927DB399B /* ProvidersSettingsView.swift */,
@@ -1068,6 +1071,7 @@
 				8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */,
 				3DECD7E43D3BF549EC322264 /* LoggedOutContentView.swift in Sources */,
 				541D351ED06D68512B6A1454 /* MultiProviderSettingsView.swift in Sources */,
+				8C27833072B5EFEFA339047F /* NoProvidersConfiguredView.swift in Sources */,
 				D2CABDD1913F7963FFFDCBA8 /* ProviderDetailView.swift in Sources */,
 				757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */,
 				F1C65AA37112C4BEC57F7BAC /* ProvidersSettingsView.swift in Sources */,
