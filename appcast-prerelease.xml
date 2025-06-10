@@ -11,7 +11,11 @@
             <sparkle:version>110</sparkle:version>
             <sparkle:shortVersionString>1.1.0-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.1.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.1.0-beta.1 (build 110)</p></div>
+                <h2>VibeMeter 1.1.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><p>&lt;h2&gt;VibeMeter 1.1.0-beta.1&lt;/h2&gt;</p>
+<p>&lt;h3&gt;🎨 UI Improvements&lt;/h3&gt;</p>
+<p>&lt;ul&gt;</p>
+<p>&lt;li&gt;&lt;strong&gt;Enhanced popover design&lt;/strong&gt; - Switched to ultra-thin translucent material with blur effect for modern look&lt;/li&gt;</p>
+<p>&lt;li&gt;&lt;strong&gt;Adaptive border&lt;/strong&gt; - Added white border that automatically adapts to light/dark mode&lt;/li&gt;</p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 01:14:25 +0100</pubDate>
             <enclosure 
@@ -155,6 +159,27 @@
                 length="5618748"
                 type="application/octet-stream"
                 sparkle:edSignature="emi+Dd/z53yYWpmpq/RZWsEg5+MG75BBWJiZykb5DKuN7ot/jZHyXPXsgmdiVj6HAJTR7ZqejZrwrrAVhBBnDA=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
+            <title>VibeMeter 1.1.0</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v1.1.0/VibeMeter-1.1.0.dmg</link>
+            <sparkle:version>111</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 1.1.0</h2><div><p>Extracting changelog for version 1.1.0...</p>
+<p>Warning: No changelog section found for version 1.1.0</p>
+<p>Using default content...</p>
+<p>&lt;h2&gt;VibeMeter 1.1.0&lt;/h2&gt;</p>
+<p>&lt;p&gt;Latest version of VibeMeter with new features and improvements.&lt;/p&gt;</p></div>
+            ]]></description>
+            <pubDate>Tue, 10 Jun 2025 02:05:44 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v1.1.0/VibeMeter-1.1.0.dmg"
+                length="5590791"
+                type="application/octet-stream"
+                sparkle:edSignature="VZhmHbVUm2oU+Q0X3SIT/TVCe/hACQVQHme6hP77LoX9qFQGsXlclZx+8z0ICnuQrA9s2fNcUi6I+QNQrHGkAg=="
             />
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>
