@@ -37,17 +37,11 @@ struct NoProvidersConfiguredView: View {
                 }
 
                 // Welcome message
-                VStack(spacing: 12) {
-                    Text("Welcome!")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    Text("Configure your first AI service provider to start tracking costs.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                }
+                Text("Configure your first AI service provider to start tracking costs.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
 
                 // Configure providers button
                 Button(action: onConfigureProviders) {

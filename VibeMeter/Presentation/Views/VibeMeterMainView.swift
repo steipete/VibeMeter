@@ -11,10 +11,13 @@ struct VibeMeterMainView: View {
     let userSessionData: MultiProviderUserSessionData
     let loginManager: MultiProviderLoginManager
     let onRefresh: () async -> Void
+    
+    @StateObject
+    private var claudeLogManager = ClaudeLogManager.shared
 
     var body: some View {
         Group {
-            if userSessionData.isLoggedInToAnyProvider {
+            if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
                 LoggedInContentView(
                     settingsManager: settingsManager,
                     userSessionData: userSessionData,
@@ -32,7 +35,7 @@ struct VibeMeterMainView: View {
         .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel("VibeMeter main interface")
-        .accessibilityHint(userSessionData.isLoggedInToAnyProvider ?
+        .accessibilityHint(userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess ?
             "Shows AI service spending dashboard and controls" :
             "Shows login options for AI service providers")
         .onKeyPress(.escape) {

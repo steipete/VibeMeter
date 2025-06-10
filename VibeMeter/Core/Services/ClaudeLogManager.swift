@@ -10,12 +10,6 @@ actor ClaudeLogProcessor {
     private let logger = Logger(subsystem: "com.vibemeter", category: "ClaudeLogProcessor")
     private let fileManager = FileManager.default
     
-    // Pre-compiled regex for efficient matching
-    private static let usageEntryPattern = try! NSRegularExpression(
-        pattern: #""message".*?"usage".*?"input_tokens":\s*(\d+).*?"output_tokens":\s*(\d+)"#,
-        options: []
-    )
-    
     /// Process all log files and return daily usage
     func processLogFiles(_ fileURLs: [URL], usingCache cache: [String: Data]) async -> (entries: [Date: [ClaudeLogEntry]], updatedCache: [String: Data]) {
         var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
@@ -50,8 +44,16 @@ actor ClaudeLogProcessor {
         let fileKey = fileURL.lastPathComponent
         
         do {
-            // Read file data
-            let fileData = try Data(contentsOf: fileURL)
+            // Skip small files (optimization #6)
+            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+            let fileSize = attributes[.size] as? Int64 ?? 0
+            if fileSize < 100 { // Skip tiny files
+                logger.trace("Skipping tiny file: \(fileKey) (\(fileSize) bytes)")
+                return nil
+            }
+            
+            // Use memory-mapped files for better performance (optimization #4)
+            let fileData = try Data(contentsOf: fileURL, options: .mappedIfSafe)
             
             // Calculate SHA-256 hash
             let hash = SHA256.hash(data: fileData)
@@ -111,9 +113,41 @@ actor ClaudeLogProcessor {
         guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !line.isEmpty else { return nil }
         
-        // Quick check with regex for efficiency
-        let range = NSRange(location: 0, length: line.utf16.count)
-        guard let match = Self.usageEntryPattern.firstMatch(in: line, options: [], range: range) else {
+        // Use FastScanner for efficient parsing
+        let scanner = FastScanner(string: line)
+        
+        // Quick check for required fields using Scanner
+        var inputTokens: Int?
+        var outputTokens: Int?
+        
+        // Scan for "message" field
+        if scanner.scanUpTo(string: "\"message\"") != nil {
+            scanner.location += 9 // Skip past "message"
+            
+            // Scan for "usage" within message
+            if scanner.scanUpTo(string: "\"usage\"") != nil {
+                scanner.location += 7 // Skip past "usage"
+                
+                // Scan for input_tokens
+                if scanner.scanUpTo(string: "\"input_tokens\"") != nil {
+                    scanner.location += 14 // Skip past "input_tokens"
+                    _ = scanner.scanUpTo(string: ":") // Skip to colon
+                    scanner.location += 1 // Skip colon
+                    inputTokens = scanner.scanInteger() as Int?
+                }
+                
+                // Scan for output_tokens
+                if inputTokens != nil && scanner.scanUpTo(string: "\"output_tokens\"") != nil {
+                    scanner.location += 15 // Skip past "output_tokens"
+                    _ = scanner.scanUpTo(string: ":") // Skip to colon
+                    scanner.location += 1 // Skip colon
+                    outputTokens = scanner.scanInteger() as Int?
+                }
+            }
+        }
+        
+        // Skip if we don't have both tokens
+        guard inputTokens != nil && outputTokens != nil else {
             return nil
         }
         
@@ -126,19 +160,12 @@ actor ClaudeLogProcessor {
             return nil
         }
         
-        // Extract tokens from regex match for quick validation
-        if let inputRange = Range(match.range(at: 1), in: line),
-           let outputRange = Range(match.range(at: 2), in: line),
-           let _ = Int(line[inputRange]),
-           let _ = Int(line[outputRange]) {
-            
-            // Now do full JSON decode since we know it's valid
-            if let jsonData = line.data(using: .utf8) {
-                do {
-                    return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
-                } catch {
-                    // Silently skip malformed entries
-                }
+        // Now do full JSON decode since we know it's valid
+        if let jsonData = line.data(using: .utf8) {
+            do {
+                return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
+            } catch {
+                // Silently skip malformed entries
             }
         }
         
@@ -298,7 +325,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         openPanel.allowsMultipleSelection = false
         // Get the actual user home directory (not the sandboxed one)
         // In a sandboxed app, NSHomeDirectory() returns the container, so we construct the path manually
-        let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+        let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
         openPanel.directoryURL = actualHomeDir
         openPanel.showsHiddenFiles = true  // Show hidden files like .claude
 
@@ -330,7 +357,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             await MainActor.run {
                 let alert = NSAlert()
                 alert.messageText = "Claude Logs Not Found"
-                alert.informativeText = "Please select your home directory (\(actualHomeDir.path)) to grant access to Claude logs located in ~/.claude/projects"
+                alert.informativeText = "Please select your home directory (\(NSHomeDirectory())) to grant access to Claude logs located in ~/.claude/projects"
                 alert.alertStyle = .warning
                 alert.addButton(withTitle: "OK")
                 alert.runModal()
@@ -503,6 +530,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private func findJSONLFiles(in directory: URL) -> [URL] {
         var jsonlFiles: [URL] = []
         let cutoffDate = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
+        
+        // Date formatter for parsing filenames (optimization #9)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
 
         logger.debug("ClaudeLogManager: Searching for JSONL files in: \(directory.path)")
 
@@ -512,12 +543,24 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) {
             for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
-                // Skip very old files for performance
-                if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
-                   let modificationDate = attributes[.modificationDate] as? Date,
-                   modificationDate < cutoffDate {
-                    logger.trace("Skipping old file: \(fileURL.lastPathComponent)")
-                    continue
+                let filename = fileURL.lastPathComponent
+                
+                // Try to extract date from filename first (optimization #9)
+                if let dateRange = filename.range(of: #"\d{4}-\d{2}-\d{2}"#, options: .regularExpression) {
+                    let dateString = String(filename[dateRange])
+                    if let fileDate = dateFormatter.date(from: dateString),
+                       fileDate < cutoffDate {
+                        logger.trace("Skipping old file based on filename: \(filename)")
+                        continue
+                    }
+                } else {
+                    // Fall back to modification date if no date in filename
+                    if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
+                       let modificationDate = attributes[.modificationDate] as? Date,
+                       modificationDate < cutoffDate {
+                        logger.trace("Skipping old file: \(fileURL.lastPathComponent)")
+                        continue
+                    }
                 }
                 
                 jsonlFiles.append(fileURL)
@@ -568,7 +611,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             logger.info("Loading bookmark from: \(url.path)")
             logger.info("Current NSHomeDirectory: \(NSHomeDirectory())")
             logger.info("Current NSUserName: \(NSUserName())")
-            logger.info("Expected home directory: /Users/\(NSUserName())")
+            logger.info("Expected home directory: \(NSHomeDirectory())")
 
             let data = try Data(contentsOf: url)
             
@@ -617,13 +660,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
-            let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+            let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
             let isValidLocation = url.path == actualHomeDir.path || 
                                 fileManager.fileExists(atPath: claudeLogsPath.path)
             
             guard isValidLocation else {
                 logger.error("Bookmark points to invalid directory: \(url.path)")
-                logger.error("Expected home directory: \(actualHomeDir.path)")
+                logger.error("Expected home directory: \(NSHomeDirectory())")
                 logger.error("Claude logs path would be: \(claudeLogsPath.path)")
                 // Invalidate the bookmark
                 self.bookmarkData = nil
@@ -671,13 +714,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
-            let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+            let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
             let isValidLocation = url.path == actualHomeDir.path || 
                                 fileManager.fileExists(atPath: claudeLogsPath.path)
             
             guard isValidLocation else {
                 logger.warning("Bookmark points to invalid directory: \(url.path)")
-                logger.warning("Expected home directory: \(actualHomeDir.path) or directory containing .claude/projects")
+                logger.warning("Expected home directory: \(NSHomeDirectory()) or directory containing .claude/projects")
                 return nil
             }
             

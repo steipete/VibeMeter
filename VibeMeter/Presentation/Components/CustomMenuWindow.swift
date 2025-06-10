@@ -70,14 +70,6 @@ final class CustomMenuWindow: NSPanel {
     }
 
     func show(relativeTo statusItemButton: NSStatusBarButton) {
-        // Use modern macOS 15 window positioning APIs for better reliability
-        guard let statusWindow = statusItemButton.window else { return }
-
-        // Get status item frame in screen coordinates using modern APIs
-        let buttonBounds = statusItemButton.bounds
-        let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
-        let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
-
         // First, make sure the SwiftUI hierarchy has laid itself out so the
         // hosting view reports an accurate fitting size.
         hostingController.view.layoutSubtreeIfNeeded()
@@ -90,13 +82,35 @@ final class CustomMenuWindow: NSPanel {
         // the right dimensions.
         setContentSize(preferredSize)
 
-        // Calculate optimal position with screen boundary awareness using the
-        // freshly computed preferred size.
-        let targetFrame = calculateOptimalFrame(
-            relativeTo: buttonFrameInScreen,
-            preferredSize: preferredSize)
-
-        setFrame(targetFrame, display: false)
+        // Check if we can get the status button's window and position
+        if let statusWindow = statusItemButton.window {
+            // Get status item frame in screen coordinates using modern APIs
+            let buttonBounds = statusItemButton.bounds
+            let buttonFrameInWindow = statusItemButton.convert(buttonBounds, to: nil)
+            let buttonFrameInScreen = statusWindow.convertToScreen(buttonFrameInWindow)
+            
+            // Check if the button frame is valid and visible
+            // When the icon is hidden by apps like Ice, the frame might have zero width/height
+            // or be positioned off-screen. In these cases, we need to fall back to a fixed
+            // position at the top right of the screen.
+            if buttonFrameInScreen.width > 0 && buttonFrameInScreen.height > 0 {
+                // Normal case: Calculate optimal position relative to the status bar icon
+                let targetFrame = calculateOptimalFrame(
+                    relativeTo: buttonFrameInScreen,
+                    preferredSize: preferredSize)
+                
+                setFrame(targetFrame, display: false)
+            } else {
+                // Fallback case: Icon is hidden by menu bar management apps
+                // Position the popover at the top right of the screen instead
+                // This ensures users can still access VibeMeter when the icon is not visible
+                showAtTopRightFallback(withSize: preferredSize)
+            }
+        } else {
+            // Fallback case: Can't get the status button's window at all
+            // This is rare but can happen in certain edge cases
+            showAtTopRightFallback(withSize: preferredSize)
+        }
 
         // Ensure the hosting controller's view is loaded
         // This is critical for Release builds
@@ -226,6 +240,35 @@ final class CustomMenuWindow: NSPanel {
         return NSRect(
             origin: NSPoint(x: x, y: finalY),
             size: preferredSize)
+    }
+    
+    /// Shows the window at the top right of the screen as a fallback position.
+    ///
+    /// This fallback is used when the menu bar icon cannot be located, typically when:
+    /// - The icon is hidden by menu bar management apps like Ice or Bartender
+    /// - The status item frame has zero dimensions
+    /// - The status button window is unavailable
+    ///
+    /// The window will appear at the top-right corner of the screen, just below
+    /// the menu bar, ensuring users can still access VibeMeter even when the
+    /// menu bar icon is not visible.
+    private func showAtTopRightFallback(withSize preferredSize: NSSize) {
+        guard let screen = NSScreen.main else { return }
+        
+        let screenFrame = screen.visibleFrame
+        let menuBarHeight: CGFloat = 25 // Standard menu bar height
+        let rightMargin: CGFloat = 10
+        let gap: CGFloat = 5
+        
+        // Position at top right, just below the menu bar
+        let x = screenFrame.maxX - preferredSize.width - rightMargin
+        let y = screenFrame.maxY - menuBarHeight - preferredSize.height - gap
+        
+        let fallbackFrame = NSRect(
+            origin: NSPoint(x: x, y: y),
+            size: preferredSize)
+        
+        setFrame(fallbackFrame, display: false)
     }
 
     func hide() {
