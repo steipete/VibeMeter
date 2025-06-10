@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a single log entry from Claude's usage logs
-public struct ClaudeLogEntry: Decodable, Identifiable, Sendable {
+public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     public let id = UUID()
     public let timestamp: Date
     public let model: String?
@@ -53,6 +53,24 @@ public struct ClaudeLogEntry: Decodable, Identifiable, Sendable {
 
         self.inputTokens = try usageContainer.decode(Int.self, forKey: .inputTokens)
         self.outputTokens = try usageContainer.decode(Int.self, forKey: .outputTokens)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        // Encode timestamp as ISO8601 string
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let dateString = formatter.string(from: timestamp)
+        try container.encode(dateString, forKey: .timestamp)
+        
+        try container.encodeIfPresent(model, forKey: .model)
+        
+        var messageContainer = container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
+        var usageContainer = messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
+        
+        try usageContainer.encode(inputTokens, forKey: .inputTokens)
+        try usageContainer.encode(outputTokens, forKey: .outputTokens)
     }
 
     /// For testing and manual initialization

@@ -1,6 +1,150 @@
 import AppKit
 import Foundation
 import os.log
+import CryptoKit
+
+// MARK: - Background Actor for Log Processing
+
+/// Actor that handles background processing of Claude log files
+actor ClaudeLogProcessor {
+    private let logger = Logger(subsystem: "com.vibemeter", category: "ClaudeLogProcessor")
+    private let fileManager = FileManager.default
+    
+    // Pre-compiled regex for efficient matching
+    private static let usageEntryPattern = try! NSRegularExpression(
+        pattern: #""message".*?"usage".*?"input_tokens":\s*(\d+).*?"output_tokens":\s*(\d+)"#,
+        options: []
+    )
+    
+    /// Process all log files and return daily usage
+    func processLogFiles(_ fileURLs: [URL], usingCache cache: [String: Data]) async -> (entries: [Date: [ClaudeLogEntry]], updatedCache: [String: Data]) {
+        var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
+        var updatedCache = cache
+        
+        await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self) { group in
+            for fileURL in fileURLs {
+                group.addTask(priority: .utility) {
+                    await self.processFile(fileURL, existingCache: cache)
+                }
+            }
+            
+            // Collect results
+            for await result in group {
+                if let (entries, fileKey, fileHash) = result {
+                    // Update cache
+                    updatedCache[fileKey] = fileHash
+                    
+                    // Group by day
+                    for entry in entries {
+                        let day = Calendar.current.startOfDay(for: entry.timestamp)
+                        dailyUsage[day, default: []].append(entry)
+                    }
+                }
+            }
+        }
+        
+        return (dailyUsage, updatedCache)
+    }
+    
+    private func processFile(_ fileURL: URL, existingCache: [String: Data]) async -> ([ClaudeLogEntry], String, Data)? {
+        let fileKey = fileURL.lastPathComponent
+        
+        do {
+            // Read file data
+            let fileData = try Data(contentsOf: fileURL)
+            
+            // Calculate SHA-256 hash
+            let hash = SHA256.hash(data: fileData)
+            let hashData = Data(hash)
+            
+            // Check if file hasn't changed
+            if let cachedHash = existingCache[fileKey], cachedHash == hashData {
+                logger.debug("Skipping unchanged file: \(fileKey)")
+                return nil
+            }
+            
+            // Parse the file
+            let entries = parseFileData(fileData)
+            logger.debug("Parsed \(entries.count) entries from \(fileKey)")
+            
+            return (entries, fileKey, hashData)
+        } catch {
+            logger.error("Failed to process file \(fileKey): \(error)")
+            return nil
+        }
+    }
+    
+    private func parseFileData(_ data: Data) -> [ClaudeLogEntry] {
+        var entries: [ClaudeLogEntry] = []
+        var buffer = Data()
+        
+        // Process data in chunks
+        let chunkSize = 65536 // 64KB
+        var offset = 0
+        
+        while offset < data.count {
+            let end = min(offset + chunkSize, data.count)
+            let chunk = data.subdata(in: offset..<end)
+            buffer.append(chunk)
+            offset = end
+            
+            // Process complete lines
+            while let newlineRange = buffer.range(of: Data("\n".utf8)) {
+                let lineData = buffer.subdata(in: 0..<newlineRange.lowerBound)
+                buffer.removeSubrange(0...newlineRange.lowerBound)
+                
+                if let entry = parseLogLine(lineData) {
+                    entries.append(entry)
+                }
+            }
+        }
+        
+        // Process any remaining data
+        if !buffer.isEmpty, let entry = parseLogLine(buffer) {
+            entries.append(entry)
+        }
+        
+        return entries
+    }
+    
+    private func parseLogLine(_ data: Data) -> ClaudeLogEntry? {
+        guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !line.isEmpty else { return nil }
+        
+        // Quick check with regex for efficiency
+        let range = NSRange(location: 0, length: line.utf16.count)
+        guard let match = Self.usageEntryPattern.firstMatch(in: line, options: [], range: range) else {
+            return nil
+        }
+        
+        // Skip summary and other non-usage entries
+        if line.contains("\"type\":\"summary\"") || 
+           line.contains("\"type\":\"user\"") ||
+           line.contains("\"leafUuid\"") ||
+           line.contains("\"sessionId\"") ||
+           line.contains("\"parentUuid\"") {
+            return nil
+        }
+        
+        // Extract tokens from regex match for quick validation
+        if let inputRange = Range(match.range(at: 1), in: line),
+           let outputRange = Range(match.range(at: 2), in: line),
+           let _ = Int(line[inputRange]),
+           let _ = Int(line[outputRange]) {
+            
+            // Now do full JSON decode since we know it's valid
+            if let jsonData = line.data(using: .utf8) {
+                do {
+                    return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
+                } catch {
+                    // Silently skip malformed entries
+                }
+            }
+        }
+        
+        return nil
+    }
+}
 
 // MARK: - Protocols
 
@@ -40,6 +184,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let userDefaults: UserDefaults
     private let logDirectoryName = ".claude/projects"
     private let authTokenManager = AuthenticationTokenManager()
+    private let logProcessor = ClaudeLogProcessor()
 
     @Published
     public private(set) var hasAccess = false
@@ -54,24 +199,50 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         }
     }
     
+    // Cache keys for UserDefaults
+    private let cacheKey = "com.vibemeter.claudeLogCache"
+    private let cacheTimestampKey = "com.vibemeter.claudeLogCacheTimestamp"
+    private let fileHashCacheKey = "com.vibemeter.claudeFileHashCache"
+    
     // Cache for parsed usage data
-    private var cachedDailyUsage: [Date: [ClaudeLogEntry]]?
-    private var cacheTimestamp: Date?
-    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
-    
-    // Pre-compiled regex for efficient matching
-    private static let usageEntryPattern = try! NSRegularExpression(
-        pattern: #""message".*?"usage".*?"input_tokens":\s*(\d+).*?"output_tokens":\s*(\d+)"#,
-        options: []
-    )
-    
-    // File-level cache to avoid re-parsing unchanged files
-    private struct FileCache {
-        let fileURL: URL
-        let modificationDate: Date
-        let entries: [ClaudeLogEntry]
+    private var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
+        get {
+            guard let data = userDefaults.data(forKey: cacheKey),
+                  let decoded = try? JSONDecoder().decode([Date: [ClaudeLogEntry]].self, from: data) else {
+                return nil
+            }
+            return decoded
+        }
+        set {
+            if let newValue,
+               let encoded = try? JSONEncoder().encode(newValue) {
+                userDefaults.set(encoded, forKey: cacheKey)
+            } else {
+                userDefaults.removeObject(forKey: cacheKey)
+            }
+        }
     }
-    private var fileCache: [URL: FileCache] = [:]
+    
+    private var cacheTimestamp: Date? {
+        get {
+            userDefaults.object(forKey: cacheTimestampKey) as? Date
+        }
+        set {
+            userDefaults.set(newValue, forKey: cacheTimestampKey)
+        }
+    }
+    
+    // File hash cache for detecting changes
+    private var fileHashCache: [String: Data] {
+        get {
+            userDefaults.dictionary(forKey: fileHashCacheKey) as? [String: Data] ?? [:]
+        }
+        set {
+            userDefaults.set(newValue, forKey: fileHashCacheKey)
+        }
+    }
+    
+    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
 
     private lazy var tiktoken: Tiktoken? = {
         do {
@@ -215,13 +386,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             return cachedData
         }
         
-        await MainActor.run {
-            isProcessing = true
-        }
+        isProcessing = true
         defer {
-            Task { @MainActor in
-                isProcessing = false
-            }
+            isProcessing = false
         }
 
         logger.info("ClaudeLogManager: getDailyUsage started (cache miss)")
@@ -245,172 +412,25 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         let jsonlFiles = findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
 
-        // Process files on background queue with optimizations
-        return await withTaskGroup(of: [Date: [ClaudeLogEntry]].self) { group in
-            var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-            
-            for fileURL in jsonlFiles {
-                group.addTask(priority: .utility) {
-                    // Check file cache first
-                    if let cached = await self.checkFileCache(for: fileURL) {
-                        self.logger.debug("Using cached data for \(fileURL.lastPathComponent)")
-                        return cached
-                    }
-                    
-                    // Parse the file
-                    let entries = await self.parseLogFile(at: fileURL)
-                    
-                    // Group by day
-                    var dayGroups: [Date: [ClaudeLogEntry]] = [:]
-                    for entry in entries {
-                        let day = Calendar.current.startOfDay(for: entry.timestamp)
-                        dayGroups[day, default: []].append(entry)
-                    }
-                    
-                    return dayGroups
-                }
-            }
-            
-            // Collect results
-            for await fileEntries in group {
-                for (day, entries) in fileEntries {
-                    dailyUsage[day, default: []].append(contentsOf: entries)
-                }
-            }
-            
-            let totalEntries = dailyUsage.values.flatMap(\.self).count
-            logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
-            
-            // Cache the results
-            await MainActor.run {
-                self.cachedDailyUsage = dailyUsage
-                self.cacheTimestamp = Date()
-            }
-            
-            return dailyUsage
-        }
+        // Process files using the background actor
+        let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(jsonlFiles, usingCache: fileHashCache)
+        
+        let totalEntries = dailyUsage.values.flatMap(\.self).count
+        logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
+        
+        // Update caches
+        self.cachedDailyUsage = dailyUsage
+        self.cacheTimestamp = Date()
+        self.fileHashCache = updatedHashCache
+        
+        return dailyUsage
     }
     
     /// Invalidate the cache to force a refresh on next access
     public func invalidateCache() {
         cachedDailyUsage = nil
         cacheTimestamp = nil
-        fileCache.removeAll()
-    }
-    
-    // MARK: - Optimized File Parsing
-    
-    private func checkFileCache(for fileURL: URL) async -> [Date: [ClaudeLogEntry]]? {
-        guard let cached = fileCache[fileURL] else { return nil }
-        
-        // Check if file has been modified
-        do {
-            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
-            if let modificationDate = attributes[.modificationDate] as? Date,
-               modificationDate == cached.modificationDate {
-                // File hasn't changed, use cached entries
-                var dayGroups: [Date: [ClaudeLogEntry]] = [:]
-                for entry in cached.entries {
-                    let day = Calendar.current.startOfDay(for: entry.timestamp)
-                    dayGroups[day, default: []].append(entry)
-                }
-                return dayGroups
-            }
-        } catch {
-            logger.debug("Failed to check file attributes: \(error)")
-        }
-        
-        return nil
-    }
-    
-    private func parseLogFile(at fileURL: URL) async -> [ClaudeLogEntry] {
-        var entries: [ClaudeLogEntry] = []
-        
-        do {
-            // Get file modification date for caching
-            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
-            let modificationDate = attributes[.modificationDate] as? Date ?? Date()
-            
-            // Read file using streaming approach for better memory usage
-            let fileHandle = try FileHandle(forReadingFrom: fileURL)
-            defer { try? fileHandle.close() }
-            
-            var buffer = Data()
-            let chunkSize = 65536 // 64KB chunks
-            
-            while let chunk = try fileHandle.read(upToCount: chunkSize), !chunk.isEmpty {
-                buffer.append(chunk)
-                
-                // Process complete lines
-                while let newlineRange = buffer.range(of: Data("\n".utf8)) {
-                    let lineData = buffer.subdata(in: 0..<newlineRange.lowerBound)
-                    buffer.removeSubrange(0...newlineRange.lowerBound)
-                    
-                    if let entry = parseLogLine(lineData) {
-                        entries.append(entry)
-                    }
-                }
-            }
-            
-            // Process any remaining data
-            if !buffer.isEmpty, let entry = parseLogLine(buffer) {
-                entries.append(entry)
-            }
-            
-            // Cache the parsed entries
-            fileCache[fileURL] = FileCache(
-                fileURL: fileURL,
-                modificationDate: modificationDate,
-                entries: entries
-            )
-            
-            if !entries.isEmpty {
-                logger.debug("Parsed \(entries.count) entries from \(fileURL.lastPathComponent)")
-            }
-            
-        } catch {
-            logger.error("Failed to parse file \(fileURL.lastPathComponent): \(error)")
-        }
-        
-        return entries
-    }
-    
-    private func parseLogLine(_ data: Data) -> ClaudeLogEntry? {
-        guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !line.isEmpty else { return nil }
-        
-        // Quick check with regex for efficiency
-        let range = NSRange(location: 0, length: line.utf16.count)
-        guard let match = Self.usageEntryPattern.firstMatch(in: line, options: [], range: range) else {
-            return nil
-        }
-        
-        // Skip summary and other non-usage entries
-        if line.contains("\"type\":\"summary\"") || 
-           line.contains("\"type\":\"user\"") ||
-           line.contains("\"leafUuid\"") ||
-           line.contains("\"sessionId\"") ||
-           line.contains("\"parentUuid\"") {
-            return nil
-        }
-        
-        // Extract tokens from regex match for quick validation
-        if let inputRange = Range(match.range(at: 1), in: line),
-           let outputRange = Range(match.range(at: 2), in: line),
-           let _ = Int(line[inputRange]),
-           let _ = Int(line[outputRange]) {
-            
-            // Now do full JSON decode since we know it's valid
-            if let jsonData = line.data(using: .utf8) {
-                do {
-                    return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
-                } catch {
-                    // Silently skip malformed entries
-                }
-            }
-        }
-        
-        return nil
+        fileHashCache = [:]
     }
 
     /// Calculate the current 5-hour window usage
