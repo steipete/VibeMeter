@@ -226,19 +226,50 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         let totalInputTokens = recentEntries.reduce(0) { $0 + $1.inputTokens }
         let totalOutputTokens = recentEntries.reduce(0) { $0 + $1.outputTokens }
 
-        // Claude Pro limits (these should be configurable)
-        let inputTokenLimit = 100_000_000 // 100M input tokens per 5 hours
-        let outputTokenLimit = 20_000_000 // 20M output tokens per 5 hours
-
-        // Calculate percentage used (weighted average of input and output)
-        let inputUsageRatio = Double(totalInputTokens) / Double(inputTokenLimit)
-        let outputUsageRatio = Double(totalOutputTokens) / Double(outputTokenLimit)
-        let overallUsageRatio = max(inputUsageRatio, outputUsageRatio)
-
-        return FiveHourWindow(
-            used: overallUsageRatio * 100,
-            total: 100,
-            resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60))
+        // Get account type from settings
+        let accountType = SettingsManager.shared.sessionSettingsManager.claudeAccountType
+        
+        // For Pro/Team accounts, calculate based on message count approximation
+        // Since we don't have exact token limits, we'll estimate based on messages
+        if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
+            // Estimate average tokens per message (input + output)
+            // Average message might be ~2000 tokens input + ~1000 tokens output
+            let avgTokensPerMessage = 3000
+            let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
+            
+            let totalTokensUsed = totalInputTokens + totalOutputTokens
+            let usageRatio = Double(totalTokensUsed) / Double(estimatedTokenLimit)
+            
+            return FiveHourWindow(
+                used: min(usageRatio * 100, 100),
+                total: 100,
+                resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60))
+        } else {
+            // Free tier - daily limit
+            // Calculate usage for the whole day
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: now)
+            let todayEntries = dailyUsage.values
+                .flatMap(\.self)
+                .filter { $0.timestamp >= startOfDay }
+            
+            let messageCount = todayEntries.count
+            let dailyLimit = accountType.dailyMessageLimit ?? 50
+            let usageRatio = Double(messageCount) / Double(dailyLimit)
+            
+            // Reset at midnight PT
+            var nextResetComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            nextResetComponents.day! += 1
+            nextResetComponents.hour = 0
+            nextResetComponents.minute = 0
+            nextResetComponents.timeZone = TimeZone(identifier: "America/Los_Angeles")
+            let resetDate = calendar.date(from: nextResetComponents) ?? now
+            
+            return FiveHourWindow(
+                used: min(usageRatio * 100, 100),
+                total: 100,
+                resetDate: resetDate)
+        }
     }
 
     /// Count tokens in text using Tiktoken

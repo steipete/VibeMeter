@@ -83,8 +83,10 @@ public actor ClaudeProvider: ProviderProtocol {
 
         // Calculate costs for each day
         var invoiceItems: [ProviderInvoiceItem] = []
-        // For now, default to Pro pricing until we can access settings properly
-        let accountType = ClaudePricingTier.pro
+        // Get account type from settings
+        let accountType = await MainActor.run {
+            SettingsManager.shared.sessionSettingsManager.claudeAccountType
+        }
 
         for (date, entries) in monthlyEntries {
             let dailyUsage = ClaudeDailyUsage(date: date, entries: entries)
@@ -266,8 +268,8 @@ public actor ClaudeProvider: ProviderProtocol {
         case .free:
             // Free tier has no cost
             (0, 0)
-        case .pro:
-            // Pro tier pricing (Claude 3.5 Sonnet)
+        case .pro, .team:
+            // Pro/Team tier pricing (Claude 3.5 Sonnet)
             (3.0, 15.0) // $3/$15 per million tokens
         }
     }

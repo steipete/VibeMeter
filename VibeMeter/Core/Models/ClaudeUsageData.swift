@@ -114,24 +114,68 @@ public struct ClaudeDailyUsage: Identifiable, Sendable {
 }
 
 /// Claude pricing tiers
-public enum ClaudePricingTier: String, CaseIterable, Sendable {
+public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     case free = "Free"
     case pro = "Pro"
-
-    public var displayName: String { rawValue }
-
-    /// Monthly token limits for each tier (if applicable)
-    public var monthlyTokenLimit: Int? {
+    case team = "Team"
+    
+    public var displayName: String { 
         switch self {
-        case .free:
-            1_000_000 // Example limit
-        case .pro:
-            nil // No hard monthly limit, uses 5-hour windows
+        case .free: "Free"
+        case .pro: "Pro ($20/mo)"
+        case .team: "Team ($25-30/mo)"
+        }
+    }
+    
+    /// Monthly price in USD
+    public var monthlyPrice: Double? {
+        switch self {
+        case .free: nil
+        case .pro: 20.0
+        case .team: 25.0 // Annual pricing, 30 for monthly
+        }
+    }
+
+    /// Messages per day for free tier
+    public var dailyMessageLimit: Int? {
+        switch self {
+        case .free: 50 // 50 messages per day
+        case .pro, .team: nil // No daily limit, uses 5-hour windows
         }
     }
 
     /// Whether this tier uses the 5-hour window system
     public var usesFiveHourWindow: Bool {
-        self == .pro
+        switch self {
+        case .free: false
+        case .pro, .team: true
+        }
+    }
+    
+    /// Approximate messages per 5-hour window (for Pro/Team tiers)
+    /// Based on average conversation length
+    public var messagesPerFiveHours: Int? {
+        switch self {
+        case .free: nil
+        case .pro: 45 // ~45 messages per 5 hours for average conversations
+        case .team: 45 // Same as Pro for individual usage
+        }
+    }
+    
+    /// Context window in tokens
+    public var contextWindowTokens: Int {
+        200_000 // All tiers have 200K token context window
+    }
+    
+    /// Description for UI
+    public var description: String {
+        switch self {
+        case .free:
+            "50 messages per day, resets at midnight PT"
+        case .pro:
+            "~45 messages per 5-hour window, priority access"
+        case .team:
+            "Team features, ~45 messages per 5-hour window"
+        }
     }
 }

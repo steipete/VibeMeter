@@ -15,6 +15,9 @@ struct ProviderDetailView: View {
     private var dismiss
     @State
     private var customSettings: [String: String] = [:]
+    
+    @State
+    private var claudeAccountType: ClaudePricingTier = .pro
 
     private let providerRegistry = ProviderRegistry.shared
 
@@ -91,10 +94,15 @@ struct ProviderDetailView: View {
             }
         }
         .padding(24)
-        .frame(width: 500, height: 520)
+        .frame(width: 500, height: provider == .claude ? 620 : 520)
         .task {
             // Load custom settings when view appears
             customSettings = providerRegistry.configuration(for: provider).customSettings
+            
+            // Load Claude account type if applicable
+            if provider == .claude {
+                claudeAccountType = (settingsManager as? SettingsManager)?.sessionSettingsManager.claudeAccountType ?? .pro
+            }
         }
         .onChange(of: provider) { _, newProvider in
             // Update settings if provider changes
@@ -176,6 +184,40 @@ struct ProviderDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
+                
+                // Claude-specific settings
+                if provider == .claude {
+                    Divider()
+                        .padding(.vertical, 4)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Subscription Tier")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Picker("", selection: $claudeAccountType) {
+                            ForEach(ClaudePricingTier.allCases, id: \.self) { tier in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(tier.displayName)
+                                    Text(tier.description)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .tag(tier)
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        .labelsHidden()
+                        
+                        Text(claudeAccountType.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 4)
+                    }
+                    .onChange(of: claudeAccountType) { _, newValue in
+                        saveClaudeAccountType(newValue)
+                    }
+                }
             }
             .padding()
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
@@ -198,6 +240,14 @@ struct ProviderDetailView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func saveClaudeAccountType(_ accountType: ClaudePricingTier) {
+        if let settingsManager = settingsManager as? SettingsManager {
+            settingsManager.sessionSettingsManager.claudeAccountType = accountType
         }
     }
 }
