@@ -53,6 +53,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             hasAccess = bookmarkData != nil
         }
     }
+    
+    // Cache for parsed usage data
+    private var cachedDailyUsage: [Date: [ClaudeLogEntry]]?
+    private var cacheTimestamp: Date?
+    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
 
     private lazy var tiktoken: Tiktoken? = {
         do {
@@ -188,10 +193,24 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     /// Get daily usage data from Claude logs
     public func getDailyUsage() async -> [Date: [ClaudeLogEntry]] {
-        isProcessing = true
-        defer { isProcessing = false }
+        // Check cache first
+        if let cachedData = cachedDailyUsage,
+           let timestamp = cacheTimestamp,
+           Date().timeIntervalSince(timestamp) < cacheValidityDuration {
+            logger.info("ClaudeLogManager: Returning cached data")
+            return cachedData
+        }
+        
+        await MainActor.run {
+            isProcessing = true
+        }
+        defer {
+            Task { @MainActor in
+                isProcessing = false
+            }
+        }
 
-        logger.info("ClaudeLogManager: getDailyUsage started")
+        logger.info("ClaudeLogManager: getDailyUsage started (cache miss)")
 
         guard let accessURL = resolveBookmark() else {
             logger.warning("ClaudeLogManager: No access to Claude logs - bookmark resolution failed")
@@ -201,8 +220,6 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         let claudeURL = accessURL.appendingPathComponent(logDirectoryName)
         logger.info("ClaudeLogManager: Looking for Claude logs at: \(claudeURL.path)")
-
-        var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
 
         guard fileManager.fileExists(atPath: claudeURL.path) else {
             logger.warning("ClaudeLogManager: Claude directory not found at: \(claudeURL.path)")
@@ -214,62 +231,81 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         let jsonlFiles = findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
 
-        let decoder = JSONDecoder()
+        // Process files on background queue
+        return await withTaskGroup(of: [Date: [ClaudeLogEntry]].self) { group in
+            var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
+            let decoder = JSONDecoder()
+            
+            for fileURL in jsonlFiles {
+                group.addTask {
+                    var fileEntries: [Date: [ClaudeLogEntry]] = [:]
+                    
+                    do {
+                        let content = try String(contentsOf: fileURL, encoding: .utf8)
+                        let lines = content.split(separator: "\n")
+                        
+                        for line in lines {
+                            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmedLine.isEmpty,
+                                  let data = trimmedLine.data(using: .utf8) else { continue }
 
-        for fileURL in jsonlFiles {
-            logger.debug("ClaudeLogManager: Processing file: \(fileURL.lastPathComponent)")
-            do {
-                let content = try String(contentsOf: fileURL, encoding: .utf8)
-                let lines = content.split(separator: "\n")
-                logger.debug("ClaudeLogManager: File has \(lines.count) lines")
+                            // Pre-filter: Check if this line contains usage data structure
+                            if !trimmedLine.contains("\"message\"") || 
+                               !trimmedLine.contains("\"usage\"") ||
+                               !trimmedLine.contains("\"input_tokens\"") ||
+                               !trimmedLine.contains("\"output_tokens\"") {
+                                continue
+                            }
+                            
+                            // Skip entries that are clearly not usage logs
+                            if trimmedLine.contains("\"type\":\"summary\"") || 
+                               trimmedLine.contains("\"type\":\"user\"") ||
+                               trimmedLine.contains("\"leafUuid\"") ||
+                               trimmedLine.contains("\"sessionId\"") ||
+                               trimmedLine.contains("\"parentUuid\"") {
+                                continue
+                            }
 
-                var entriesInFile = 0
-                for line in lines {
-                    let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmedLine.isEmpty,
-                          let data = trimmedLine.data(using: .utf8) else { continue }
-
-                    // Pre-filter: Check if this line contains usage data structure
-                    // Valid usage entries should have both "message" with nested "usage" containing tokens
-                    if !trimmedLine.contains("\"message\"") || 
-                       !trimmedLine.contains("\"usage\"") ||
-                       !trimmedLine.contains("\"input_tokens\"") ||
-                       !trimmedLine.contains("\"output_tokens\"") {
-                        continue
+                            do {
+                                let entry = try decoder.decode(ClaudeLogEntry.self, from: data)
+                                let day = Calendar.current.startOfDay(for: entry.timestamp)
+                                fileEntries[day, default: []].append(entry)
+                            } catch {
+                                // Skip non-usage entries silently
+                            }
+                        }
+                    } catch {
+                        self.logger.error("Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
                     }
                     
-                    // Skip entries that are clearly not usage logs
-                    if trimmedLine.contains("\"type\":\"summary\"") || 
-                       trimmedLine.contains("\"type\":\"user\"") ||
-                       trimmedLine.contains("\"leafUuid\"") ||
-                       trimmedLine.contains("\"sessionId\"") ||
-                       trimmedLine.contains("\"parentUuid\"") {
-                        continue
-                    }
-
-                    do {
-                        let entry = try decoder.decode(ClaudeLogEntry.self, from: data)
-                        let day = Calendar.current.startOfDay(for: entry.timestamp)
-                        dailyUsage[day, default: []].append(entry)
-                        entriesInFile += 1
-                    } catch {
-                        // Only log at trace level since we expect many non-usage entries
-                        logger.trace("ClaudeLogManager: Skipped non-usage entry")
-                    }
+                    return fileEntries
                 }
-                if entriesInFile > 0 {
-                    logger.debug("ClaudeLogManager: Parsed \(entriesInFile) usage entries from \(fileURL.lastPathComponent)")
-                }
-            } catch {
-                logger
-                    .error(
-                        "ClaudeLogManager: Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
             }
+            
+            // Collect results
+            for await fileEntries in group {
+                for (day, entries) in fileEntries {
+                    dailyUsage[day, default: []].append(contentsOf: entries)
+                }
+            }
+            
+            let totalEntries = dailyUsage.values.flatMap(\.self).count
+            logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
+            
+            // Cache the results
+            await MainActor.run {
+                self.cachedDailyUsage = dailyUsage
+                self.cacheTimestamp = Date()
+            }
+            
+            return dailyUsage
         }
-
-        let totalEntries = dailyUsage.values.flatMap(\.self).count
-        logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
-        return dailyUsage
+    }
+    
+    /// Invalidate the cache to force a refresh on next access
+    public func invalidateCache() {
+        cachedDailyUsage = nil
+        cacheTimestamp = nil
     }
 
     /// Calculate the current 5-hour window usage

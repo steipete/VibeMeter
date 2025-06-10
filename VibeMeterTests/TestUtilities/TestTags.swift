@@ -143,4 +143,22 @@ extension Tag {
     /// Tests that require specific hardware features
     @Tag
     static var hardware: Self
+    
+    // MARK: - Feature Specific Tags
+    
+    /// Claude AI specific tests
+    @Tag
+    static var claude: Self
+    
+    /// Gauge calculation tests
+    @Tag
+    static var gauge: Self
+    
+    /// Tiktoken library tests
+    @Tag
+    static var tiktoken: Self
+    
+    /// Billing and spending tests
+    @Tag
+    static var billing: Self
 }

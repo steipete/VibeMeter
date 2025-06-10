@@ -6,6 +6,7 @@ struct ClaudeUsageReportView: View {
     @State private var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var loadingMessage = "Loading usage data..."
     
     // Pricing constants (per million tokens)
     private let inputTokenPrice: Double = 3.00   // $3 per million input tokens
@@ -41,8 +42,22 @@ struct ClaudeUsageReportView: View {
             // Content
             if isLoading {
                 Spacer()
-                ProgressView("Loading usage data...")
-                    .padding()
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .controlSize(.large)
+                        .scaleEffect(1.5)
+                    
+                    Text(loadingMessage)
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                    
+                    if claudeLogManager.isProcessing {
+                        Text("Processing log files...")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding()
                 Spacer()
             } else if let error = errorMessage {
                 Spacer()
@@ -209,17 +224,29 @@ struct ClaudeUsageReportView: View {
     private func refreshData() {
         isLoading = true
         errorMessage = nil
+        loadingMessage = "Loading usage data..."
+        
+        // Force cache invalidation on manual refresh
+        claudeLogManager.invalidateCache()
         
         Task {
             do {
                 guard claudeLogManager.hasAccess else {
-                    errorMessage = "No folder access granted. Please grant access in settings."
-                    isLoading = false
+                    await MainActor.run {
+                        errorMessage = "No folder access granted. Please grant access in settings."
+                        isLoading = false
+                    }
                     return
                 }
                 
-                let usage = await claudeLogManager.getDailyUsage()
                 await MainActor.run {
+                    loadingMessage = "Scanning log files..."
+                }
+                
+                let usage = await claudeLogManager.getDailyUsage()
+                
+                await MainActor.run {
+                    loadingMessage = "Processing data..."
                     self.dailyUsage = usage
                     self.isLoading = false
                 }

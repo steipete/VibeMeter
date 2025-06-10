@@ -30,6 +30,7 @@
 		193E8E37BA0FE30B11034776 /* SessionSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E332B51B2D09DB541E6B93C9 /* SessionSettingsManager.swift */; };
 		19797FCD3E18D7D35C982ACD /* NetworkRetryHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0B5A578E2D63827397C55E /* NetworkRetryHandler.swift */; };
 		198ECD25931331B51716CE9D /* StatusBarAccessibilityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A82298CB8F3518EB431A859B /* StatusBarAccessibilityProvider.swift */; };
+		1B76E1ED83EA11334981E8CE /* ClaudePricingTierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC3EBF004DC77FE31D93F03 /* ClaudePricingTierTests.swift */; };
 		1F9ADD74E229A357D89DB04B /* NetworkStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D914138F35FF092F51A3FBE /* NetworkStateManager.swift */; };
 		25EA6F50EFD068FDBB62877D /* MockURLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE78244C662C610484A80BD5 /* MockURLSession.swift */; };
 		272C729B3F43BF9F216ECD23 /* MockResetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439CE23EE076B9D13C4EEA4B /* MockResetProtocol.swift */; };
@@ -138,7 +139,6 @@
 		B8D8042A52469091A47729F8 /* CommonViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9375FF59EBF50B0E93AA4D /* CommonViewModifiers.swift */; };
 		BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B5D9C53CC36213616E28BF /* MenuBarState.swift */; };
 		BAC107F85490277974C41BFB /* MockSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4DADD8170C9D18746C9ABD /* MockSettingsManager.swift */; };
-		BAC90FA81EF996C50B3E44E6 /* ClaudeAccountTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801EE4539388E3F75C26B099 /* ClaudeAccountTypeTests.swift */; };
 		BCE19A17DB57AFF8436123DC /* URLQueryItemsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D017032E04756D3C31B29991 /* URLQueryItemsTests.swift */; };
 		BCF1D7C42D78EF7C2E05B7FD /* TiktokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CE8505AED4C5223FC57A6 /* TiktokenTests.swift */; };
 		BDB571CE71022FD5742BAEB9 /* MenuBarStateManagerAnimationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FE27AC0C7BB488E24F50E3 /* MenuBarStateManagerAnimationTests.swift */; };
@@ -266,6 +266,7 @@
 		2CACAE5664463A40F689320E /* LoggedOutContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutContentView.swift; sourceTree = "<group>"; };
 		2DACA014F717F55AD4E79740 /* SwiftTestingHelpers+Expectations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftTestingHelpers+Expectations.swift"; sourceTree = "<group>"; };
 		2DC2BC4E2D04588361896E58 /* ClaudeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeDetailView.swift; sourceTree = "<group>"; };
+		2EC3EBF004DC77FE31D93F03 /* ClaudePricingTierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudePricingTierTests.swift; sourceTree = "<group>"; };
 		34533F373FD70F1508DF046B /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		361705F5E57667204920498C /* CursorResponseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorResponseModels.swift; sourceTree = "<group>"; };
 		37E56DF65F990A04A4334C30 /* MultiProviderErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderErrorHandler.swift; sourceTree = "<group>"; };
@@ -320,7 +321,6 @@
 		7D6E1751574DF947C28B4048 /* ProgressColorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressColorTests.swift; sourceTree = "<group>"; };
 		7D914138F35FF092F51A3FBE /* NetworkStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStateManager.swift; sourceTree = "<group>"; };
 		7FA9D480170CD60AB4088A4E /* CurrencyOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyOrchestrator.swift; sourceTree = "<group>"; };
-		801EE4539388E3F75C26B099 /* ClaudeAccountTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeAccountTypeTests.swift; sourceTree = "<group>"; };
 		812BAD18182FE9FFC1F6857C /* CursorProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorProviderTests.swift; sourceTree = "<group>"; };
 		81D234961D5AD1EB9F516D2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderRowView.swift; sourceTree = "<group>"; };
@@ -744,8 +744,8 @@
 				EDAC9756EEC771ECAE3C1522 /* AuthenticationTokenManagerTests.swift */,
 				1463D2727E6B8F5BA31E5649 /* BackgroundDataProcessorMocks.swift */,
 				92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */,
-				801EE4539388E3F75C26B099 /* ClaudeAccountTypeTests.swift */,
 				17EA12CC9E59608D7F5389BD /* ClaudeFiveHourWindowTests.swift */,
+				2EC3EBF004DC77FE31D93F03 /* ClaudePricingTierTests.swift */,
 				282444495F49CDC4BD6ED7E6 /* ClaudeProviderTests.swift */,
 				B6191817077689C72AD22A34 /* CurrencyConversionTests.swift */,
 				526AA3EDA8B1D75AF9632AC4 /* CurrencyDataTests.swift */,
@@ -925,8 +925,8 @@
 				9B1E22A3195BB8AF1F9507E3 /* AuthenticationTokenManagerTests.swift in Sources */,
 				032E9E7CE6CE3990756B892D /* BackgroundDataProcessorMocks.swift in Sources */,
 				568D9D9932981852406CFB77 /* BackgroundDataProcessorTests.swift in Sources */,
-				BAC90FA81EF996C50B3E44E6 /* ClaudeAccountTypeTests.swift in Sources */,
 				8017E7926AC65660CE28E70F /* ClaudeFiveHourWindowTests.swift in Sources */,
+				1B76E1ED83EA11334981E8CE /* ClaudePricingTierTests.swift in Sources */,
 				E97E4CC7C82A327694BC0179 /* ClaudeProviderTests.swift in Sources */,
 				F6395E5D9CA38E887B62CF38 /* CurrencyConversionTests.swift in Sources */,
 				D1318A9F92FD93DF87A4AFBF /* CurrencyDataTests.swift in Sources */,

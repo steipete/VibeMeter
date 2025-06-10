@@ -279,9 +279,15 @@ struct CursorAutoAuthenticationTests {
         
         // Setup
         let orchestrator = MockMultiProviderDataOrchestrator()
+        let settingsManager = MockSettingsManager()
+        let providerFactory = ProviderFactory(settingsManager: settingsManager)
+        let loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
+        let sessionStateManager = SessionStateManager(
+            loginManager: loginManager,
+            settingsManager: settingsManager
+        )
         let errorHandler = MultiProviderErrorHandler(
-            orchestrator: orchestrator,
-            settingsManager: MockSettingsManager()
+            sessionStateManager: sessionStateManager
         )
         
         // Store credentials
@@ -290,10 +296,7 @@ struct CursorAutoAuthenticationTests {
         try credentialKeychain.set("password123", key: "cursor_password")
         
         // Simulate session expiry error
-        let sessionExpiredError = ProviderError.authenticationError(
-            message: "Session expired",
-            statusCode: 401
-        )
+        let sessionExpiredError = ProviderError.tokenExpired
         
         var reauthAttempted = false
         orchestrator.onAttemptReauth = { provider in
@@ -302,7 +305,14 @@ struct CursorAutoAuthenticationTests {
         }
         
         // Handle error which should trigger re-authentication
-        await errorHandler.handleError(sessionExpiredError, for: .cursor)
+        let spendingData = MultiProviderSpendingData()
+        let _ = errorHandler.handleRefreshError(
+            for: ServiceProvider.cursor,
+            error: sessionExpiredError,
+            userSessionData: orchestrator.userSessionData,
+            spendingData: spendingData,
+            refreshErrors: [:]
+        )
         
         try await Task.sleep(for: .milliseconds(100))
         
@@ -397,10 +407,11 @@ final class LoginWebViewManagerMock: NSObject {
 }
 
 @MainActor
-final class MockMultiProviderDataOrchestrator: MultiProviderDataOrchestrator {
+final class MockMultiProviderDataOrchestrator {
     var onAttemptReauth: ((ServiceProvider) -> Void)?
+    var userSessionData = MultiProviderUserSessionData()
     
-    override init() {
-        super.init(settingsManager: MockSettingsManager())
+    func attemptReauthentication(for provider: ServiceProvider) async {
+        onAttemptReauth?(provider)
     }
 }

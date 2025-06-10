@@ -9,35 +9,45 @@ struct ClaudePricingTierTests {
     // MARK: - Account Type Properties Tests
     
     @Test("Claude account types have correct properties", arguments: [
-        (ClaudePricingTier.free, "Free", false, 50, nil, nil),
-        (ClaudePricingTier.pro, "Pro", true, nil, 45, nil),
-        (ClaudePricingTier.team, "Team", true, nil, 45, 5),
-        (ClaudePricingTier.enterprise, "Enterprise", true, nil, 45, 20),
+        (ClaudePricingTier.free, "Free", false, 50, 0, 0),
+        (ClaudePricingTier.pro, "Pro ($20/mo)", true, 0, 45, 0),
+        (ClaudePricingTier.max100, "Max 5× ($100/mo)", true, 0, 225, 5),
+        (ClaudePricingTier.max200, "Max 20× ($200/mo)", true, 0, 900, 20),
     ])
     func accountTypeProperties(
         accountType: ClaudePricingTier,
         expectedName: String,
         expectedUsesFiveHour: Bool,
-        expectedDailyLimit: Int?,
-        expectedMessagesPerWindow: Int?,
-        expectedMultiplier: Int?
+        expectedDailyLimit: Int,
+        expectedMessagesPerWindow: Int,
+        expectedMultiplier: Int
     ) {
         #expect(accountType.displayName == expectedName)
         #expect(accountType.usesFiveHourWindow == expectedUsesFiveHour)
-        #expect(accountType.dailyMessageLimit == expectedDailyLimit)
-        #expect(accountType.messagesPerFiveHours == expectedMessagesPerWindow)
         
-        if let multiplier = expectedMultiplier {
-            #expect(accountType.displayName.contains("\(multiplier)×"))
+        if expectedDailyLimit > 0 {
+            #expect(accountType.dailyMessageLimit == expectedDailyLimit)
+        } else {
+            #expect(accountType.dailyMessageLimit == nil)
+        }
+        
+        if expectedMessagesPerWindow > 0 {
+            #expect(accountType.messagesPerFiveHours == expectedMessagesPerWindow)
+        } else {
+            #expect(accountType.messagesPerFiveHours == nil)
+        }
+        
+        if expectedMultiplier > 0 {
+            #expect(accountType.displayName.contains("\(expectedMultiplier)×"))
         }
     }
 
-    @Test("Account type price display")
-    func accountTypePriceDisplay() {
-        #expect(ClaudePricingTier.free.priceDisplay == "Free")
-        #expect(ClaudePricingTier.pro.priceDisplay == "$20/month")
-        #expect(ClaudePricingTier.team.priceDisplay == "$100/month")
-        #expect(ClaudePricingTier.enterprise.priceDisplay == "$400/month")
+    @Test("Account type monthly price")
+    func accountTypeMonthlyPrice() {
+        #expect(ClaudePricingTier.free.monthlyPrice == nil)
+        #expect(ClaudePricingTier.pro.monthlyPrice == 20.0)
+        #expect(ClaudePricingTier.max100.monthlyPrice == 100.0)
+        #expect(ClaudePricingTier.max200.monthlyPrice == 200.0)
     }
 
     @Test("Account type is CaseIterable")
@@ -46,8 +56,8 @@ struct ClaudePricingTierTests {
         #expect(allTypes.count == 4)
         #expect(allTypes.contains(.free))
         #expect(allTypes.contains(.pro))
-        #expect(allTypes.contains(.team))
-        #expect(allTypes.contains(.enterprise))
+        #expect(allTypes.contains(.max100))
+        #expect(allTypes.contains(.max200))
     }
 
     // MARK: - Settings Persistence Tests
@@ -89,10 +99,15 @@ struct ClaudePricingTierTests {
         if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
             let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
             
-            // Pro: 45 messages * 3000 = 135,000 tokens
-            // Team: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
-            // Enterprise: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
-            #expect(estimatedTokenLimit == 135_000)
+            // Calculate expected token limit based on tier
+            let expectedTokenLimit: Int
+            switch accountType {
+            case .pro: expectedTokenLimit = 135_000 // 45 * 3000
+            case .max100: expectedTokenLimit = 675_000 // 225 * 3000
+            case .max200: expectedTokenLimit = 2_700_000 // 900 * 3000
+            default: expectedTokenLimit = 0
+            }
+            #expect(estimatedTokenLimit == expectedTokenLimit)
         } else if let dailyLimit = accountType.dailyMessageLimit {
             let dailyTokenLimit = dailyLimit * avgTokensPerMessage
             
@@ -192,10 +207,10 @@ struct ClaudePricingTierTests {
     @Test("Account type raw value stability for migration")
     func accountTypeRawValueStability() {
         // Ensure raw values don't change (important for UserDefaults storage)
-        #expect(ClaudePricingTier.free.rawValue == "free")
-        #expect(ClaudePricingTier.pro.rawValue == "pro")
-        #expect(ClaudePricingTier.team.rawValue == "team")
-        #expect(ClaudePricingTier.enterprise.rawValue == "enterprise")
+        #expect(ClaudePricingTier.free.rawValue == "Free")
+        #expect(ClaudePricingTier.pro.rawValue == "Pro")
+        #expect(ClaudePricingTier.max100.rawValue == "Max100")
+        #expect(ClaudePricingTier.max200.rawValue == "Max200")
     }
 
     @Test("Handle unknown account type gracefully")
@@ -218,7 +233,17 @@ struct ClaudePricingTierTests {
     @MainActor
     func accountTypeSpendingIntegration() async {
         let settingsManager = MockSettingsManager()
-        let orchestrator = MultiProviderDataOrchestrator(settingsManager: settingsManager)
+        let providerFactory = ProviderFactory(settingsManager: settingsManager)
+        let exchangeRateManager = ExchangeRateManagerMock()
+        let notificationManager = NotificationManagerMock()
+        let loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
+        let orchestrator = MultiProviderDataOrchestrator(
+            providerFactory: providerFactory,
+            settingsManager: settingsManager,
+            exchangeRateManager: exchangeRateManager,
+            notificationManager: notificationManager,
+            loginManager: loginManager
+        )
         
         // Set Claude account type
         settingsManager.sessionSettingsManager.claudeAccountType = .pro
@@ -228,23 +253,22 @@ struct ClaudePricingTierTests {
         
         // Add Claude spending data
         let claudeData = ProviderSpendingData(
-            provider: .claude,
-            monthlyInvoice: ProviderMonthlyInvoice(
+            provider: ServiceProvider.claude,
+            currentSpendingUSD: 20.0, // Pro subscription
+            currentSpendingConverted: 20.0,
+            latestInvoiceResponse: ProviderMonthlyInvoice(
                 items: [], // Pro tier is subscription-based, not usage-based
-                provider: .claude,
+                provider: ServiceProvider.claude,
                 month: 0,
                 year: 2025
-            ),
-            usageData: nil,
-            currency: "USD",
-            exchangeRate: 1.0
+            )
         )
         orchestrator.spendingData.setSpendingData(claudeData, for: .claude)
         
         // Verify account type affects calculations
         let accountType = settingsManager.sessionSettingsManager.claudeAccountType
         #expect(accountType == .pro)
-        #expect(accountType.priceDisplay == "$20/month")
+        #expect(accountType.monthlyPrice == 20.0)
     }
 }
 

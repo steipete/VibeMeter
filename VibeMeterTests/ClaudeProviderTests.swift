@@ -321,10 +321,10 @@ struct ClaudeDataModelTests {
         let proTier = ClaudePricingTier.pro
 
         #expect(freeTier.displayName == "Free")
-        #expect(proTier.displayName == "Pro")
+        #expect(proTier.displayName == "Pro ($20/mo)")
 
-        #expect(freeTier.monthlyTokenLimit == 1_000_000)
-        #expect(proTier.monthlyTokenLimit == nil)
+        #expect(freeTier.dailyMessageLimit == 50)
+        #expect(proTier.messagesPerFiveHours == 45)
 
         #expect(!freeTier.usesFiveHourWindow)
         #expect(proTier.usesFiveHourWindow)

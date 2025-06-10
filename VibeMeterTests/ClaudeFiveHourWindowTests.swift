@@ -148,13 +148,13 @@ struct ClaudeFiveHourWindowTests {
     }
     
     @Test("Calculate window for different subscription tiers", arguments: [
-        ClaudeAccountType.free,
-        ClaudeAccountType.pro,
-        ClaudeAccountType.max5x,
-        ClaudeAccountType.max20x
+        ClaudePricingTier.free,
+        ClaudePricingTier.pro,
+        ClaudePricingTier.max100,
+        ClaudePricingTier.max200
     ])
     @MainActor
-    func calculateWindowForSubscriptionTier(accountType: ClaudeAccountType) async {
+    func calculateWindowForSubscriptionTier(accountType: ClaudePricingTier) async {
         let logManager = ClaudeLogManagerMock()
         logManager.mockAccountType = accountType
         
