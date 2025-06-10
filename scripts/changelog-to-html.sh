@@ -80,14 +80,15 @@ extract_version_section() {
 }
 
 # Main processing
-echo "Extracting changelog for version $VERSION..."
+# Note: Debug output redirected to stderr to avoid polluting HTML output
+echo "Extracting changelog for version $VERSION..." >&2
 
 # Extract the version section
 version_content=$(extract_version_section "$VERSION" "$CHANGELOG_FILE")
 
 if [ -z "$version_content" ]; then
-    echo "Warning: No changelog section found for version $VERSION"
-    echo "Using default content..."
+    echo "Warning: No changelog section found for version $VERSION" >&2
+    echo "Using default content..." >&2
     cat << EOF
 <h2>VibeMeter $VERSION</h2>
 <p>Latest version of VibeMeter with new features and improvements.</p>
@@ -97,7 +98,7 @@ EOF
 fi
 
 # Convert to HTML
-echo "<h2>VibeMeter $VERSION</h2>"
+# Note: Title is handled by the calling script (e.g., generate-appcast.sh)
 
 # Process line by line to handle lists properly
 in_list=false

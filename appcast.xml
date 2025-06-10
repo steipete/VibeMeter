@@ -11,9 +11,7 @@
             <sparkle:version>111</sparkle:version>
             <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.1.0</h2><div>Extracting changelog for version 1.1.0...
-<h2>VibeMeter 1.1.0</h2>
-<h3>🎨 UI Improvements</h3>
+                <h2>VibeMeter 1.1.0</h2><div><h3>🎨 UI Improvements</h3>
 <ul>
 <li><strong>Enhanced popover design</strong> - Switched to ultra-thin translucent material with blur effect for modern look</li>
 <li><strong>Adaptive border</strong> - Added white border that automatically adapts to light/dark mode</li>
