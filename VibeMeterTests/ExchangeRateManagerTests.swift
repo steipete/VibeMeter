@@ -289,16 +289,31 @@ struct ExchangeRateManagerTests {
                 "rates": ratesDict,
             ] as [String: Any]
 
-            return try! JSONSerialization.data(withJSONObject: response)
+            do {
+                return try JSONSerialization.data(withJSONObject: response)
+            } catch {
+                Issue.record("Failed to serialize JSON response: \(error)")
+                return Data()
+            }
         }
 
         private static func createMockResponse(statusCode: Int,
                                                url: String = "https://api.frankfurter.app/latest") -> HTTPURLResponse {
-            HTTPURLResponse(
-                url: URL(string: url)!,
+            guard let url = URL(string: url) else {
+                Issue.record("Failed to create URL from string: \(url)")
+                return HTTPURLResponse()
+            }
+
+            guard let response = HTTPURLResponse(
+                url: url,
                 statusCode: statusCode,
                 httpVersion: nil,
-                headerFields: nil)!
+                headerFields: nil) else {
+                Issue.record("Failed to create HTTPURLResponse")
+                return HTTPURLResponse()
+            }
+
+            return response
         }
 
         // MARK: - Successful Response Tests

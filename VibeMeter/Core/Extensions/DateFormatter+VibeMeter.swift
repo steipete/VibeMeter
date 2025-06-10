@@ -18,7 +18,7 @@ extension ISO8601DateFormatter {
 
 extension DateFormatter {
     /// Standard date formatter for UI display
-    nonisolated(unsafe) static let vibeMeterDisplay: DateFormatter = {
+    static let vibeMeterDisplay: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
@@ -26,7 +26,7 @@ extension DateFormatter {
     }()
 
     /// Formatter for log file names (yyyy-MM-dd)
-    nonisolated(unsafe) static let vibeMeterLogFile: DateFormatter = {
+    static let vibeMeterLogFile: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter

@@ -80,24 +80,22 @@ final class MultiProviderErrorHandler {
                 logger.info("Attempting automatic re-authentication for Cursor")
                 spendingData.updateConnectionStatus(for: provider, status: .syncing)
 
-                loginManager.attemptAutomaticReauthentication(for: provider) { [weak self] success in
-                    guard let self else { return }
-                    Task { @MainActor in
-                        if success {
-                            self.logger.info("Automatic re-authentication successful for Cursor")
-                            // Trigger data refresh after successful re-auth
-                            if let orchestrator = loginManager.orchestrator {
-                                await orchestrator.refreshData(for: provider, showSyncedMessage: false)
-                            }
-                        } else {
-                            self.logger.warning("Automatic re-authentication failed for Cursor")
-                            spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
-                            self.sessionStateManager.handleAuthenticationError(
-                                for: provider,
-                                error: error,
-                                userSessionData: userSessionData,
-                                spendingData: spendingData)
+                Task { @MainActor in
+                    let success = await loginManager.attemptAutomaticReauthentication(for: provider)
+                    if success {
+                        logger.info("Automatic re-authentication successful for Cursor")
+                        // Trigger data refresh after successful re-auth
+                        if let orchestrator = loginManager.orchestrator {
+                            await orchestrator.refreshData(for: provider, showSyncedMessage: false)
                         }
+                    } else {
+                        logger.warning("Automatic re-authentication failed for Cursor")
+                        spendingData.updateConnectionStatus(for: provider, status: .error(message: errorMessage))
+                        sessionStateManager.handleAuthenticationError(
+                            for: provider,
+                            error: error,
+                            userSessionData: userSessionData,
+                            spendingData: spendingData)
                     }
                 }
             } else {

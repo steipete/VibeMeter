@@ -10,35 +10,51 @@ actor ClaudeLogProcessor {
     private let logger = Logger.vibeMeter(category: "ClaudeLogProcessor")
     private let fileManager = FileManager.default
 
-    /// Process all log files and return daily usage
-    func processLogFiles(_ fileURLs: [URL],
-                         usingCache cache: [String: Data]) async -> (entries: [Date: [ClaudeLogEntry]], updatedCache: [
-        String: Data
-    ]) {
+    /// Process all log files and return daily usage with progress updates
+    func processLogFiles(
+        _ fileURLs: [URL],
+        usingCache cache: [String: Data],
+        progressHandler: (@Sendable (Int, [Date: [ClaudeLogEntry]]) async -> Void)? = nil) async -> (entries: [
+        Date: [ClaudeLogEntry]
+    ], updatedCache: [String: Data]) {
         var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
         var updatedCache = cache
+        var filesProcessed = 0
 
-        await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self) { group in
-            for fileURL in fileURLs {
-                group.addTask(priority: .utility) {
-                    await self.processFile(fileURL, existingCache: cache)
+        logger.info("Processing \(fileURLs.count) log files")
+
+        // Process files one by one for streaming updates
+        for fileURL in fileURLs {
+            if let result = await processFile(fileURL, existingCache: cache) {
+                let (entries, fileKey, fileHash) = result
+
+                // Update cache
+                updatedCache[fileKey] = fileHash
+
+                // Group by day
+                for entry in entries {
+                    let day = Calendar.current.startOfDay(for: entry.timestamp)
+                    dailyUsage[day, default: []].append(entry)
                 }
-            }
 
-            // Collect results
-            for await result in group {
-                if let (entries, fileKey, fileHash) = result {
-                    // Update cache
-                    updatedCache[fileKey] = fileHash
+                filesProcessed += 1
 
-                    // Group by day
-                    for entry in entries {
-                        let day = Calendar.current.startOfDay(for: entry.timestamp)
-                        dailyUsage[day, default: []].append(entry)
-                    }
+                // Send progress update
+                if let progressHandler {
+                    await progressHandler(filesProcessed, dailyUsage)
+                }
+            } else {
+                filesProcessed += 1
+
+                // Still send progress update even if no entries found
+                if let progressHandler {
+                    await progressHandler(filesProcessed, dailyUsage)
                 }
             }
         }
+
+        let totalEntries = dailyUsage.values.flatMap(\.self).count
+        logger.info("Processed \(totalEntries) total entries across all files")
 
         return (dailyUsage, updatedCache)
     }
@@ -81,6 +97,8 @@ actor ClaudeLogProcessor {
 
     private func parseFileData(_ data: Data) -> [ClaudeLogEntry] {
         var entries: [ClaudeLogEntry] = []
+        var linesProcessed = 0
+        var linesWithTokens = 0
 
         // Use autoreleasepool for better memory management with large files
         autoreleasepool {
@@ -108,17 +126,27 @@ actor ClaudeLogProcessor {
                         let lineData = buffer.subdata(in: 0 ..< newlineRange.lowerBound)
                         buffer.removeSubrange(0 ... newlineRange.lowerBound)
 
+                        linesProcessed += 1
                         if let entry = parseLogLine(lineData) {
                             entries.append(entry)
+                            linesWithTokens += 1
                         }
                     }
                 }
             }
 
             // Process any remaining data
-            if !buffer.isEmpty, let entry = parseLogLine(buffer) {
-                entries.append(entry)
+            if !buffer.isEmpty {
+                linesProcessed += 1
+                if let entry = parseLogLine(buffer) {
+                    entries.append(entry)
+                    linesWithTokens += 1
+                }
             }
+        }
+
+        if linesProcessed > 0 {
+            logger.debug("Processed \(linesProcessed) lines, found \(linesWithTokens) with token data")
         }
 
         return entries
@@ -128,67 +156,21 @@ actor ClaudeLogProcessor {
         guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !line.isEmpty else { return nil }
 
-        // Use FastScanner for efficient parsing
-        let scanner = FastScanner(string: line)
-
-        // Quick check for required fields using Scanner
-        var inputTokens: Int?
-        var outputTokens: Int?
-
-        // Scan for "message" field
-        if scanner.scanUpTo(string: "\"message\"") != nil {
-            scanner.location += 9 // Skip past "message"
-
-            // Scan for "usage" within message
-            if scanner.scanUpTo(string: "\"usage\"") != nil {
-                scanner.location += 7 // Skip past "usage"
-
-                // Scan for input_tokens
-                if scanner.scanUpTo(string: "\"input_tokens\"") != nil {
-                    scanner.location += 14 // Skip past "input_tokens"
-                    _ = scanner.scanUpTo(string: ":") // Skip to colon
-                    scanner.location += 1 // Skip colon
-                    inputTokens = scanner.scanInteger() as Int?
-                }
-
-                // Scan for output_tokens
-                if inputTokens != nil, scanner.scanUpTo(string: "\"output_tokens\"") != nil {
-                    scanner.location += 15 // Skip past "output_tokens"
-                    _ = scanner.scanUpTo(string: ":") // Skip to colon
-                    scanner.location += 1 // Skip colon
-                    outputTokens = scanner.scanInteger() as Int?
-                }
-            }
-        }
-
-        // Skip if we don't have both tokens
-        guard inputTokens != nil && outputTokens != nil else {
-            return nil
-        }
-
-        // Skip summary and other non-usage entries
-        if line.contains("\"type\":\"summary\"") ||
-            line.contains("\"type\":\"user\"") ||
-            line.contains("\"leafUuid\"") ||
-            line.contains("\"sessionId\"") ||
-            line.contains("\"parentUuid\"") {
-            return nil
-        }
-
-        // Now do full JSON decode since we know it's valid
-        if let jsonData = line.data(using: .utf8) {
-            do {
-                return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
-            } catch {
-                // Silently skip malformed entries
-            }
-        }
-
-        return nil
+        // Use the flexible ClaudeCodeLogParser
+        return ClaudeCodeLogParser.parseLogLine(line)
     }
 }
 
 // MARK: - Protocols
+
+/// Protocol for receiving progress updates during log processing
+@MainActor
+public protocol ClaudeLogProgressDelegate: AnyObject {
+    func logProcessingDidStart(totalFiles: Int)
+    func logProcessingDidUpdate(filesProcessed: Int, dailyUsage: [Date: [ClaudeLogEntry]])
+    func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]])
+    func logProcessingDidFail(error: Error)
+}
 
 /// Protocol for managing Claude log file access and parsing
 @MainActor
@@ -200,6 +182,7 @@ public protocol ClaudeLogManagerProtocol: AnyObject, Sendable {
     func requestLogAccess() async -> Bool
     func revokeAccess()
     func getDailyUsage() async -> [Date: [ClaudeLogEntry]]
+    func getDailyUsageWithProgress(delegate: ClaudeLogProgressDelegate?) async -> [Date: [ClaudeLogEntry]]
     func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow
     func countTokens(in text: String) -> Int
 }
@@ -224,9 +207,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let logger = Logger.vibeMeter(category: "ClaudeLogManager")
     private let fileManager: FileManager
     private let userDefaults: UserDefaults
-    private let logDirectoryName = ".claude/projects"
     private let authTokenManager = AuthenticationTokenManager()
     private let logProcessor = ClaudeLogProcessor()
+    
+    // New components
+    private let bookmarkManager: ClaudeLogBookmarkManager
+    private let fileScanner: ClaudeLogFileScanner
+    private let windowCalculator: ClaudeFiveHourWindowCalculator
 
     @Published
     public private(set) var hasAccess = false
@@ -234,12 +221,6 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public private(set) var isProcessing = false
     @Published
     public private(set) var lastError: Error?
-
-    private var bookmarkData: Data? {
-        didSet {
-            hasAccess = bookmarkData != nil
-        }
-    }
 
     // Cache keys for UserDefaults
     private let cacheKey = "com.vibemeter.claudeLogCache"
@@ -301,7 +282,12 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 userDefaults: UserDefaults = .standard) {
         self.fileManager = fileManager
         self.userDefaults = userDefaults
-        loadBookmark()
+        self.bookmarkManager = ClaudeLogBookmarkManager()
+        self.fileScanner = ClaudeLogFileScanner()
+        self.windowCalculator = ClaudeFiveHourWindowCalculator()
+        
+        // Set up access state
+        self.hasAccess = bookmarkManager.hasAccess
 
         // If we have access, ensure we have a token saved and provider is enabled
         if hasAccess {
@@ -329,67 +315,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     /// Request access to the Claude logs directory
     public func requestLogAccess() async -> Bool {
-        let openPanel = NSOpenPanel()
-        openPanel.title = "Grant Access to Claude Logs"
-        openPanel.message =
-            "Please select your home directory to grant VibeMeter access to the ~/.claude folder for reading usage data."
-        openPanel.prompt = "Grant Access"
-        openPanel.canChooseFiles = false
-        openPanel.canChooseDirectories = true
-        openPanel.canCreateDirectories = false
-        openPanel.allowsMultipleSelection = false
-        // Get the actual user home directory (not the sandboxed one)
-        // In a sandboxed app, NSHomeDirectory() returns the container, so we construct the path manually
-        let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
-        openPanel.directoryURL = actualHomeDir
-        openPanel.showsHiddenFiles = true // Show hidden files like .claude
-
-        let response = await withCheckedContinuation { continuation in
-            openPanel.begin { response in
-                continuation.resume(returning: response)
-            }
-        }
-
-        guard response == .OK, let url = openPanel.url else {
-            logger.info("User cancelled folder access request")
-            return false
-        }
-
-        // Validate that the selected directory can access Claude logs
-        logger.info("Validating selected directory: \(url.path)")
-        logger.info("Expected home directory: \(actualHomeDir.path)")
-        logger.info("NSUserName: \(NSUserName())")
-
-        // Check if Claude logs directory exists at the expected location
-        let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
-        let canAccessClaudeLogs = fileManager.fileExists(atPath: claudeLogsPath.path) ||
-            url.path == actualHomeDir.path // Accept home directory even if .claude doesn't exist yet
-
-        guard canAccessClaudeLogs else {
-            logger.warning("Selected directory doesn't contain Claude logs: \(url.path)")
-            logger.warning("Expected to find logs at: \(claudeLogsPath.path)")
-            // Show alert to user
-            await MainActor.run {
-                let alert = NSAlert()
-                alert.messageText = "Claude Logs Not Found"
-                alert
-                    .informativeText =
-                    "Please select your home directory (\(NSHomeDirectory())) to grant access to Claude logs located in ~/.claude/projects"
-                alert.alertStyle = .warning
-                alert.addButton(withTitle: "OK")
-                alert.runModal()
-            }
-            return false
-        }
-
-        do {
-            let bookmark = try url.bookmarkData(
-                options: .withSecurityScope,
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil)
-            saveBookmark(data: bookmark)
-            logger.info("Successfully created security-scoped bookmark for folder access")
-
+        let success = await bookmarkManager.requestLogAccess()
+        
+        if success {
+            hasAccess = true
+            
             // Save a dummy token to indicate Claude is "logged in"
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
 
@@ -397,36 +327,33 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             if !ProviderRegistry.shared.isEnabled(.claude) {
                 ProviderRegistry.shared.enableProvider(.claude)
             }
-
-            return true
-        } catch {
-            logger.error("Failed to create bookmark: \(error.localizedDescription)")
-            lastError = error
-            return false
         }
+        
+        return success
     }
 
     /// Revoke access to Claude logs
     public func revokeAccess() {
-        bookmarkData = nil
-        do {
-            try fileManager.removeItem(at: bookmarkFileURL())
-            logger.info("Successfully revoked Claude log access")
-
-            // Remove the dummy token to indicate Claude is "logged out"
-            _ = authTokenManager.deleteToken(for: .claude)
-        } catch {
-            logger.error("Failed to remove bookmark file: \(error.localizedDescription)")
-        }
+        bookmarkManager.revokeAccess()
+        hasAccess = false
+        
+        // Remove the dummy token to indicate Claude is "logged out"
+        _ = authTokenManager.deleteToken(for: .claude)
     }
 
     /// Get daily usage data from Claude logs
     public func getDailyUsage() async -> [Date: [ClaudeLogEntry]] {
+        await getDailyUsageWithProgress(delegate: nil)
+    }
+
+    /// Get daily usage data from Claude logs with progress updates
+    public func getDailyUsageWithProgress(delegate: ClaudeLogProgressDelegate?) async -> [Date: [ClaudeLogEntry]] {
         // Check cache first
         if let cachedData = cachedDailyUsage,
            let timestamp = cacheTimestamp,
            Date().timeIntervalSince(timestamp) < cacheValidityDuration {
             logger.info("ClaudeLogManager: Returning cached data")
+            delegate?.logProcessingDidComplete(dailyUsage: cachedData)
             return cachedData
         }
 
@@ -437,27 +364,45 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         logger.info("ClaudeLogManager: getDailyUsage started (cache miss)")
 
-        guard let accessURL = resolveBookmark() else {
+        guard let accessURL = bookmarkManager.resolveBookmark() else {
             logger.warning("ClaudeLogManager: No access to Claude logs - bookmark resolution failed")
+            let error = ClaudeLogManagerError.noAccess
+            delegate?.logProcessingDidFail(error: error)
             return [:]
         }
         defer { accessURL.stopAccessingSecurityScopedResource() }
 
-        let claudeURL = accessURL.appendingPathComponent(logDirectoryName)
+        guard let claudeURL = bookmarkManager.getClaudeLogsURL() else {
+            logger.warning("ClaudeLogManager: Could not get Claude logs URL")
+            let error = ClaudeLogManagerError.noAccess
+            delegate?.logProcessingDidFail(error: error)
+            return [:]
+        }
+        
         logger.info("ClaudeLogManager: Looking for Claude logs at: \(claudeURL.path)")
 
-        guard fileManager.fileExists(atPath: claudeURL.path) else {
-            logger.warning("ClaudeLogManager: Claude directory not found at: \(claudeURL.path)")
-            logger.warning("ClaudeLogManager: Home directory is: \(accessURL.path)")
+        guard fileScanner.claudeLogsExist(at: accessURL) else {
+            logger.warning("ClaudeLogManager: Claude directory not found")
+            let error = ClaudeLogManagerError.fileSystemError(
+                NSError(domain: "ClaudeLogManager", code: 404, userInfo: [
+                    NSLocalizedDescriptionKey: "Claude logs directory not found",
+                ]))
+            delegate?.logProcessingDidFail(error: error)
             return [:]
         }
 
         // Get all JSONL files in the directory and subdirectories
-        let jsonlFiles = findJSONLFiles(in: claudeURL)
+        let jsonlFiles = fileScanner.findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
 
-        // Process files using the background actor
-        let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(jsonlFiles, usingCache: fileHashCache)
+        // Notify delegate of start
+        delegate?.logProcessingDidStart(totalFiles: jsonlFiles.count)
+
+        // Process files using the background actor without progress handler
+        // to avoid Sendable issues with delegate capture
+        let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(
+            jsonlFiles,
+            usingCache: fileHashCache)
 
         let totalEntries = dailyUsage.values.flatMap(\.self).count
         logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
@@ -466,6 +411,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.cachedDailyUsage = dailyUsage
         self.cacheTimestamp = Date()
         self.fileHashCache = updatedHashCache
+
+        // Notify delegate of completion
+        delegate?.logProcessingDidComplete(dailyUsage: dailyUsage)
 
         return dailyUsage
     }
@@ -479,62 +427,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     /// Calculate the current 5-hour window usage
     public func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
-        let now = Date()
-        let fiveHoursAgo = now.addingTimeInterval(-5 * 60 * 60)
-
-        // Filter entries within the last 5 hours
-        let recentEntries = dailyUsage.values
-            .flatMap(\.self)
-            .filter { $0.timestamp >= fiveHoursAgo }
-
-        // Calculate total tokens used
-        let totalInputTokens = recentEntries.reduce(0) { $0 + $1.inputTokens }
-        let totalOutputTokens = recentEntries.reduce(0) { $0 + $1.outputTokens }
-
-        // Get account type from settings
-        let accountType = SettingsManager.shared.sessionSettingsManager.claudeAccountType
-
-        // For Pro/Team accounts, calculate based on message count approximation
-        // Since we don't have exact token limits, we'll estimate based on messages
-        if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
-            // Estimate average tokens per message (input + output)
-            // Average message might be ~2000 tokens input + ~1000 tokens output
-            let avgTokensPerMessage = 3000
-            let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
-
-            let totalTokensUsed = totalInputTokens + totalOutputTokens
-            let usageRatio = Double(totalTokensUsed) / Double(estimatedTokenLimit)
-
-            return FiveHourWindow(
-                used: min(usageRatio * 100, 100),
-                total: 100,
-                resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60))
-        } else {
-            // Free tier - daily limit
-            // Calculate usage for the whole day
-            let calendar = Calendar.current
-            let startOfDay = calendar.startOfDay(for: now)
-            let todayEntries = dailyUsage.values
-                .flatMap(\.self)
-                .filter { $0.timestamp >= startOfDay }
-
-            let messageCount = todayEntries.count
-            let dailyLimit = accountType.dailyMessageLimit ?? 50
-            let usageRatio = Double(messageCount) / Double(dailyLimit)
-
-            // Reset at midnight PT
-            var nextResetComponents = calendar.dateComponents([.year, .month, .day], from: now)
-            nextResetComponents.day! += 1
-            nextResetComponents.hour = 0
-            nextResetComponents.minute = 0
-            nextResetComponents.timeZone = TimeZone(identifier: "America/Los_Angeles")
-            let resetDate = calendar.date(from: nextResetComponents) ?? now
-
-            return FiveHourWindow(
-                used: min(usageRatio * 100, 100),
-                total: 100,
-                resetDate: resetDate)
-        }
+        windowCalculator.calculateFiveHourWindow(from: dailyUsage)
     }
 
     /// Count tokens in text using Tiktoken
@@ -543,236 +436,6 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     }
 
     // MARK: - Private Methods
-
-    private func findJSONLFiles(in directory: URL) -> [URL] {
-        var jsonlFiles: [URL] = []
-        let cutoffDate = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
-
-        // Date formatter for parsing filenames (optimization #9)
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-
-        logger.debug("ClaudeLogManager: Searching for JSONL files in: \(directory.path)")
-
-        if let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey, .fileSizeKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
-            for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
-                let filename = fileURL.lastPathComponent
-
-                // Try to extract date from filename first (optimization #9)
-                if let dateRange = filename.range(of: #"\d{4}-\d{2}-\d{2}"#, options: .regularExpression) {
-                    let dateString = String(filename[dateRange])
-                    if let fileDate = dateFormatter.date(from: dateString),
-                       fileDate < cutoffDate {
-                        logger.trace("Skipping old file based on filename: \(filename)")
-                        continue
-                    }
-                } else {
-                    // Fall back to modification date if no date in filename
-                    if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
-                       let modificationDate = attributes[.modificationDate] as? Date,
-                       modificationDate < cutoffDate {
-                        logger.trace("Skipping old file: \(fileURL.lastPathComponent)")
-                        continue
-                    }
-                }
-
-                jsonlFiles.append(fileURL)
-                logger.debug("ClaudeLogManager: Found JSONL file: \(fileURL.path)")
-            }
-        } else {
-            logger.error("ClaudeLogManager: Failed to create file enumerator for directory: \(directory.path)")
-        }
-
-        // Sort by modification date (newest first) for better cache hits
-        jsonlFiles.sort { url1, url2 in
-            let date1 = (try? fileManager.attributesOfItem(atPath: url1.path)[.modificationDate] as? Date) ?? Date
-                .distantPast
-            let date2 = (try? fileManager.attributesOfItem(atPath: url2.path)[.modificationDate] as? Date) ?? Date
-                .distantPast
-            return date1 > date2
-        }
-
-        logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files (excluding old files)")
-        return jsonlFiles
-    }
-
-    private func saveBookmark(data: Data) {
-        do {
-            let url = bookmarkFileURL()
-            let directory = url.deletingLastPathComponent()
-
-            // Create directory if needed
-            if !fileManager.fileExists(atPath: directory.path) {
-                try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-            }
-
-            try data.write(to: url)
-            self.bookmarkData = data
-            logger.debug("Saved bookmark to: \(url.path)")
-        } catch {
-            logger.error("Failed to save bookmark data: \(error.localizedDescription)")
-            lastError = error
-        }
-    }
-
-    private func loadBookmark() {
-        do {
-            let url = bookmarkFileURL()
-            guard fileManager.fileExists(atPath: url.path) else {
-                logger.debug("No existing bookmark found")
-                return
-            }
-
-            logger.info("Loading bookmark from: \(url.path)")
-            logger.info("Current NSHomeDirectory: \(NSHomeDirectory())")
-            logger.info("Current NSUserName: \(NSUserName())")
-            logger.info("Expected home directory: \(NSHomeDirectory())")
-
-            let data = try Data(contentsOf: url)
-
-            // Validate the bookmark points to the home directory
-            if let validatedURL = validateBookmark(data) {
-                self.bookmarkData = data
-                logger.info("Loaded existing bookmark for Claude logs at: \(validatedURL.path)")
-            } else {
-                logger.warning("Existing bookmark is invalid (wrong directory), removing it")
-                try? fileManager.removeItem(at: url)
-                // Remove the token as well since the bookmark is invalid
-                _ = authTokenManager.deleteToken(for: .claude)
-                // Disable Claude provider
-                if ProviderRegistry.shared.isEnabled(.claude) {
-                    ProviderRegistry.shared.disableProvider(.claude)
-                }
-
-                // Log the issue prominently
-                logger
-                    .error(
-                        "IMPORTANT: Claude bookmark was pointing to wrong directory and has been invalidated. User needs to grant access again.")
-            }
-        } catch {
-            logger.error("Failed to load bookmark: \(error.localizedDescription)")
-        }
-    }
-
-    private func resolveBookmark() -> URL? {
-        guard let bookmarkData else {
-            logger.debug("No bookmark data available")
-            return nil
-        }
-
-        do {
-            var isStale = false
-            let url = try URL(
-                resolvingBookmarkData: bookmarkData,
-                options: .withSecurityScope,
-                relativeTo: nil,
-                bookmarkDataIsStale: &isStale)
-
-            logger.debug("Resolved bookmark URL: \(url.path)")
-
-            // Check if Claude logs exist at this location
-            let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
-            logger.debug("Checking for Claude logs at: \(claudeLogsPath.path)")
-
-            // Accept the bookmark if it's either:
-            // 1. The user's home directory (/Users/username)
-            // 2. A directory that contains .claude/projects
-            let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
-            let isValidLocation = url.path == actualHomeDir.path ||
-                fileManager.fileExists(atPath: claudeLogsPath.path)
-
-            guard isValidLocation else {
-                logger.error("Bookmark points to invalid directory: \(url.path)")
-                logger.error("Expected home directory: \(NSHomeDirectory())")
-                logger.error("Claude logs path would be: \(claudeLogsPath.path)")
-                // Invalidate the bookmark
-                self.bookmarkData = nil
-                revokeAccess()
-                return nil
-            }
-
-            if isStale {
-                logger.warning("Bookmark is stale, attempting to refresh")
-                let newBookmark = try url.bookmarkData(
-                    options: .withSecurityScope,
-                    includingResourceValuesForKeys: nil,
-                    relativeTo: nil)
-                saveBookmark(data: newBookmark)
-            }
-
-            guard url.startAccessingSecurityScopedResource() else {
-                logger.error("Failed to start accessing security-scoped resource")
-                return nil
-            }
-
-            return url
-        } catch {
-            logger.error("Failed to resolve bookmark: \(error.localizedDescription)")
-            self.bookmarkData = nil // Invalidate bookmark if it fails
-            lastError = error
-            return nil
-        }
-    }
-
-    private func validateBookmark(_ bookmarkData: Data) -> URL? {
-        do {
-            var isStale = false
-            let url = try URL(
-                resolvingBookmarkData: bookmarkData,
-                options: .withSecurityScope,
-                relativeTo: nil,
-                bookmarkDataIsStale: &isStale)
-
-            logger.debug("Validating bookmark URL: \(url.path)")
-
-            // Check if Claude logs exist at this location
-            let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
-
-            // Accept the bookmark if it's either:
-            // 1. The user's home directory (/Users/username)
-            // 2. A directory that contains .claude/projects
-            let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
-            let isValidLocation = url.path == actualHomeDir.path ||
-                fileManager.fileExists(atPath: claudeLogsPath.path)
-
-            guard isValidLocation else {
-                logger.warning("Bookmark points to invalid directory: \(url.path)")
-                logger.warning("Expected home directory: \(NSHomeDirectory()) or directory containing .claude/projects")
-                return nil
-            }
-
-            // Try to access it to ensure it's valid
-            guard url.startAccessingSecurityScopedResource() else {
-                logger.error("Failed to access security-scoped resource for validation")
-                return nil
-            }
-            url.stopAccessingSecurityScopedResource()
-
-            return url
-        } catch {
-            logger.error("Failed to validate bookmark: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
-    private func bookmarkFileURL() -> URL {
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
-            // Use temporary directory for tests
-            let testDir = fileManager.temporaryDirectory
-                .appendingPathComponent("VibeMeterTests")
-                .appendingPathComponent("Claude")
-            try? fileManager.createDirectory(at: testDir, withIntermediateDirectories: true)
-            return testDir.appendingPathComponent("claude_folder_bookmark.data")
-        }
-
-        let applicationSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return applicationSupport
-            .appendingPathComponent("VibeMeter")
-            .appendingPathComponent("claude_folder_bookmark.data")
-    }
 }
 
 // MARK: - Errors

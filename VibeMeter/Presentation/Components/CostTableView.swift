@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Component that displays spending data in a structured table format.
@@ -17,9 +18,6 @@ struct CostTableView: View {
 
     @State
     private var selectedProvider: ServiceProvider?
-
-    @State
-    private var showClaudeUsageReport = false
 
     init(
         settingsManager: any SettingsManagerProtocol,
@@ -44,9 +42,6 @@ struct CostTableView: View {
             spendingLimitsSection
         }
         .id("cost-table-\(spendingData.providersWithData.count)-\(currencyData.selectedCode)-\(totalSpendingHash)")
-        .sheet(isPresented: $showClaudeUsageReport) {
-            ClaudeUsageReportView()
-        }
     }
 
     private var providerBreakdownSection: some View {
@@ -319,7 +314,7 @@ struct CostTableView: View {
                     if ClaudeLogManager.shared.hasAccess {
                         HStack {
                             Button(action: {
-                                showClaudeUsageReport = true
+                                ClaudeUsageReportWindowController.showWindow()
                             }) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "chart.bar.doc.horizontal")

@@ -132,7 +132,7 @@ public enum RelativeTimeFormatter {
 
         private func startTimer() {
             Task {
-                for await _ in LegacyAsyncTimerSequence(interval: 30) {
+                for await _ in AsyncTimerSequence.seconds(30) {
                     await MainActor.run {
                         currentTime = Date()
                     }

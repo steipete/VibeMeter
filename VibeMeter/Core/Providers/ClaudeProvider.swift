@@ -85,16 +85,16 @@ public actor ClaudeProvider: ProviderProtocol {
         // Calculate costs for each day
         var invoiceItems: [ProviderInvoiceItem] = []
         // Get account type from settings
-        let accountType = await MainActor.run {
+        let _ = await MainActor.run {
             SettingsManager.shared.sessionSettingsManager.claudeAccountType
         }
 
         // Group entries by model for analytics (if needed later)
         let allEntries = monthlyEntries.flatMap(\.1)
-        let entriesByModel = Dictionary(grouping: allEntries) { $0.model ?? "claude-3-5-sonnet" }
+        let _ = Dictionary(grouping: allEntries) { $0.model ?? "claude-3-5-sonnet" }
 
         for (date, entries) in monthlyEntries {
-            let dailyUsage = ClaudeDailyUsage(date: date, entries: entries)
+            let _ = ClaudeDailyUsage(date: date, entries: entries)
 
             // Calculate cost using the new pricing manager with smart mode selection
             var totalDailyCost = 0.0

@@ -140,43 +140,37 @@ final class CustomMenuWindow: NSPanel {
         NSApp.activate(ignoringOtherApps: true)
 
         // Small delay to ensure window is fully displayed before animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
-            guard let self else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(10))
 
             // Verify window is actually visible before animating
             if self.isVisible {
                 self.animateWindowIn()
                 self.setupEventMonitoring()
             } else {
-                // Fallback: retry with async dispatch
-                self.displayWindowFallback()
+                // Fallback: retry with async
+                await self.displayWindowFallback()
             }
         }
     }
 
-    /// Fallback window display method using async dispatch
-    private func displayWindowFallback() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+    /// Fallback window display method using async
+    private func displayWindowFallback() async {
+        // Alternative approach: try makeKeyAndOrderFront with app activation
+        NSApp.activate(ignoringOtherApps: true)
+        self.makeKeyAndOrderFront(nil)
 
-            // Alternative approach: try makeKeyAndOrderFront with app activation
-            NSApp.activate(ignoringOtherApps: true)
-            self.makeKeyAndOrderFront(nil)
+        // Final fallback after short delay
+        try? await Task.sleep(for: .milliseconds(50))
 
-            // Final fallback after short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self else { return }
-
-                if self.isVisible {
-                    self.animateWindowIn()
-                    self.setupEventMonitoring()
-                } else {
-                    // Last resort: force ordering front regardless of state
-                    self.orderFrontRegardless()
-                    self.alphaValue = 1.0 // Skip animation if there are issues
-                    self.setupEventMonitoring()
-                }
-            }
+        if self.isVisible {
+            self.animateWindowIn()
+            self.setupEventMonitoring()
+        } else {
+            // Last resort: force ordering front regardless of state
+            self.orderFrontRegardless()
+            self.alphaValue = 1.0 // Skip animation if there are issues
+            self.setupEventMonitoring()
         }
     }
 

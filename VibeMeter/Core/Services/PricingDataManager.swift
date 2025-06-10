@@ -8,7 +8,7 @@ import os.log
 public final class PricingDataManager: @unchecked Sendable {
     // MARK: - Types
 
-    public struct ModelPricing {
+    public struct ModelPricing: Sendable {
         public let inputCostPerToken: Double?
         public let outputCostPerToken: Double?
         public let cacheCreationCostPerToken: Double?

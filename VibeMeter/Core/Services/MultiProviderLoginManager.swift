@@ -34,8 +34,12 @@ public final class MultiProviderLoginManager {
     public weak var orchestrator: MultiProviderDataOrchestrator?
 
     // Internal method to attempt automatic re-authentication
-    func attemptAutomaticReauthentication(for provider: ServiceProvider, completion: @escaping (Bool) -> Void) {
-        webViewManager.attemptAutomaticReauthentication(for: provider, completion: completion)
+    func attemptAutomaticReauthentication(for provider: ServiceProvider) async -> Bool {
+        await withCheckedContinuation { continuation in
+            webViewManager.attemptAutomaticReauthentication(for: provider) { success in
+                continuation.resume(returning: success)
+            }
+        }
     }
 
     // MARK: - Initialization

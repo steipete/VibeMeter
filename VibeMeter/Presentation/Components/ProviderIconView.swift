@@ -16,17 +16,17 @@ struct ProviderIconView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             // Provider icon
-            if provider == .cursor {
+            switch provider {
+            case .cursor:
                 Image(asset: VibeMeterAsset.cursor)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
                     .accessibilityHidden(true)
-            } else {
-                // Fallback for future providers
-                Image(systemName: "cpu")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
+            case .claude:
+                Image(asset: VibeMeterAsset.claude)
+                    .resizable()
+                    .scaledToFit()
                     .frame(width: 20, height: 20)
                     .accessibilityHidden(true)
             }

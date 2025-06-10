@@ -3,15 +3,7 @@ import SwiftUI
 /// Displays a detailed daily token usage report for Claude
 struct ClaudeUsageReportView: View {
     @StateObject
-    private var claudeLogManager = ClaudeLogManager.shared
-    @State
-    private var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-    @State
-    private var isLoading = true
-    @State
-    private var errorMessage: String?
-    @State
-    private var loadingMessage = "Loading usage data..."
+    private var dataLoader = ClaudeUsageDataLoader()
 
     // Pricing constants (per million tokens)
     private let inputTokenPrice: Double = 3.00 // $3 per million input tokens
@@ -19,41 +11,55 @@ struct ClaudeUsageReportView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Claude Token Usage Report")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+            // Header with material background
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Claude Token Usage Report")
+                            .font(.title2)
+                            .fontWeight(.semibold)
 
-                    Text("Daily breakdown of token usage and costs")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        Text("Daily breakdown of token usage and costs")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button(action: refreshData) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(dataLoader.isLoading)
                 }
+                .padding()
 
-                Spacer()
-
-                Button(action: refreshData) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.title3)
-                }
-                .buttonStyle(.plain)
-                .disabled(isLoading)
+                Divider()
             }
-            .padding()
-
-            Divider()
+            .background(.ultraThinMaterial)
 
             // Content
             Group {
-                if isLoading {
-                    VStack {
+                if dataLoader.isLoading, dataLoader.dailyUsage.isEmpty {
+                    VStack(spacing: 16) {
                         Spacer()
-                        ProgressView(loadingMessage)
+                        ProgressView()
                             .progressViewStyle(.circular)
+                            .scaleEffect(1.5)
+
+                        Text(dataLoader.loadingMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        if dataLoader.totalFiles > 0 {
+                            ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
+                                .progressViewStyle(.linear)
+                                .frame(width: 200)
+                        }
                         Spacer()
                     }
-                } else if let error = errorMessage {
+                } else if let error = dataLoader.errorMessage {
                     VStack(spacing: 16) {
                         Spacer()
                         Image(systemName: "exclamationmark.triangle")
@@ -75,7 +81,7 @@ struct ClaudeUsageReportView: View {
                         .buttonStyle(.borderedProminent)
                         Spacer()
                     }
-                } else if sortedDays.isEmpty {
+                } else if sortedDays.isEmpty, !dataLoader.isLoading {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "doc.text.magnifyingglass")
@@ -85,13 +91,38 @@ struct ClaudeUsageReportView: View {
                         Text("No usage data found")
                             .font(.headline)
 
-                        Text("Start using Claude to see your token usage here")
+                        Text("Start using Claude Code to see your token usage here")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding()
                     Spacer()
                 } else {
+                    // Show loading indicator at the top if still processing
+                    if dataLoader.isLoading, dataLoader.totalFiles > 0 {
+                        VStack(spacing: 8) {
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(0.8)
+
+                                Text(dataLoader.loadingMessage)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+
+                                Spacer()
+                            }
+
+                            ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
+                                .progressViewStyle(.linear)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+
+                        Divider()
+                    }
+
                     // Table
                     Table(of: DailyUsageSummary.self) {
                         TableColumn("Date") { summary in
@@ -122,7 +153,7 @@ struct ClaudeUsageReportView: View {
                     }
                     .tableStyle(.inset(alternatesRowBackgrounds: true))
 
-                    // Summary footer
+                    // Summary footer with material background
                     VStack(spacing: 0) {
                         Divider()
 
@@ -169,13 +200,12 @@ struct ClaudeUsageReportView: View {
                             }
                         }
                         .padding()
-                        .background(Color(NSColor.controlBackgroundColor))
+                        .background(.ultraThinMaterial)
                     }
                 }
             }
         }
-        .frame(minWidth: 700, idealWidth: 800, minHeight: 500, idealHeight: 600)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(.clear)
         .onAppear {
             refreshData()
         }
@@ -184,12 +214,12 @@ struct ClaudeUsageReportView: View {
     // MARK: - Data Processing
 
     private var sortedDays: [Date] {
-        dailyUsage.keys.sorted(by: >)
+        dataLoader.dailyUsage.keys.sorted(by: >)
     }
 
     private var summaries: [DailyUsageSummary] {
         sortedDays.compactMap { date in
-            guard let entries = dailyUsage[date] else { return nil }
+            guard let entries = dataLoader.dailyUsage[date] else { return nil }
             return DailyUsageSummary(date: date, entries: entries,
                                      inputPrice: inputTokenPrice,
                                      outputPrice: outputTokenPrice)
@@ -197,11 +227,11 @@ struct ClaudeUsageReportView: View {
     }
 
     private var totalInputTokens: Int {
-        dailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.inputTokens }
+        dataLoader.dailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.inputTokens }
     }
 
     private var totalOutputTokens: Int {
-        dailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.outputTokens }
+        dataLoader.dailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.outputTokens }
     }
 
     private var totalTokens: Int {
@@ -217,34 +247,7 @@ struct ClaudeUsageReportView: View {
     // MARK: - Actions
 
     private func refreshData() {
-        isLoading = true
-        errorMessage = nil
-        loadingMessage = "Loading usage data..."
-
-        // Force cache invalidation on manual refresh
-        claudeLogManager.invalidateCache()
-
-        Task {
-            guard claudeLogManager.hasAccess else {
-                await MainActor.run {
-                    errorMessage = "No folder access granted. Please grant access in settings."
-                    isLoading = false
-                }
-                return
-            }
-
-            await MainActor.run {
-                loadingMessage = "Scanning log files..."
-            }
-
-            let usage = await claudeLogManager.getDailyUsage()
-
-            await MainActor.run {
-                loadingMessage = "Processing data..."
-                self.dailyUsage = usage
-                self.isLoading = false
-            }
-        }
+        dataLoader.loadData(forceRefresh: true)
     }
 }
 
@@ -282,9 +285,111 @@ private struct DailyUsageSummary: Identifiable {
     }
 }
 
+// MARK: - Data Loader
+
+/// Observable object that handles loading Claude usage data with progress updates
+@MainActor
+final class ClaudeUsageDataLoader: ObservableObject {
+    @Published
+    var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
+    @Published
+    var isLoading = false
+    @Published
+    var errorMessage: String?
+    @Published
+    var loadingMessage = "Loading usage data..."
+    @Published
+    var filesProcessed = 0
+    @Published
+    var totalFiles = 0
+
+    private let claudeLogManager = ClaudeLogManager.shared
+
+    func loadData(forceRefresh: Bool = false) {
+        guard !isLoading else { return }
+
+        if forceRefresh {
+            claudeLogManager.invalidateCache()
+        }
+
+        isLoading = true
+        errorMessage = nil
+        dailyUsage = [:]
+        filesProcessed = 0
+        totalFiles = 0
+
+        Task {
+            guard claudeLogManager.hasAccess else {
+                errorMessage = "No folder access granted. Please grant access in settings."
+                isLoading = false
+                return
+            }
+
+            let usage = await claudeLogManager.getDailyUsageWithProgress(delegate: self)
+
+            // Final update in case delegate methods weren't called
+            if dailyUsage.isEmpty, !usage.isEmpty {
+                dailyUsage = usage
+            }
+
+            isLoading = false
+        }
+    }
+}
+
+// MARK: - ClaudeLogProgressDelegate
+
+extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
+    func logProcessingDidStart(totalFiles: Int) {
+        self.totalFiles = totalFiles
+        self.loadingMessage = "Scanning \(totalFiles) log files..."
+    }
+
+    func logProcessingDidUpdate(filesProcessed: Int, dailyUsage: [Date: [ClaudeLogEntry]]) {
+        self.filesProcessed = filesProcessed
+        self.dailyUsage = dailyUsage
+
+        let percentage = totalFiles > 0 ? Int((Double(filesProcessed) / Double(totalFiles)) * 100) : 0
+        self.loadingMessage = "Processing files... \(percentage)% (\(filesProcessed)/\(totalFiles))"
+
+        // If we have some data, we're no longer in the initial loading state
+        if !dailyUsage.isEmpty {
+            self.isLoading = false
+        }
+    }
+
+    func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]]) {
+        self.dailyUsage = dailyUsage
+        self.isLoading = false
+        self.loadingMessage = ""
+    }
+
+    func logProcessingDidFail(error: Error) {
+        self.errorMessage = error.localizedDescription
+        self.isLoading = false
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Claude Usage Report") {
-    ClaudeUsageReportView()
-        .frame(width: 800, height: 600)
+    ZStack {
+        Rectangle()
+            .fill(.regularMaterial)
+
+        ClaudeUsageReportView()
+    }
+    .frame(width: 900, height: 650)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("Claude Usage Report - Light") {
+    ZStack {
+        Rectangle()
+            .fill(.regularMaterial)
+
+        ClaudeUsageReportView()
+    }
+    .frame(width: 900, height: 650)
+    .preferredColorScheme(.light)
 }

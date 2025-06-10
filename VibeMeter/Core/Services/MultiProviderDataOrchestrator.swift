@@ -349,14 +349,14 @@ public final class MultiProviderDataOrchestrator {
     }
 
     private func setupRefreshTimers() {
-        let interval = TimeInterval(settingsManager.refreshIntervalMinutes * 60)
+        let intervalMinutes = settingsManager.refreshIntervalMinutes
+        let intervalSeconds = intervalMinutes * 60
 
         for provider in ServiceProvider.allCases {
             refreshTasks[provider]?.cancel()
 
             refreshTasks[provider] = Task { [weak self] in
-                // Use legacy timer for compatibility
-                for await _ in LegacyAsyncTimerSequence(interval: interval) {
+                for await _ in AsyncTimerSequence.seconds(intervalSeconds) {
                     guard let self else { break }
 
                     await MainActor.run {

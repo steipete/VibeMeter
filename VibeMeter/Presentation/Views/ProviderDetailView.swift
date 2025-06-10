@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // MARK: - RadioButton Component
@@ -42,9 +43,6 @@ struct ProviderDetailView: View {
 
     @State
     private var claudeAccountType: ClaudePricingTier = .pro
-
-    @State
-    private var showUsageReport = false
 
     @StateObject
     private var claudeLogManager = ClaudeLogManager.shared
@@ -128,12 +126,9 @@ struct ProviderDetailView: View {
             // Update settings if provider changes
             customSettings = providerRegistry.configuration(for: newProvider).customSettings
         }
-        .sheet(isPresented: $showUsageReport) {
-            ClaudeUsageReportView()
-        }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("showClaudeUsageReport"))) { _ in
             if provider == .claude {
-                showUsageReport = true
+                ClaudeUsageReportWindowController.showWindow()
             }
         }
     }
@@ -256,7 +251,7 @@ struct ProviderDetailView: View {
                                 .padding(.vertical, 4)
 
                             Button(action: {
-                                showUsageReport = true
+                                ClaudeUsageReportWindowController.showWindow()
                             }) {
                                 HStack {
                                     Image(systemName: "chart.bar.doc.horizontal")

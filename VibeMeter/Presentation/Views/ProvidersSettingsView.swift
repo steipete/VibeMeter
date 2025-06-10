@@ -25,6 +25,7 @@ struct ProvidersSettingsView: View {
                             userSessionData: userSessionData,
                             loginManager: loginManager,
                             providerRegistry: providerRegistry,
+                            settingsManager: settingsManager,
                             showDetail: {
                                 showingProviderDetail = provider
                             })
@@ -52,7 +53,7 @@ struct ProvidersSettingsView: View {
                     HStack {
                         Spacer()
                         Text(
-                            "Currently supporting Cursor AI and Claude subscriptions. Support for more providers is coming soon.")
+                            "Currently supporting Cursor AI and Claude subscriptions.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)

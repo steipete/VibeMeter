@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Displays Claude's 5-hour window quota usage
@@ -11,9 +12,6 @@ struct ClaudeQuotaView: View {
 
     @State
     private var provider: ClaudeProvider?
-
-    @State
-    private var showUsageReport = false
 
     private func getProvider() -> ClaudeProvider {
         if let provider {
@@ -143,17 +141,14 @@ struct ClaudeQuotaView: View {
         }
         .task {
             // Refresh data every 60 seconds
-            for await _ in LegacyAsyncTimerSequence(interval: 60) {
+            for await _ in AsyncTimerSequence.seconds(60) {
                 await loadQuotaData()
             }
-        }
-        .sheet(isPresented: $showUsageReport) {
-            ClaudeUsageReportView()
         }
     }
 
     private func openUsageReport() {
-        showUsageReport = true
+        ClaudeUsageReportWindowController.showWindow()
     }
 
     // MARK: - Helper Methods
