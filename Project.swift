@@ -52,6 +52,9 @@ let project = Project(
             "GCC_WARN_UNUSED_VARIABLE": true,
             "CLANG_WARN_UNREACHABLE_CODE": true,
             "ENABLE_STRICT_OBJC_MSGSEND": true,
+            // Recommended settings from Xcode
+            "ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOL_EXTENSIONS": "YES",
+            "LOCALIZATION_PREFERS_STRING_CATALOGS": "YES",
         ],
         configurations: [
             .debug(
@@ -108,7 +111,7 @@ let project = Project(
             ],
             resources: [
                 .glob(pattern: "VibeMeter/Assets.xcassets", excluding: []),
-                .glob(pattern: "VibeMeter/Resources/*.tiktoken", excluding: []),
+                .glob(pattern: "VibeMeter/Core/Utilities/Tiktoken/*.tiktoken", excluding: []),
             ],
             entitlements: .file(path: "VibeMeter/VibeMeter.entitlements"),
             dependencies: [

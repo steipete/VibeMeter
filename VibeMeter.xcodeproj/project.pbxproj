@@ -34,7 +34,6 @@
 		25EA6F50EFD068FDBB62877D /* MockURLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE78244C662C610484A80BD5 /* MockURLSession.swift */; };
 		272C729B3F43BF9F216ECD23 /* MockResetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439CE23EE076B9D13C4EEA4B /* MockResetProtocol.swift */; };
 		2A51B53F4271C7D9388DFEF0 /* CursorAPIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908F6A61E97329D239ABE126 /* CursorAPIConstants.swift */; };
-		2B6FE08422A2EF80FE9E4AD2 /* o200k_base.tiktoken in Resources */ = {isa = PBXBuildFile; fileRef = CB7899A9D3A9A70756EE9BB9 /* o200k_base.tiktoken */; };
 		2B783CCF1FF1C0918F6B3464 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 81D234961D5AD1EB9F516D2D /* Assets.xcassets */; };
 		2CB9E8103733D7133080CA67 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5230E3BF7C62DE2CB3EC4F04 /* AdvancedSettingsView.swift */; };
 		2D6EFD3709D0C0A81C8674A0 /* ExchangeRateManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50F98178129F6CE47CA6A2 /* ExchangeRateManagerMock.swift */; };
@@ -53,6 +52,7 @@
 		3C08CA78517AE30E2E588800 /* ClaudeLogManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A09FDDDEB654AC6800B11B7 /* ClaudeLogManagerMock.swift */; };
 		3DECD7E43D3BF549EC322264 /* LoggedOutContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CACAE5664463A40F689320E /* LoggedOutContentView.swift */; };
 		3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */; };
+		403E002947E0AA012BF649E1 /* o200k_base.tiktoken in Resources */ = {isa = PBXBuildFile; fileRef = 56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */; };
 		4314B4C4F9F5ECD39D01FED1 /* ClaudeLogManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73006332A10A82BBB8CA094A /* ClaudeLogManager.swift */; };
 		431CBB59100A77D27DEAD638 /* RelativeTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C150557B8157403E9A54FF79 /* RelativeTimeFormatter.swift */; };
 		45967DE75B7FF83B3DA274C3 /* PreviewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254DA98B907022FE1B39774F /* PreviewExtensions.swift */; };
@@ -280,6 +280,7 @@
 		5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsWebView.swift; sourceTree = "<group>"; };
 		5493C8811511815FE8EAF1AB /* VibeMeter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VibeMeter.entitlements; sourceTree = "<group>"; };
 		550E1B080BD9EFA949EC9DB1 /* VibeMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */ = {isa = PBXFileReference; path = o200k_base.tiktoken; sourceTree = "<group>"; };
 		5775960465B9D428644B097D /* SpendingLimitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsView.swift; sourceTree = "<group>"; };
 		5AB1DA38348E79E925182B50 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		5C25A0EAC785B6D2D6A3B78C /* MultiProviderDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderDataProcessor.swift; sourceTree = "<group>"; };
@@ -352,7 +353,6 @@
 		C2C3B28F92AD9F00ED3A4DB6 /* TestDataBuilders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataBuilders.swift; sourceTree = "<group>"; };
 		C6B5D9C53CC36213616E28BF /* MenuBarState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarState.swift; sourceTree = "<group>"; };
 		C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingHelpers.swift; sourceTree = "<group>"; };
-		CB7899A9D3A9A70756EE9BB9 /* o200k_base.tiktoken */ = {isa = PBXFileReference; path = o200k_base.tiktoken; sourceTree = "<group>"; };
 		CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeter-Info.plist"; sourceTree = "<group>"; };
 		CCB48421ED6BB82167A61CF6 /* NetworkRetryHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandlerTests.swift; sourceTree = "<group>"; };
 		D017032E04756D3C31B29991 /* URLQueryItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLQueryItemsTests.swift; sourceTree = "<group>"; };
@@ -416,7 +416,6 @@
 				AE1ADC8AB70FAFCE3AA61B46 /* App */,
 				73CEA0B5482799BE8A2E436E /* Core */,
 				AB8ECA5CD53BB5597D594662 /* Presentation */,
-				7F722E001CDC5402796338B4 /* Resources */,
 				81D234961D5AD1EB9F516D2D /* Assets.xcassets */,
 				5493C8811511815FE8EAF1AB /* VibeMeter.entitlements */,
 			);
@@ -619,14 +618,6 @@
 			path = Provider;
 			sourceTree = "<group>";
 		};
-		7F722E001CDC5402796338B4 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				CB7899A9D3A9A70756EE9BB9 /* o200k_base.tiktoken */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		98B3190F517B1A4EE8EB1684 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -783,6 +774,7 @@
 				1503C216F26E86D5E7D2D654 /* CoreBPE.swift */,
 				BE4D1DEC8FD0912AA3A504DC /* Encoding.swift */,
 				02495C910698EAD6700596AD /* FileDecoder.swift */,
+				56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */,
 				6307AA436B1FE8EB38AC9BAC /* Tiktoken.swift */,
 			);
 			path = Tiktoken;
@@ -894,7 +886,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B783CCF1FF1C0918F6B3464 /* Assets.xcassets in Resources */,
-				2B6FE08422A2EF80FE9E4AD2 /* o200k_base.tiktoken in Resources */,
+				403E002947E0AA012BF649E1 /* o200k_base.tiktoken in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1130,6 +1122,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1190,6 +1183,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -1318,6 +1312,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1384,6 +1379,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
