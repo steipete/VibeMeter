@@ -1,5 +1,29 @@
 import SwiftUI
 
+// MARK: - RadioButton Component
+
+private struct RadioButton: View {
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.5), lineWidth: 2)
+                    .frame(width: 16, height: 16)
+                
+                if isSelected {
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 8, height: 8)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 /// Detailed view for a specific service provider showing connection status and management options.
 ///
 /// This view displays comprehensive information about a selected provider including
@@ -60,17 +84,6 @@ struct ProviderDetailView: View {
                 if let session = userSessionData.getSession(for: provider) {
                     connectionStatusSection(session: session)
                     providerSettingsSection
-
-                    // Logout button for logged in users
-                    if userSessionData.isLoggedIn(to: provider) {
-                        HStack {
-                            Spacer()
-                            Button("Log Out", role: .destructive) {
-                                loginManager.logOut(from: provider)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
                 }
             }
 
@@ -94,7 +107,7 @@ struct ProviderDetailView: View {
             }
         }
         .padding(24)
-        .frame(width: 500, height: provider == .claude ? 620 : 520)
+        .frame(width: 600, height: provider == .claude ? 700 : 500)
         .task {
             // Load custom settings when view appears
             customSettings = providerRegistry.configuration(for: provider).customSettings
@@ -190,29 +203,37 @@ struct ProviderDetailView: View {
                     Divider()
                         .padding(.vertical, 4)
                     
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("Subscription Tier")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(.headline)
                         
-                        Picker("", selection: $claudeAccountType) {
+                        VStack(alignment: .leading, spacing: 12) {
                             ForEach(ClaudePricingTier.allCases, id: \.self) { tier in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(tier.displayName)
-                                    Text(tier.description)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                HStack(alignment: .top, spacing: 12) {
+                                    RadioButton(isSelected: claudeAccountType == tier) {
+                                        claudeAccountType = tier
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(tier.displayName)
+                                            .font(.system(.body))
+                                            .fontWeight(claudeAccountType == tier ? .medium : .regular)
+                                        
+                                        Text(tier.description)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    
+                                    Spacer()
                                 }
-                                .tag(tier)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    claudeAccountType = tier
+                                }
                             }
                         }
-                        .pickerStyle(.radioGroup)
-                        .labelsHidden()
-                        
-                        Text(claudeAccountType.description)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 4)
+                        .padding(.leading, 4)
                     }
                     .onChange(of: claudeAccountType) { _, newValue in
                         saveClaudeAccountType(newValue)

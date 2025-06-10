@@ -117,13 +117,15 @@ public struct ClaudeDailyUsage: Identifiable, Sendable {
 public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     case free = "Free"
     case pro = "Pro"
-    case team = "Team"
+    case max100 = "Max100"
+    case max200 = "Max200"
     
     public var displayName: String { 
         switch self {
         case .free: "Free"
         case .pro: "Pro ($20/mo)"
-        case .team: "Team ($25-30/mo)"
+        case .max100: "Max 5× ($100/mo)"
+        case .max200: "Max 20× ($200/mo)"
         }
     }
     
@@ -132,7 +134,8 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
         switch self {
         case .free: nil
         case .pro: 20.0
-        case .team: 25.0 // Annual pricing, 30 for monthly
+        case .max100: 100.0
+        case .max200: 200.0
         }
     }
 
@@ -140,7 +143,7 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     public var dailyMessageLimit: Int? {
         switch self {
         case .free: 50 // 50 messages per day
-        case .pro, .team: nil // No daily limit, uses 5-hour windows
+        case .pro, .max100, .max200: nil // No daily limit, uses 5-hour windows
         }
     }
 
@@ -148,17 +151,17 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     public var usesFiveHourWindow: Bool {
         switch self {
         case .free: false
-        case .pro, .team: true
+        case .pro, .max100, .max200: true
         }
     }
     
-    /// Approximate messages per 5-hour window (for Pro/Team tiers)
-    /// Based on average conversation length
+    /// Approximate messages per 5-hour window
     public var messagesPerFiveHours: Int? {
         switch self {
         case .free: nil
-        case .pro: 45 // ~45 messages per 5 hours for average conversations
-        case .team: 45 // Same as Pro for individual usage
+        case .pro: 45 // ~45 messages per 5 hours
+        case .max100: 225 // 5× Pro usage
+        case .max200: 900 // 20× Pro usage
         }
     }
     
@@ -171,11 +174,13 @@ public enum ClaudePricingTier: String, CaseIterable, Sendable, Codable {
     public var description: String {
         switch self {
         case .free:
-            "50 messages per day, resets at midnight PT"
+            "50 messages/day • Resets at midnight PT"
         case .pro:
-            "~45 messages per 5-hour window, priority access"
-        case .team:
-            "Team features, ~45 messages per 5-hour window"
+            "~45 messages per 5-hour window • Priority access"
+        case .max100:
+            "~225 messages per 5-hour window • 5× Pro usage • Priority features"
+        case .max200:
+            "~900 messages per 5-hour window • 20× Pro usage • All features"
         }
     }
 }

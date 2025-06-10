@@ -42,7 +42,7 @@ public actor ClaudeProvider: ProviderProtocol {
 
         guard hasAccess else {
             logger.error("Claude: No file access, cannot fetch user info")
-            throw ProviderError.authenticationFailed(reason: "No file access to Claude logs")
+            throw ProviderError.authenticationFailed(reason: "No folder access")
         }
 
         // Return local user info based on system username
@@ -243,7 +243,7 @@ public actor ClaudeProvider: ProviderProtocol {
         // Fetch fresh data
         guard await logManager.hasAccess else {
             throw ProviderError
-                .authenticationFailed(reason: "No access to Claude logs. Please grant folder access in settings.")
+                .authenticationFailed(reason: "Grant folder access in settings")
         }
 
         let usage = await logManager.getDailyUsage()
@@ -268,8 +268,8 @@ public actor ClaudeProvider: ProviderProtocol {
         case .free:
             // Free tier has no cost
             (0, 0)
-        case .pro, .team:
-            // Pro/Team tier pricing (Claude 3.5 Sonnet)
+        case .pro, .max100, .max200:
+            // All paid tiers use the same Claude 3.5 Sonnet pricing
             (3.0, 15.0) // $3/$15 per million tokens
         }
     }
