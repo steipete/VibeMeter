@@ -19,7 +19,20 @@ VibeMeter uses an automated release process that handles all the complexity of:
 ```
 This validates your environment is ready for release.
 
-### Step 2: Create the Release
+### Step 2: Update CHANGELOG.md
+Before creating any release, ensure the CHANGELOG.md file contains a proper section for the version being released:
+
+```markdown
+## [1.1.0] - 2025-06-10
+
+### 🎨 UI Improvements
+- **Enhanced feature** - Description of the improvement
+...
+```
+
+**CRITICAL**: The appcast generation relies on the local CHANGELOG.md file, NOT the GitHub release description. The changelog must be added to CHANGELOG.md BEFORE running the release script.
+
+### Step 3: Create the Release
 ```bash
 # For stable releases:
 ./scripts/release.sh stable
@@ -41,10 +54,11 @@ The script will:
 6. Update the appcast files with EdDSA signatures
 7. Commit and push all changes
 
-### Step 3: Verify Success
+### Step 4: Verify Success
 - Check the GitHub releases page
-- Verify the appcast was updated correctly
+- Verify the appcast was updated correctly with proper changelog content
 - Test updating from a previous version
+- **Important**: Verify that the Sparkle update dialog shows the formatted changelog, not HTML tags
 
 ## ⚠️ Critical Requirements
 
@@ -143,6 +157,23 @@ VibeMeter supports two update channels:
 2. **Pre-release Channel** (`appcast-prerelease.xml`)
    - Includes beta, alpha, and RC versions
    - Users opt-in via Settings
+
+## 🐛 Common Issues and Solutions
+
+### Appcast Shows HTML Tags Instead of Formatted Text
+**Problem**: Sparkle update dialog shows escaped HTML like `&lt;h2&gt;` instead of formatted text.
+
+**Root Cause**: The generate-appcast.sh script is escaping HTML content from GitHub release descriptions.
+
+**Solution**: 
+1. Ensure CHANGELOG.md has the proper section for the release version BEFORE running release script
+2. The appcast should use local CHANGELOG.md, not GitHub release body
+3. If the appcast is wrong, manually fix the generate-appcast.sh script to use local changelog content
+
+### Build Numbers Not Incrementing
+**Problem**: Sparkle doesn't detect new version as an update.
+
+**Solution**: Always increment the build number in Project.swift before releasing.
 
 ## 🛠️ Manual Process (If Needed)
 

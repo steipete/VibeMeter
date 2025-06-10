@@ -11,11 +11,38 @@
             <sparkle:version>110</sparkle:version>
             <sparkle:shortVersionString>1.1.0-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.1.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><p>&lt;h2&gt;VibeMeter 1.1.0-beta.1&lt;/h2&gt;</p>
-<p>&lt;h3&gt;🎨 UI Improvements&lt;/h3&gt;</p>
-<p>&lt;ul&gt;</p>
-<p>&lt;li&gt;&lt;strong&gt;Enhanced popover design&lt;/strong&gt; - Switched to ultra-thin translucent material with blur effect for modern look&lt;/li&gt;</p>
-<p>&lt;li&gt;&lt;strong&gt;Adaptive border&lt;/strong&gt; - Added white border that automatically adapts to light/dark mode&lt;/li&gt;</p></div>
+                <h2>VibeMeter 1.1.0-beta.1</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.1.0-beta.1...
+<h2>VibeMeter 1.1.0-beta.1</h2>
+<h3>🎨 UI Improvements</h3>
+<ul>
+<li><strong>Enhanced popover design</strong> - Switched to ultra-thin translucent material with blur effect for modern look</li>
+<li><strong>Adaptive border</strong> - Added white border that automatically adapts to light/dark mode</li>
+<li><strong>Optimized spacing</strong> - Reduced excessive left/right margins for better content density</li>
+<li><strong>Progressive gauge colors</strong> - Added smooth color transitions from green (low usage) to red (high usage)</li>
+<li><strong>Improved money formatting</strong> - Show "€0" instead of "€0,00" and remove unnecessary decimal places</li>
+</ul>
+<h3>⚡ Functionality Enhancements</h3>
+<ul>
+<li><strong>Smart gauge calculation</strong> - Display request usage percentage (182/500 = 36%) when no money spent, then switch to spending percentage when money is spent</li>
+<li><strong>Dynamic tooltip updates</strong> - Fixed tooltip refresh discrepancy using NSTrackingArea hover detection</li>
+<li><strong>Simplified tooltip</strong> - Removed keyboard shortcuts section and emoji indicators for cleaner display</li>
+<li><strong>Robust window display</strong> - Implemented multi-strategy window display system to prevent UI freezing</li>
+</ul>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li><strong>Fixed UI deadlock</strong> - Resolved freezing when showing the custom menu window</li>
+<li><strong>Fixed tooltip inconsistency</strong> - Tooltip and popover now show consistent refresh timestamps</li>
+<li><strong>Fixed gauge accuracy</strong> - Corrected percentage calculations across all display components</li>
+<li><strong>Fixed money display</strong> - Consistent formatting without unnecessary decimals throughout the app</li>
+</ul>
+<h3>🔧 Technical Improvements</h3>
+<ul>
+<li><strong>Window display strategy</strong> - Added fallback mechanisms with <code>orderFrontRegardless()</code> and async display timing</li>
+<li><strong>Hover-based updates</strong> - Tooltip refreshes dynamically on mouse hover for real-time accuracy</li>
+<li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
+<li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-beta1-20250610">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 01:14:25 +0100</pubDate>
             <enclosure 
@@ -32,7 +59,12 @@
             <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.8</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.8</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.8 (build 105)</p></div>
+                <h2>VibeMeter 1.0.0-beta.8</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.8...
+Warning: No changelog section found for version 1.0.0-beta.8
+Using default content...
+<h2>VibeMeter 1.0.0-beta.8</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Sat, 07 Jun 2025 12:51:50 +0100</pubDate>
             <enclosure 
@@ -49,7 +81,27 @@
             <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.7</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.7</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.7 (build 105)</p></div>
+                <h2>VibeMeter 1.0.0-beta.7</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.7...
+<h2>VibeMeter 1.0.0-beta.7</h2>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li>Fixed invoice fetching for Cursor users without teams - teamId is now optional in API requests</li>
+<li>Fixed incorrect coding key for startOfMonth, causing failure to decode usage (#16)</li>
+<li>Fixed CI test execution by removing invalid -test-iterations parameter</li>
+<li>Fixed API response handling for Individual users (empty response object)</li>
+</ul>
+<h3>🔧 Improvements</h3>
+<ul>
+<li>Replaced mock data with actual API responses for better testing accuracy</li>
+<li>Improved error handling for team ID fallback (-1 for missing teams)</li>
+<li>Enhanced CI workflow permissions for external PR comments (#18)</li>
+<li>Enabled silent project regeneration without Xcode restart</li>
+</ul>
+<h3>📝 Documentation</h3>
+<ul>
+<li>Added link to code signing guide in scripts README</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta7-20250610">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 21:44:22 +0100</pubDate>
             <enclosure 
@@ -66,7 +118,12 @@
             <sparkle:version>105</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.6</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.6</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.6 (build 105)</p></div>
+                <h2>VibeMeter 1.0.0-beta.6</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.6...
+Warning: No changelog section found for version 1.0.0-beta.6
+Using default content...
+<h2>VibeMeter 1.0.0-beta.6</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 14:14:30 +0100</pubDate>
             <enclosure 
@@ -83,7 +140,12 @@
             <sparkle:version>104</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.5</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.5</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.5 (build 104)</p></div>
+                <h2>VibeMeter 1.0.0-beta.5</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.5...
+Warning: No changelog section found for version 1.0.0-beta.5
+Using default content...
+<h2>VibeMeter 1.0.0-beta.5</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:21:54 +0100</pubDate>
             <enclosure 
@@ -100,7 +162,12 @@
             <sparkle:version>103</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.4</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.4</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.4 (build 103)</p></div>
+                <h2>VibeMeter 1.0.0-beta.4</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.4...
+Warning: No changelog section found for version 1.0.0-beta.4
+Using default content...
+<h2>VibeMeter 1.0.0-beta.4</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:15:02 +0100</pubDate>
             <enclosure 
@@ -117,7 +184,12 @@
             <sparkle:version>102</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.3</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.3</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.3 (build 102)</p></div>
+                <h2>VibeMeter 1.0.0-beta.3</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.3...
+Warning: No changelog section found for version 1.0.0-beta.3
+Using default content...
+<h2>VibeMeter 1.0.0-beta.3</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 11:11:01 +0100</pubDate>
             <enclosure 
@@ -134,7 +206,27 @@
             <sparkle:version>101</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.2</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.2</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.2 (build 101)</p></div>
+                <h2>VibeMeter 1.0.0-beta.2</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.2...
+<h2>VibeMeter 1.0.0-beta.2</h2>
+<h3>🔧 Improvements</h3>
+<ul>
+<li><strong>Release process refinement</strong> - Streamlined build and distribution workflow</li>
+<li><strong>Appcast optimization</strong> - Improved update feed generation and validation</li>
+<li><strong>Build number management</strong> - Enhanced version tracking for reliable updates</li>
+</ul>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li>Fixed double beta suffix in release naming</li>
+<li>Corrected build number synchronization in appcast</li>
+<li>Resolved release script version handling</li>
+</ul>
+<h3>📝 Documentation</h3>
+<ul>
+<li>Updated release process documentation</li>
+<li>Added comprehensive release checklist</li>
+<li>Improved troubleshooting guides</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta2-20250610">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 10:59:00 +0100</pubDate>
             <enclosure 
@@ -151,7 +243,12 @@
             <sparkle:version>100</sparkle:version>
             <sparkle:shortVersionString>1.0.0-beta.1</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><p>Release 1.0.0-beta.1 (build 100)</p></div>
+                <h2>VibeMeter 1.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div>Extracting changelog for version 1.0.0-beta.1...
+Warning: No changelog section found for version 1.0.0-beta.1
+Using default content...
+<h2>VibeMeter 1.0.0-beta.1</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 10:56:46 +0100</pubDate>
             <enclosure 
@@ -168,11 +265,38 @@
             <sparkle:version>111</sparkle:version>
             <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.1.0</h2><div><p>Extracting changelog for version 1.1.0...</p>
-<p>Warning: No changelog section found for version 1.1.0</p>
-<p>Using default content...</p>
-<p>&lt;h2&gt;VibeMeter 1.1.0&lt;/h2&gt;</p>
-<p>&lt;p&gt;Latest version of VibeMeter with new features and improvements.&lt;/p&gt;</p></div>
+                <h2>VibeMeter 1.1.0</h2><div>Extracting changelog for version 1.1.0...
+<h2>VibeMeter 1.1.0</h2>
+<h3>🎨 UI Improvements</h3>
+<ul>
+<li><strong>Enhanced popover design</strong> - Switched to ultra-thin translucent material with blur effect for modern look</li>
+<li><strong>Adaptive border</strong> - Added white border that automatically adapts to light/dark mode</li>
+<li><strong>Optimized spacing</strong> - Reduced excessive left/right margins for better content density</li>
+<li><strong>Progressive gauge colors</strong> - Added smooth color transitions from green (low usage) to red (high usage)</li>
+<li><strong>Improved money formatting</strong> - Show "€0" instead of "€0,00" and remove unnecessary decimal places</li>
+</ul>
+<h3>⚡ Functionality Enhancements</h3>
+<ul>
+<li><strong>Smart gauge calculation</strong> - Display request usage percentage (182/500 = 36%) when no money spent, then switch to spending percentage when money is spent</li>
+<li><strong>Dynamic tooltip updates</strong> - Fixed tooltip refresh discrepancy using NSTrackingArea hover detection</li>
+<li><strong>Simplified tooltip</strong> - Removed keyboard shortcuts section and emoji indicators for cleaner display</li>
+<li><strong>Robust window display</strong> - Implemented multi-strategy window display system to prevent UI freezing</li>
+</ul>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li><strong>Fixed UI deadlock</strong> - Resolved freezing when showing the custom menu window</li>
+<li><strong>Fixed tooltip inconsistency</strong> - Tooltip and popover now show consistent refresh timestamps</li>
+<li><strong>Fixed gauge accuracy</strong> - Corrected percentage calculations across all display components</li>
+<li><strong>Fixed money display</strong> - Consistent formatting without unnecessary decimals throughout the app</li>
+</ul>
+<h3>🔧 Technical Improvements</h3>
+<ul>
+<li><strong>Window display strategy</strong> - Added fallback mechanisms with <code>orderFrontRegardless()</code> and async display timing</li>
+<li><strong>Hover-based updates</strong> - Tooltip refreshes dynamically on mouse hover for real-time accuracy</li>
+<li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
+<li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250610">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 02:05:44 +0100</pubDate>
             <enclosure 

@@ -11,11 +11,38 @@
             <sparkle:version>111</sparkle:version>
             <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 1.1.0</h2><div><p>Extracting changelog for version 1.1.0...</p>
-<p>Warning: No changelog section found for version 1.1.0</p>
-<p>Using default content...</p>
-<p>&lt;h2&gt;VibeMeter 1.1.0&lt;/h2&gt;</p>
-<p>&lt;p&gt;Latest version of VibeMeter with new features and improvements.&lt;/p&gt;</p></div>
+                <h2>VibeMeter 1.1.0</h2><div>Extracting changelog for version 1.1.0...
+<h2>VibeMeter 1.1.0</h2>
+<h3>🎨 UI Improvements</h3>
+<ul>
+<li><strong>Enhanced popover design</strong> - Switched to ultra-thin translucent material with blur effect for modern look</li>
+<li><strong>Adaptive border</strong> - Added white border that automatically adapts to light/dark mode</li>
+<li><strong>Optimized spacing</strong> - Reduced excessive left/right margins for better content density</li>
+<li><strong>Progressive gauge colors</strong> - Added smooth color transitions from green (low usage) to red (high usage)</li>
+<li><strong>Improved money formatting</strong> - Show "€0" instead of "€0,00" and remove unnecessary decimal places</li>
+</ul>
+<h3>⚡ Functionality Enhancements</h3>
+<ul>
+<li><strong>Smart gauge calculation</strong> - Display request usage percentage (182/500 = 36%) when no money spent, then switch to spending percentage when money is spent</li>
+<li><strong>Dynamic tooltip updates</strong> - Fixed tooltip refresh discrepancy using NSTrackingArea hover detection</li>
+<li><strong>Simplified tooltip</strong> - Removed keyboard shortcuts section and emoji indicators for cleaner display</li>
+<li><strong>Robust window display</strong> - Implemented multi-strategy window display system to prevent UI freezing</li>
+</ul>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li><strong>Fixed UI deadlock</strong> - Resolved freezing when showing the custom menu window</li>
+<li><strong>Fixed tooltip inconsistency</strong> - Tooltip and popover now show consistent refresh timestamps</li>
+<li><strong>Fixed gauge accuracy</strong> - Corrected percentage calculations across all display components</li>
+<li><strong>Fixed money display</strong> - Consistent formatting without unnecessary decimals throughout the app</li>
+</ul>
+<h3>🔧 Technical Improvements</h3>
+<ul>
+<li><strong>Window display strategy</strong> - Added fallback mechanisms with <code>orderFrontRegardless()</code> and async display timing</li>
+<li><strong>Hover-based updates</strong> - Tooltip refreshes dynamically on mouse hover for real-time accuracy</li>
+<li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
+<li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250610">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 02:05:44 +0100</pubDate>
             <enclosure 

@@ -239,23 +239,42 @@ create_appcast_item() {
     # Clean up temp DMG
     rm -f "$temp_dmg"
     
-    # Clean body for XML to handle special characters safely
-    local clean_body
-    clean_body=$(echo "$body" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g')
-    
-    # Format the description with proper XML structure
+    # Generate description using local changelog
     local description="<h2>$title</h2>"
     if [ "$is_prerelease" = "true" ]; then
         description+="<p><strong>Pre-release version</strong></p>"
     fi
     
-    # Add body content with proper formatting, limiting to prevent overly long descriptions
-    if [ -n "$clean_body" ] && [ "$clean_body" != "Release notes not available" ]; then
-        # Split body into paragraphs and limit to first 5 lines for brevity
-        local formatted_body=$(echo "$clean_body" | head -5 | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' | sed 's/^/<p>/; s/$/<\/p>/')
-        description+="<div>$formatted_body</div>"
+    # Try to get changelog from local CHANGELOG.md using changelog-to-html.sh
+    local changelog_html=""
+    local changelog_script="$(dirname "$SCRIPT_DIR")/scripts/changelog-to-html.sh"
+    local changelog_file="$(dirname "$SCRIPT_DIR")/CHANGELOG.md"
+    
+    if [ -x "$changelog_script" ] && [ -f "$changelog_file" ]; then
+        # Extract version number from tag (remove 'v' prefix)
+        local version_for_changelog="${version_string}"
+        changelog_html=$("$changelog_script" "$version_for_changelog" "$changelog_file" 2>/dev/null || echo "")
+        
+        # If that fails, try with the base version for pre-releases
+        if [ -z "$changelog_html" ] && [[ "$version_for_changelog" =~ ^([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            local base_version="${BASH_REMATCH[1]}"
+            changelog_html=$("$changelog_script" "$base_version" "$changelog_file" 2>/dev/null || echo "")
+        fi
+    fi
+    
+    # Use changelog if available, otherwise fall back to GitHub release body
+    if [ -n "$changelog_html" ]; then
+        description+="<div>$changelog_html</div>"
     else
-        description+="<p>Release notes not available</p>"
+        # Fall back to GitHub release body (escaped for XML safety)
+        local clean_body
+        clean_body=$(echo "$body" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g')
+        if [ -n "$clean_body" ] && [ "$clean_body" != "Release notes not available" ]; then
+            local formatted_body=$(echo "$clean_body" | head -5 | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' | sed 's/^/<p>/; s/$/<\/p>/')
+            description+="<div>$formatted_body</div>"
+        else
+            description+="<p>Release notes not available</p>"
+        fi
     fi
     
     # Generate the item XML
