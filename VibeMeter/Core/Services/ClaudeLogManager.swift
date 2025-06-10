@@ -58,6 +58,20 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private var cachedDailyUsage: [Date: [ClaudeLogEntry]]?
     private var cacheTimestamp: Date?
     private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
+    
+    // Pre-compiled regex for efficient matching
+    private static let usageEntryPattern = try! NSRegularExpression(
+        pattern: #""message".*?"usage".*?"input_tokens":\s*(\d+).*?"output_tokens":\s*(\d+)"#,
+        options: []
+    )
+    
+    // File-level cache to avoid re-parsing unchanged files
+    private struct FileCache {
+        let fileURL: URL
+        let modificationDate: Date
+        let entries: [ClaudeLogEntry]
+    }
+    private var fileCache: [URL: FileCache] = [:]
 
     private lazy var tiktoken: Tiktoken? = {
         do {
@@ -231,54 +245,29 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         let jsonlFiles = findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
 
-        // Process files on background queue
+        // Process files on background queue with optimizations
         return await withTaskGroup(of: [Date: [ClaudeLogEntry]].self) { group in
             var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-            let decoder = JSONDecoder()
             
             for fileURL in jsonlFiles {
-                group.addTask {
-                    var fileEntries: [Date: [ClaudeLogEntry]] = [:]
-                    
-                    do {
-                        let content = try String(contentsOf: fileURL, encoding: .utf8)
-                        let lines = content.split(separator: "\n")
-                        
-                        for line in lines {
-                            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmedLine.isEmpty,
-                                  let data = trimmedLine.data(using: .utf8) else { continue }
-
-                            // Pre-filter: Check if this line contains usage data structure
-                            if !trimmedLine.contains("\"message\"") || 
-                               !trimmedLine.contains("\"usage\"") ||
-                               !trimmedLine.contains("\"input_tokens\"") ||
-                               !trimmedLine.contains("\"output_tokens\"") {
-                                continue
-                            }
-                            
-                            // Skip entries that are clearly not usage logs
-                            if trimmedLine.contains("\"type\":\"summary\"") || 
-                               trimmedLine.contains("\"type\":\"user\"") ||
-                               trimmedLine.contains("\"leafUuid\"") ||
-                               trimmedLine.contains("\"sessionId\"") ||
-                               trimmedLine.contains("\"parentUuid\"") {
-                                continue
-                            }
-
-                            do {
-                                let entry = try decoder.decode(ClaudeLogEntry.self, from: data)
-                                let day = Calendar.current.startOfDay(for: entry.timestamp)
-                                fileEntries[day, default: []].append(entry)
-                            } catch {
-                                // Skip non-usage entries silently
-                            }
-                        }
-                    } catch {
-                        self.logger.error("Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                group.addTask(priority: .utility) {
+                    // Check file cache first
+                    if let cached = await self.checkFileCache(for: fileURL) {
+                        self.logger.debug("Using cached data for \(fileURL.lastPathComponent)")
+                        return cached
                     }
                     
-                    return fileEntries
+                    // Parse the file
+                    let entries = await self.parseLogFile(at: fileURL)
+                    
+                    // Group by day
+                    var dayGroups: [Date: [ClaudeLogEntry]] = [:]
+                    for entry in entries {
+                        let day = Calendar.current.startOfDay(for: entry.timestamp)
+                        dayGroups[day, default: []].append(entry)
+                    }
+                    
+                    return dayGroups
                 }
             }
             
@@ -306,6 +295,122 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public func invalidateCache() {
         cachedDailyUsage = nil
         cacheTimestamp = nil
+        fileCache.removeAll()
+    }
+    
+    // MARK: - Optimized File Parsing
+    
+    private func checkFileCache(for fileURL: URL) async -> [Date: [ClaudeLogEntry]]? {
+        guard let cached = fileCache[fileURL] else { return nil }
+        
+        // Check if file has been modified
+        do {
+            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+            if let modificationDate = attributes[.modificationDate] as? Date,
+               modificationDate == cached.modificationDate {
+                // File hasn't changed, use cached entries
+                var dayGroups: [Date: [ClaudeLogEntry]] = [:]
+                for entry in cached.entries {
+                    let day = Calendar.current.startOfDay(for: entry.timestamp)
+                    dayGroups[day, default: []].append(entry)
+                }
+                return dayGroups
+            }
+        } catch {
+            logger.debug("Failed to check file attributes: \(error)")
+        }
+        
+        return nil
+    }
+    
+    private func parseLogFile(at fileURL: URL) async -> [ClaudeLogEntry] {
+        var entries: [ClaudeLogEntry] = []
+        
+        do {
+            // Get file modification date for caching
+            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+            let modificationDate = attributes[.modificationDate] as? Date ?? Date()
+            
+            // Read file using streaming approach for better memory usage
+            let fileHandle = try FileHandle(forReadingFrom: fileURL)
+            defer { try? fileHandle.close() }
+            
+            var buffer = Data()
+            let chunkSize = 65536 // 64KB chunks
+            
+            while let chunk = try fileHandle.read(upToCount: chunkSize), !chunk.isEmpty {
+                buffer.append(chunk)
+                
+                // Process complete lines
+                while let newlineRange = buffer.range(of: Data("\n".utf8)) {
+                    let lineData = buffer.subdata(in: 0..<newlineRange.lowerBound)
+                    buffer.removeSubrange(0...newlineRange.lowerBound)
+                    
+                    if let entry = parseLogLine(lineData) {
+                        entries.append(entry)
+                    }
+                }
+            }
+            
+            // Process any remaining data
+            if !buffer.isEmpty, let entry = parseLogLine(buffer) {
+                entries.append(entry)
+            }
+            
+            // Cache the parsed entries
+            fileCache[fileURL] = FileCache(
+                fileURL: fileURL,
+                modificationDate: modificationDate,
+                entries: entries
+            )
+            
+            if !entries.isEmpty {
+                logger.debug("Parsed \(entries.count) entries from \(fileURL.lastPathComponent)")
+            }
+            
+        } catch {
+            logger.error("Failed to parse file \(fileURL.lastPathComponent): \(error)")
+        }
+        
+        return entries
+    }
+    
+    private func parseLogLine(_ data: Data) -> ClaudeLogEntry? {
+        guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !line.isEmpty else { return nil }
+        
+        // Quick check with regex for efficiency
+        let range = NSRange(location: 0, length: line.utf16.count)
+        guard let match = Self.usageEntryPattern.firstMatch(in: line, options: [], range: range) else {
+            return nil
+        }
+        
+        // Skip summary and other non-usage entries
+        if line.contains("\"type\":\"summary\"") || 
+           line.contains("\"type\":\"user\"") ||
+           line.contains("\"leafUuid\"") ||
+           line.contains("\"sessionId\"") ||
+           line.contains("\"parentUuid\"") {
+            return nil
+        }
+        
+        // Extract tokens from regex match for quick validation
+        if let inputRange = Range(match.range(at: 1), in: line),
+           let outputRange = Range(match.range(at: 2), in: line),
+           let _ = Int(line[inputRange]),
+           let _ = Int(line[outputRange]) {
+            
+            // Now do full JSON decode since we know it's valid
+            if let jsonData = line.data(using: .utf8) {
+                do {
+                    return try JSONDecoder().decode(ClaudeLogEntry.self, from: jsonData)
+                } catch {
+                    // Silently skip malformed entries
+                }
+            }
+        }
+        
+        return nil
     }
 
     /// Calculate the current 5-hour window usage
@@ -377,13 +482,24 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     private func findJSONLFiles(in directory: URL) -> [URL] {
         var jsonlFiles: [URL] = []
+        let cutoffDate = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
 
         logger.debug("ClaudeLogManager: Searching for JSONL files in: \(directory.path)")
 
-        if let enumerator = fileManager.enumerator(at: directory,
-                                                   includingPropertiesForKeys: [.isRegularFileKey],
-                                                   options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
+        if let enumerator = fileManager.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey, .fileSizeKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) {
             for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
+                // Skip very old files for performance
+                if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
+                   let modificationDate = attributes[.modificationDate] as? Date,
+                   modificationDate < cutoffDate {
+                    logger.trace("Skipping old file: \(fileURL.lastPathComponent)")
+                    continue
+                }
+                
                 jsonlFiles.append(fileURL)
                 logger.debug("ClaudeLogManager: Found JSONL file: \(fileURL.path)")
             }
@@ -391,7 +507,14 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             logger.error("ClaudeLogManager: Failed to create file enumerator for directory: \(directory.path)")
         }
 
-        logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files total")
+        // Sort by modification date (newest first) for better cache hits
+        jsonlFiles.sort { url1, url2 in
+            let date1 = (try? fileManager.attributesOfItem(atPath: url1.path)[.modificationDate] as? Date) ?? Date.distantPast
+            let date2 = (try? fileManager.attributesOfItem(atPath: url2.path)[.modificationDate] as? Date) ?? Date.distantPast
+            return date1 > date2
+        }
+
+        logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files (excluding old files)")
         return jsonlFiles
     }
 
