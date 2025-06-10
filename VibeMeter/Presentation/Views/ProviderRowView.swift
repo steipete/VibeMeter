@@ -11,6 +11,8 @@ struct ProviderRowView: View {
     let loginManager: MultiProviderLoginManager
     let providerRegistry: ProviderRegistry
     let showDetail: () -> Void
+    
+    @StateObject private var claudeLogManager = ClaudeLogManager.shared
 
     private var session: ProviderSessionState? {
         userSessionData.getSession(for: provider)
@@ -38,7 +40,7 @@ struct ProviderRowView: View {
 
                 if provider == .claude {
                     // Claude shows folder access status
-                    if ClaudeLogManager.shared.hasAccess {
+                    if claudeLogManager.hasAccess {
                         Text("Folder access granted")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -85,16 +87,16 @@ struct ProviderRowView: View {
             HStack(spacing: 8) {
                 if provider == .claude {
                     // Claude uses folder access instead of login
-                    if !ClaudeLogManager.shared.hasAccess {
+                    if !claudeLogManager.hasAccess {
                         Button("Grant Access") {
                             Task {
-                                _ = await ClaudeLogManager.shared.requestLogAccess()
+                                _ = await claudeLogManager.requestLogAccess()
                             }
                         }
                         .buttonStyle(.borderedProminent)
                     } else {
                         Button("Revoke Access") {
-                            ClaudeLogManager.shared.revokeAccess()
+                            claudeLogManager.revokeAccess()
                         }
                         .buttonStyle(.bordered)
                     }
@@ -127,7 +129,7 @@ struct ProviderRowView: View {
         if !isEnabled {
             .gray
         } else if provider == .claude {
-            ClaudeLogManager.shared.hasAccess ? .green : .orange
+            claudeLogManager.hasAccess ? .green : .orange
         } else if isLoggedIn {
             .green
         } else {
