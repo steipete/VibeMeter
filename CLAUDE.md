@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - We support Swift 6 and macOS 15 only.
 - Don't care about backwards compatibility, always properly refactor.
 - App is fully sandboxed as of v1.0.0 - maintain sandbox compatibility.
+- Follow docs/RELEASE.md for releases
 
 ## Project Overview
 

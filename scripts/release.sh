@@ -255,7 +255,30 @@ git push origin "$TAG_NAME"
 
 # Create release
 echo "📤 Creating GitHub release..."
-RELEASE_NOTES="Release $RELEASE_VERSION (build $BUILD_NUMBER)"
+
+# Generate release notes from changelog
+echo "📝 Generating release notes from changelog..."
+CHANGELOG_HTML=""
+if [[ -x "$SCRIPT_DIR/changelog-to-html.sh" ]] && [[ -f "$PROJECT_ROOT/CHANGELOG.md" ]]; then
+    # Extract version for changelog (remove any pre-release suffixes for lookup)
+    CHANGELOG_VERSION="$RELEASE_VERSION"
+    if [[ "$CHANGELOG_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        CHANGELOG_BASE="${BASH_REMATCH[1]}"
+        # Try full version first, then base version
+        CHANGELOG_HTML=$("$SCRIPT_DIR/changelog-to-html.sh" "$CHANGELOG_VERSION" "$PROJECT_ROOT/CHANGELOG.md" 2>/dev/null || \
+                        "$SCRIPT_DIR/changelog-to-html.sh" "$CHANGELOG_BASE" "$PROJECT_ROOT/CHANGELOG.md" 2>/dev/null || \
+                        echo "")
+    fi
+fi
+
+# Fallback to basic release notes if changelog extraction fails
+if [[ -z "$CHANGELOG_HTML" ]]; then
+    echo "⚠️  Could not extract changelog, using basic release notes"
+    RELEASE_NOTES="Release $RELEASE_VERSION (build $BUILD_NUMBER)"
+else
+    echo "✅ Generated release notes from changelog"
+    RELEASE_NOTES="$CHANGELOG_HTML"
+fi
 
 if [[ "$RELEASE_TYPE" == "stable" ]]; then
     gh release create "$TAG_NAME" \
