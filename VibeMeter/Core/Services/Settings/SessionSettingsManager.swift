@@ -18,6 +18,7 @@ public final class SessionSettingsManager {
     private enum Keys {
         static let providerSessions = "providerSessions"
         static let enabledProviders = "enabledProviders"
+        static let claudeAccountType = "claudeAccountType"
     }
 
     // MARK: - Session Data
@@ -46,6 +47,16 @@ public final class SessionSettingsManager {
         }
     }
 
+    // MARK: - Claude Account Type
+
+    /// Claude account type
+    public var claudeAccountType: ClaudeAccountType {
+        didSet {
+            userDefaults.set(claudeAccountType.rawValue, forKey: Keys.claudeAccountType)
+            logger.debug("Claude account type set to: \(self.claudeAccountType.rawValue)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -65,6 +76,10 @@ public final class SessionSettingsManager {
         } else {
             self.enabledProviders = [.cursor] // Default to Cursor enabled
         }
+
+        // Load Claude account type
+        let savedAccountType = userDefaults.string(forKey: Keys.claudeAccountType) ?? ClaudeAccountType.pro.rawValue
+        claudeAccountType = ClaudeAccountType(rawValue: savedAccountType) ?? .pro
 
         logger.info("SessionSettingsManager initialized with \(self.providerSessions.count) provider sessions")
         for (provider, session) in providerSessions {
@@ -133,4 +148,11 @@ public final class SessionSettingsManager {
             logger.error("Failed to encode provider sessions")
         }
     }
+}
+
+// Add ClaudeAccountType enum
+public enum ClaudeAccountType: String, CaseIterable, Codable, Identifiable, Sendable {
+    case free = "Free"
+    case pro = "Pro"
+    public var id: String { rawValue }
 }
