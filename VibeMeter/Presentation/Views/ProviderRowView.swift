@@ -94,11 +94,6 @@ struct ProviderRowView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
-                    } else {
-                        Button("Revoke Access") {
-                            claudeLogManager.revokeAccess()
-                        }
-                        .buttonStyle(.bordered)
                     }
                 } else {
                     // Other providers use login
