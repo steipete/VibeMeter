@@ -13,6 +13,9 @@ final class CustomMenuWindow: NSPanel {
     private let hostingController: NSHostingController<AnyView>
     private var retainedContentView: AnyView?
     private var isEventMonitoringActive = false
+    
+    /// Closure to be called when window hides
+    var onHide: (() -> Void)?
 
     init(contentView: some View) {
         // Store the content view to prevent deallocation in Release builds
@@ -233,6 +236,7 @@ final class CustomMenuWindow: NSPanel {
         // Immediately remove from screen (no animation) to avoid toggle state issues
         orderOut(nil)
         teardownEventMonitoring()
+        onHide?()
     }
 
     private func setupEventMonitoring() {

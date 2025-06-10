@@ -200,13 +200,8 @@ final class StatusBarController: NSObject {
     }
 
     private func handleLeftClick(_ button: NSStatusBarButton) {
-        if menuManager.isCustomWindowVisible {
-            // If custom window is visible, hide it
-            menuManager.hideCustomWindow()
-        } else {
-            // If custom window is not visible, show it (this will hide context menu if it's showing)
-            menuManager.showCustomWindow(relativeTo: button)
-        }
+        // Use toggle method which handles button highlighting
+        menuManager.toggleCustomWindow(relativeTo: button)
     }
 
     private func handleRightClick(_ button: NSStatusBarButton) {

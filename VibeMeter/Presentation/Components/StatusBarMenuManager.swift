@@ -56,8 +56,10 @@ final class StatusBarMenuManager {
     func toggleCustomWindow(relativeTo button: NSStatusBarButton) {
         if let window = customWindow, window.isVisible {
             hideCustomWindow()
+            button.highlight(false)
         } else {
             showCustomWindow(relativeTo: button)
+            button.highlight(true)
         }
     }
 
@@ -93,14 +95,23 @@ final class StatusBarMenuManager {
         // Create custom window if needed
         if customWindow == nil {
             customWindow = CustomMenuWindow(contentView: containerView)
+            
+            // Set up callback to unhighlight button when window hides
+            customWindow?.onHide = { [weak button] in
+                button?.highlight(false)
+            }
         }
 
         // Show the custom window
         customWindow?.show(relativeTo: button)
+        
+        // Highlight the button to show active state
+        button.highlight(true)
     }
 
     func hideCustomWindow() {
         customWindow?.hide()
+        // Note: The button unhighlighting is handled by the onHide callback
     }
 
     var isCustomWindowVisible: Bool {
