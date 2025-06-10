@@ -14,7 +14,7 @@ public final class CurrencyOrchestrator {
     private let exchangeRateManager: ExchangeRateManagerProtocol
     private let notificationManager: NotificationManagerProtocol
     private let settingsManager: any SettingsManagerProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "CurrencyOrchestrator")
+    private let logger = Logger.vibeMeter(category: "CurrencyOrchestrator")
 
     // MARK: - Data Models
 

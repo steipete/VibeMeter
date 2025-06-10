@@ -14,7 +14,7 @@ public final class NetworkStateManager {
     // MARK: - Dependencies
 
     private let networkMonitor = NetworkConnectivityMonitor()
-    private let logger = Logger(subsystem: "com.vibemeter", category: "NetworkStateManager")
+    private let logger = Logger.vibeMeter(category: "NetworkStateManager")
 
     // MARK: - Callbacks
 

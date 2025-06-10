@@ -58,7 +58,7 @@ public final class NetworkConnectivityMonitor {
 
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "com.vibemeter.networkmonitor", qos: .utility)
-    private let logger = Logger(subsystem: "com.vibemeter", category: "NetworkMonitor")
+    private let logger = Logger.vibeMeter(category: "NetworkMonitor")
 
     private var lastConnectionState = false
     private var lastConnectionType: NWInterface.InterfaceType?

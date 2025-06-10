@@ -18,7 +18,7 @@ final class LoginWebViewManager: NSObject {
 
     private var webViews: [ServiceProvider: WKWebView] = [:]
     private var loginWindows: [ServiceProvider: NSWindow] = [:]
-    private let logger = Logger(subsystem: "com.vibemeter", category: "LoginWebView")
+    private let logger = Logger.vibeMeter(category: "LoginWebView")
 
     // MARK: - Callbacks
 
@@ -26,14 +26,14 @@ final class LoginWebViewManager: NSObject {
     var onLoginDismiss: LoginDismissHandler?
 
     // MARK: - Public Methods
-    
+
     /// Attempts automatic re-authentication for Cursor using stored credentials
     func attemptAutomaticReauthentication(for provider: ServiceProvider, completion: @escaping (Bool) -> Void) {
         guard provider == .cursor else {
             completion(false)
             return
         }
-        
+
         Task { @MainActor in
             do {
                 // Retrieve stored credentials
@@ -44,28 +44,27 @@ final class LoginWebViewManager: NSObject {
                     completion(false)
                     return
                 }
-                
+
                 logger.info("Attempting automatic re-authentication for Cursor")
-                
+
                 // Create hidden WebView for automatic login
                 let webViewConfiguration = WKWebViewConfiguration()
                 let autoLoginScript = WKUserScript(
                     source: getAutoLoginScript(email: email, password: password),
                     injectionTime: .atDocumentEnd,
-                    forMainFrameOnly: true
-                )
+                    forMainFrameOnly: true)
                 webViewConfiguration.userContentController.addUserScript(autoLoginScript)
-                
+
                 // Add CAPTCHA detection
                 webViewConfiguration.userContentController.add(self, name: "captchaDetected")
-                
+
                 let webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
                 webView.navigationDelegate = self
                 self.webViews[provider] = webView
-                
+
                 // Load login page
                 webView.load(URLRequest(url: provider.authenticationURL))
-                
+
                 // Set timeout for auto-login attempt
                 Task {
                     try? await Task.sleep(for: .seconds(30))
@@ -75,7 +74,7 @@ final class LoginWebViewManager: NSObject {
                         completion(false)
                     }
                 }
-                
+
             } catch {
                 logger.error("Failed to retrieve credentials for auto-login: \(error)")
                 completion(false)
@@ -102,35 +101,34 @@ final class LoginWebViewManager: NSObject {
             showLoginWebView(for: provider)
         }
     }
-    
+
     /// Shows consent window before login for providers that capture credentials
     private func showLoginConsentWindow(for provider: ServiceProvider) {
         logger.info("Showing login consent window for \(provider.displayName)")
-        
+
         // Create and preload the WebView in the background
         let webViewConfiguration = WKWebViewConfiguration()
-        
+
         // Add user script to capture login credentials
         let credentialCaptureScript = WKUserScript(
             source: getCursorCredentialCaptureScript(),
             injectionTime: .atDocumentEnd,
-            forMainFrameOnly: true
-        )
+            forMainFrameOnly: true)
         webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
-        
+
         // Add message handler for credential capture
         webViewConfiguration.userContentController.add(self, name: "credentialCapture")
-        
+
         let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 480, height: 640), configuration: webViewConfiguration)
         webView.navigationDelegate = self
         webViews[provider] = webView
-        
+
         // Preload the login page in the background
         let authURL = provider.authenticationURL
         let request = URLRequest(url: authURL)
         webView.load(request)
         logger.info("Preloading login page for \(provider.displayName)")
-        
+
         // Create consent view
         let consentView = LoginConsentView(
             provider: provider,
@@ -139,11 +137,10 @@ final class LoginWebViewManager: NSObject {
             },
             onCancel: { [weak self] in
                 self?.closeLoginWindow(for: provider)
-            }
-        )
-        
+            })
+
         let hostingController = NSHostingController(rootView: consentView)
-        
+
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Login to \(provider.displayName)"
         window.styleMask = [.titled, .closable]
@@ -151,46 +148,45 @@ final class LoginWebViewManager: NSObject {
         window.center()
         window.delegate = self
         loginWindows[provider] = window
-        
+
         // Store provider in window's identifier for delegation
         window.identifier = NSUserInterfaceItemIdentifier(provider.rawValue)
-        
+
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
-    
+
     /// Shows the actual login WebView
     private func showLoginWebView(for provider: ServiceProvider, existingWebView: WKWebView? = nil) {
         logger.info("Showing login WebView for \(provider.displayName)")
-        
+
         let webView: WKWebView
-        
-        if let existingWebView = existingWebView {
+
+        if let existingWebView {
             // Use the preloaded WebView
             webView = existingWebView
         } else {
             // Create new WebView
             let webViewConfiguration = WKWebViewConfiguration()
-            
+
             // Add user script to capture login credentials for Cursor
             if provider == .cursor {
                 let credentialCaptureScript = WKUserScript(
                     source: getCursorCredentialCaptureScript(),
                     injectionTime: .atDocumentEnd,
-                    forMainFrameOnly: true
-                )
+                    forMainFrameOnly: true)
                 webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
-                
+
                 // Add message handler for credential capture
                 webViewConfiguration.userContentController.add(self, name: "credentialCapture")
             }
-            
+
             webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 480, height: 640), configuration: webViewConfiguration)
             webView.navigationDelegate = self
             webViews[provider] = webView
-            
+
             let authURL = provider.authenticationURL
-            let request = URLRequest(url: authURL)
+            let request = URLRequest.vibeMeter(url: authURL)
             webView.load(request)
         }
 
@@ -329,7 +325,8 @@ extension LoginWebViewManager: NSWindowDelegate {
 
         // Clean up message handler
         if provider == .cursor {
-            webViews[provider]?.configuration.userContentController.removeScriptMessageHandler(forName: "credentialCapture")
+            webViews[provider]?.configuration.userContentController
+                .removeScriptMessageHandler(forName: "credentialCapture")
         }
 
         webViews[provider]?.stopLoading()
@@ -343,7 +340,7 @@ extension LoginWebViewManager: NSWindowDelegate {
 // MARK: - WKScriptMessageHandler
 
 extension LoginWebViewManager: WKScriptMessageHandler {
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
         switch message.name {
         case "credentialCapture":
             handleCredentialCapture(message: message)
@@ -353,37 +350,37 @@ extension LoginWebViewManager: WKScriptMessageHandler {
             break
         }
     }
-    
+
     private func handleCredentialCapture(message: WKScriptMessage) {
         guard let messageBody = message.body as? [String: String],
               let email = messageBody["email"],
               let password = messageBody["password"] else {
             return
         }
-        
+
         logger.info("Captured credentials for Cursor login")
-        
+
         // Store credentials in keychain
         Task {
             do {
                 let credentialKeychain = Keychain(service: "com.vibemeter.cursor.credentials")
-                
+
                 // Store email
                 try credentialKeychain.set(email, key: "cursor_email")
-                
+
                 // Store password
                 try credentialKeychain.set(password, key: "cursor_password")
-                
+
                 logger.info("Successfully stored Cursor credentials in keychain")
             } catch {
                 logger.error("Failed to store Cursor credentials: \(error)")
             }
         }
     }
-    
+
     private func handleCaptchaDetected() {
         logger.warning("CAPTCHA detected during automatic login")
-        
+
         // Show notification that manual intervention is required
         Task { @MainActor in
             // Show notification using system notifications
@@ -391,15 +388,14 @@ extension LoginWebViewManager: WKScriptMessageHandler {
             content.title = "Cursor Login Requires Attention"
             content.body = "A CAPTCHA verification is needed. Click to complete the login process."
             content.sound = .default
-            
+
             let request = UNNotificationRequest(
                 identifier: "cursor-captcha-required",
                 content: content,
-                trigger: nil
-            )
-            
+                trigger: nil)
+
             try? await UNUserNotificationCenter.current().add(request)
-            
+
             // Show the login window for manual CAPTCHA completion
             // Skip consent since they already consented previously
             showLoginWebView(for: .cursor)
@@ -418,20 +414,20 @@ private extension LoginWebViewManager {
                 // Look for email/username and password fields
                 const emailField = document.querySelector('input[type="email"], input[name="email"], input[name="username"], input[id="email"], input[id="username"]');
                 const passwordField = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-                
+
                 if (!emailField || !passwordField) {
                     // Retry after a short delay if fields not found
                     setTimeout(captureCredentials, 500);
                     return;
                 }
-                
+
                 // Capture on form submission
                 const form = emailField.closest('form') || passwordField.closest('form');
                 if (form) {
                     form.addEventListener('submit', function(e) {
                         const email = emailField.value;
                         const password = passwordField.value;
-                        
+
                         if (email && password) {
                             // Send credentials to native app
                             window.webkit.messageHandlers.credentialCapture.postMessage({
@@ -441,7 +437,7 @@ private extension LoginWebViewManager {
                         }
                     }, true);
                 }
-                
+
                 // Also capture on button clicks (in case form submission is prevented)
                 const submitButtons = document.querySelectorAll('button[type="submit"], button:contains("Log in"), button:contains("Sign in")');
                 submitButtons.forEach(button => {
@@ -449,7 +445,7 @@ private extension LoginWebViewManager {
                         setTimeout(() => {
                             const email = emailField.value;
                             const password = passwordField.value;
-                            
+
                             if (email && password) {
                                 window.webkit.messageHandlers.credentialCapture.postMessage({
                                     email: email,
@@ -460,7 +456,7 @@ private extension LoginWebViewManager {
                     }, true);
                 });
             }
-            
+
             // Start capture process
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', captureCredentials);
@@ -470,55 +466,55 @@ private extension LoginWebViewManager {
         })();
         """
     }
-    
+
     func getAutoLoginScript(email: String, password: String) -> String {
         // Escape special characters in credentials
         let escapedEmail = email.replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
         let escapedPassword = password.replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
-        
+
         return """
         (function() {
             let loginAttempted = false;
-            
+
             function attemptAutoLogin() {
                 if (loginAttempted) return;
-                
+
                 // Check for CAPTCHA elements
                 const captchaElements = document.querySelectorAll(
                     'div[class*="captcha"], iframe[src*="recaptcha"], div[id*="captcha"], .g-recaptcha'
                 );
-                
+
                 if (captchaElements.length > 0) {
                     window.webkit.messageHandlers.captchaDetected.postMessage({});
                     return;
                 }
-                
+
                 // Find email and password fields
                 const emailField = document.querySelector('input[type="email"], input[name="email"], input[name="username"], input[id="email"], input[id="username"]');
                 const passwordField = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-                
+
                 if (!emailField || !passwordField) {
                     setTimeout(attemptAutoLogin, 500);
                     return;
                 }
-                
+
                 // Fill in credentials
                 emailField.value = '\(escapedEmail)';
                 passwordField.value = '\(escapedPassword)';
-                
+
                 // Trigger input events to ensure form validation
                 emailField.dispatchEvent(new Event('input', { bubbles: true }));
                 emailField.dispatchEvent(new Event('change', { bubbles: true }));
                 passwordField.dispatchEvent(new Event('input', { bubbles: true }));
                 passwordField.dispatchEvent(new Event('change', { bubbles: true }));
-                
+
                 // Find and click submit button
                 const submitButton = document.querySelector(
                     'button[type="submit"], button:contains("Log in"), button:contains("Sign in"), input[type="submit"]'
                 );
-                
+
                 if (submitButton) {
                     loginAttempted = true;
                     setTimeout(() => {
@@ -535,7 +531,7 @@ private extension LoginWebViewManager {
                     }
                 }
             }
-            
+
             // Start auto-login process
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', attemptAutoLogin);

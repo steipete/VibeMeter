@@ -69,7 +69,7 @@ public final class SettingsManager: SettingsManagerProtocol {
     // Public access to display settings manager for gauge representation
     public var displaySettingsManager: DisplaySettingsManager { displayManager }
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "Settings")
+    private let logger = Logger.vibeMeter(category: "Settings")
 
     // MARK: - Delegated Properties
 

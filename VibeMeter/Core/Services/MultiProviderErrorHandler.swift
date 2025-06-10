@@ -10,7 +10,7 @@ import os.log
 final class MultiProviderErrorHandler {
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderErrorHandler")
+    private let logger = Logger.vibeMeter(category: "MultiProviderErrorHandler")
     private let sessionStateManager: SessionStateManager
     private weak var loginManager: MultiProviderLoginManager?
 
@@ -74,12 +74,12 @@ final class MultiProviderErrorHandler {
 
         if error == .unauthorized {
             logger.warning("Authentication failed for \(provider.displayName)")
-            
+
             // Attempt automatic re-authentication for Cursor
-            if provider == .cursor, let loginManager = loginManager {
+            if provider == .cursor, let loginManager {
                 logger.info("Attempting automatic re-authentication for Cursor")
                 spendingData.updateConnectionStatus(for: provider, status: .syncing)
-                
+
                 loginManager.attemptAutomaticReauthentication(for: provider) { [weak self] success in
                     guard let self else { return }
                     Task { @MainActor in

@@ -43,7 +43,7 @@ public enum NotificationLimitType: String, CaseIterable, Sendable {
 public final class NotificationManager: NSObject, NotificationManagerProtocol {
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "Notifications")
+    private let logger = Logger.vibeMeter(category: "Notifications")
 
     // Track which notifications have been shown
     private var warningNotificationShown = false
@@ -226,7 +226,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     public nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse) async {
-        let logger = Logger(subsystem: "com.vibemeter", category: "Notifications")
+        let logger = Logger.vibeMeter(category: "Notifications")
         logger.info("User interacted with notification: \(response.notification.request.identifier)")
 
         // Handle notification actions if needed

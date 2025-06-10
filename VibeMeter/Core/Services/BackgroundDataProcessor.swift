@@ -19,7 +19,7 @@ struct ProviderDataResult {
 /// blocking the main thread during network operations. It processes multiple API
 /// calls concurrently and returns consolidated results to the main actor.
 actor BackgroundDataProcessor {
-    private let logger = Logger(subsystem: "com.vibemeter", category: "BackgroundProcessor")
+    private let logger = Logger.vibeMeter(category: "BackgroundProcessor")
 
     /// Processes provider data concurrently without blocking the main thread.
     ///

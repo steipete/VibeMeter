@@ -15,7 +15,7 @@ public final class DisplaySettingsManager {
     // MARK: - Properties
 
     private let userDefaults: UserDefaults
-    private let logger = Logger(subsystem: "com.vibemeter", category: "DisplaySettings")
+    private let logger = Logger.vibeMeter(category: "DisplaySettings")
 
     // MARK: - Keys
 

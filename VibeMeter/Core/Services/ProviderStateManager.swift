@@ -14,7 +14,7 @@ final class ProviderStateManager {
     // MARK: - Private Properties
 
     private let tokenManager: AuthenticationTokenManager
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ProviderState")
+    private let logger = Logger.vibeMeter(category: "ProviderState")
 
     // MARK: - Initialization
 

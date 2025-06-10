@@ -6,7 +6,7 @@ final class AuthenticationTokenManager: @unchecked Sendable {
     // MARK: - Private Properties
 
     private let keychainHelpers: [ServiceProvider: KeychainServicing]
-    private let logger = Logger(subsystem: "com.vibemeter", category: "AuthTokenManager")
+    private let logger = Logger.vibeMeter(category: "AuthTokenManager")
 
     // MARK: - Initialization
 
@@ -86,7 +86,7 @@ final class AuthenticationTokenManager: @unchecked Sendable {
 
     private static func createKeychainHelpers() -> [ServiceProvider: KeychainServicing] {
         var helpers: [ServiceProvider: KeychainServicing] = [:]
-        let logger = Logger(subsystem: "com.vibemeter", category: "AuthTokenManager")
+        let logger = Logger.vibeMeter(category: "AuthTokenManager")
 
         for provider in ServiceProvider.allCases {
             let keychain = KeychainHelper(service: provider.keychainService)

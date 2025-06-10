@@ -11,7 +11,7 @@ public final class SessionSettingsManager {
     // MARK: - Properties
 
     private let userDefaults: UserDefaults
-    private let logger = Logger(subsystem: "com.vibemeter", category: "SessionSettings")
+    private let logger = Logger.vibeMeter(category: "SessionSettings")
 
     // MARK: - Keys
 

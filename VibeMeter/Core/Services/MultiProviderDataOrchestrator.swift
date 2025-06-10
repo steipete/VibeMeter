@@ -51,7 +51,7 @@ public final class MultiProviderDataOrchestrator {
 
     // MARK: - Private Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderOrchestrator")
+    private let logger = Logger.vibeMeter(category: "MultiProviderOrchestrator")
     private var refreshTimers: [ServiceProvider: Timer] = [:]
     private let backgroundProcessor = BackgroundDataProcessor()
 
@@ -86,7 +86,9 @@ public final class MultiProviderDataOrchestrator {
             notificationManager: notificationManager,
             settingsManager: settingsManager,
             currencyData: currencyData)
-        self.errorHandler = MultiProviderErrorHandler(sessionStateManager: sessionStateManager, loginManager: loginManager)
+        self.errorHandler = MultiProviderErrorHandler(
+            sessionStateManager: sessionStateManager,
+            loginManager: loginManager)
         self.dataProcessor = MultiProviderDataProcessor(
             sessionStateManager: sessionStateManager,
             currencyOrchestrator: currencyOrchestrator,
@@ -100,7 +102,7 @@ public final class MultiProviderDataOrchestrator {
 
         // Set orchestrator reference in login manager
         loginManager.orchestrator = self
-        
+
         setupManagerCallbacks()
         setupRefreshTimers()
 

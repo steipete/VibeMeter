@@ -10,7 +10,7 @@ import os.log
 final class MultiProviderDataProcessor: Sendable {
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "MultiProviderDataProcessor")
+    private let logger = Logger.vibeMeter(category: "MultiProviderDataProcessor")
     private let sessionStateManager: SessionStateManager
     private let currencyOrchestrator: CurrencyOrchestrator
     private let gravatarService: GravatarService

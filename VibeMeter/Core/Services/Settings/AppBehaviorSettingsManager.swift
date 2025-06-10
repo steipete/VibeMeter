@@ -13,7 +13,7 @@ public final class AppBehaviorSettingsManager {
 
     private let userDefaults: UserDefaults
     private let startupManager: StartupControlling
-    private let logger = Logger(subsystem: "com.vibemeter", category: "AppBehaviorSettings")
+    private let logger = Logger.vibeMeter(category: "AppBehaviorSettings")
 
     // MARK: - Keys
 

@@ -17,7 +17,7 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
     // MARK: - Properties
 
     private let urlSession: URLSessionProtocol
-    private let logger = Logger(subsystem: "com.vibemeter", category: "ExchangeRate")
+    private let logger = Logger.vibeMeter(category: "ExchangeRate")
 
     // Cache
     private var cachedRates: [String: Double] = [:]
@@ -126,7 +126,9 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
             throw ExchangeRateError.invalidURL
         }
 
-        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
+        var request = URLRequest.vibeMeter(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 30
 
         let (data, response) = try await urlSession.data(for: request)
 

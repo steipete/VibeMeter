@@ -11,7 +11,7 @@ public final class SpendingLimitsManager {
     // MARK: - Properties
 
     private let userDefaults: UserDefaults
-    private let logger = Logger(subsystem: "com.vibemeter", category: "SpendingLimits")
+    private let logger = Logger.vibeMeter(category: "SpendingLimits")
 
     // MARK: - Keys
 
