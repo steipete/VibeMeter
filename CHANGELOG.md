@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Claude Subscription Tiers** - Added support for Free, Pro ($20), Max 5× ($100), and Max 20× ($200) tiers
 - **Automatic Re-authentication** - Cursor sessions now automatically re-authenticate when cookies expire
 - **Official Claude Icon** - Extracted and integrated the official Claude app icon for better recognition
+- **Login Consent Flow** - New consent dialog explains credential handling before Cursor login
 
 ### 🎨 UI Improvements
 - **ClaudeQuotaView** - Dedicated 5-hour window progress display in the popover
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Folder Access Validation** - Validates home directory selection and cleans up invalid bookmarks
 - **Credential Storage** - Secure storage of Cursor credentials in macOS Keychain for auto-auth
 - **CAPTCHA Detection** - Automatic detection and user notification when manual intervention needed
+- **WebView Preloading** - Login page preloads in background while consent dialog is shown
 
 ### 🐛 Bug Fixes
 - **Fixed Claude initialization race condition** - Claude now properly initializes before data refresh
