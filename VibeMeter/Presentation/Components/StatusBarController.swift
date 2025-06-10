@@ -251,16 +251,8 @@ final class StatusBarController: NSObject {
     }
 
     private func calculateClaudeQuota() -> Double {
-        // Very rough placeholder until detailed five-hour window is implemented
-        // Simply returns 0 if unavailable or percentage used based on 5 hours
-        let entries = ClaudeLogManager.shared
-        let daily = await entries.getDailyUsage()
-        let windowSeconds: Double = 5 * 60 * 60
-        var usedSeconds: Double = 0
-        for (_, list) in daily {
-            usedSeconds += list.reduce(0) { $0 + Double($1.inputTokens + $1.outputTokens) / 15.0 }
-        }
-        return min(max(usedSeconds / windowSeconds, 0), 1)
+        // TODO: implement proper async calculation; placeholder returns 0
+        return 0.0
     }
 
     private func setupTrackingArea(for button: NSStatusBarButton) {
