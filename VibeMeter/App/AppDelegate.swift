@@ -34,7 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let exchangeRateManager: ExchangeRateManagerProtocol = ExchangeRateManager.shared
     let notificationManager: NotificationManagerProtocol = NotificationManager()
 
-    private let logger = Logger(subsystem: "com.vibemeter", category: "AppLifecycle")
+    private let logger = Logger.vibeMeter(category: "AppLifecycle")
 
     /// Distributed notification name used to ask an existing instance to show the Settings window.
     private static let showSettingsNotification = Notification.Name("com.vibemeter.showSettings")
@@ -118,10 +118,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         configureActivationPolicy()
         sparkleUpdaterManager = SparkleUpdaterManager()
-        
+
         // Initialize ClaudeLogManager early to ensure token is saved before orchestrator checks
         _ = ClaudeLogManager.shared
-        
+
         loginManager.refreshLoginStatesFromKeychain()
     }
 

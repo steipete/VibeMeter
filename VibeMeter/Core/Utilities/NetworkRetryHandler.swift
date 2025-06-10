@@ -42,7 +42,7 @@ actor NetworkRetryHandler {
     // MARK: - Properties
 
     private let configuration: Configuration
-    private let logger = Logger(subsystem: "com.vibemeter", category: "NetworkRetry")
+    private let logger = Logger.vibeMeter(category: "NetworkRetry")
 
     // MARK: - Initialization
 

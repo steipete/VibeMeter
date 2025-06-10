@@ -12,6 +12,7 @@ let project = Project(
             url: "https://github.com/kishikawakatsumi/KeychainAccess.git",
             requirement: .upToNextMajor(from: "4.0.0")),
         .remote(url: "https://github.com/sparkle-project/Sparkle.git", requirement: .upToNextMajor(from: "2.0.0")),
+        .remote(url: "https://github.com/nalexn/ViewInspector.git", requirement: .upToNextMajor(from: "0.9.0")),
     ],
     settings: .settings(
         base: [
@@ -67,6 +68,8 @@ let project = Project(
                     // Less strict for development
                     "GCC_TREAT_WARNINGS_AS_ERRORS": false,
                     "SWIFT_TREAT_WARNINGS_AS_ERRORS": false,
+                    // Enable code coverage
+                    "ENABLE_CODE_COVERAGE": true,
                 ],
                 xcconfig: nil),
             .release(
@@ -144,6 +147,7 @@ let project = Project(
             sources: ["VibeMeterTests/**"],
             dependencies: [
                 .target(name: "VibeMeter"),
+                .package(product: "ViewInspector"),
             ],
             settings: .settings(
                 base: [

@@ -18,10 +18,7 @@ final class CurrencyConversionHelper {
             }
         }
 
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
+        let formatter = NumberFormatter.vibeMeterCurrency
         formatter.locale = locale
 
         let formattedNumber = formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)

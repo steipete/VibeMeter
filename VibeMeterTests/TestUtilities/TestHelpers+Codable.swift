@@ -10,7 +10,7 @@ extension Encodable where Self: Decodable {
     func testRoundtrip() throws -> Self {
         let encoder = JSONEncoder()
         let encoded = try encoder.encode(self)
-        
+
         let decoder = JSONDecoder()
         return try decoder.decode(Self.self, from: encoded)
     }
@@ -66,8 +66,7 @@ extension String {
 ///   - line: Source line (automatically provided)
 func assertCodableRoundtrip<T: Codable & Equatable>(
     _ value: T,
-    sourceLocation: SourceLocation = #_sourceLocation
-) throws {
+    sourceLocation: SourceLocation = #_sourceLocation) throws {
     let encoded = try JSONEncoder().encode(value)
     let decoded = try JSONDecoder().decode(T.self, from: encoded)
     #expect(decoded == value, sourceLocation: sourceLocation)
@@ -78,10 +77,9 @@ func assertCodableRoundtrip<T: Codable & Equatable>(
 ///   - value: The value to encode
 ///   - file: Source file (automatically provided)
 ///   - line: Source line (automatically provided)
-func assertEncodable<T: Encodable>(
-    _ value: T,
-    sourceLocation: SourceLocation = #_sourceLocation
-) {
+func assertEncodable(
+    _ value: some Encodable,
+    sourceLocation: SourceLocation = #_sourceLocation) {
     #expect(throws: Never.self, sourceLocation: sourceLocation) {
         _ = try JSONEncoder().encode(value)
     }
@@ -93,11 +91,10 @@ func assertEncodable<T: Encodable>(
 ///   - type: The type to decode to
 ///   - file: Source file (automatically provided)
 ///   - line: Source line (automatically provided)
-func assertDecodable<T: Decodable>(
+func assertDecodable(
     _ data: Data,
-    to type: T.Type,
-    sourceLocation: SourceLocation = #_sourceLocation
-) {
+    to type: (some Decodable).Type,
+    sourceLocation: SourceLocation = #_sourceLocation) {
     #expect(throws: Never.self, sourceLocation: sourceLocation) {
         _ = try JSONDecoder().decode(type, from: data)
     }

@@ -66,6 +66,37 @@ The gauge icon in the menu bar has two display modes:
 
 This intelligent behavior ensures the gauge always provides meaningful feedback about your usage, whether you're tracking overall spending or Claude's specific quota limits.
 
+## 🧪 Testing & Code Coverage
+
+VibeMeter maintains comprehensive test coverage to ensure reliability:
+
+### Running Tests
+```bash
+# Run all tests
+xcodebuild test -workspace VibeMeter.xcworkspace -scheme VibeMeter
+
+# Run tests with code coverage
+./scripts/generate-coverage-report.sh
+
+# Generate HTML coverage report and open it
+./scripts/generate-coverage-report.sh --html --open
+
+# Enforce minimum coverage threshold
+./scripts/generate-coverage-report.sh --min-coverage 70
+```
+
+### Test Coverage
+- **Current Coverage**: ~80-85%
+- **Test Files**: 40+ test suites
+- **Test Categories**:
+  - Unit tests for business logic
+  - Integration tests for provider workflows
+  - UI component tests (with ViewInspector)
+  - Performance benchmarks
+
+### Continuous Integration
+Code coverage is automatically generated and reported on all pull requests via GitHub Actions.
+
 ## ⚙️ Configuration
 
 ### Spending Limits

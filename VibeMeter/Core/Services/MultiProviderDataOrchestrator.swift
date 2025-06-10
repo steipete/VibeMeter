@@ -52,7 +52,7 @@ public final class MultiProviderDataOrchestrator {
     // MARK: - Private Properties
 
     private let logger = Logger.vibeMeter(category: "MultiProviderOrchestrator")
-    private var refreshTimers: [ServiceProvider: Timer] = [:]
+    private var refreshTasks: [ServiceProvider: Task<Void, Never>] = [:]
     private let backgroundProcessor = BackgroundDataProcessor()
 
     // MARK: - Initialization
@@ -352,16 +352,24 @@ public final class MultiProviderDataOrchestrator {
         let interval = TimeInterval(settingsManager.refreshIntervalMinutes * 60)
 
         for provider in ServiceProvider.allCases {
-            refreshTimers[provider]?.invalidate()
+            refreshTasks[provider]?.cancel()
 
-            refreshTimers[provider] = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self,
-                          ProviderRegistry.shared.isEnabled(provider),
-                          self.userSessionData.isLoggedIn(to: provider) else { return }
+            refreshTasks[provider] = Task { [weak self] in
+                // Use legacy timer for compatibility
+                for await _ in LegacyAsyncTimerSequence(interval: interval) {
+                    guard let self else { break }
 
-                    self.logger.info("Timer fired for \(provider.displayName), refreshing data")
+                    await MainActor.run {
+                        guard ProviderRegistry.shared.isEnabled(provider),
+                              self.userSessionData.isLoggedIn(to: provider) else { return }
+
+                        self.logger.info("Timer fired for \(provider.displayName), refreshing data")
+                    }
+
                     await self.refreshData(for: provider, showSyncedMessage: false)
+
+                    // Check if task was cancelled
+                    if Task.isCancelled { break }
                 }
             }
         }

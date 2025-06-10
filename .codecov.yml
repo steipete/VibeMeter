@@ -1,0 +1,35 @@
+# Codecov configuration for VibeMeter
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...90"
+  
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 5%
+        base: auto
+        
+    patch:
+      default:
+        target: 80%
+        threshold: 10%
+        base: auto
+
+parsers:
+  xcode:
+    derived_data_path: ./build/DerivedData
+
+ignore:
+  - "VibeMeterTests/**/*"
+  - "**/Mocks/**/*"
+  - "**/TestUtilities/**/*"
+  - "**/PreviewHelpers/**/*"
+  - "**/*.generated.swift"
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: true

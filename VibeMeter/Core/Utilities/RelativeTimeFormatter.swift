@@ -131,9 +131,13 @@ public enum RelativeTimeFormatter {
         }
 
         private func startTimer() {
-            Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-                Task { @MainActor in
-                    currentTime = Date()
+            Task {
+                for await _ in LegacyAsyncTimerSequence(interval: 30) {
+                    await MainActor.run {
+                        currentTime = Date()
+                    }
+
+                    if Task.isCancelled { break }
                 }
             }
         }

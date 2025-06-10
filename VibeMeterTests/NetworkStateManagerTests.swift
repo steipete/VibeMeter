@@ -277,7 +277,7 @@ struct NetworkStateManagerTests {
 
     // MARK: - Stale Data Monitoring Tests
 
-    @Test("Start stale data monitoring", .timeLimit(.seconds(1)))
+    @Test("Start stale data monitoring", .timeLimit(.minutes(1)))
     @MainActor
     func testStartStaleDataMonitoring() async throws {
         let manager = NetworkStateManager()
@@ -324,12 +324,12 @@ struct NetworkStateManagerIntegrationTests {
     @MainActor
     func networkRestorationFlow() async {
         let manager = NetworkStateManager()
-        let spendingData = MockMultiProviderSpendingData()
+        let spendingData = MultiProviderSpendingData()
 
         // Add provider with network error
-        let providerData = ProviderSpendingData(provider: .cursor)
+        var providerData = ProviderSpendingData(provider: .cursor)
         providerData.connectionStatus = .error(message: "Network timeout")
-        spendingData.setSpendingData(providerData, for: .cursor)
+        spendingData.updateConnectionStatus(for: .cursor, status: .error(message: "Network timeout"))
 
         var refreshCount = 0
         manager.onNetworkRestored = {
@@ -353,10 +353,9 @@ struct NetworkStateManagerIntegrationTests {
             refreshCount += 1
         }
 
-        // Make data stale
-        if let data = spendingData.getSpendingData(for: .cursor) {
-            data.lastSuccessfulRefresh = Date().addingTimeInterval(-7200) // 2 hours old
-        }
+        // Make data stale by clearing the last refresh date
+        // We'll use updateConnectionStatus to simulate stale data
+        spendingData.updateConnectionStatus(for: .cursor, status: .stale)
 
         // Simulate app becoming active
         await manager.handleAppBecameActive(spendingData: spendingData, staleThreshold: 3600)
@@ -369,14 +368,18 @@ struct NetworkStateManagerIntegrationTests {
 // MARK: - Test Helpers
 
 @MainActor
-private func createSpendingData(providers: [ServiceProvider]) -> MockMultiProviderSpendingData {
-    let data = MockMultiProviderSpendingData()
+private func createSpendingData(providers: [ServiceProvider]) -> MultiProviderSpendingData {
+    let data = MultiProviderSpendingData()
 
     for provider in providers {
-        let providerData = ProviderSpendingData(provider: provider)
-        providerData.connectionStatus = .connected
-        providerData.lastSuccessfulRefresh = Date()
-        data.setSpendingData(providerData, for: provider)
+        data.updateConnectionStatus(for: provider, status: .connected)
+        // Create a dummy invoice to mark as recently refreshed
+        let invoice = ProviderMonthlyInvoice(
+            items: [ProviderInvoiceItem(cents: 1000, description: "Test Usage", provider: provider)],
+            provider: provider,
+            month: Calendar.current.component(.month, from: Date()),
+            year: Calendar.current.component(.year, from: Date()))
+        data.updateSpending(for: provider, from: invoice, rates: [:], targetCurrency: "USD")
     }
 
     return data

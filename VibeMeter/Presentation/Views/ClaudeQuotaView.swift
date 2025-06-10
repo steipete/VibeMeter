@@ -24,7 +24,7 @@ struct ClaudeQuotaView: View {
         return newProvider
     }
 
-    private let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    // Timer removed in favor of onLegacyTimer
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -141,8 +141,11 @@ struct ClaudeQuotaView: View {
         .task {
             await loadQuotaData()
         }
-        .onReceive(timer) { _ in
-            Task { await loadQuotaData() }
+        .task {
+            // Refresh data every 60 seconds
+            for await _ in LegacyAsyncTimerSequence(interval: 60) {
+                await loadQuotaData()
+            }
         }
         .sheet(isPresented: $showUsageReport) {
             ClaudeUsageReportView()

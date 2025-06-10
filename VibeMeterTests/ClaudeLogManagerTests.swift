@@ -288,24 +288,26 @@ struct ClaudeLogEntryTests {
     @Test("Create log entry with all fields")
     func createLogEntryComplete() {
         let entry = ClaudeLogEntry(
-            message: ClaudeLogMessage(usage: ClaudeUsage(inputTokens: 1000, outputTokens: 500)),
+            timestamp: Date(),
             model: "claude-3-5-sonnet",
-            timestamp: Date())
+            inputTokens: 1000,
+            outputTokens: 500)
 
         #expect(entry.inputTokens == 1000)
-        #expect(entry.outputTokens == 1500)
+        #expect(entry.outputTokens == 500)
         #expect(entry.model == "claude-3-5-sonnet")
     }
 
     @Test("Create log entry with minimal fields")
     func createLogEntryMinimal() {
         let entry = ClaudeLogEntry(
-            message: ClaudeLogMessage(usage: ClaudeUsage(inputTokens: 100, outputTokens: 50)),
+            timestamp: Date(),
             model: nil,
-            timestamp: Date())
+            inputTokens: 100,
+            outputTokens: 50)
 
         #expect(entry.inputTokens == 100)
-        #expect(entry.outputTokens == 150)
+        #expect(entry.outputTokens == 50)
         #expect(entry.model == nil)
     }
 }

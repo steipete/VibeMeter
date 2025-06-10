@@ -1,0 +1,104 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Generate Code Coverage
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      
+    - name: Install Tuist
+      run: |
+        curl -Ls https://install.tuist.io | bash
+        echo "/usr/local/bin" >> $GITHUB_PATH
+        
+    - name: Generate Xcode project
+      run: ./scripts/generate-xcproj.sh
+      
+    - name: Build and test with coverage
+      run: |
+        xcodebuild test \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -configuration Debug \
+          -enableCodeCoverage YES \
+          -resultBundlePath TestResults.xcresult \
+          -quiet
+          
+    - name: Generate coverage report
+      run: |
+        # Extract coverage percentage
+        COVERAGE=$(xcrun xccov view --report --only-targets TestResults.xcresult | grep "VibeMeter.app" | awk '{print $3}')
+        echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+        
+        # Generate detailed report
+        xcrun xccov view --report TestResults.xcresult > coverage.txt
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./TestResults.xcresult
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        
+    - name: Create coverage badge
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: YOUR_GIST_ID_HERE
+        filename: vibemeter-coverage.json
+        label: Coverage
+        message: ${{ env.COVERAGE }}
+        color: |
+          ${{
+            startsWith(env.COVERAGE, '9') && 'brightgreen' ||
+            startsWith(env.COVERAGE, '8') && 'green' ||
+            startsWith(env.COVERAGE, '7') && 'yellowgreen' ||
+            startsWith(env.COVERAGE, '6') && 'yellow' ||
+            'red'
+          }}
+          
+    - name: Comment PR with coverage
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const coverage = process.env.COVERAGE;
+          const body = `## 📊 Code Coverage Report
+          
+          **Overall Coverage:** ${coverage}
+          
+          <details>
+          <summary>View detailed report</summary>
+          
+          \`\`\`
+          ${require('fs').readFileSync('coverage.txt', 'utf8').slice(0, 3000)}
+          \`\`\`
+          </details>`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          })
+          
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: |
+          TestResults.xcresult
+          coverage.txt
