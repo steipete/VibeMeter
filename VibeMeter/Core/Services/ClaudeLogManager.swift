@@ -156,7 +156,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         let claudeURL = accessURL.appendingPathComponent(logDirectoryName)
         logger.info("ClaudeLogManager: Looking for Claude logs at: \(claudeURL.path)")
-        
+
         var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
 
         guard fileManager.fileExists(atPath: claudeURL.path) else {
@@ -197,7 +197,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 }
                 logger.debug("ClaudeLogManager: Parsed \(entriesInFile) entries from \(fileURL.lastPathComponent)")
             } catch {
-                logger.error("ClaudeLogManager: Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                logger
+                    .error(
+                        "ClaudeLogManager: Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
             }
         }
 
@@ -246,7 +248,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         var jsonlFiles: [URL] = []
 
         logger.debug("ClaudeLogManager: Searching for JSONL files in: \(directory.path)")
-        
+
         if let enumerator = fileManager.enumerator(at: directory,
                                                    includingPropertiesForKeys: [.isRegularFileKey],
                                                    options: [.skipsHiddenFiles, .skipsPackageDescendants]) {

@@ -117,7 +117,7 @@ public final class MultiProviderDataOrchestrator {
         Task {
             let loggedInProviders = loginManager.loggedInProviders
             logger.info("Starting initial data refresh for \(loggedInProviders.count) logged-in providers")
-            
+
             for provider in loggedInProviders {
                 logger.info("Triggering initial refresh for \(provider.displayName)")
                 if provider == .claude {

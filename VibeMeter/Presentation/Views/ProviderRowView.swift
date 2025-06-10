@@ -94,10 +94,7 @@ struct ProviderRowView: View {
                                 let granted = await claudeLogManager.requestLogAccess()
                                 if granted {
                                     // Trigger login success flow for Claude
-                                    loginManager.handleAuthenticationResponse(
-                                        ["provider": "claude"],
-                                        for: .claude
-                                    )
+                                    loginManager.onLoginSuccess?(provider)
                                 }
                             }
                         }
