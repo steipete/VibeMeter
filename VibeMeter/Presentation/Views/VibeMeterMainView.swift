@@ -115,12 +115,15 @@ private extension VibeMeterMainView {
     }
 
     func openSettingsToProvidersTab() {
-        // Post notification to open providers tab
-        NotificationCenter.default.post(
-            name: .openSettingsTab,
-            object: MultiProviderSettingsTab.providers)
-
-        // Open settings window
+        // Open settings window first
         NSApp.openSettings()
+        
+        // Post notification to switch to providers tab after a brief delay
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            NotificationCenter.default.post(
+                name: .openSettingsTab,
+                object: MultiProviderSettingsTab.providers)
+        }
     }
 }
