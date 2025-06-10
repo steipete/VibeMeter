@@ -1,4 +1,6 @@
 import SwiftUI
+import AppKit
+import os.log
 
 // MARK: - App Entry Point
 
@@ -56,3 +58,5 @@ struct VibeMeterApp: App {
         }
     }
 }
+
+// Duplicate Claude provider implementation removed. Real implementation now lives in Core/Services and Core/Providers.

@@ -22,12 +22,15 @@ public final class ProviderFactory: @unchecked Sendable {
     /// Creates a provider instance for the specified service.
     /// - Parameter provider: The service provider to create
     /// - Returns: Configured provider instance
+    @MainActor
     public func createProvider(for provider: ServiceProvider) -> ProviderProtocol {
         switch provider {
         case .cursor:
-            CursorProvider(
+            return CursorProvider(
                 settingsManager: settingsManager,
                 urlSession: urlSession)
+        case .claude:
+            return ClaudeProvider(logManager: ClaudeLogManager.shared)
         }
     }
 

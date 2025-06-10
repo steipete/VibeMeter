@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ New Features
+- **Claude Usage Tracking:** Added a new provider to track token usage for Anthropic's Claude by parsing local log files from `~/.claude/projects/`.
+- **Local Provider Support:** Implemented a no-login flow for local providers, requesting folder access via a system open panel.
+- **Dual-Mode Gauge:** The menu bar gauge can now be configured in Settings to display either total monthly spending or the Claude Pro 5-hour quota.
+- **New Settings Options:** Added settings to select Claude account type (Free/Pro) and configure the menu bar gauge representation.
+- **Enhanced Popover UI:** The main popover now includes a dedicated section to display Claude's 5-hour window usage when active.
+
+### 🔧 Technical Improvements
+- **Testable Architecture:** Refactored `ClaudeLogManager` and `ClaudeProvider` with protocols and dependency injection for improved testability.
+- **Swift Testing:** Added unit tests for the new Claude components using the modern Swift Testing framework.
+- **Tokenizer Integration:** Integrated a Swift implementation of the `tiktoken` library with the `o200k_base` encoding for future token-based calculations.
+- **Sandboxed File Access:** Utilizes security-scoped bookmarks to securely access the Claude log directory in a sandboxed environment.
+
 ## [1.1.0] - 2025-06-10
 
 ### 🎨 UI Improvements

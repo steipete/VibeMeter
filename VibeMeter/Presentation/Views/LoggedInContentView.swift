@@ -43,6 +43,12 @@ struct LoggedInContentView: View {
             // Content section - improved spacing
             VStack(spacing: 6) {
                 CostTableView(settingsManager: settingsManager, loginManager: loginManager, showTimestamps: false)
+
+                // NEW: Add a dedicated view for Claude's quota if it's active
+                if userSessionData.isLoggedIn(to: .claude) {
+                    Divider().padding(.vertical, 4)
+                    ClaudeQuotaView()
+                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)

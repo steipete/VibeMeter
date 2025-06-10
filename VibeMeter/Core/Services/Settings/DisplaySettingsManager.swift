@@ -23,6 +23,23 @@ public final class DisplaySettingsManager {
         static let selectedCurrencyCode = "selectedCurrencyCode"
         static let refreshIntervalMinutes = "refreshIntervalMinutes"
         static let menuBarDisplayMode = "menuBarDisplayMode"
+        static let gaugeRepresents = "gaugeRepresents"
+    }
+
+    // MARK: - Gauge Representation
+
+    public enum GaugeRepresentation: String, CaseIterable, Identifiable, Sendable {
+        case totalSpending
+        case claudeQuota
+
+        public var id: String { rawValue }
+
+        public var displayName: String {
+            switch self {
+            case .totalSpending: "Total Monthly Spending"
+            case .claudeQuota: "Claude 5-Hour Quota"
+            }
+        }
     }
 
     // MARK: - Display Preferences
@@ -51,6 +68,13 @@ public final class DisplaySettingsManager {
         }
     }
 
+    public var gaugeRepresentation: GaugeRepresentation {
+        didSet {
+            userDefaults.set(gaugeRepresentation.rawValue, forKey: Keys.gaugeRepresents)
+            logger.debug("Gauge representation set to: \(self.gaugeRepresentation.displayName)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -68,6 +92,10 @@ public final class DisplaySettingsManager {
             menuBarDisplayMode = .both // Default to "both" (icon + money)
         }
 
+        let savedGaugeRep = userDefaults.string(forKey: Keys.gaugeRepresents) ?? GaugeRepresentation.totalSpending
+            .rawValue
+        gaugeRepresentation = GaugeRepresentation(rawValue: savedGaugeRep) ?? .totalSpending
+
         // Validate refresh interval
         if !Self.refreshIntervalOptions.contains(refreshIntervalMinutes) {
             refreshIntervalMinutes = 5
@@ -79,7 +107,8 @@ public final class DisplaySettingsManager {
                 DisplaySettingsManager initialized - \
                 currency: \(self.selectedCurrencyCode), \
                 refresh: \(self.refreshIntervalMinutes)min, \
-                display: \(self.menuBarDisplayMode.displayName)
+                display: \(self.menuBarDisplayMode.displayName), \
+                gauge: \(self.gaugeRepresentation.displayName)
                 """)
     }
 

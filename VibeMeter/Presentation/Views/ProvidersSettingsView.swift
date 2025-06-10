@@ -20,19 +20,23 @@ struct ProvidersSettingsView: View {
             Form {
                 Section {
                     ForEach(ServiceProvider.allCases) { provider in
-                        ProviderRowView(
-                            provider: provider,
-                            userSessionData: userSessionData,
-                            loginManager: loginManager,
-                            providerRegistry: providerRegistry,
-                            showDetail: {
-                                showingProviderDetail = provider
-                            })
-                            .id({
-                                let email = userSessionData.getSession(for: provider)?.userEmail ?? "none"
-                                let isLoggedIn = userSessionData.isLoggedIn(to: provider)
-                                return "\(provider.rawValue)-\(email)-\(isLoggedIn)"
-                            }())
+                        if provider == .claude {
+                            ClaudeProviderRowView()
+                        } else {
+                            ProviderRowView(
+                                provider: provider,
+                                userSessionData: userSessionData,
+                                loginManager: loginManager,
+                                providerRegistry: providerRegistry,
+                                showDetail: {
+                                    showingProviderDetail = provider
+                                })
+                                .id({
+                                    let email = userSessionData.getSession(for: provider)?.userEmail ?? "none"
+                                    let isLoggedIn = userSessionData.isLoggedIn(to: provider)
+                                    return "\(provider.rawValue)-\(email)-\(isLoggedIn)"
+                                }())
+                        }
                     }
                 } header: {
                     HStack {

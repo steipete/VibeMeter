@@ -9,6 +9,7 @@ import os.log
 /// Each provider has unique authentication methods, API endpoints, and data structures.
 public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
     case cursor
+    case claude
     // Future providers can be added here:
     // case openai = "openai"
     // case anthropic = "anthropic"
@@ -18,6 +19,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "Cursor"
+        case .claude:
+            "Claude"
         }
     }
 
@@ -26,6 +29,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://cursor.com")!
+        case .claude:
+            URL(string: "https://claude.ai")!
         }
     }
 
@@ -34,6 +39,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/analytics")!
+        case .claude:
+            URL(string: "https://claude.ai")! // No specific dashboard for local logs
         }
     }
 
@@ -42,6 +49,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://authenticator.cursor.sh/")!
+        case .claude:
+            URL(string: "file://localhost")! // Not applicable for local provider
         }
     }
 
@@ -50,6 +59,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             URL(string: "https://www.cursor.com/api")!
+        case .claude:
+            URL(string: "file://localhost")! // Not applicable
         }
     }
 
@@ -58,6 +69,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             ".cursor.com"
+        case .claude:
+            "" // Not applicable
         }
     }
 
@@ -66,6 +79,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "WorkosCursorSessionToken"
+        case .claude:
+            "" // Not applicable
         }
     }
 
@@ -74,6 +89,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "com.steipete.vibemeter.cursor"
+        case .claude:
+            "com.steipete.vibemeter.claude"
         }
     }
 
@@ -82,6 +99,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "USD" // Cursor bills in USD
+        case .claude:
+            "USD" // Costs will be calculated in USD
         }
     }
 
@@ -90,6 +109,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             true
+        case .claude:
+            false
         }
     }
 
@@ -98,6 +119,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "cursor"
+        case .claude:
+            "chart.bar.doc.horizontal.fill" // Placeholder system icon
         }
     }
 
@@ -106,6 +129,8 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         switch self {
         case .cursor:
             "#000000" // Cursor's black theme
+        case .claude:
+            "#D97757" // Brownish/orange color associated with Anthropic
         }
     }
 }

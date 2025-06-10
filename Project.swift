@@ -105,9 +105,24 @@ let project = Project(
                 "VibeMeter/App/**/*.swift",
                 "VibeMeter/Core/**/*.swift",
                 "VibeMeter/Presentation/**/*.swift",
+                // Manually added Claude files to ensure compilation
+                "VibeMeter/Core/Models/ClaudeUsageData.swift",
+                "VibeMeter/Core/Services/ClaudeLogManaging.swift",
+                "VibeMeter/Core/Services/ClaudeLogManager.swift",
+                "VibeMeter/Core/Providers/ClaudeProvider.swift",
+                "VibeMeter/Presentation/Views/ClaudeDetailView.swift",
+                "VibeMeter/Presentation/Views/ClaudeProviderRowView.swift",
+                "VibeMeter/Presentation/Views/ClaudeQuotaView.swift",
+                // Tiktoken files
+                "VibeMeter/Core/Utilities/Tiktoken/CoreBPE.swift",
+                "VibeMeter/Core/Utilities/Tiktoken/Errors.swift",
+                "VibeMeter/Core/Utilities/Tiktoken/Helpers.swift",
+                "VibeMeter/Core/Utilities/Tiktoken/Tiktoken.swift",
+                "VibeMeter/Core/Utilities/Tiktoken/Vocab.swift",
             ],
             resources: [
                 .glob(pattern: "VibeMeter/Assets.xcassets", excluding: []),
+                "VibeMeter/Core/Utilities/Tiktoken/o200k_base.tiktoken",
             ],
             entitlements: .file(path: "VibeMeter/VibeMeter.entitlements"),
             dependencies: [
@@ -137,7 +152,14 @@ let project = Project(
             bundleId: "com.steipete.vibemeter.tests",
             deploymentTargets: .macOS("15.0"),
             infoPlist: .default,
-            sources: ["VibeMeterTests/**"],
+            sources: [
+                "VibeMeterTests/**",
+                // Manually added test files
+                "VibeMeterTests/TestUtilities/MockFileManager.swift",
+                "VibeMeterTests/TestUtilities/MockClaudeLogManager.swift",
+                "VibeMeterTests/ClaudeLogManagerTests.swift",
+                "VibeMeterTests/ClaudeProviderTests.swift",
+            ],
             dependencies: [
                 .target(name: "VibeMeter"),
             ],

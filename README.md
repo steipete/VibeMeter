@@ -34,6 +34,9 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 
 Vibe Meter connects securely to your Cursor AI account and monitors your monthly usage:
 
+- **Cursor:** Connects securely to your Cursor AI account to monitor your monthly spending.
+- **Claude:** Securely reads local log files from `~/.claude/projects/` to track token usage without requiring a login.
+
 - **Automatic Sync** - Updates spending data every 5 minutes
 - **Visual Indicators** - Gauge fills up as you approach your spending limits
 - **Progress Notifications** - Alerts at 80% and 100% of your warning threshold
@@ -53,11 +56,13 @@ This intelligent behavior ensures the gauge always provides meaningful feedback 
 ### Spending Limits
 - **Warning Limit** - Get notified when you reach 80% (default: $20)
 - **Upper Limit** - Maximum threshold for visual indicators (default: $30)
+- **Claude Account Type** - Select your account type (Free/Pro) for accurate quota tracking.
 
 ### Display Options
 - **Show Cost in Menu Bar** - Toggle cost display next to the icon
 - **Currency Selection** - Choose from 20+ supported currencies
 - **Notification Preferences** - Customize alert frequency and triggers
+- **Gauge Representation** - Choose to display total spending or Claude's 5-hour quota in the menu bar.
 
 ## 🛠️ Development
 
@@ -253,7 +258,7 @@ To participate:
 
 Vibe Meter follows clean architecture principles:
 
-- **Multi-Provider System** - Extensible design for supporting multiple AI services
+- **Multi-Provider System** - Supports Cursor and Claude, with an extensible design for additional AI services.
 - **Reactive State Management** - Modern `@Observable` data flow with SwiftUI integration
 - **Service Layer** - Modular services for API clients, authentication, and notifications
 - **Protocol-Oriented Design** - Extensive use of protocols for testability and flexibility
@@ -317,3 +322,5 @@ Created by [Peter Steinberger](https://steipete.com) ([@steipete](https://twitte
 Read about the development process: [Building a native macOS app with AI](https://steipete.com/posts/vibemeter/)
 
 **Made with ❤️ in Vienna, Austria**
+
+**Note on Tiktoken:** The `o200k_base.tiktoken` file required for Claude tokenization is currently a placeholder. To ensure accurate token counting, you must replace this file in `VibeMeter/Core/Utilities/Tiktoken/` with the official version from OpenAI.
