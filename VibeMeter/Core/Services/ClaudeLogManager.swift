@@ -229,18 +229,37 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                     guard !trimmedLine.isEmpty,
                           let data = trimmedLine.data(using: .utf8) else { continue }
 
+                    // Pre-filter: Check if this line contains usage data structure
+                    // Valid usage entries should have both "message" with nested "usage" containing tokens
+                    if !trimmedLine.contains("\"message\"") || 
+                       !trimmedLine.contains("\"usage\"") ||
+                       !trimmedLine.contains("\"input_tokens\"") ||
+                       !trimmedLine.contains("\"output_tokens\"") {
+                        continue
+                    }
+                    
+                    // Skip entries that are clearly not usage logs
+                    if trimmedLine.contains("\"type\":\"summary\"") || 
+                       trimmedLine.contains("\"type\":\"user\"") ||
+                       trimmedLine.contains("\"leafUuid\"") ||
+                       trimmedLine.contains("\"sessionId\"") ||
+                       trimmedLine.contains("\"parentUuid\"") {
+                        continue
+                    }
+
                     do {
                         let entry = try decoder.decode(ClaudeLogEntry.self, from: data)
                         let day = Calendar.current.startOfDay(for: entry.timestamp)
                         dailyUsage[day, default: []].append(entry)
                         entriesInFile += 1
                     } catch {
-                        // Log individual line parsing errors at debug level
-                        logger.debug("ClaudeLogManager: Failed to parse log entry: \(error.localizedDescription)")
-                        logger.debug("ClaudeLogManager: Failed line: \(trimmedLine)")
+                        // Only log at trace level since we expect many non-usage entries
+                        logger.trace("ClaudeLogManager: Skipped non-usage entry")
                     }
                 }
-                logger.debug("ClaudeLogManager: Parsed \(entriesInFile) entries from \(fileURL.lastPathComponent)")
+                if entriesInFile > 0 {
+                    logger.debug("ClaudeLogManager: Parsed \(entriesInFile) usage entries from \(fileURL.lastPathComponent)")
+                }
             } catch {
                 logger
                     .error(
