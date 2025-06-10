@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-06-10
+
+### 🎨 UI Improvements
+- **Enhanced popover design** - Switched to ultra-thin translucent material with blur effect for modern look
+- **Adaptive border** - Added white border that automatically adapts to light/dark mode
+- **Optimized spacing** - Reduced excessive left/right margins for better content density
+- **Progressive gauge colors** - Added smooth color transitions from green (low usage) to red (high usage)
+- **Improved money formatting** - Show "€0" instead of "€0,00" and remove unnecessary decimal places
+
+### ⚡ Functionality Enhancements
+- **Smart gauge calculation** - Display request usage percentage (182/500 = 36%) when no money spent, then switch to spending percentage when money is spent
+- **Dynamic tooltip updates** - Fixed tooltip refresh discrepancy using NSTrackingArea hover detection
+- **Simplified tooltip** - Removed keyboard shortcuts section and emoji indicators for cleaner display
+- **Robust window display** - Implemented multi-strategy window display system to prevent UI freezing
+
+### 🐛 Bug Fixes
+- **Fixed UI deadlock** - Resolved freezing when showing the custom menu window
+- **Fixed tooltip inconsistency** - Tooltip and popover now show consistent refresh timestamps
+- **Fixed gauge accuracy** - Corrected percentage calculations across all display components
+- **Fixed money display** - Consistent formatting without unnecessary decimals throughout the app
+
+### 🔧 Technical Improvements
+- **Window display strategy** - Added fallback mechanisms with `orderFrontRegardless()` and async display timing
+- **Hover-based updates** - Tooltip refreshes dynamically on mouse hover for real-time accuracy
+- **Swift Concurrency compliance** - Added proper `@MainActor` annotations throughout the codebase
+- **Code consistency** - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager
+
 ## [1.1.0-beta.1] - 2025-06-10
 
 ### 🎨 UI Improvements
