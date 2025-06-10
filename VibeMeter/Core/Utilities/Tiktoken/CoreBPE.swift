@@ -40,7 +40,7 @@ final class CoreBPE {
         var tokens: [Int] = []
 
         // Handle special tokens first
-        var remainingText = text
+        let remainingText = text
         for (specialToken, tokenId) in specialTokens where remainingText.contains(specialToken) {
             // Split by special token and encode parts separately
             let parts = remainingText.components(separatedBy: specialToken)
