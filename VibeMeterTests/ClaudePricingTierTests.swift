@@ -249,7 +249,11 @@ struct ClaudePricingTierTests {
         settingsManager.sessionSettingsManager.claudeAccountType = .pro
         
         // Enable Claude
-        orchestrator.userSessionData.setLoginState(true, for: .claude)
+        orchestrator.userSessionData.handleLoginSuccess(
+            for: ServiceProvider.claude,
+            email: "test@example.com",
+            teamName: nil
+        )
         
         // Add Claude spending data
         let claudeData = ProviderSpendingData(
@@ -263,7 +267,12 @@ struct ClaudePricingTierTests {
                 year: 2025
             )
         )
-        orchestrator.spendingData.setSpendingData(claudeData, for: .claude)
+        orchestrator.spendingData.updateSpending(
+            for: ServiceProvider.claude,
+            from: claudeData.latestInvoiceResponse!,
+            rates: [:],
+            targetCurrency: "USD"
+        )
         
         // Verify account type affects calculations
         let accountType = settingsManager.sessionSettingsManager.claudeAccountType

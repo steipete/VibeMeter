@@ -52,7 +52,7 @@ struct ClaudeFiveHourWindowTests {
         // Mock Pro account (uses 5-hour window)
         let mockSettings = MockSettingsManager()
         mockSettings.sessionSettingsManager.claudeAccountType = .pro
-        let logManagerWithSettings = ClaudeLogManager(
+        _ = ClaudeLogManager(
             fileManager: .default,
             userDefaults: .standard
         )
@@ -141,9 +141,9 @@ struct ClaudeFiveHourWindowTests {
         
         // Reset should be at midnight PT
         let calendar = Calendar.current
-        let resetHour = calendar.component(.hour, from: window.resetDate)
+        _ = calendar.component(.hour, from: window.resetDate)
         let resetTimeZone = TimeZone(identifier: "America/Los_Angeles")!
-        var resetComponents = calendar.dateComponents(in: resetTimeZone, from: window.resetDate)
+        let resetComponents = calendar.dateComponents(in: resetTimeZone, from: window.resetDate)
         #expect(resetComponents.hour == 0)
     }
     

@@ -230,31 +230,24 @@ struct ClaudeUsageReportView: View {
         claudeLogManager.invalidateCache()
         
         Task {
-            do {
-                guard claudeLogManager.hasAccess else {
-                    await MainActor.run {
-                        errorMessage = "No folder access granted. Please grant access in settings."
-                        isLoading = false
-                    }
-                    return
-                }
-                
+            guard claudeLogManager.hasAccess else {
                 await MainActor.run {
-                    loadingMessage = "Scanning log files..."
+                    errorMessage = "No folder access granted. Please grant access in settings."
+                    isLoading = false
                 }
-                
-                let usage = await claudeLogManager.getDailyUsage()
-                
-                await MainActor.run {
-                    loadingMessage = "Processing data..."
-                    self.dailyUsage = usage
-                    self.isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+                return
+            }
+            
+            await MainActor.run {
+                loadingMessage = "Scanning log files..."
+            }
+            
+            let usage = await claudeLogManager.getDailyUsage()
+            
+            await MainActor.run {
+                loadingMessage = "Processing data..."
+                self.dailyUsage = usage
+                self.isLoading = false
             }
         }
     }

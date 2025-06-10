@@ -33,7 +33,7 @@ extension Double? {
         sourceLocation: SourceLocation = #_sourceLocation) -> Bool {
         guard let value = self else {
             #expect(
-                false,
+                Bool(false),
                 "Expected value to be approximately \(expected), but was nil",
                 sourceLocation: sourceLocation)
             return false
@@ -47,7 +47,7 @@ extension Double? {
 extension Confirmation {
     /// Expects the confirmation to be confirmed exactly once
     func expectOnce(sourceLocation _: SourceLocation = #_sourceLocation) async {
-        await self.confirm()
+        self.confirm()
     }
 }
 
@@ -145,11 +145,11 @@ func expectThrows<E: Error & Equatable>(
     sourceLocation: SourceLocation = #_sourceLocation) async {
     do {
         _ = try await expression()
-        #expect(false, "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
+        #expect(Bool(false), "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
     } catch let error as E {
         #expect(error == expectedError, sourceLocation: sourceLocation)
     } catch {
-        #expect(false, "Expected to throw \(expectedError), but threw \(error)", sourceLocation: sourceLocation)
+        #expect(Bool(false), "Expected to throw \(expectedError), but threw \(error)", sourceLocation: sourceLocation)
     }
 }
 
@@ -160,10 +160,10 @@ func expectThrows<E: Error & Equatable>(
     sourceLocation: SourceLocation = #_sourceLocation) {
     do {
         _ = try expression()
-        #expect(false, "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
+        #expect(Bool(false), "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
     } catch let error as E {
         #expect(error == expectedError, sourceLocation: sourceLocation)
     } catch {
-        #expect(false, "Expected to throw \(expectedError), but threw \(error)", sourceLocation: sourceLocation)
+        #expect(Bool(false), "Expected to throw \(expectedError), but threw \(error)", sourceLocation: sourceLocation)
     }
 }
