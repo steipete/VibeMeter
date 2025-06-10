@@ -78,6 +78,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             if !ProviderRegistry.shared.isEnabled(.claude) {
                 ProviderRegistry.shared.enableProvider(.claude)
             }
+            
+            // Clear any error messages since we have valid access
+            Task { @MainActor in
+                if let orchestrator = (NSApp.delegate as? AppDelegate)?.orchestrator {
+                    orchestrator.userSessionData.clearError(for: .claude)
+                }
+            }
         }
     }
 
@@ -151,6 +158,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
             // Save a dummy token to indicate Claude is "logged in"
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
+            
+            // Enable Claude provider if not already enabled
+            if !ProviderRegistry.shared.isEnabled(.claude) {
+                ProviderRegistry.shared.enableProvider(.claude)
+            }
 
             return true
         } catch {

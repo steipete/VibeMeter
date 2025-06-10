@@ -86,6 +86,17 @@ struct ProvidersSettingsView: View {
     }
 
     private func updateUserSessionForProvider(_ provider: ServiceProvider) async {
+        // Claude uses folder access, not auth tokens
+        if provider == .claude {
+            // For Claude, we just mark it as logged in with a placeholder email
+            userSessionData.handleLoginSuccess(
+                for: provider,
+                email: "Local Claude User",
+                teamName: nil,
+                teamId: nil)
+            return
+        }
+        
         guard let token = loginManager.getAuthToken(for: provider) else {
             userSessionData.handleLoginFailure(for: provider,
                                                error: NSError(domain: "SettingsView", code: 1,
