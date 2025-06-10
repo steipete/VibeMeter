@@ -13,6 +13,7 @@ final class StatusBarController: NSObject {
 
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
+    private var trackingArea: NSTrackingArea?
 
     // MARK: - Component Managers
 
@@ -82,6 +83,9 @@ final class StatusBarController: NSObject {
             button.setAccessibilityTitle("VibeMeter")
             button.setAccessibilityRole(.button)
             button.setAccessibilityHelp("Shows AI service spending information and opens VibeMeter menu")
+
+            // Set up tracking area for dynamic tooltip updates
+            setupTrackingArea(for: button)
 
             updateStatusItemDisplay()
         }
@@ -243,12 +247,60 @@ final class StatusBarController: NSObject {
         return 0.0
     }
 
+    private func setupTrackingArea(for button: NSStatusBarButton) {
+        // Remove existing tracking area if any
+        if let existingTrackingArea = trackingArea {
+            button.removeTrackingArea(existingTrackingArea)
+        }
+        
+        // Create new tracking area
+        trackingArea = NSTrackingArea(
+            rect: button.bounds,
+            options: [.activeAlways, .mouseEnteredAndExited],
+            owner: self,
+            userInfo: nil
+        )
+        
+        if let trackingArea = trackingArea {
+            button.addTrackingArea(trackingArea)
+        }
+    }
+    
+    @objc func mouseEntered(_ event: NSEvent) {
+        // Force tooltip update when mouse enters the status bar button
+        updateTooltipOnDemand()
+    }
+    
+    @objc func mouseExited(_ event: NSEvent) {
+        // Optional: Could implement if we want to do something on exit
+    }
+    
+    private func updateTooltipOnDemand() {
+        guard let button = statusItem?.button else { return }
+        
+        // Create tooltip provider and get fresh tooltip text
+        let tooltipProvider = StatusBarTooltipProvider(
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData,
+            settingsManager: settingsManager
+        )
+        
+        let freshTooltip = tooltipProvider.createTooltipText()
+        button.toolTip = freshTooltip
+    }
+
     deinit {
         // Since deinit cannot be marked as @MainActor, we need to assume we're on the main actor
         // since StatusBarController is @MainActor and deinit is called when the actor is being deallocated
         MainActor.assumeIsolated {
             animationController.stopTimers()
             observer.stopObserving()
+            
+            // Clean up tracking area
+            if let button = statusItem?.button, let trackingArea = trackingArea {
+                button.removeTrackingArea(trackingArea)
+            }
         }
     }
 }
