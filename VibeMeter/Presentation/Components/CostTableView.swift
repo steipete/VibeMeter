@@ -17,6 +17,9 @@ struct CostTableView: View {
 
     @State
     private var selectedProvider: ServiceProvider?
+    
+    @State
+    private var showClaudeUsageReport = false
 
     init(
         settingsManager: any SettingsManagerProtocol,
@@ -41,6 +44,9 @@ struct CostTableView: View {
             spendingLimitsSection
         }
         .id("cost-table-\(spendingData.providersWithData.count)-\(currencyData.selectedCode)-\(totalSpendingHash)")
+        .sheet(isPresented: $showClaudeUsageReport) {
+            ClaudeUsageReportView()
+        }
     }
 
     private var providerBreakdownSection: some View {
@@ -314,6 +320,26 @@ struct CostTableView: View {
                             }
                         }
                         .padding(.leading, 32)
+                    }
+                    
+                    // Add button to view detailed usage report if we have access
+                    if ClaudeLogManager.shared.hasAccess {
+                        HStack {
+                            Button(action: {
+                                showClaudeUsageReport = true
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chart.bar.doc.horizontal")
+                                        .font(.caption)
+                                    Text("View Token Report")
+                                        .font(.caption)
+                                }
+                                .foregroundStyle(.link)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.leading, 32)
+                            .padding(.top, 4)
+                        }
                     }
                 }
             }

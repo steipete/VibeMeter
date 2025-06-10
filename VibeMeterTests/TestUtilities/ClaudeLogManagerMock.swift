@@ -9,6 +9,9 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
     private(set) var hasAccess = false
     private(set) var isProcessing = false
     private(set) var lastError: Error?
+    
+    // Mock account type for testing
+    var mockAccountType: ClaudePricingTier = .pro
 
     // MARK: - Return Values
 

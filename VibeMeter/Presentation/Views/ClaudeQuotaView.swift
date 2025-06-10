@@ -11,6 +11,9 @@ struct ClaudeQuotaView: View {
 
     @State
     private var provider: ClaudeProvider?
+    
+    @State
+    private var showUsageReport = false
 
     private func getProvider() -> ClaudeProvider {
         if let provider {
@@ -32,6 +35,17 @@ struct ClaudeQuotaView: View {
                     .foregroundStyle(.primary)
 
                 Spacer()
+                
+                // Info button to show usage report
+                Button(action: {
+                    openUsageReport()
+                }) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("View detailed token usage report")
 
                 if isLoading {
                     ProgressView()
@@ -130,6 +144,13 @@ struct ClaudeQuotaView: View {
         .onReceive(timer) { _ in
             Task { await loadQuotaData() }
         }
+        .sheet(isPresented: $showUsageReport) {
+            ClaudeUsageReportView()
+        }
+    }
+    
+    private func openUsageReport() {
+        showUsageReport = true
     }
 
     // MARK: - Helper Methods

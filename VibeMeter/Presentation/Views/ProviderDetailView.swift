@@ -42,6 +42,12 @@ struct ProviderDetailView: View {
     
     @State
     private var claudeAccountType: ClaudePricingTier = .pro
+    
+    @State
+    private var showUsageReport = false
+    
+    @StateObject
+    private var claudeLogManager = ClaudeLogManager.shared
 
     private let providerRegistry = ProviderRegistry.shared
 
@@ -120,6 +126,14 @@ struct ProviderDetailView: View {
         .onChange(of: provider) { _, newProvider in
             // Update settings if provider changes
             customSettings = providerRegistry.configuration(for: newProvider).customSettings
+        }
+        .sheet(isPresented: $showUsageReport) {
+            ClaudeUsageReportView()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("showClaudeUsageReport"))) { _ in
+            if provider == .claude {
+                showUsageReport = true
+            }
         }
     }
 
@@ -234,6 +248,26 @@ struct ProviderDetailView: View {
                             }
                         }
                         .padding(.leading, 4)
+                        
+                        // Usage Report button
+                        if claudeLogManager.hasAccess {
+                            Divider()
+                                .padding(.vertical, 4)
+                            
+                            Button(action: {
+                                showUsageReport = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "chart.bar.doc.horizontal")
+                                    Text("View Token Usage Report")
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                     .onChange(of: claudeAccountType) { _, newValue in
                         saveClaudeAccountType(newValue)

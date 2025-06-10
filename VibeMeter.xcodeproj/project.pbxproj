@@ -183,6 +183,7 @@
 		F2478F136FD1DB5DACBCF4A7 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = DCD2A60E058F1B21F1848622 /* Logging */; };
 		F6395E5D9CA38E887B62CF38 /* CurrencyConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6191817077689C72AD22A34 /* CurrencyConversionTests.swift */; };
 		FA7D60BBA428F3A3CB900D42 /* NotificationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87EFED712792DB24562580D7 /* NotificationManagerTests.swift */; };
+		FB676D09F791E32839E573D7 /* ClaudeUsageReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5B6F78F3C5AD2C1E050EC4 /* ClaudeUsageReportView.swift */; };
 		FCE8EF13E274D32AE563B000 /* ClaudeQuotaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD500DAD229643D09226882 /* ClaudeQuotaView.swift */; };
 		FD5572DA2E3520EC9E8416EC /* ProviderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF2FE815C9C73A3EA9DC1D7F /* ProviderProtocol.swift */; };
 /* End PBXBuildFile section */
@@ -388,6 +389,7 @@
 		ED0B5A578E2D63827397C55E /* NetworkRetryHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandler.swift; sourceTree = "<group>"; };
 		EDAC9756EEC771ECAE3C1522 /* AuthenticationTokenManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationTokenManagerTests.swift; sourceTree = "<group>"; };
 		EDB66367033919CE2DDBD9C3 /* CurrencyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyData.swift; sourceTree = "<group>"; };
+		EE5B6F78F3C5AD2C1E050EC4 /* ClaudeUsageReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageReportView.swift; sourceTree = "<group>"; };
 		F04F8B936436212D02F8F7FE /* ProviderConnectionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConnectionStatusTests.swift; sourceTree = "<group>"; };
 		F0662AEC9A00132BD74EDFC4 /* ActionButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonsView.swift; sourceTree = "<group>"; };
 		F232967C420EA4E6E10C8A97 /* ProviderModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderModels.swift; sourceTree = "<group>"; };
@@ -640,6 +642,7 @@
 				5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */,
 				2DC2BC4E2D04588361896E58 /* ClaudeDetailView.swift */,
 				AAD500DAD229643D09226882 /* ClaudeQuotaView.swift */,
+				EE5B6F78F3C5AD2C1E050EC4 /* ClaudeUsageReportView.swift */,
 				F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */,
 				FBF643C5ED008D1390C13CFD /* GeneralSettingsView.swift */,
 				A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */,
@@ -1085,6 +1088,7 @@
 				D68194CDF81EBAD89B60AEA5 /* AnalyticsWebView.swift in Sources */,
 				302840CBC5A78BB1C843AB93 /* ClaudeDetailView.swift in Sources */,
 				FCE8EF13E274D32AE563B000 /* ClaudeQuotaView.swift in Sources */,
+				FB676D09F791E32839E573D7 /* ClaudeUsageReportView.swift in Sources */,
 				0A16B135674C38B690B22443 /* CostTableView+ViewState.swift in Sources */,
 				A5D96152F8C9DE5D9A62B173 /* GeneralSettingsView.swift in Sources */,
 				8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */,

@@ -2,20 +2,20 @@ import Foundation
 import Testing
 @testable import VibeMeter
 
-// MARK: - Claude Account Type & Subscription Tier Tests
+// MARK: - Claude Pricing Tier & Subscription Tests
 
-@Suite("Claude Account Type Tests", .tags(.claude, .settings))
-struct ClaudeAccountTypeTests {
+@Suite("Claude Pricing Tier Tests", .tags(.claude, .settings))
+struct ClaudePricingTierTests {
     // MARK: - Account Type Properties Tests
     
     @Test("Claude account types have correct properties", arguments: [
-        (ClaudeAccountType.free, "Free", false, 50, nil, nil),
-        (ClaudeAccountType.pro, "Pro", true, nil, 45, nil),
-        (ClaudeAccountType.max5x, "Max 5×", true, nil, 45, 5),
-        (ClaudeAccountType.max20x, "Max 20×", true, nil, 45, 20),
+        (ClaudePricingTier.free, "Free", false, 50, nil, nil),
+        (ClaudePricingTier.pro, "Pro", true, nil, 45, nil),
+        (ClaudePricingTier.team, "Team", true, nil, 45, 5),
+        (ClaudePricingTier.enterprise, "Enterprise", true, nil, 45, 20),
     ])
     func accountTypeProperties(
-        accountType: ClaudeAccountType,
+        accountType: ClaudePricingTier,
         expectedName: String,
         expectedUsesFiveHour: Bool,
         expectedDailyLimit: Int?,
@@ -34,20 +34,20 @@ struct ClaudeAccountTypeTests {
 
     @Test("Account type price display")
     func accountTypePriceDisplay() {
-        #expect(ClaudeAccountType.free.priceDisplay == "Free")
-        #expect(ClaudeAccountType.pro.priceDisplay == "$20/month")
-        #expect(ClaudeAccountType.max5x.priceDisplay == "$100/month")
-        #expect(ClaudeAccountType.max20x.priceDisplay == "$200/month")
+        #expect(ClaudePricingTier.free.priceDisplay == "Free")
+        #expect(ClaudePricingTier.pro.priceDisplay == "$20/month")
+        #expect(ClaudePricingTier.team.priceDisplay == "$100/month")
+        #expect(ClaudePricingTier.enterprise.priceDisplay == "$400/month")
     }
 
     @Test("Account type is CaseIterable")
     func accountTypeIsCaseIterable() {
-        let allTypes = ClaudeAccountType.allCases
+        let allTypes = ClaudePricingTier.allCases
         #expect(allTypes.count == 4)
         #expect(allTypes.contains(.free))
         #expect(allTypes.contains(.pro))
-        #expect(allTypes.contains(.max5x))
-        #expect(allTypes.contains(.max20x))
+        #expect(allTypes.contains(.team))
+        #expect(allTypes.contains(.enterprise))
     }
 
     // MARK: - Settings Persistence Tests
@@ -61,7 +61,7 @@ struct ClaudeAccountTypeTests {
         let sessionSettings = SessionSettingsManager(userDefaults: userDefaults)
         
         // Test each account type
-        for accountType in ClaudeAccountType.allCases {
+        for accountType in ClaudePricingTier.allCases {
             sessionSettings.claudeAccountType = accountType
             
             // Create new instance to verify persistence
@@ -82,16 +82,16 @@ struct ClaudeAccountTypeTests {
 
     // MARK: - Window Calculation Tests
     
-    @Test("Calculate token limits based on account type", arguments: ClaudeAccountType.allCases)
-    func calculateTokenLimits(accountType: ClaudeAccountType) {
+    @Test("Calculate token limits based on account type", arguments: ClaudePricingTier.allCases)
+    func calculateTokenLimits(accountType: ClaudePricingTier) {
         let avgTokensPerMessage = 3000
         
         if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
             let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
             
             // Pro: 45 messages * 3000 = 135,000 tokens
-            // Max 5×: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
-            // Max 20×: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
+            // Team: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
+            // Enterprise: 45 messages * 3000 = 135,000 tokens (same limit, different tier)
             #expect(estimatedTokenLimit == 135_000)
         } else if let dailyLimit = accountType.dailyMessageLimit {
             let dailyTokenLimit = dailyLimit * avgTokensPerMessage
@@ -109,7 +109,7 @@ struct ClaudeAccountTypeTests {
         
         // Test free tier (daily reset)
         logManager.mockAccountType = .free
-        let freeWindow = logManager.calculateFiveHourWindow(from: [:])
+        let freeWindow = logManager.calculateFiveHourWindowWithAccountType(from: [:])
         
         // Should reset at midnight PT
         let calendar = Calendar.current
@@ -122,7 +122,7 @@ struct ClaudeAccountTypeTests {
         
         // Test pro tier (5-hour window)
         logManager.mockAccountType = .pro
-        let proWindow = logManager.calculateFiveHourWindow(from: [:])
+        let proWindow = logManager.calculateFiveHourWindowWithAccountType(from: [:])
         
         // Should reset within 5 hours
         let timeUntilReset = proWindow.resetDate.timeIntervalSince(now)
@@ -138,7 +138,7 @@ struct ClaudeAccountTypeTests {
         let settingsManager = MockSettingsManager()
         
         // Simulate UI selection
-        for accountType in ClaudeAccountType.allCases {
+        for accountType in ClaudePricingTier.allCases {
             settingsManager.sessionSettingsManager.claudeAccountType = accountType
             
             // Verify the selection is reflected
@@ -170,9 +170,9 @@ struct ClaudeAccountTypeTests {
         }
         
         // Test different account types
-        for accountType in ClaudeAccountType.allCases {
+        for accountType in ClaudePricingTier.allCases {
             logManager.mockAccountType = accountType
-            let window = logManager.calculateFiveHourWindow(from: dailyUsage)
+            let window = logManager.calculateFiveHourWindowWithAccountType(from: dailyUsage)
             
             #expect(window.total == 100) // Always normalized to 100
             #expect(window.used >= 0)
@@ -192,10 +192,10 @@ struct ClaudeAccountTypeTests {
     @Test("Account type raw value stability for migration")
     func accountTypeRawValueStability() {
         // Ensure raw values don't change (important for UserDefaults storage)
-        #expect(ClaudeAccountType.free.rawValue == "free")
-        #expect(ClaudeAccountType.pro.rawValue == "pro")
-        #expect(ClaudeAccountType.max5x.rawValue == "max5x")
-        #expect(ClaudeAccountType.max20x.rawValue == "max20x")
+        #expect(ClaudePricingTier.free.rawValue == "free")
+        #expect(ClaudePricingTier.pro.rawValue == "pro")
+        #expect(ClaudePricingTier.team.rawValue == "team")
+        #expect(ClaudePricingTier.enterprise.rawValue == "enterprise")
     }
 
     @Test("Handle unknown account type gracefully")
@@ -268,7 +268,8 @@ extension FiveHourWindow {
 // MARK: - Extended Mock for Account Type Testing
 
 extension ClaudeLogManagerMock {
-    override func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
+    // Custom implementation for account type testing
+    func calculateFiveHourWindowWithAccountType(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
         let now = Date()
         let fiveHoursAgo = now.addingTimeInterval(-5 * 60 * 60)
         
