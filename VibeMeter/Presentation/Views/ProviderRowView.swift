@@ -29,36 +29,51 @@ struct ProviderRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
+            // Enable/disable toggle
+            Toggle("", isOn: Binding(
+                get: { isEnabled },
+                set: { newValue in
+                    if newValue {
+                        providerRegistry.enableProvider(provider)
+                    } else {
+                        providerRegistry.disableProvider(provider)
+                    }
+                }
+            ))
+            .toggleStyle(.switch)
+            .labelsHidden()
+            
             // Provider icon
             providerIcon(for: provider)
-                .foregroundStyle(.primary)
+                .foregroundStyle(isEnabled ? .primary : .secondary)
                 .frame(width: 32, height: 32)
 
             // Provider info
             VStack(alignment: .leading, spacing: 4) {
                 Text(provider.displayName)
                     .font(.headline)
+                    .foregroundStyle(isEnabled ? .primary : .secondary)
 
                 if provider == .claude {
                     // Claude shows folder access status
                     if claudeLogManager.hasAccess {
                         Text("Folder access granted")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(isEnabled ? .secondary : .tertiary)
                     } else {
                         Text("No folder access")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(isEnabled ? .secondary : .tertiary)
                     }
                 } else if let session, isLoggedIn {
                     Text(session.userEmail ?? "Unknown user")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isEnabled ? .secondary : .tertiary)
 
                     if let teamName = session.teamName {
                         Text("Team: \(teamName)")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(isEnabled ? .tertiary : .quaternary)
                     }
                 } else if isEnabled {
                     Text("Not connected")
@@ -88,11 +103,15 @@ struct ProviderRowView: View {
             HStack(spacing: 8) {
                 if provider == .claude {
                     // Claude uses folder access instead of login
-                    if !claudeLogManager.hasAccess {
+                    if !claudeLogManager.hasAccess && isEnabled {
                         Button("Grant Access") {
                             Task {
                                 let granted = await claudeLogManager.requestLogAccess()
                                 if granted {
+                                    // Enable Claude provider if not already enabled
+                                    if !ProviderRegistry.shared.isEnabled(provider) {
+                                        ProviderRegistry.shared.enableProvider(provider)
+                                    }
                                     // Trigger login success flow for Claude
                                     loginManager.onLoginSuccess?(provider)
                                 }

@@ -71,9 +71,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.userDefaults = userDefaults
         loadBookmark()
 
-        // If we have access, ensure we have a token saved
+        // If we have access, ensure we have a token saved and provider is enabled
         if hasAccess {
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
+            // Enable Claude provider if not already enabled
+            if !ProviderRegistry.shared.isEnabled(.claude) {
+                ProviderRegistry.shared.enableProvider(.claude)
+            }
         }
     }
 
