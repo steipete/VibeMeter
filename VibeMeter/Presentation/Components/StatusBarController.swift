@@ -151,13 +151,16 @@ final class StatusBarController: NSObject {
                 rates: currencyData.effectiveRates)
 
             // Calculate gauge value based on whether money has been spent
-            let gaugeValue: Double = if totalSpendingUSD > 0 {
-                // Money has been spent - show spending as percentage of limit
-                min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
-            } else {
-                // No money spent - show requests used as percentage of available limit
-                calculateRequestUsagePercentage()
-            }
+            let gaugeValue: Double = {
+                if settingsManager.gaugeRepresentation == .claudeQuota,
+                   userSession.isLoggedIn(to: .claude) {
+                    return calculateClaudeQuota()
+                } else if totalSpendingUSD > 0 {
+                    min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+                } else {
+                    calculateRequestUsagePercentage()
+                }
+            }()
 
             // Only set new data state if the value has changed significantly
             if case .loading = stateManager.currentState {
@@ -245,6 +248,19 @@ final class StatusBarController: NSObject {
         }
 
         return 0.0
+    }
+
+    private func calculateClaudeQuota() -> Double {
+        // Very rough placeholder until detailed five-hour window is implemented
+        // Simply returns 0 if unavailable or percentage used based on 5 hours
+        let entries = ClaudeLogManager.shared
+        let daily = await entries.getDailyUsage()
+        let windowSeconds: Double = 5 * 60 * 60
+        var usedSeconds: Double = 0
+        for (_, list) in daily {
+            usedSeconds += list.reduce(0) { $0 + Double($1.inputTokens + $1.outputTokens) / 15.0 }
+        }
+        return min(max(usedSeconds / windowSeconds, 0), 1)
     }
 
     private func setupTrackingArea(for button: NSStatusBarButton) {
