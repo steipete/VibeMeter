@@ -121,11 +121,12 @@ struct ClaudeFiveHourWindowTests {
         let logManager = ClaudeLogManagerMock()
         
         // Create entries throughout the day
+        // Use smaller hours to ensure all entries are from today
         let entries = [
             createLogEntry(hoursAgo: 1),
-            createLogEntry(hoursAgo: 6),
-            createLogEntry(hoursAgo: 12),
-            createLogEntry(hoursAgo: 18),
+            createLogEntry(hoursAgo: 4),
+            createLogEntry(hoursAgo: 7),
+            createLogEntry(hoursAgo: 10),
         ]
         
         let dailyUsage = createDailyUsage(entries: entries)

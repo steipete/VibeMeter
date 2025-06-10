@@ -18,6 +18,18 @@ struct MenuBarHighlightSyncTests {
         let menuManager = StatusBarMenuManagerMock()
         let button = NSStatusBarButtonMock()
         
+        // Set up click handler to connect button clicks to menu manager
+        button.clickHandler = { eventType in
+            switch eventType {
+            case .leftMouseUp:
+                menuManager.toggleCustomWindow(relativeTo: button)
+            case .rightMouseUp:
+                menuManager.showContextMenu(for: button, statusItem: NSObject())
+            default:
+                break
+            }
+        }
+        
         return (menuManager, button)
     }
     
@@ -140,6 +152,11 @@ struct MenuBarHighlightSyncTests {
         let button = NSStatusBarButtonMock()
         let window = CustomMenuWindowMock()
         
+        // Set up callback to unhighlight button when window hides
+        window.onHide = {
+            button.highlight(false)
+        }
+        
         // Show window
         window.show(relativeTo: button)
         button.highlight(true)
@@ -161,6 +178,11 @@ struct MenuBarHighlightSyncTests {
     func escKeyDismissesAndUnhighlights() async {
         let button = NSStatusBarButtonMock()
         let window = CustomMenuWindowMock()
+        
+        // Set up callback to unhighlight button when window hides
+        window.onHide = {
+            button.highlight(false)
+        }
         
         // Show window
         window.show(relativeTo: button)

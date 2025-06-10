@@ -52,6 +52,7 @@ public final class SessionStateManager {
     /// Initializes session state for providers with existing tokens
     public func initializeExistingProviderSessions(
         userSessionData: MultiProviderUserSessionData) {
+        // Check regular providers with tokens
         for provider in loginManager.loggedInProviders {
             logger.info("Initializing session state for logged-in provider: \(provider.displayName)")
             // Create a basic logged-in session state until we fetch full data
@@ -60,6 +61,28 @@ public final class SessionStateManager {
                 email: "", // Will be updated when data is fetched
                 teamName: nil,
                 teamId: nil)
+        }
+        
+        // Special handling for Claude - check folder access
+        Task { @MainActor in
+            if ClaudeLogManager.shared.hasAccess {
+                // Check if Claude already has a token
+                if loginManager.getAuthToken(for: .claude) == nil {
+                    logger.info("Claude has folder access but no token, initializing...")
+                    // Save the dummy token for Claude through login manager
+                    let claudeToken = "claude_local_access"
+                    loginManager.handleLoginSuccess(for: .claude, cookieValue: claudeToken)
+                    logger.info("Initialized Claude with folder access")
+                } else if !userSessionData.isLoggedIn(to: .claude) {
+                    // Token exists but session not initialized
+                    logger.info("Claude has token but no session, initializing...")
+                    userSessionData.handleLoginSuccess(
+                        for: .claude,
+                        email: "\(NSUserName())@local",
+                        teamName: nil,
+                        teamId: nil)
+                }
+            }
         }
 
         logger.info(
