@@ -10,22 +10,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🚀 New Features
 - **Claude AI Support** - Added comprehensive Claude usage tracking via local log file analysis
 - **Dual-Mode Menu Bar Gauge** - Toggle between total spending and Claude 5-hour window quota display
-- **5-Hour Window Tracking** - Real-time monitoring of Claude Pro's rolling quota with visual progress bar
+- **5-Hour Window Tracking** - Real-time monitoring of Claude's rolling quota with visual progress bar
 - **Token Counting** - Integrated Tiktoken library with o200k_base encoding for accurate token calculation
 - **Daily Usage Breakdown** - New detailed view showing Claude token usage per day with cost calculation
 - **No-Login Authentication** - Claude integration works without login, using secure folder access instead
+- **Claude Subscription Tiers** - Added support for Free, Pro ($20), Max 5× ($100), and Max 20× ($200) tiers
+- **Automatic Re-authentication** - Cursor sessions now automatically re-authenticate when cookies expire
+- **Official Claude Icon** - Extracted and integrated the official Claude app icon for better recognition
 
 ### 🎨 UI Improvements
 - **ClaudeQuotaView** - Dedicated 5-hour window progress display in the popover
 - **ClaudeDetailView** - Table view with daily token usage breakdown and costs
 - **Gauge Representation Setting** - New toggle in settings to switch between spending/quota display
-- **Claude Account Type Setting** - Select Free/Pro account type for accurate cost calculations
+- **Claude Account Type Setting** - Select subscription tier for accurate quota calculations
+- **Provider Configuration** - Login/Grant Access buttons now always visible with auto-enable on click
+- **Settings Navigation** - Configure Providers button opens directly to Providers tab
+- **Menu Bar Highlight** - Button highlight state now properly syncs with popover visibility
+- **Improved Provider Dialog** - Larger dialog (600×700) with better layout and removed logout button
 
 ### 🔧 Technical Improvements
 - **Refactored ClaudeLogManager** - Made testable with dependency injection and protocol-based design
 - **Comprehensive Test Suite** - Added extensive tests for Claude provider functionality with mocks
 - **Sandbox Security** - Implemented security-scoped bookmarks for safe folder access
 - **Protocol-Based Architecture** - ClaudeLogManagerProtocol enables better testing and flexibility
+- **Folder Access Validation** - Validates home directory selection and cleans up invalid bookmarks
+- **Credential Storage** - Secure storage of Cursor credentials in macOS Keychain for auto-auth
+- **CAPTCHA Detection** - Automatic detection and user notification when manual intervention needed
+
+### 🐛 Bug Fixes
+- **Fixed Claude initialization race condition** - Claude now properly initializes before data refresh
+- **Fixed provider error messages** - Shortened error messages to prevent UI truncation
+- **Fixed directory picker** - Now pre-selects actual home directory instead of sandboxed path
 
 ## [1.1.0] - 2025-06-10
 

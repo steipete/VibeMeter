@@ -99,7 +99,8 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         openPanel.canChooseDirectories = true
         openPanel.canCreateDirectories = false
         openPanel.allowsMultipleSelection = false
-        // Use the actual user home directory path
+        // Get the actual user home directory (not the sandboxed one)
+        // In a sandboxed app, NSHomeDirectory() returns the container, so we construct the path manually
         let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
         openPanel.directoryURL = actualHomeDir
         openPanel.showsHiddenFiles = true  // Show hidden files like .claude
@@ -115,14 +116,24 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             return false
         }
 
-        // Validate that the user selected their home directory
-        guard url.path == actualHomeDir.path else {
-            logger.warning("User selected wrong directory: \(url.path) instead of home directory: \(actualHomeDir.path)")
+        // Validate that the selected directory can access Claude logs
+        logger.info("Validating selected directory: \(url.path)")
+        logger.info("Expected home directory: \(actualHomeDir.path)")
+        logger.info("NSUserName: \(NSUserName())")
+        
+        // Check if Claude logs directory exists at the expected location
+        let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
+        let canAccessClaudeLogs = fileManager.fileExists(atPath: claudeLogsPath.path) ||
+                                 url.path == actualHomeDir.path // Accept home directory even if .claude doesn't exist yet
+        
+        guard canAccessClaudeLogs else {
+            logger.warning("Selected directory doesn't contain Claude logs: \(url.path)")
+            logger.warning("Expected to find logs at: \(claudeLogsPath.path)")
             // Show alert to user
             await MainActor.run {
                 let alert = NSAlert()
-                alert.messageText = "Wrong Directory Selected"
-                alert.informativeText = "Please select your home directory (\(actualHomeDir.path)) to grant access to Claude logs."
+                alert.messageText = "Claude Logs Not Found"
+                alert.informativeText = "Please select your home directory (\(actualHomeDir.path)) to grant access to Claude logs located in ~/.claude/projects"
                 alert.alertStyle = .warning
                 alert.addButton(withTitle: "OK")
                 alert.runModal()
@@ -344,6 +355,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 return
             }
 
+            logger.info("Loading bookmark from: \(url.path)")
+            logger.info("Current NSHomeDirectory: \(NSHomeDirectory())")
+            logger.info("Current NSUserName: \(NSUserName())")
+            logger.info("Expected home directory: /Users/\(NSUserName())")
+
             let data = try Data(contentsOf: url)
             
             // Validate the bookmark points to the home directory
@@ -382,10 +398,23 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
 
-            // Validate it points to the home directory
+            logger.debug("Resolved bookmark URL: \(url.path)")
+            
+            // Check if Claude logs exist at this location
+            let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
+            logger.debug("Checking for Claude logs at: \(claudeLogsPath.path)")
+            
+            // Accept the bookmark if it's either:
+            // 1. The user's home directory (/Users/username)
+            // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
-            guard url.path == actualHomeDir.path else {
-                logger.error("Bookmark points to wrong directory: \(url.path) instead of home: \(actualHomeDir.path)")
+            let isValidLocation = url.path == actualHomeDir.path || 
+                                fileManager.fileExists(atPath: claudeLogsPath.path)
+            
+            guard isValidLocation else {
+                logger.error("Bookmark points to invalid directory: \(url.path)")
+                logger.error("Expected home directory: \(actualHomeDir.path)")
+                logger.error("Claude logs path would be: \(claudeLogsPath.path)")
                 // Invalidate the bookmark
                 self.bookmarkData = nil
                 revokeAccess()
@@ -424,10 +453,21 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
             
-            // Check if this bookmark points to the home directory
+            logger.debug("Validating bookmark URL: \(url.path)")
+            
+            // Check if Claude logs exist at this location
+            let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
+            
+            // Accept the bookmark if it's either:
+            // 1. The user's home directory (/Users/username)
+            // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
-            guard url.path == actualHomeDir.path else {
-                logger.warning("Bookmark points to wrong directory: \(url.path) instead of home: \(actualHomeDir.path)")
+            let isValidLocation = url.path == actualHomeDir.path || 
+                                fileManager.fileExists(atPath: claudeLogsPath.path)
+            
+            guard isValidLocation else {
+                logger.warning("Bookmark points to invalid directory: \(url.path)")
+                logger.warning("Expected home directory: \(actualHomeDir.path) or directory containing .claude/projects")
                 return nil
             }
             
