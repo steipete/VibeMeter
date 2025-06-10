@@ -38,9 +38,17 @@ actor BackgroundDataProcessor {
         authToken: String,
         providerClient: any ProviderProtocol) async throws -> ProviderDataResult {
         logger.info("Processing data for \(provider.displayName) on background actor")
+        
+        if provider == .claude {
+            logger.info("Claude: Starting background data processing")
+        }
 
         // Fetch user info first - this is required for authentication validation
         let userInfo = try await providerClient.fetchUserInfo(authToken: authToken)
+        
+        if provider == .claude {
+            logger.info("Claude: User info fetched - \(userInfo.email)")
+        }
 
         // Try to fetch team info, but don't fail if it's unavailable
         let teamInfo: ProviderTeamInfo
@@ -96,6 +104,14 @@ actor BackgroundDataProcessor {
                 provider: provider)
         }
 
+        if provider == .claude {
+            logger.info("Claude: Invoice items: \(invoice.items.count), total: \(invoice.totalCentsForMonth) cents")
+            logger.info("Claude: Usage data - current: \(usage.currentRequests), max: \(usage.maxRequests ?? 0)")
+            if let pricing = invoice.pricingDescription {
+                logger.info("Claude: Pricing description: \(pricing.description)")
+            }
+        }
+        
         logger.info("Completed background processing for \(provider.displayName)")
         return ProviderDataResult(
             userInfo: userInfo,

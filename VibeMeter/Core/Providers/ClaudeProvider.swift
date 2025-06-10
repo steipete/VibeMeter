@@ -34,11 +34,22 @@ public actor ClaudeProvider: ProviderProtocol {
     }
 
     public func fetchUserInfo(authToken _: String) async throws -> ProviderUserInfo {
+        logger.info("Claude: fetchUserInfo called")
+        
+        // Check if we have file access
+        let hasAccess = await logManager.hasAccess
+        logger.info("Claude: File access status: \(hasAccess)")
+        
+        guard hasAccess else {
+            logger.error("Claude: No file access, cannot fetch user info")
+            throw ProviderError.authenticationFailed(reason: "No file access to Claude logs")
+        }
+        
         // Return local user info based on system username
         let username = NSUserName()
         let email = "\(username)@local"
 
-        logger.info("Fetched user info for Claude: \(username)")
+        logger.info("Claude: Fetched user info - username: \(username), email: \(email)")
         return ProviderUserInfo(
             email: email,
             provider: .claude)
@@ -46,8 +57,11 @@ public actor ClaudeProvider: ProviderProtocol {
 
     public func fetchMonthlyInvoice(authToken _: String, month: Int, year: Int,
                                     teamId _: Int?) async throws -> ProviderMonthlyInvoice {
+        logger.info("Claude: fetchMonthlyInvoice called for month: \(month + 1)/\(year)")
+        
         // Get daily usage data
         let dailyUsage = try await getDailyUsageWithCache()
+        logger.info("Claude: Got daily usage data with \(dailyUsage.count) days")
 
         let calendar = Calendar.current
         let components = DateComponents(year: year, month: month + 1) // month is 0-indexed
@@ -64,6 +78,8 @@ public actor ClaudeProvider: ProviderProtocol {
             }
             return (date, entries)
         }
+        
+        logger.info("Claude: Filtered to \(monthlyEntries.count) days for month \(month + 1)/\(year)")
 
         // Calculate costs for each day
         var invoiceItems: [ProviderInvoiceItem] = []
@@ -92,11 +108,19 @@ public actor ClaudeProvider: ProviderProtocol {
         // Calculate total tokens for the month
         var totalInputTokens = 0
         var totalOutputTokens = 0
-        for (_, entries) in monthlyEntries {
-            let dailyUsage = ClaudeDailyUsage(date: Date(), entries: entries)
+        var totalCost = 0.0
+        for (date, entries) in monthlyEntries {
+            let dailyUsage = ClaudeDailyUsage(date: date, entries: entries)
             totalInputTokens += dailyUsage.totalInputTokens
             totalOutputTokens += dailyUsage.totalOutputTokens
+            
+            let dailyCost = calculateCost(for: dailyUsage, accountType: accountType)
+            totalCost += dailyCost
+            
+            logger.debug("Claude: Day \(formatDate(date)) - Input: \(dailyUsage.totalInputTokens), Output: \(dailyUsage.totalOutputTokens), Cost: $\(dailyCost)")
         }
+        
+        logger.info("Claude: Monthly totals - Input tokens: \(totalInputTokens), Output tokens: \(totalOutputTokens), Total cost: $\(totalCost)")
 
         // Create pricing description with token counts and cost breakdown
         let formatter = NumberFormatter()
@@ -136,9 +160,13 @@ public actor ClaudeProvider: ProviderProtocol {
     }
 
     public func fetchUsageData(authToken _: String) async throws -> ProviderUsageData {
+        logger.info("Claude: fetchUsageData called")
+        
         // Calculate 5-hour window usage for Pro accounts
         let dailyUsage = try await getDailyUsageWithCache()
         let fiveHourWindow = await logManager.calculateFiveHourWindow(from: dailyUsage)
+        
+        logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.used)/\(fiveHourWindow.total) messages")
 
         // Convert to ProviderUsageData format
         let currentRequests = Int(fiveHourWindow.used)
@@ -154,7 +182,9 @@ public actor ClaudeProvider: ProviderProtocol {
 
     public func validateToken(authToken _: String) async -> Bool {
         // For Claude, validation means checking if we have file access
-        await logManager.hasAccess
+        let hasAccess = await logManager.hasAccess
+        logger.info("Claude: validateToken called - hasAccess: \(hasAccess)")
+        return hasAccess
     }
 
     public nonisolated func getAuthenticationURL() -> URL {

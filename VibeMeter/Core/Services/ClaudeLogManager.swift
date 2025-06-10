@@ -146,30 +146,39 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         isProcessing = true
         defer { isProcessing = false }
 
+        logger.info("ClaudeLogManager: getDailyUsage started")
+
         guard let accessURL = resolveBookmark() else {
-            logger.warning("No access to Claude logs")
+            logger.warning("ClaudeLogManager: No access to Claude logs - bookmark resolution failed")
             return [:]
         }
         defer { accessURL.stopAccessingSecurityScopedResource() }
 
         let claudeURL = accessURL.appendingPathComponent(logDirectoryName)
+        logger.info("ClaudeLogManager: Looking for Claude logs at: \(claudeURL.path)")
+        
         var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
 
         guard fileManager.fileExists(atPath: claudeURL.path) else {
-            logger.warning("Claude directory not found at: \(claudeURL.path)")
+            logger.warning("ClaudeLogManager: Claude directory not found at: \(claudeURL.path)")
+            logger.warning("ClaudeLogManager: Home directory is: \(accessURL.path)")
             return [:]
         }
 
         // Get all JSONL files in the directory and subdirectories
         let jsonlFiles = findJSONLFiles(in: claudeURL)
+        logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
 
         let decoder = JSONDecoder()
 
         for fileURL in jsonlFiles {
+            logger.debug("ClaudeLogManager: Processing file: \(fileURL.lastPathComponent)")
             do {
                 let content = try String(contentsOf: fileURL, encoding: .utf8)
                 let lines = content.split(separator: "\n")
+                logger.debug("ClaudeLogManager: File has \(lines.count) lines")
 
+                var entriesInFile = 0
                 for line in lines {
                     let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !trimmedLine.isEmpty,
@@ -179,17 +188,21 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                         let entry = try decoder.decode(ClaudeLogEntry.self, from: data)
                         let day = Calendar.current.startOfDay(for: entry.timestamp)
                         dailyUsage[day, default: []].append(entry)
+                        entriesInFile += 1
                     } catch {
                         // Log individual line parsing errors at debug level
-                        logger.debug("Failed to parse log entry: \(error.localizedDescription)")
+                        logger.debug("ClaudeLogManager: Failed to parse log entry: \(error.localizedDescription)")
+                        logger.debug("ClaudeLogManager: Failed line: \(trimmedLine)")
                     }
                 }
+                logger.debug("ClaudeLogManager: Parsed \(entriesInFile) entries from \(fileURL.lastPathComponent)")
             } catch {
-                logger.error("Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                logger.error("ClaudeLogManager: Failed to read file \(fileURL.lastPathComponent): \(error.localizedDescription)")
             }
         }
 
-        logger.info("Parsed \(dailyUsage.values.flatMap(\.self).count) log entries from \(dailyUsage.count) days")
+        let totalEntries = dailyUsage.values.flatMap(\.self).count
+        logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
         return dailyUsage
     }
 
@@ -232,14 +245,20 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private func findJSONLFiles(in directory: URL) -> [URL] {
         var jsonlFiles: [URL] = []
 
+        logger.debug("ClaudeLogManager: Searching for JSONL files in: \(directory.path)")
+        
         if let enumerator = fileManager.enumerator(at: directory,
                                                    includingPropertiesForKeys: [.isRegularFileKey],
                                                    options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
             for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
                 jsonlFiles.append(fileURL)
+                logger.debug("ClaudeLogManager: Found JSONL file: \(fileURL.path)")
             }
+        } else {
+            logger.error("ClaudeLogManager: Failed to create file enumerator for directory: \(directory.path)")
         }
 
+        logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files total")
         return jsonlFiles
     }
 

@@ -115,9 +115,15 @@ public final class MultiProviderDataOrchestrator {
 
         // Trigger initial data refresh for providers with existing tokens
         Task {
-            logger.info("Starting initial data refresh for logged-in providers")
-            for provider in loginManager.loggedInProviders {
+            let loggedInProviders = loginManager.loggedInProviders
+            logger.info("Starting initial data refresh for \(loggedInProviders.count) logged-in providers")
+            
+            for provider in loggedInProviders {
                 logger.info("Triggering initial refresh for \(provider.displayName)")
+                if provider == .claude {
+                    let hasToken = loginManager.getAuthToken(for: provider) != nil
+                    logger.info("Claude: Initial check - hasToken: \(hasToken)")
+                }
                 await refreshData(for: provider, showSyncedMessage: false)
             }
 
@@ -196,11 +202,17 @@ public final class MultiProviderDataOrchestrator {
     private func getAuthTokenOrHandleLogout(for provider: ServiceProvider) -> String? {
         guard let authToken = loginManager.getAuthToken(for: provider) else {
             logger.info("No auth token for \(provider.displayName), marking as logged out")
+            if provider == .claude {
+                logger.info("Claude: Token check failed - user needs to grant folder access")
+            }
             userSessionData.handleLogout(from: provider)
             return nil
         }
 
         logger.info("Found auth token for \(provider.displayName), proceeding with data fetch")
+        if provider == .claude {
+            logger.info("Claude: Token found ('\(authToken)'), will fetch data")
+        }
         return authToken
     }
 
