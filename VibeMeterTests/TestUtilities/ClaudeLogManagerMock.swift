@@ -9,7 +9,7 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
     private(set) var hasAccess = false
     private(set) var isProcessing = false
     private(set) var lastError: Error?
-    
+
     // Mock account type for testing
     var mockAccountType: ClaudePricingTier = .pro
 
@@ -50,32 +50,40 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
     func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
         recordCall("calculateFiveHourWindow")
         capturedCalculateFiveHourWindowUsage = dailyUsage
-        
-        // Actually calculate the window based on the mock account type
+
+        // If we have a pre-configured result, return it
+        // Check if it's different from the default value
+        let defaultWindow = FiveHourWindow(used: 50, total: 100, resetDate: Date().addingTimeInterval(3600))
+        if calculateFiveHourWindowResult.used != defaultWindow.used ||
+            calculateFiveHourWindowResult.total != defaultWindow.total {
+            return calculateFiveHourWindowResult
+        }
+
+        // Otherwise, actually calculate the window based on the mock account type
         let now = Date()
         let fiveHoursAgo = now.addingTimeInterval(-5 * 60 * 60)
-        
+
         // Filter entries within the last 5 hours
         let recentEntries = dailyUsage.values
             .flatMap(\.self)
             .filter { $0.timestamp >= fiveHoursAgo }
-        
+
         // Calculate total tokens used
         let totalInputTokens = recentEntries.reduce(0) { $0 + $1.inputTokens }
         let totalOutputTokens = recentEntries.reduce(0) { $0 + $1.outputTokens }
-        
+
         // For Pro/Team accounts, calculate based on message count approximation
         if mockAccountType.usesFiveHourWindow, let messagesPerWindow = mockAccountType.messagesPerFiveHours {
             let avgTokensPerMessage = 3000
             let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
-            
+
             let totalTokensUsed = totalInputTokens + totalOutputTokens
             let usageRatio = Double(totalTokensUsed) / Double(estimatedTokenLimit)
-            
+
             // Find the oldest entry in the window to calculate reset time
             let oldestEntryTime = recentEntries.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? now
             let resetDate = oldestEntryTime.addingTimeInterval(5 * 60 * 60)
-            
+
             return FiveHourWindow(
                 used: min(usageRatio * 100, 100),
                 total: 100,
@@ -86,15 +94,15 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
             let startOfDay = calendar.startOfDay(for: now)
             let todayEntries = dailyUsage.values
                 .flatMap(\.self)
-                .filter { 
+                .filter {
                     let entryDay = calendar.startOfDay(for: $0.timestamp)
                     return entryDay == startOfDay
                 }
-            
+
             let messageCount = todayEntries.count
             let dailyLimit = mockAccountType.dailyMessageLimit ?? 50
             let usageRatio = Double(messageCount) / Double(dailyLimit)
-            
+
             // Reset at midnight PT
             var nextResetComponents = calendar.dateComponents([.year, .month, .day], from: now)
             nextResetComponents.day! += 1
@@ -102,7 +110,7 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
             nextResetComponents.minute = 0
             nextResetComponents.timeZone = TimeZone(identifier: "America/Los_Angeles")
             let resetDate = calendar.date(from: nextResetComponents) ?? now
-            
+
             return FiveHourWindow(
                 used: min(usageRatio * 100, 100),
                 total: 100,

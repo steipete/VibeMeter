@@ -145,7 +145,10 @@ func expectThrows<E: Error & Equatable>(
     sourceLocation: SourceLocation = #_sourceLocation) async {
     do {
         _ = try await expression()
-        #expect(Bool(false), "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
+        #expect(
+            Bool(false),
+            "Expected to throw \(expectedError), but no error was thrown",
+            sourceLocation: sourceLocation)
     } catch let error as E {
         #expect(error == expectedError, sourceLocation: sourceLocation)
     } catch {
@@ -160,7 +163,10 @@ func expectThrows<E: Error & Equatable>(
     sourceLocation: SourceLocation = #_sourceLocation) {
     do {
         _ = try expression()
-        #expect(Bool(false), "Expected to throw \(expectedError), but no error was thrown", sourceLocation: sourceLocation)
+        #expect(
+            Bool(false),
+            "Expected to throw \(expectedError), but no error was thrown",
+            sourceLocation: sourceLocation)
     } catch let error as E {
         #expect(error == expectedError, sourceLocation: sourceLocation)
     } catch {

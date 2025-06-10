@@ -51,6 +51,9 @@ struct ClaudeProviderTests {
         let logManager = ClaudeLogManagerMock()
         let provider = ClaudeProvider(settingsManager: settingsManager, logManager: logManager)
 
+        // Set up mock to have access
+        logManager.setHasAccess(true)
+
         let userInfo = try await provider.fetchUserInfo(authToken: "dummy_token")
 
         #expect(userInfo.provider == .claude)
@@ -133,6 +136,9 @@ struct ClaudeProviderTests {
 
         // Set up mock data
         logManager.setHasAccess(true)
+        // Create sample daily usage data that will result in the desired five-hour window
+        let sampleUsage = ClaudeLogManagerMock.createSampleDailyUsage(daysCount: 1)
+        logManager.setDailyUsage(sampleUsage)
         logManager.setFiveHourWindow(used: 75, total: 100, resetDate: Date().addingTimeInterval(3600))
 
         let usage = try await provider.fetchUsageData(authToken: "dummy_token")
@@ -140,6 +146,7 @@ struct ClaudeProviderTests {
         #expect(usage.provider == .claude)
         #expect(usage.currentRequests == 75)
         #expect(usage.maxRequests == 100)
+        #expect(logManager.callCount(for: "getDailyUsage") == 1)
         #expect(logManager.callCount(for: "calculateFiveHourWindow") == 1)
     }
 

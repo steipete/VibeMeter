@@ -16,7 +16,7 @@ public enum TestHelpers {
     }
 
     public static func dateFromISO8601(_ string: String) -> Date? {
-        ISO8601DateFormatter().date(from: string)
+        ISO8601DateFormatter.vibeMeterDefault.date(from: string)
     }
 
     // MARK: - Currency Helpers

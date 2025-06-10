@@ -1104,10 +1104,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
         guard !warningNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
+        let formatter = NumberFormatter.vibeMeterCurrency
         formatter.locale = Locale(identifier: "en_US")
         let spendingFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: currentSpending)) ?? "")"
         let limitFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: limitAmount)) ?? "")"
@@ -1138,10 +1135,7 @@ private final class TestableNotificationManager2: NotificationManagerProtocol, @
         guard !upperLimitNotificationShown else { return }
 
         let symbol = ExchangeRateManager.getSymbol(for: currencyCode)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
+        let formatter = NumberFormatter.vibeMeterCurrency
         formatter.locale = Locale(identifier: "en_US")
         let spendingFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: currentSpending)) ?? "")"
         let limitFormatted = "\(symbol)\(formatter.string(from: NSNumber(value: limitAmount)) ?? "")"
