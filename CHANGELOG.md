@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed Claude initialization race condition** - Claude now properly initializes before data refresh
 - **Fixed provider error messages** - Shortened error messages to prevent UI truncation
 - **Fixed directory picker** - Now pre-selects actual home directory instead of sandboxed path
+- **Fixed Claude directory validation** - Properly handles sandboxed environments and accepts any directory containing .claude/projects
 
 ## [1.1.0] - 2025-06-10
 
