@@ -70,7 +70,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.fileManager = fileManager
         self.userDefaults = userDefaults
         loadBookmark()
-        
+
         // If we have access, ensure we have a token saved
         if hasAccess {
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
@@ -88,7 +88,8 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public func requestLogAccess() async -> Bool {
         let openPanel = NSOpenPanel()
         openPanel.title = "Grant Access to Claude Logs"
-        openPanel.message = "Please select your home directory to grant VibeMeter access to the ~/.claude folder for reading usage data."
+        openPanel.message =
+            "Please select your home directory to grant VibeMeter access to the ~/.claude folder for reading usage data."
         openPanel.prompt = "Grant Access"
         openPanel.canChooseFiles = false
         openPanel.canChooseDirectories = true
@@ -114,10 +115,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 relativeTo: nil)
             saveBookmark(data: bookmark)
             logger.info("Successfully created security-scoped bookmark for folder access")
-            
+
             // Save a dummy token to indicate Claude is "logged in"
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
-            
+
             return true
         } catch {
             logger.error("Failed to create bookmark: \(error.localizedDescription)")
@@ -132,7 +133,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         do {
             try fileManager.removeItem(at: bookmarkFileURL())
             logger.info("Successfully revoked Claude log access")
-            
+
             // Remove the dummy token to indicate Claude is "logged out"
             _ = authTokenManager.deleteToken(for: .claude)
         } catch {

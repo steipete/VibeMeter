@@ -32,7 +32,7 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     func clearUserSessionData(for provider: ServiceProvider)
     func getSession(for provider: ServiceProvider) -> ProviderSession?
     func updateSession(for provider: ServiceProvider, session: ProviderSession)
-    
+
     // Access to sub-managers
     var displaySettingsManager: DisplaySettingsManager { get }
     var sessionSettingsManager: SessionSettingsManager { get }

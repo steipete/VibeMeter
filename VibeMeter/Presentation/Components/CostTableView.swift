@@ -270,9 +270,9 @@ struct CostTableView: View {
             if let providerData = spendingData.getSpendingData(for: provider) {
                 VStack(alignment: .leading, spacing: 4) {
                     // Show token counts if available
-                    if let description = providerData.invoiceData?.pricingDescription {
+                    if let pricingDescription = providerData.latestInvoiceResponse?.pricingDescription {
                         // Split the description to show input and output on separate lines
-                        let components = description.components(separatedBy: ", ")
+                        let components = pricingDescription.description.components(separatedBy: ", ")
                         VStack(alignment: .leading, spacing: 2) {
                             ForEach(components, id: \.self) { component in
                                 Text(component)
@@ -282,14 +282,14 @@ struct CostTableView: View {
                         }
                         .padding(.leading, 32)
                     }
-                    
+
                     // Show 5-hour window usage for Pro accounts
                     if let usageData = providerData.usageData {
                         HStack(spacing: 8) {
                             Text("5-hour window:")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            
+
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
                                     RoundedRectangle(cornerRadius: 3)

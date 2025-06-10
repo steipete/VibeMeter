@@ -97,29 +97,33 @@ public actor ClaudeProvider: ProviderProtocol {
             totalInputTokens += dailyUsage.totalInputTokens
             totalOutputTokens += dailyUsage.totalOutputTokens
         }
-        
+
         // Create pricing description with token counts and cost breakdown
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = ","
-        
+
         let inputStr = formatter.string(from: NSNumber(value: totalInputTokens)) ?? "\(totalInputTokens)"
         let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
-        
+
         // Calculate individual costs
         let (inputPrice, outputPrice) = getPricing(for: accountType)
         let inputCost = Double(totalInputTokens) / 1_000_000 * inputPrice
         let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPrice
-        
+
         let costFormatter = NumberFormatter()
         costFormatter.numberStyle = .currency
         costFormatter.currencyCode = "USD"
         costFormatter.maximumFractionDigits = 2
-        
+
         let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
         let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
-        
-        let pricingDescription = "\(inputStr) input (\(inputCostStr)), \(outputStr) output (\(outputCostStr))"
+
+        let pricingDescriptionText = "\(inputStr) input (\(inputCostStr)), \(outputStr) output (\(outputCostStr))"
+        let pricingDescription = ProviderPricingDescription(
+            description: pricingDescriptionText,
+            id: "claude-token-usage",
+            provider: .claude)
 
         logger.info("Fetched monthly invoice for Claude: \(invoiceItems.count) items, month: \(month + 1)/\(year)")
 

@@ -95,7 +95,7 @@ final class StatusBarMenuManager {
         // Create custom window if needed
         if customWindow == nil {
             customWindow = CustomMenuWindow(contentView: containerView)
-            
+
             // Set up callback to unhighlight button when window hides
             customWindow?.onHide = { [weak button] in
                 button?.highlight(false)
@@ -104,7 +104,7 @@ final class StatusBarMenuManager {
 
         // Show the custom window
         customWindow?.show(relativeTo: button)
-        
+
         // Highlight the button to show active state
         button.highlight(true)
     }

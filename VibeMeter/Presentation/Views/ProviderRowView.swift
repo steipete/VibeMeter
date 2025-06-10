@@ -11,8 +11,9 @@ struct ProviderRowView: View {
     let loginManager: MultiProviderLoginManager
     let providerRegistry: ProviderRegistry
     let showDetail: () -> Void
-    
-    @StateObject private var claudeLogManager = ClaudeLogManager.shared
+
+    @StateObject
+    private var claudeLogManager = ClaudeLogManager.shared
 
     private var session: ProviderSessionState? {
         userSessionData.getSession(for: provider)

@@ -13,7 +13,7 @@ final class CustomMenuWindow: NSPanel {
     private let hostingController: NSHostingController<AnyView>
     private var retainedContentView: AnyView?
     private var isEventMonitoringActive = false
-    
+
     /// Closure to be called when window hides
     var onHide: (() -> Void)?
 
