@@ -52,21 +52,25 @@ struct LoggedInContentView: View {
             .accessibilityHint("Shows total spending, provider breakdown, and spending limits")
             .animation(.easeInOut(duration: 0.2), value: spendingData.providersWithData.count)
 
-            // Last updated section at bottom
-            if let lastUpdate = mostRecentRefresh {
-                VStack(spacing: 2) {
-                    HStack {
+            // Last updated section at bottom - always reserve space to prevent layout jump
+            VStack(spacing: 2) {
+                HStack {
+                    if let lastUpdate = mostRecentRefresh {
                         Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                             .accessibilityLabel(
                                 "Last updated \(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))")
-
-                        Spacer()
+                    } else {
+                        // Show shimmer placeholder to reserve space and prevent layout jump
+                        ShimmerShapes.text(width: 120, height: 11, cornerRadius: 2)
+                            .accessibilityLabel("Loading update timestamp")
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+
+                    Spacer()
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
             }
 
             // Action buttons footer - more compact
