@@ -17,7 +17,7 @@ final class CurrencyConversionHelper {
                 return "\(currencySymbol)-∞"
             }
         }
-        
+
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0

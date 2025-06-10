@@ -101,20 +101,80 @@ final class CustomMenuWindow: NSPanel {
         hostingController.view.needsLayout = true
         hostingController.view.layoutSubtreeIfNeeded()
 
-        // Simple, direct window ordering approach
-        alphaValue = 0
-        makeKeyAndOrderFront(nil)
+        // Robust window display approach to prevent hanging
+        displayWindowSafely()
+    }
 
-        // Animate in with fade
+    /// Safely displays the window using multiple fallback strategies to prevent hanging.
+    ///
+    /// This method implements a robust window display strategy to prevent the common
+    /// hanging issue that occurs when mixing AppKit and SwiftUI, especially on first run.
+    ///
+    /// The approach uses multiple strategies:
+    /// 1. `orderFrontRegardless()` - More reliable than `makeKeyAndOrderFront()`
+    /// 2. App activation to ensure proper window ordering context
+    /// 3. Async dispatch with verification to handle timing issues
+    /// 4. Multiple fallback strategies to ensure window appears
+    private func displayWindowSafely() {
+        // Strategy 1: Try immediate display with orderFrontRegardless (most reliable)
+        alphaValue = 0
+
+        // First, ensure the app is active (this can prevent many display issues)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Use orderFrontRegardless for more reliable window display
+        // This works even if the app isn't active and is less prone to hanging
+        orderFrontRegardless()
+
+        // Small delay to ensure window is fully displayed before animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
+            guard let self else { return }
+
+            // Verify window is actually visible before animating
+            if self.isVisible {
+                self.animateWindowIn()
+                self.setupEventMonitoring()
+            } else {
+                // Fallback: retry with async dispatch
+                self.displayWindowFallback()
+            }
+        }
+    }
+
+    /// Fallback window display method using async dispatch
+    private func displayWindowFallback() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+
+            // Alternative approach: try makeKeyAndOrderFront with app activation
+            NSApp.activate(ignoringOtherApps: true)
+            self.makeKeyAndOrderFront(nil)
+
+            // Final fallback after short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                guard let self else { return }
+
+                if self.isVisible {
+                    self.animateWindowIn()
+                    self.setupEventMonitoring()
+                } else {
+                    // Last resort: force ordering front regardless of state
+                    self.orderFrontRegardless()
+                    self.alphaValue = 1.0 // Skip animation if there are issues
+                    self.setupEventMonitoring()
+                }
+            }
+        }
+    }
+
+    /// Animates the window appearance
+    private func animateWindowIn() {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.0, 0.2, 1.0) // Material Design easing
             context.allowsImplicitAnimation = true
-            animator().alphaValue = 1
+            self.animator().alphaValue = 1
         }
-
-        // Set up event monitoring immediately after window is visible
-        setupEventMonitoring()
     }
 
     /// Animates the window to a new size without flipping
@@ -239,11 +299,28 @@ struct CustomMenuContainer<Content: View>: View {
     @ViewBuilder
     let content: Content
 
+    @Environment(\.colorScheme)
+    private var colorScheme
+
     var body: some View {
         content
             // Let both width and height be dictated by the intrinsic size
             .fixedSize()
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(borderColor, lineWidth: 1))
+    }
+
+    private var borderColor: Color {
+        switch colorScheme {
+        case .dark:
+            Color.white.opacity(0.1)
+        case .light:
+            Color.white.opacity(0.8)
+        @unknown default:
+            Color.white.opacity(0.5)
+        }
     }
 }
 

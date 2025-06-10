@@ -286,7 +286,7 @@ class MockBackgroundProvider: ProviderProtocol, @unchecked Sendable {
 
 // MARK: - Thread Capturing Mock Provider
 
-final class ThreadCapturingProvider: MockBackgroundProvider {
+final class ThreadCapturingProvider: MockBackgroundProvider, @unchecked Sendable {
     private var _executionThread: Thread?
 
     var executionThread: Thread? {

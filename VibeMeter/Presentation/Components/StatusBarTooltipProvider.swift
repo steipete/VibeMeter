@@ -43,9 +43,8 @@ final class StatusBarTooltipProvider {
 
         let spendingInfo = createSpendingInfo()
         let refreshInfo = createRefreshInfo(for: providers)
-        let keyboardShortcuts = createKeyboardShortcutsInfo()
 
-        return [spendingInfo, refreshInfo, keyboardShortcuts].joined(separator: "\n")
+        return [spendingInfo, refreshInfo].joined(separator: "\n")
     }
 
     // MARK: - Private Methods
@@ -55,10 +54,18 @@ final class StatusBarTooltipProvider {
         let totalSpendingUSD = spendingData.totalSpendingConverted(
             to: "USD",
             rates: currencyData.effectiveRates)
-        let upperLimit = settingsManager.upperLimitUSD
-        let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
 
-        return "VibeMeter - \(Int(percentage))% of limit"
+        if totalSpendingUSD > 0 {
+            // Money has been spent - show spending as percentage of limit
+            let upperLimit = settingsManager.upperLimitUSD
+            let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
+            return "VibeMeter - \(Int(percentage))% of spending limit"
+        } else {
+            // No money spent - show requests used as percentage of available limit
+            let requestPercentage = calculateRequestUsagePercentage()
+            let percentage = (requestPercentage * 100).rounded()
+            return "VibeMeter - \(Int(percentage))% of requests used"
+        }
     }
 
     @MainActor
@@ -85,12 +92,22 @@ final class StatusBarTooltipProvider {
         return refreshInfo
     }
 
-    private func createKeyboardShortcutsInfo() -> String {
-        var shortcuts = "\nKeyboard shortcuts:"
-        shortcuts += "\n⌘R - Refresh data"
-        shortcuts += "\n⌘, - Open Settings"
-        shortcuts += "\n⌘Q - Quit VibeMeter"
-        shortcuts += "\nESC - Close menu"
-        return shortcuts
+    /// Calculates the request usage percentage across all providers
+    @MainActor
+    private func calculateRequestUsagePercentage() -> Double {
+        let providers = spendingData.providersWithData
+
+        // Use same logic as ProviderUsageBadgeView for consistency
+        for provider in providers {
+            if let providerData = spendingData.getSpendingData(for: provider),
+               let usageData = providerData.usageData,
+               let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                // Calculate percentage using same formula as progress bar
+                let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                return progress
+            }
+        }
+
+        return 0.0
     }
 }

@@ -163,8 +163,7 @@ struct CurrencyManagerTests {
         // Enhanced logging with Test.current
         if let currentTest = Test.current {
             print(
-                "[\(currentTest.name)] Performance: \(currencies.count) currencies in \(String(format: "%.3f", duration))s"
-            )
+                "[\(currentTest.name)] Performance: \(currencies.count) currencies in \(String(format: "%.3f", duration))s")
         }
 
         // Then

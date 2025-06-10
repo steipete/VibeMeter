@@ -146,7 +146,7 @@ final class StatusBarDisplayManager {
         let totalSpendingUSD = hasData ? spendingData.totalSpendingConverted(
             to: "USD",
             rates: currencyData.effectiveRates) : 0.0
-        
+
         // Calculate gauge value based on whether money has been spent
         let gaugeValue: Double
         if hasData {
@@ -154,7 +154,7 @@ final class StatusBarDisplayManager {
                 // Money has been spent - show spending as percentage of limit
                 gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
             } else {
-                // No money spent - show requests used as percentage of total
+                // No money spent - show requests used as percentage of available limit
                 let requestPercentage = calculateRequestUsagePercentage()
                 gaugeValue = requestPercentage
             }
@@ -305,7 +305,7 @@ final class StatusBarDisplayManager {
             // Use new logic: icon is shown when there's no data OR user setting shows icon
             let shouldShowIcon = !state.hasData || state.displayMode.showsIcon
             let spacingPrefix = shouldShowIcon ? "  " : ""
-            
+
             // Format the display value without unnecessary decimals
             let displayValue: String
             if stateManager.animatedCostValue == 0 {
@@ -343,35 +343,22 @@ final class StatusBarDisplayManager {
             lastAccessibilityDescription = accessibility
         }
     }
-    
+
     /// Calculates the request usage percentage across all providers
     private func calculateRequestUsagePercentage() -> Double {
         let providers = spendingData.providersWithData
-        
-        // If we have multiple providers, we'll average their request percentages
-        var totalPercentage: Double = 0.0
-        var providerCount = 0
-        
+
+        // Use same logic as ProviderUsageBadgeView for consistency
         for provider in providers {
             if let providerData = spendingData.getSpendingData(for: provider),
-               let usageData = providerData.usageData {
-                // Calculate percentage of requests used
-                let requestsUsed = usageData.currentRequests
-                let totalRequests = usageData.totalRequests
-                
-                if totalRequests > 0 {
-                    let percentage = Double(requestsUsed) / Double(totalRequests)
-                    totalPercentage += percentage
-                    providerCount += 1
-                }
+               let usageData = providerData.usageData,
+               let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                // Calculate percentage using same formula as progress bar
+                let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                return progress
             }
         }
-        
-        // Return average percentage across all providers
-        if providerCount > 0 {
-            return min(max(totalPercentage / Double(providerCount), 0.0), 1.0)
-        } else {
-            return 0.0
-        }
+
+        return 0.0
     }
 }

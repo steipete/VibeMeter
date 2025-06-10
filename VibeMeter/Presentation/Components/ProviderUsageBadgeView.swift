@@ -88,14 +88,44 @@ struct ProviderUsageBadgeView: View {
     }
 
     private func progressColor(for progress: Double) -> Color {
-        switch progress {
-        case 0 ..< 0.5:
-            .accentColor
+        let clampedProgress = max(0.0, min(1.0, progress))
+
+        switch clampedProgress {
+        case 0.0 ..< 0.25:
+            // Low usage: Green with some blue tint
+            return Color.green.blend(with: .cyan, ratio: 0.3)
+        case 0.25 ..< 0.5:
+            // Low-medium: Cyan to blue
+            let ratio = (clampedProgress - 0.25) / 0.25
+            return Color.cyan.blend(with: .blue, ratio: ratio)
         case 0.5 ..< 0.8:
-            .orange
+            // Medium-high: Blue to orange
+            let ratio = (clampedProgress - 0.5) / 0.3
+            return Color.blue.blend(with: .orange, ratio: ratio)
         default:
-            .red
+            // High/over limit: Orange to red
+            let ratio = min(1.0, (clampedProgress - 0.8) / 0.2)
+            return Color.orange.blend(with: .red, ratio: ratio)
         }
+    }
+}
+
+/// Color extension providing color blending functionality.
+private extension Color {
+    func blend(with other: Color, ratio: Double) -> Color {
+        let nsColor1 = NSColor(self).usingColorSpace(.deviceRGB)!
+        let r1 = nsColor1.redComponent
+        let g1 = nsColor1.greenComponent
+        let b1 = nsColor1.blueComponent
+
+        let nsColor2 = NSColor(other).usingColorSpace(.deviceRGB)!
+        let r2 = nsColor2.redComponent
+        let g2 = nsColor2.greenComponent
+        let b2 = nsColor2.blueComponent
+
+        return Color(red: r1 + (r2 - r1) * ratio,
+                     green: g1 + (g2 - g1) * ratio,
+                     blue: b1 + (b2 - b1) * ratio)
     }
 }
 

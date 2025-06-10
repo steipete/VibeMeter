@@ -195,24 +195,38 @@ struct GaugeIcon: View {
         }
     }
 
-    /// Template image compatible gauge colors
-    /// Uses black with varying opacity that macOS will automatically invert based on menu bar appearance
+    /// Progressive gauge colors with greenish tint for low usage
+    /// Transitions from green (low) -> blue (medium) -> orange (high) -> red (over limit)
     private func color(for v: Double) -> Color {
-        // For template images, use black with varying intensity
-        // macOS will automatically invert this to appropriate color based on menu bar background
-        let intensity = 0.6 + (v * 0.4) // Range from 0.6 to 1.0 opacity
-        return Color.black.opacity(intensity)
+        let clampedValue = max(0.0, min(1.0, v))
+
+        switch clampedValue {
+        case 0.0 ..< 0.25:
+            // Low usage: Green with some blue tint
+            let ratio = clampedValue / 0.25
+            return Color.green.blend(with: .cyan, ratio: 0.3).opacity(0.7 + ratio * 0.3)
+        case 0.25 ..< 0.5:
+            // Low-medium: Cyan to blue
+            let ratio = (clampedValue - 0.25) / 0.25
+            return Color.cyan.blend(with: .blue, ratio: ratio).opacity(0.8)
+        case 0.5 ..< 0.8:
+            // Medium-high: Blue to orange
+            let ratio = (clampedValue - 0.5) / 0.3
+            return Color.blue.blend(with: .orange, ratio: ratio).opacity(0.9)
+        default:
+            // High/over limit: Orange to red
+            let ratio = min(1.0, (clampedValue - 0.8) / 0.2)
+            return Color.orange.blend(with: .red, ratio: ratio).opacity(1.0)
+        }
     }
 
-    /// Loading state for template images
-    /// Uses black with pulsing opacity that macOS will automatically invert
-    private func loadingColor(for v: Double) -> Color {
-        // For template images, use black with pulsing opacity for loading animation
-        // macOS will automatically invert this to appropriate color
-        let baseOpacity = 0.7
-        let pulseAmount = 0.3
-        let opacity = baseOpacity + (pulseAmount * sin(v * .pi))
-        return Color.black.opacity(opacity)
+    /// Loading state with subtle color animation
+    /// Uses a gentle color pulse between blue and cyan
+    private func loadingColor(for _: Double) -> Color {
+        let baseColor = Color.blue
+        let pulseColor = Color.cyan
+        let pulseAmount = 0.5 + 0.5 * sin(Date().timeIntervalSinceReferenceDate * 2)
+        return baseColor.blend(with: pulseColor, ratio: pulseAmount).opacity(0.8)
     }
 }
 

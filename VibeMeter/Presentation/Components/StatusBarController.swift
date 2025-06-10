@@ -145,7 +145,15 @@ final class StatusBarController: NSObject {
             let totalSpendingUSD = spendingData.totalSpendingConverted(
                 to: "USD",
                 rates: currencyData.effectiveRates)
-            let gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+
+            // Calculate gauge value based on whether money has been spent
+            let gaugeValue: Double = if totalSpendingUSD > 0 {
+                // Money has been spent - show spending as percentage of limit
+                min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+            } else {
+                // No money spent - show requests used as percentage of available limit
+                calculateRequestUsagePercentage()
+            }
 
             // Only set new data state if the value has changed significantly
             if case .loading = stateManager.currentState {
@@ -215,6 +223,24 @@ final class StatusBarController: NSObject {
     func showCustomWindow() {
         guard let button = statusItem?.button else { return }
         menuManager.showCustomWindow(relativeTo: button)
+    }
+
+    /// Calculates the request usage percentage across all providers
+    private func calculateRequestUsagePercentage() -> Double {
+        let providers = spendingData.providersWithData
+
+        // Use same logic as ProviderUsageBadgeView for consistency
+        for provider in providers {
+            if let providerData = spendingData.getSpendingData(for: provider),
+               let usageData = providerData.usageData,
+               let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                // Calculate percentage using same formula as progress bar
+                let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                return progress
+            }
+        }
+
+        return 0.0
     }
 
     deinit {

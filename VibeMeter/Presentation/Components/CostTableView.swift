@@ -162,7 +162,18 @@ struct CostTableView: View {
             to: currencyData.selectedCode,
             rates: currencyData.effectiveRates)
 
-        return "\(currencyData.selectedSymbol)\(totalSpending.formatted(.number.precision(.fractionLength(2))))"
+        // Format without unnecessary decimals
+        if totalSpending == 0 {
+            return "\(currencyData.selectedSymbol)0"
+        } else {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.minimumFractionDigits = 0
+            formatter.maximumFractionDigits = 2
+            formatter.usesGroupingSeparator = false
+            let formattedAmount = formatter.string(from: NSNumber(value: totalSpending)) ?? "0"
+            return "\(currencyData.selectedSymbol)\(formattedAmount)"
+        }
     }
 
     private var convertedWarningLimit: Double {

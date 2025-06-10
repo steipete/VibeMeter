@@ -40,8 +40,19 @@ struct ProviderSpendingAmountView: View {
                 to: currencyData.selectedCode,
                 rates: currencyData.effectiveRates) ?? spendingUSD
 
-        let formattedAmount =
-            "\(currencyData.selectedSymbol)\(convertedSpending.formatted(.number.precision(.fractionLength(2))))"
+        // Format without unnecessary decimals
+        let formattedAmount: String
+        if convertedSpending == 0 {
+            formattedAmount = "\(currencyData.selectedSymbol)0"
+        } else {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.minimumFractionDigits = 0
+            formatter.maximumFractionDigits = 2
+            formatter.usesGroupingSeparator = false
+            let amount = formatter.string(from: NSNumber(value: convertedSpending)) ?? "0"
+            formattedAmount = "\(currencyData.selectedSymbol)\(amount)"
+        }
 
         return Text(formattedAmount)
             .font(.body.weight(.semibold).monospaced())
