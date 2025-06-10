@@ -27,35 +27,38 @@ struct CustomCharacterSet {
 /// Fast custom scanner for parsing structured text
 class FastScanner {
     let string: String
+    let characters: [Character]
     var location: Int = 0
     
     init(string: String) {
         self.string = string
+        self.characters = Array(string)
     }
     
     var isAtEnd: Bool {
-        return self.location >= self.string.count
+        return self.location >= self.characters.count
     }
     
     // MARK: - String Scanning
     
     @discardableResult
     func scan(string: String) -> String? {
+        let targetChars = Array(string)
+        
         // Check if we have enough characters left to scan
-        guard self.location + string.count <= self.string.count else {
+        guard self.location + targetChars.count <= self.characters.count else {
             return nil
         }
         
         // Check if the string matches at current location
-        let startIndex = self.string.index(self.string.startIndex, offsetBy: self.location)
-        let endIndex = self.string.index(startIndex, offsetBy: string.count)
-        
-        if self.string[startIndex..<endIndex] == string {
-            self.location += string.count
-            return string
-        } else {
-            return nil
+        for (index, char) in targetChars.enumerated() {
+            if self.characters[self.location + index] != char {
+                return nil
+            }
         }
+        
+        self.location += targetChars.count
+        return string
     }
     
     // MARK: - Integer Scanning
@@ -72,9 +75,8 @@ class FastScanner {
         
         // Parse digits
         var digitString = ""
-        while self.location < self.string.count {
-            let index = self.string.index(self.string.startIndex, offsetBy: self.location)
-            let char = self.string[index]
+        while self.location < self.characters.count {
+            let char = self.characters[self.location]
             if CustomCharacterSet.decimalDigits.contains(char) {
                 digitString.append(char)
                 self.location += 1
@@ -94,9 +96,8 @@ class FastScanner {
     // MARK: - Whitespace Handling
     
     func scanWhitespaces() {
-        while self.location < self.string.count {
-            let index = self.string.index(self.string.startIndex, offsetBy: self.location)
-            let char = self.string[index]
+        while self.location < self.characters.count {
+            let char = self.characters[self.location]
             if CustomCharacterSet.whitespacesAndNewlines.contains(char) {
                 self.location += 1
             } else {
@@ -109,25 +110,36 @@ class FastScanner {
     
     func scanUpTo(string: String) -> String? {
         let startLocation = self.location
+        let targetChars = Array(string)
         
         // Ensure we're not beyond the string bounds
-        guard startLocation < self.string.count else { return nil }
+        guard startLocation < self.characters.count else { return nil }
+        guard !targetChars.isEmpty else { return nil }
         
-        while self.location < self.string.count {
-            // Check if we have enough characters left to match the target string
-            if self.location + string.count <= self.string.count {
-                // Check if we found the target string
-                let currentIndex = self.string.index(self.string.startIndex, offsetBy: self.location)
-                let endCheckIndex = self.string.index(currentIndex, offsetBy: string.count)
-                
-                if self.string[currentIndex..<endCheckIndex] == string {
-                    // Found the target string, return everything up to this point
-                    if self.location > startLocation {
-                        let startIdx = self.string.index(self.string.startIndex, offsetBy: startLocation)
-                        let endIdx = self.string.index(self.string.startIndex, offsetBy: self.location)
-                        return String(self.string[startIdx..<endIdx])
-                    } else {
-                        return nil // Nothing scanned
+        // Use first character for quick rejection
+        let firstChar = targetChars[0]
+        
+        while self.location < self.characters.count {
+            // Quick check: skip if first character doesn't match
+            if self.characters[self.location] == firstChar {
+                // Check if we have enough characters left to match the target string
+                if self.location + targetChars.count <= self.characters.count {
+                    // Now check the full match
+                    var matches = true
+                    for i in 1..<targetChars.count {
+                        if self.characters[self.location + i] != targetChars[i] {
+                            matches = false
+                            break
+                        }
+                    }
+                    
+                    if matches {
+                        // Found the target string, return everything up to this point
+                        if self.location > startLocation {
+                            return String(self.characters[startLocation..<self.location])
+                        } else {
+                            return nil // Nothing scanned
+                        }
                     }
                 }
             }
@@ -136,9 +148,7 @@ class FastScanner {
         
         // Reached end without finding string - return rest of string if any
         if self.location > startLocation {
-            let startIdx = self.string.index(self.string.startIndex, offsetBy: startLocation)
-            let endIdx = self.string.index(self.string.startIndex, offsetBy: self.location)
-            return String(self.string[startIdx..<endIdx])
+            return String(self.characters[startLocation..<self.location])
         }
         
         return nil

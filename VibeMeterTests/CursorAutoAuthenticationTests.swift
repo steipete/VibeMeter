@@ -240,8 +240,8 @@ struct CursorAutoAuthenticationTests {
             timedOut = true
         }
         
-        // Wait for timeout
-        try await Task.sleep(for: .seconds(2)) // Simulated timeout in mock
+        // Wait for timeout (mock simulates 2 second delay)
+        try await Task.sleep(for: .seconds(2.5))
         
         #expect(timedOut)
     }
@@ -280,14 +280,10 @@ struct CursorAutoAuthenticationTests {
     
     // MARK: - Integration Tests
     
-    @Test("Full auto-authentication flow from error detection")
+    @Test("Error handler returns updated errors dictionary")
     @MainActor
-    func fullAutoAuthFlow() async throws {
-        clearTestCredentials()
-        defer { clearTestCredentials() }
-        
+    func errorHandlerReturnsUpdatedErrors() async throws {
         // Setup
-        let orchestrator = MockMultiProviderDataOrchestrator()
         let settingsManager = MockSettingsManager()
         let providerFactory = ProviderFactory(settingsManager: settingsManager)
         let loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
@@ -296,45 +292,54 @@ struct CursorAutoAuthenticationTests {
             settingsManager: settingsManager
         )
         let errorHandler = MultiProviderErrorHandler(
-            sessionStateManager: sessionStateManager
+            sessionStateManager: sessionStateManager,
+            loginManager: loginManager
         )
         
-        // Store credentials
-        let credentialKeychain = Keychain(service: "com.vibemeter.cursor.credentials")
-        try credentialKeychain.set("test@example.com", key: "cursor_email")
-        try credentialKeychain.set("password123", key: "cursor_password")
-        
-        // Simulate session expiry error
-        let sessionExpiredError = ProviderError.tokenExpired
-        
-        var reauthAttempted = false
-        orchestrator.onAttemptReauth = { provider in
-            #expect(provider == .cursor)
-            reauthAttempted = true
-        }
-        
-        // Handle error which should trigger re-authentication
+        // Create test data
+        let userSessionData = MultiProviderUserSessionData()
         let spendingData = MultiProviderSpendingData()
-        let shouldReauth = errorHandler.handleRefreshError(
+        let initialErrors: [ServiceProvider: String] = [:]
+        
+        // Test with unauthorized error
+        let unauthorizedError = ProviderError.unauthorized
+        let updatedErrors = errorHandler.handleRefreshError(
             for: ServiceProvider.cursor,
-            error: sessionExpiredError,
-            userSessionData: orchestrator.userSessionData,
+            error: unauthorizedError,
+            userSessionData: userSessionData,
             spendingData: spendingData,
-            refreshErrors: [:]
+            refreshErrors: initialErrors
         )
         
-        // The error handler should indicate reauth is needed
-        #expect(shouldReauth)
+        // Since unauthorized errors trigger auto-reauth, they don't add to the errors dictionary
+        #expect(updatedErrors.isEmpty)
         
-        // In a real scenario, the orchestrator would call attemptReauthentication
-        // For testing, we'll simulate it
-        if shouldReauth {
-            await orchestrator.attemptReauthentication(for: .cursor)
-        }
+        // Test with rate limit error
+        let rateLimitError = ProviderError.rateLimitExceeded
+        let updatedErrors2 = errorHandler.handleRefreshError(
+            for: ServiceProvider.cursor,
+            error: rateLimitError,
+            userSessionData: userSessionData,
+            spendingData: spendingData,
+            refreshErrors: initialErrors
+        )
         
-        try await Task.sleep(for: .milliseconds(100))
+        // Rate limit errors should be added to the errors dictionary
+        #expect(updatedErrors2[.cursor] == "Rate limit exceeded")
         
-        #expect(reauthAttempted)
+        // Test with generic error
+        let genericError = NSError(domain: "TestDomain", code: 500, userInfo: [NSLocalizedDescriptionKey: "Server error"])
+        let updatedErrors3 = errorHandler.handleRefreshError(
+            for: ServiceProvider.cursor,
+            error: genericError,
+            userSessionData: userSessionData,
+            spendingData: spendingData,
+            refreshErrors: initialErrors
+        )
+        
+        // Generic errors should be added to the errors dictionary
+        #expect(updatedErrors3[.cursor] != nil)
+        #expect(updatedErrors3[.cursor]?.contains("Server error") == true)
     }
 }
 
@@ -424,12 +429,3 @@ final class LoginWebViewManagerMock: NSObject {
     }
 }
 
-@MainActor
-final class MockMultiProviderDataOrchestrator {
-    var onAttemptReauth: ((ServiceProvider) -> Void)?
-    var userSessionData = MultiProviderUserSessionData()
-    
-    func attemptReauthentication(for provider: ServiceProvider) async {
-        onAttemptReauth?(provider)
-    }
-}
