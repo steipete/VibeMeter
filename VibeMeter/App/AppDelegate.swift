@@ -118,6 +118,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         configureActivationPolicy()
         sparkleUpdaterManager = SparkleUpdaterManager()
+        
+        // Initialize ClaudeLogManager early to ensure token is saved before orchestrator checks
+        _ = ClaudeLogManager.shared
+        
         loginManager.refreshLoginStatesFromKeychain()
     }
 

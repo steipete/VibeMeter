@@ -99,7 +99,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         openPanel.canChooseDirectories = true
         openPanel.canCreateDirectories = false
         openPanel.allowsMultipleSelection = false
-        openPanel.directoryURL = fileManager.homeDirectoryForCurrentUser
+        // Use the actual user home directory path
+        let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+        openPanel.directoryURL = actualHomeDir
+        openPanel.showsHiddenFiles = true  // Show hidden files like .claude
 
         let response = await withCheckedContinuation { continuation in
             openPanel.begin { response in
@@ -109,6 +112,21 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         guard response == .OK, let url = openPanel.url else {
             logger.info("User cancelled folder access request")
+            return false
+        }
+
+        // Validate that the user selected their home directory
+        guard url.path == actualHomeDir.path else {
+            logger.warning("User selected wrong directory: \(url.path) instead of home directory: \(actualHomeDir.path)")
+            // Show alert to user
+            await MainActor.run {
+                let alert = NSAlert()
+                alert.messageText = "Wrong Directory Selected"
+                alert.informativeText = "Please select your home directory (\(actualHomeDir.path)) to grant access to Claude logs."
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
             return false
         }
 
@@ -327,8 +345,24 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             }
 
             let data = try Data(contentsOf: url)
-            self.bookmarkData = data
-            logger.info("Loaded existing bookmark for Claude logs")
+            
+            // Validate the bookmark points to the home directory
+            if let validatedURL = validateBookmark(data) {
+                self.bookmarkData = data
+                logger.info("Loaded existing bookmark for Claude logs at: \(validatedURL.path)")
+            } else {
+                logger.warning("Existing bookmark is invalid (wrong directory), removing it")
+                try? fileManager.removeItem(at: url)
+                // Remove the token as well since the bookmark is invalid
+                _ = authTokenManager.deleteToken(for: .claude)
+                // Disable Claude provider
+                if ProviderRegistry.shared.isEnabled(.claude) {
+                    ProviderRegistry.shared.disableProvider(.claude)
+                }
+                
+                // Log the issue prominently
+                logger.error("IMPORTANT: Claude bookmark was pointing to wrong directory and has been invalidated. User needs to grant access again.")
+            }
         } catch {
             logger.error("Failed to load bookmark: \(error.localizedDescription)")
         }
@@ -347,6 +381,16 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 options: .withSecurityScope,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
+
+            // Validate it points to the home directory
+            let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+            guard url.path == actualHomeDir.path else {
+                logger.error("Bookmark points to wrong directory: \(url.path) instead of home: \(actualHomeDir.path)")
+                // Invalidate the bookmark
+                self.bookmarkData = nil
+                revokeAccess()
+                return nil
+            }
 
             if isStale {
                 logger.warning("Bookmark is stale, attempting to refresh")
@@ -367,6 +411,36 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             logger.error("Failed to resolve bookmark: \(error.localizedDescription)")
             self.bookmarkData = nil // Invalidate bookmark if it fails
             lastError = error
+            return nil
+        }
+    }
+
+    private func validateBookmark(_ bookmarkData: Data) -> URL? {
+        do {
+            var isStale = false
+            let url = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale)
+            
+            // Check if this bookmark points to the home directory
+            let actualHomeDir = URL(fileURLWithPath: "/Users/\(NSUserName())")
+            guard url.path == actualHomeDir.path else {
+                logger.warning("Bookmark points to wrong directory: \(url.path) instead of home: \(actualHomeDir.path)")
+                return nil
+            }
+            
+            // Try to access it to ensure it's valid
+            guard url.startAccessingSecurityScopedResource() else {
+                logger.error("Failed to access security-scoped resource for validation")
+                return nil
+            }
+            url.stopAccessingSecurityScopedResource()
+            
+            return url
+        } catch {
+            logger.error("Failed to validate bookmark: \(error.localizedDescription)")
             return nil
         }
     }
