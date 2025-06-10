@@ -81,7 +81,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             
             // Clear any error messages since we have valid access
             Task { @MainActor in
-                if let orchestrator = (NSApp.delegate as? AppDelegate)?.orchestrator {
+                if let orchestrator = (NSApp.delegate as? AppDelegate)?.multiProviderOrchestrator {
                     orchestrator.userSessionData.clearError(for: .claude)
                 }
             }
