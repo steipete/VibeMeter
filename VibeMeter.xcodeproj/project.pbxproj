@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -280,7 +280,7 @@
 		5360E9BBA0EB8F6A39B49E4E /* AnalyticsWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsWebView.swift; sourceTree = "<group>"; };
 		5493C8811511815FE8EAF1AB /* VibeMeter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VibeMeter.entitlements; sourceTree = "<group>"; };
 		550E1B080BD9EFA949EC9DB1 /* VibeMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */ = {isa = PBXFileReference; path = o200k_base.tiktoken; sourceTree = "<group>"; };
+		56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */ = {isa = PBXFileReference; lastKnownFileType = text; path = o200k_base.tiktoken; sourceTree = "<group>"; };
 		5775960465B9D428644B097D /* SpendingLimitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsView.swift; sourceTree = "<group>"; };
 		5AB1DA38348E79E925182B50 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		5C25A0EAC785B6D2D6A3B78C /* MultiProviderDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderDataProcessor.swift; sourceTree = "<group>"; };
@@ -1097,19 +1097,11 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter.tests;
 				PRODUCT_NAME = VibeMeterTests;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-					"$(inherited)",
-					DEBUG,
-				);
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VibeMeter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VibeMeter";
@@ -1158,6 +1150,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				COMPILATION_CACHE_ENABLE_CACHING = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 111;
 				DEAD_CODE_STRIPPING = YES;
@@ -1182,7 +1175,10 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.1.0;
@@ -1219,17 +1215,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-enable-actor-data-race-checks",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-					"-Xfrontend",
-					"-warn-long-function-bodies=500",
-					"-Xfrontend",
-					"-warn-long-expression-type-checking=500",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
@@ -1251,12 +1237,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter.tests;
 				PRODUCT_NAME = VibeMeterTests;
 				SDKROOT = macosx;
@@ -1283,25 +1264,12 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-enable-actor-data-race-checks",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-					"-Xfrontend",
-					"-warn-long-function-bodies=500",
-					"-Xfrontend",
-					"-warn-long-expression-type-checking=500",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-					"$(inherited)",
-					DEBUG,
-				);
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -1348,6 +1316,7 @@
 				CODE_SIGN_IDENTITY = "Sign to Run Locally";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				COMPILATION_CACHE_ENABLE_CACHING = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 111;
 				DEAD_CODE_STRIPPING = YES;
@@ -1378,7 +1347,10 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.1.0;

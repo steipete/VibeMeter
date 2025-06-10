@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import KeychainAccess
 import os.log
+import SwiftUI
 import UserNotifications
 import WebKit
 
@@ -93,30 +94,112 @@ final class LoginWebViewManager: NSObject {
             return
         }
 
-        // Create provider-specific WebView with JavaScript injection
+        // For Cursor, show consent view first
+        if provider == .cursor {
+            showLoginConsentWindow(for: provider)
+        } else {
+            // For other providers, show login directly
+            showLoginWebView(for: provider)
+        }
+    }
+    
+    /// Shows consent window before login for providers that capture credentials
+    private func showLoginConsentWindow(for provider: ServiceProvider) {
+        logger.info("Showing login consent window for \(provider.displayName)")
+        
+        // Create and preload the WebView in the background
         let webViewConfiguration = WKWebViewConfiguration()
         
         // Add user script to capture login credentials
-        if provider == .cursor {
-            let credentialCaptureScript = WKUserScript(
-                source: getCursorCredentialCaptureScript(),
-                injectionTime: .atDocumentEnd,
-                forMainFrameOnly: true
-            )
-            webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
-            
-            // Add message handler for credential capture
-            webViewConfiguration.userContentController.add(self, name: "credentialCapture")
-        }
+        let credentialCaptureScript = WKUserScript(
+            source: getCursorCredentialCaptureScript(),
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
+        
+        // Add message handler for credential capture
+        webViewConfiguration.userContentController.add(self, name: "credentialCapture")
         
         let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 480, height: 640), configuration: webViewConfiguration)
         webView.navigationDelegate = self
         webViews[provider] = webView
+        
+        // Preload the login page in the background
+        let authURL = provider.authenticationURL
+        let request = URLRequest(url: authURL)
+        webView.load(request)
+        logger.info("Preloading login page for \(provider.displayName)")
+        
+        // Create consent view
+        let consentView = LoginConsentView(
+            provider: provider,
+            onAccept: { [weak self] in
+                self?.showLoginWebView(for: provider, existingWebView: webView)
+            },
+            onCancel: { [weak self] in
+                self?.closeLoginWindow(for: provider)
+            }
+        )
+        
+        let hostingController = NSHostingController(rootView: consentView)
+        
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Login to \(provider.displayName)"
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.delegate = self
+        loginWindows[provider] = window
+        
+        // Store provider in window's identifier for delegation
+        window.identifier = NSUserInterfaceItemIdentifier(provider.rawValue)
+        
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    /// Shows the actual login WebView
+    private func showLoginWebView(for provider: ServiceProvider, existingWebView: WKWebView? = nil) {
+        logger.info("Showing login WebView for \(provider.displayName)")
+        
+        let webView: WKWebView
+        
+        if let existingWebView = existingWebView {
+            // Use the preloaded WebView
+            webView = existingWebView
+        } else {
+            // Create new WebView
+            let webViewConfiguration = WKWebViewConfiguration()
+            
+            // Add user script to capture login credentials for Cursor
+            if provider == .cursor {
+                let credentialCaptureScript = WKUserScript(
+                    source: getCursorCredentialCaptureScript(),
+                    injectionTime: .atDocumentEnd,
+                    forMainFrameOnly: true
+                )
+                webViewConfiguration.userContentController.addUserScript(credentialCaptureScript)
+                
+                // Add message handler for credential capture
+                webViewConfiguration.userContentController.add(self, name: "credentialCapture")
+            }
+            
+            webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 480, height: 640), configuration: webViewConfiguration)
+            webView.navigationDelegate = self
+            webViews[provider] = webView
+            
+            let authURL = provider.authenticationURL
+            let request = URLRequest(url: authURL)
+            webView.load(request)
+        }
 
         let contentViewController = NSViewController()
         contentViewController.view = webView
 
-        let window = NSWindow(contentViewController: contentViewController)
+        // Get existing window or create new one
+        let window = loginWindows[provider] ?? NSWindow(contentViewController: contentViewController)
+        window.contentViewController = contentViewController
         window.title = "Login to \(provider.displayName)"
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
@@ -127,13 +210,10 @@ final class LoginWebViewManager: NSObject {
         // Store provider in window's identifier for delegation
         window.identifier = NSUserInterfaceItemIdentifier(provider.rawValue)
 
-        let authURL = provider.authenticationURL
-        let request = URLRequest(url: authURL)
-        webView.load(request)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
-        logger.info("Login window presented for \(provider.displayName) with URL: \(authURL)")
+        logger.info("Login window presented for \(provider.displayName)")
     }
 
     /// Closes login window for a specific provider.
@@ -309,7 +389,7 @@ extension LoginWebViewManager: WKScriptMessageHandler {
             // Show notification using system notifications
             let content = UNMutableNotificationContent()
             content.title = "Cursor Login Requires Attention"
-            content.body = "Please complete the CAPTCHA to continue."
+            content.body = "A CAPTCHA verification is needed. Click to complete the login process."
             content.sound = .default
             
             let request = UNNotificationRequest(
@@ -321,7 +401,8 @@ extension LoginWebViewManager: WKScriptMessageHandler {
             try? await UNUserNotificationCenter.current().add(request)
             
             // Show the login window for manual CAPTCHA completion
-            showLoginWindow(for: .cursor)
+            // Skip consent since they already consented previously
+            showLoginWebView(for: .cursor)
         }
     }
 }
