@@ -8,6 +8,9 @@
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
+	<!-- Allow storing and resolving security-scoped bookmarks for Claude log access -->
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
 	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
 	<true/>
 	<key>com.apple.security.cs.disable-library-validation</key>
