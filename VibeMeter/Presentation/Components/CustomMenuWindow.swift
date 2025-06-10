@@ -125,10 +125,6 @@ final class CustomMenuWindow: NSPanel {
         // First, ensure the app is active (this can prevent many display issues)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Use orderFrontRegardless for more reliable window display
-        // This works even if the app isn't active and is less prone to hanging
-        orderFrontRegardless()
-
         // Small delay to ensure window is fully displayed before animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
             guard let self else { return }
