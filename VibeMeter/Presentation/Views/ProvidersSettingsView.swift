@@ -51,7 +51,7 @@ struct ProvidersSettingsView: View {
                 } footer: {
                     HStack {
                         Spacer()
-                        Text("Support for more providers is coming soon. Help appreciated.")
+                        Text("Currently supporting Cursor AI and Claude subscriptions. Support for more providers is coming soon.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)

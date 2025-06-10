@@ -89,12 +89,14 @@ struct ProviderRowView: View {
                     Text(errorMessage)
                         .font(.caption)
                         .foregroundStyle(.red)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
 
             Spacer()
 
-            // Status indicator
+            // Status indicatortest
             Circle()
                 .fill(statusColor)
                 .frame(width: 8, height: 8)
@@ -103,15 +105,16 @@ struct ProviderRowView: View {
             HStack(spacing: 8) {
                 if provider == .claude {
                     // Claude uses folder access instead of login
-                    if !claudeLogManager.hasAccess && isEnabled {
+                    if !claudeLogManager.hasAccess {
                         Button("Grant Access") {
                             Task {
+                                // Enable Claude first if disabled
+                                if !isEnabled {
+                                    ProviderRegistry.shared.enableProvider(provider)
+                                }
+                                
                                 let granted = await claudeLogManager.requestLogAccess()
                                 if granted {
-                                    // Enable Claude provider if not already enabled
-                                    if !ProviderRegistry.shared.isEnabled(provider) {
-                                        ProviderRegistry.shared.enableProvider(provider)
-                                    }
                                     // Trigger login success flow for Claude
                                     loginManager.onLoginSuccess?(provider)
                                 }
@@ -121,8 +124,12 @@ struct ProviderRowView: View {
                     }
                 } else {
                     // Other providers use login
-                    if isEnabled, !isLoggedIn {
+                    if !isLoggedIn {
                         Button("Login") {
+                            // Enable provider first if disabled
+                            if !isEnabled {
+                                ProviderRegistry.shared.enableProvider(provider)
+                            }
                             loginManager.showLoginWindow(for: provider)
                         }
                         .buttonStyle(.borderedProminent)
