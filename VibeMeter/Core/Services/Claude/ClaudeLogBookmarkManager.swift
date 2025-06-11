@@ -9,15 +9,15 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
     private let fileManager = FileManager.default
     private let logDirectoryName = ".claude/projects"
     private var bookmarkData: Data?
-    
+
     var hasAccess: Bool {
         bookmarkData != nil
     }
-    
+
     init() {
         loadBookmark()
     }
-    
+
     /// Request access to the Claude logs directory
     func requestLogAccess() async -> Bool {
         let openPanel = NSOpenPanel()
@@ -29,33 +29,33 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
         openPanel.canChooseDirectories = true
         openPanel.canCreateDirectories = false
         openPanel.allowsMultipleSelection = false
-        
+
         // Get the actual user home directory (not the sandboxed one)
         let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
         openPanel.directoryURL = actualHomeDir
         openPanel.showsHiddenFiles = true // Show hidden files like .claude
-        
+
         let response = await withCheckedContinuation { continuation in
             openPanel.begin { response in
                 continuation.resume(returning: response)
             }
         }
-        
+
         guard response == .OK, let url = openPanel.url else {
             logger.info("User cancelled folder access request")
             return false
         }
-        
+
         // Validate that the selected directory can access Claude logs
         logger.info("Validating selected directory: \(url.path)")
         logger.info("Expected home directory: \(actualHomeDir.path)")
         logger.info("NSUserName: \(NSUserName())")
-        
+
         // Check if Claude logs directory exists at the expected location
         let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
         let canAccessClaudeLogs = fileManager.fileExists(atPath: claudeLogsPath.path) ||
             url.path == actualHomeDir.path // Accept home directory even if .claude doesn't exist yet
-        
+
         guard canAccessClaudeLogs else {
             logger.warning("Selected directory doesn't contain Claude logs: \(url.path)")
             logger.warning("Expected to find logs at: \(claudeLogsPath.path)")
@@ -71,7 +71,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             }
             return false
         }
-        
+
         do {
             let bookmark = try url.bookmarkData(
                 options: .withSecurityScope,
@@ -85,7 +85,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             return false
         }
     }
-    
+
     /// Revoke access to Claude logs
     func revokeAccess() {
         bookmarkData = nil
@@ -96,14 +96,14 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             logger.error("Failed to remove bookmark file: \(error.localizedDescription)")
         }
     }
-    
+
     /// Resolve the bookmark and return the access URL
     func resolveBookmark() -> URL? {
         guard let bookmarkData else {
             logger.debug("No bookmark data available")
             return nil
         }
-        
+
         do {
             var isStale = false
             let url = try URL(
@@ -111,20 +111,20 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
                 options: .withSecurityScope,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
-            
+
             logger.debug("Resolved bookmark URL: \(url.path)")
-            
+
             // Check if Claude logs exist at this location
             let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
             logger.debug("Checking for Claude logs at: \(claudeLogsPath.path)")
-            
+
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
             let isValidLocation = url.path == actualHomeDir.path ||
                 fileManager.fileExists(atPath: claudeLogsPath.path)
-            
+
             guard isValidLocation else {
                 logger.error("Bookmark points to invalid directory: \(url.path)")
                 logger.error("Expected home directory: \(NSHomeDirectory())")
@@ -134,7 +134,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
                 revokeAccess()
                 return nil
             }
-            
+
             if isStale {
                 logger.warning("Bookmark is stale, attempting to refresh")
                 let newBookmark = try url.bookmarkData(
@@ -143,12 +143,12 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
                     relativeTo: nil)
                 saveBookmark(data: newBookmark)
             }
-            
+
             guard url.startAccessingSecurityScopedResource() else {
                 logger.error("Failed to start accessing security-scoped resource")
                 return nil
             }
-            
+
             return url
         } catch {
             logger.error("Failed to resolve bookmark: \(error.localizedDescription)")
@@ -156,25 +156,25 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             return nil
         }
     }
-    
+
     /// Get the Claude logs directory URL
     func getClaudeLogsURL() -> URL? {
         guard let accessURL = resolveBookmark() else { return nil }
         return accessURL.appendingPathComponent(logDirectoryName)
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func saveBookmark(data: Data) {
         do {
             let url = bookmarkFileURL()
             let directory = url.deletingLastPathComponent()
-            
+
             // Create directory if needed
             if !fileManager.fileExists(atPath: directory.path) {
                 try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
             }
-            
+
             try data.write(to: url)
             self.bookmarkData = data
             logger.debug("Saved bookmark to: \(url.path)")
@@ -182,7 +182,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             logger.error("Failed to save bookmark data: \(error.localizedDescription)")
         }
     }
-    
+
     private func loadBookmark() {
         do {
             let url = bookmarkFileURL()
@@ -190,13 +190,13 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
                 logger.debug("No existing bookmark found")
                 return
             }
-            
+
             logger.info("Loading bookmark from: \(url.path)")
             logger.info("Current NSHomeDirectory: \(NSHomeDirectory())")
             logger.info("Current NSUserName: \(NSUserName())")
-            
+
             let data = try Data(contentsOf: url)
-            
+
             // Validate the bookmark points to the home directory
             if let validatedURL = validateBookmark(data) {
                 self.bookmarkData = data
@@ -209,7 +209,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             logger.error("Failed to load bookmark: \(error.localizedDescription)")
         }
     }
-    
+
     private func validateBookmark(_ bookmarkData: Data) -> URL? {
         do {
             var isStale = false
@@ -218,39 +218,39 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
                 options: .withSecurityScope,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale)
-            
+
             logger.debug("Validating bookmark URL: \(url.path)")
-            
+
             // Check if Claude logs exist at this location
             let claudeLogsPath = url.appendingPathComponent(logDirectoryName)
-            
+
             // Accept the bookmark if it's either:
             // 1. The user's home directory (/Users/username)
             // 2. A directory that contains .claude/projects
             let actualHomeDir = URL(fileURLWithPath: NSHomeDirectory())
             let isValidLocation = url.path == actualHomeDir.path ||
                 fileManager.fileExists(atPath: claudeLogsPath.path)
-            
+
             guard isValidLocation else {
                 logger.warning("Bookmark points to invalid directory: \(url.path)")
                 logger.warning("Expected home directory: \(NSHomeDirectory()) or directory containing .claude/projects")
                 return nil
             }
-            
+
             // Try to access it to ensure it's valid
             guard url.startAccessingSecurityScopedResource() else {
                 logger.error("Failed to access security-scoped resource for validation")
                 return nil
             }
             url.stopAccessingSecurityScopedResource()
-            
+
             return url
         } catch {
             logger.error("Failed to validate bookmark: \(error.localizedDescription)")
             return nil
         }
     }
-    
+
     private func bookmarkFileURL() -> URL {
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
             // Use temporary directory for tests
@@ -260,7 +260,7 @@ final class ClaudeLogBookmarkManager: @unchecked Sendable {
             try? fileManager.createDirectory(at: testDir, withIntermediateDirectories: true)
             return testDir.appendingPathComponent("claude_folder_bookmark.data")
         }
-        
+
         let applicationSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return applicationSupport
             .appendingPathComponent("VibeMeter")

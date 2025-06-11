@@ -293,7 +293,9 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         // Check cache version and invalidate if outdated
         let storedVersion = userDefaults.integer(forKey: cacheVersionKey)
         if storedVersion < currentCacheVersion {
-            logger.info("Cache version outdated (stored: \(storedVersion), current: \(currentCacheVersion)). Clearing cache.")
+            logger
+                .info(
+                    "Cache version outdated (stored: \(storedVersion), current: \(self.currentCacheVersion)). Clearing cache.")
             invalidateCacheInternal()
             userDefaults.set(currentCacheVersion, forKey: cacheVersionKey)
         }
@@ -331,7 +333,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         if success {
             hasAccess = true
-            
+
             // Save a dummy token to indicate Claude is "logged in"
             _ = authTokenManager.saveToken("claude_local_access", for: .claude)
 
