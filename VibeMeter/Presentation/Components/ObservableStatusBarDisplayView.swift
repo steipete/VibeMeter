@@ -14,7 +14,7 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
     private let currencyData: CurrencyData
     private let settingsManager: any SettingsManagerProtocol
     private let orchestrator: MultiProviderDataOrchestrator
-    
+
     init(statusBarButton: NSStatusBarButton,
          displayManager: StatusBarDisplayManager,
          stateManager: MenuBarStateManager,
@@ -31,82 +31,82 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
         self.currencyData = currencyData
         self.settingsManager = settingsManager
         self.orchestrator = orchestrator
-        
+
         super.init(frame: .zero)
-        
+
         // Enable layer backing for better performance
         wantsLayer = true
-        
+
         // Hide the view - it's only used for tracking
         isHidden = true
     }
-    
+
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func trackObservableProperties() {
         // Track all Observable properties that affect status bar display
-        
+
         // User session state
         _ = userSession.isLoggedInToAnyProvider
-        
+
         // Spending data
         _ = spendingData.providersWithData
         _ = spendingData.overallConnectionStatus
         _ = spendingData.hasProviderIssues
-        
+
         // Currency data
         _ = currencyData.selectedCode
         _ = currencyData.selectedSymbol
         _ = currencyData.effectiveRates
-        
+
         // Settings
         _ = settingsManager.menuBarDisplayMode
         _ = settingsManager.upperLimitUSD
         _ = settingsManager.displaySettingsManager.gaugeRepresentation
-        
+
         // Orchestrator state
         _ = orchestrator.isRefreshing
-        
+
         // State manager animated values
         _ = stateManager.animatedGaugeValue
         _ = stateManager.animatedCostValue
         _ = stateManager.currentState
     }
-    
+
     override func viewWillDraw() {
         super.viewWillDraw()
-        
+
         // Update the status bar display whenever we're about to draw
         // This will happen automatically when tracked properties change
         updateStatusBarDisplay()
     }
-    
+
     override func updateConstraints() {
         super.updateConstraints()
-        
+
         // Also update on constraint changes
         updateStatusBarDisplay()
     }
-    
+
     private func updateStatusBarDisplay() {
         guard let button = statusBarButton else { return }
-        
+
         // Delegate to the display manager for the actual update
         displayManager.updateDisplay(for: button)
-        
+
         // Update the state based on current data
         updateStatusBarState()
     }
-    
+
     private func updateStatusBarState() {
         let isLoggedIn = userSession.isLoggedInToAnyProvider
         let isFetchingData = orchestrator.isRefreshing.values.contains(true)
         let providers = spendingData.providersWithData
         let hasData = !providers.isEmpty
-        
+
         // Update state manager
         if isFetchingData {
             stateManager.setState(.loading)
@@ -123,14 +123,14 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
                 let totalSpendingUSD = spendingData.totalSpendingConverted(
                     to: "USD",
                     rates: currencyData.effectiveRates)
-                
+
                 if totalSpendingUSD > 0 {
                     gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
                 } else {
                     gaugeValue = calculateRequestUsagePercentage()
                 }
             }
-            
+
             // Only update if value changed significantly
             if case let .data(currentValue) = stateManager.currentState {
                 if abs(currentValue - gaugeValue) > 0.01 {
@@ -141,10 +141,10 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
             }
         }
     }
-    
+
     private func calculateRequestUsagePercentage() -> Double {
         let providers = spendingData.providersWithData
-        
+
         for provider in providers {
             if let providerData = spendingData.getSpendingData(for: provider),
                let usageData = providerData.usageData,
@@ -153,16 +153,16 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
                 return progress
             }
         }
-        
+
         return 0.0
     }
-    
+
     private func calculateClaudeQuotaPercentage() -> Double {
         guard let claudeData = spendingData.getSpendingData(for: .claude),
               let usageData = claudeData.usageData else {
             return 0.0
         }
-        
+
         let percentageUsed = Double(usageData.currentRequests) / 100.0
         return min(max(percentageUsed, 0.0), 1.0)
     }

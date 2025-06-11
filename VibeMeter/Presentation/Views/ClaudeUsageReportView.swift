@@ -4,7 +4,7 @@ import SwiftUI
 struct ClaudeUsageReportView: View {
     @StateObject
     private var dataLoader = ClaudeUsageDataLoader()
-    
+
     @State
     private var sortOrder = [KeyPathComparator(\DailyUsageSummary.date, order: .reverse)]
 
@@ -44,7 +44,7 @@ struct ClaudeUsageReportView: View {
 
             // Content
             Group {
-                if dataLoader.dailyUsage.isEmpty && dataLoader.isLoading {
+                if dataLoader.dailyUsage.isEmpty, dataLoader.isLoading {
                     VStack(spacing: 16) {
                         Spacer()
                         ProgressView()
@@ -84,7 +84,7 @@ struct ClaudeUsageReportView: View {
                         .buttonStyle(.borderedProminent)
                         Spacer()
                     }
-                } else if sortedDays.isEmpty && !dataLoader.isLoading {
+                } else if sortedDays.isEmpty, !dataLoader.isLoading {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "doc.text.magnifyingglass")
@@ -104,7 +104,7 @@ struct ClaudeUsageReportView: View {
                     // Show data with loading indicator
                     VStack(spacing: 0) {
                         // Show loading indicator at the top if still processing
-                        if dataLoader.isLoading && dataLoader.totalFiles > 0 {
+                        if dataLoader.isLoading, dataLoader.totalFiles > 0 {
                             VStack(spacing: 8) {
                                 HStack {
                                     ProgressView()
@@ -118,7 +118,9 @@ struct ClaudeUsageReportView: View {
                                     Spacer()
                                 }
 
-                                ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
+                                ProgressView(
+                                    value: Double(dataLoader.filesProcessed),
+                                    total: Double(dataLoader.totalFiles))
                                     .progressViewStyle(.linear)
                             }
                             .padding(.horizontal)
@@ -128,44 +130,44 @@ struct ClaudeUsageReportView: View {
                             Divider()
                         }
 
-                    // Table
-                    Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
-                        TableColumn("Date", value: \.date) { summary in
-                            Text(summary.date, format: .dateTime.year().month().day())
-                                .monospacedDigit()
-                        }
-                        .width(min: 100, ideal: 120)
+                        // Table
+                        Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
+                            TableColumn("Date", value: \.date) { summary in
+                                Text(summary.date, format: .dateTime.year().month().day())
+                                    .monospacedDigit()
+                            }
+                            .width(min: 100, ideal: 120)
 
-                        TableColumn("Input", value: \.inputTokens) { summary in
-                            Text(summary.formattedInput)
-                                .monospacedDigit()
-                        }
-                        .width(min: 80, ideal: 100)
+                            TableColumn("Input", value: \.inputTokens) { summary in
+                                Text(summary.formattedInput)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 80, ideal: 100)
 
-                        TableColumn("Output", value: \.outputTokens) { summary in
-                            Text(summary.formattedOutput)
-                                .monospacedDigit()
-                        }
-                        .width(min: 80, ideal: 100)
+                            TableColumn("Output", value: \.outputTokens) { summary in
+                                Text(summary.formattedOutput)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 80, ideal: 100)
 
-                        TableColumn("Total Tokens", value: \.totalTokens) { summary in
-                            Text(summary.formattedTotal)
-                                .monospacedDigit()
-                        }
-                        .width(min: 100, ideal: 120)
+                            TableColumn("Total Tokens", value: \.totalTokens) { summary in
+                                Text(summary.formattedTotal)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 100, ideal: 120)
 
-                        TableColumn("Cost (USD)", value: \.cost) { summary in
-                            Text(summary.cost, format: .currency(code: "USD"))
-                                .monospacedDigit()
-                                .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                            TableColumn("Cost (USD)", value: \.cost) { summary in
+                                Text(summary.cost, format: .currency(code: "USD"))
+                                    .monospacedDigit()
+                                    .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                            }
+                            .width(min: 80, ideal: 100)
+                        } rows: {
+                            ForEach(sortedSummaries) { summary in
+                                TableRow(summary)
+                            }
                         }
-                        .width(min: 80, ideal: 100)
-                    } rows: {
-                        ForEach(sortedSummaries) { summary in
-                            TableRow(summary)
-                        }
-                    }
-                    .tableStyle(.inset(alternatesRowBackgrounds: true))
+                        .tableStyle(.inset(alternatesRowBackgrounds: true))
                     }
 
                     // Summary footer with material background
@@ -240,7 +242,7 @@ struct ClaudeUsageReportView: View {
                                      outputPrice: outputTokenPrice)
         }
     }
-    
+
     private var sortedSummaries: [DailyUsageSummary] {
         summaries.sorted(using: sortOrder)
     }
@@ -370,7 +372,7 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
 
         let percentage = totalFiles > 0 ? Int((Double(filesProcessed) / Double(totalFiles)) * 100) : 0
         self.loadingMessage = "Processing files... \(percentage)% (\(filesProcessed)/\(totalFiles))"
-        
+
         // Keep isLoading true until all files are processed
         // This allows the progress bar to remain visible
     }

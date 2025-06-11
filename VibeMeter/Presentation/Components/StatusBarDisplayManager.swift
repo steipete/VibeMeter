@@ -62,7 +62,7 @@ final class StatusBarDisplayManager {
     func updateDisplay(for button: NSStatusBarButton) {
         // With automatic observation tracking, we always update when called
         // The tracking view ensures this is only called when needed
-        
+
         updateIcon(button: button)
         updateTitle(button: button)
         updateTooltipAndAccessibility(button: button)
@@ -74,7 +74,7 @@ final class StatusBarDisplayManager {
         let hasData = !spendingData.providersWithData.isEmpty
         let displayMode = settingsManager.menuBarDisplayMode
         let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        
+
         // Always show icon when there's no data, otherwise respect user setting
         let shouldShowIcon = !hasData || displayMode.showsIcon
 
@@ -132,12 +132,12 @@ final class StatusBarDisplayManager {
     private func updateTitle(button: NSStatusBarButton) {
         let hasData = !spendingData.providersWithData.isEmpty
         let displayMode = settingsManager.menuBarDisplayMode
-        
+
         if displayMode.showsMoney, stateManager.currentState.showsGauge, hasData {
             let totalSpending = spendingData.totalSpendingConverted(
                 to: currencyData.selectedCode,
                 rates: currencyData.effectiveRates)
-            
+
             // Check if currency changed
             let currencyChanged = lastCurrencyCode != nil && lastCurrencyCode != currencyData.selectedCode
             lastCurrencyCode = currencyData.selectedCode

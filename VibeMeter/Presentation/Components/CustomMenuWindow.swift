@@ -119,7 +119,7 @@ final class CustomMenuWindow: NSPanel {
 
         // Robust window display approach to prevent hanging
         displayWindowSafely()
-        
+
         // Set up observable tracking if we have Observable data to track
         setupObservableTracking(relativeTo: statusItemButton)
     }
@@ -327,27 +327,27 @@ final class CustomMenuWindow: NSPanel {
     override var canBecomeMain: Bool {
         false
     }
-    
+
     // MARK: - Observable Tracking
-    
+
     private func setupObservableTracking(relativeTo statusItemButton: NSStatusBarButton) {
         // Only set up tracking if we can access the app delegate's Observable data
         guard let appDelegate = NSApp.delegate as? AppDelegate else { return }
-        
+
         observableTrackingView = ObservableMenuWindowView(
             menuWindow: self,
             statusBarButton: statusItemButton,
             userSession: appDelegate.userSession,
             spendingData: appDelegate.spendingData)
-        
+
         if let trackingView = observableTrackingView,
-           let contentView = contentView {
+           let contentView {
             trackingView.frame = contentView.bounds
             trackingView.autoresizingMask = [.width, .height]
             contentView.addSubview(trackingView)
         }
     }
-    
+
     private func teardownObservableTracking() {
         observableTrackingView?.removeFromSuperview()
         observableTrackingView = nil
