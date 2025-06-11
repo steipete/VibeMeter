@@ -7,11 +7,15 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     public let model: String?
     public let inputTokens: Int
     public let outputTokens: Int
+    public let cacheCreationTokens: Int?
+    public let cacheReadTokens: Int?
+    public let costUSD: Double?
 
     private enum CodingKeys: String, CodingKey {
         case timestamp
         case model
         case message
+        case costUSD
     }
 
     private enum MessageKeys: String, CodingKey {
@@ -21,6 +25,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     private enum UsageKeys: String, CodingKey {
         case inputTokens = "input_tokens"
         case outputTokens = "output_tokens"
+        case cacheCreationTokens = "cache_creation_input_tokens"
+        case cacheReadTokens = "cache_read_input_tokens"
     }
 
     public init(from decoder: Decoder) throws {
@@ -44,12 +50,15 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         }
 
         self.model = try container.decodeIfPresent(String.self, forKey: .model)
+        self.costUSD = try container.decodeIfPresent(Double.self, forKey: .costUSD)
 
         let messageContainer = try container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         let usageContainer = try messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
 
         self.inputTokens = try usageContainer.decode(Int.self, forKey: .inputTokens)
         self.outputTokens = try usageContainer.decode(Int.self, forKey: .outputTokens)
+        self.cacheCreationTokens = try usageContainer.decodeIfPresent(Int.self, forKey: .cacheCreationTokens)
+        self.cacheReadTokens = try usageContainer.decodeIfPresent(Int.self, forKey: .cacheReadTokens)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -60,20 +69,26 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         try container.encode(dateString, forKey: .timestamp)
 
         try container.encodeIfPresent(model, forKey: .model)
+        try container.encodeIfPresent(costUSD, forKey: .costUSD)
 
         var messageContainer = container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         var usageContainer = messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
 
         try usageContainer.encode(inputTokens, forKey: .inputTokens)
         try usageContainer.encode(outputTokens, forKey: .outputTokens)
+        try usageContainer.encodeIfPresent(cacheCreationTokens, forKey: .cacheCreationTokens)
+        try usageContainer.encodeIfPresent(cacheReadTokens, forKey: .cacheReadTokens)
     }
 
     /// For testing and manual initialization
-    public init(timestamp: Date, model: String?, inputTokens: Int, outputTokens: Int) {
+    public init(timestamp: Date, model: String?, inputTokens: Int, outputTokens: Int, cacheCreationTokens: Int? = nil, cacheReadTokens: Int? = nil, costUSD: Double? = nil) {
         self.timestamp = timestamp
         self.model = model
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
+        self.cacheCreationTokens = cacheCreationTokens
+        self.cacheReadTokens = cacheReadTokens
+        self.costUSD = costUSD
     }
 }
 
@@ -113,9 +128,17 @@ public struct ClaudeDailyUsage: Identifiable, Sendable {
     public var totalOutputTokens: Int {
         entries.reduce(0) { $0 + $1.outputTokens }
     }
+    
+    public var totalCacheCreationTokens: Int {
+        entries.reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
+    }
+    
+    public var totalCacheReadTokens: Int {
+        entries.reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
+    }
 
     public var totalTokens: Int {
-        totalInputTokens + totalOutputTokens
+        totalInputTokens + totalOutputTokens + totalCacheCreationTokens + totalCacheReadTokens
     }
 
     /// Calculate cost in USD

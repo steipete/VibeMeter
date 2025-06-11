@@ -13,31 +13,31 @@ enum ClaudeCodeLogParser {
         // Skip non-relevant lines early
         if line.contains("\"type\":\"summary\"") ||
             line.contains("\"type\":\"user\"") ||
-            line.contains("leafUuid") ||
-            line.contains("sessionId") ||
-            line.contains("parentUuid") {
+            line.contains("leafUuid") {
             return nil
         }
 
-        // Check if line contains token data
-        guard line.contains("tokens") || line.contains("Tokens") else {
+        // Must have message.usage structure with token data
+        guard line.contains("\"message\"") && 
+              line.contains("\"usage\"") && 
+              (line.contains("input_tokens") || line.contains("output_tokens")) else {
             return nil
         }
 
         // Try multiple parsing strategies
 
-        // Strategy 1: Standard nested format - message.usage
+        // Strategy 1: Standard Claude Code format - message.usage
+        if let entry = parseClaudeCodeFormat(line) {
+            return entry
+        }
+
+        // Strategy 2: Standard nested format - message.usage
         if let entry = parseNestedFormat(line) {
             return entry
         }
 
-        // Strategy 2: Top-level usage format
+        // Strategy 3: Top-level usage format
         if let entry = parseTopLevelFormat(line) {
-            return entry
-        }
-
-        // Strategy 3: Claude Code specific format (may have different structure)
-        if let entry = parseClaudeCodeFormat(line) {
             return entry
         }
 
@@ -91,62 +91,47 @@ enum ClaudeCodeLogParser {
     private static func parseClaudeCodeFormat(_ line: String) -> ClaudeLogEntry? {
         guard let data = line.data(using: .utf8) else { return nil }
 
-        // Try various Claude Code specific formats
-        struct ClaudeCodeFormat1: Decodable {
+        // Claude Code log format based on actual log structure
+        struct ClaudeCodeFormat: Decodable {
             let timestamp: String
-            let event: String?
-            let model: String?
-            let usage: Usage?
-            let message: Message?
-
-            struct Usage: Decodable {
-                let inputTokens: Int?
-                let outputTokens: Int?
-                let input_tokens: Int?
-                let output_tokens: Int?
-            }
+            let version: String?
+            let message: Message
+            let costUSD: Double?
 
             struct Message: Decodable {
-                let usage: MessageUsage?
+                let model: String?
+                let usage: Usage
 
-                struct MessageUsage: Decodable {
-                    let inputTokens: Int?
-                    let outputTokens: Int?
-                    let input_tokens: Int?
-                    let output_tokens: Int?
+                struct Usage: Decodable {
+                    let input_tokens: Int
+                    let output_tokens: Int
+                    let cache_creation_input_tokens: Int?
+                    let cache_read_input_tokens: Int?
                 }
             }
         }
 
         do {
-            let format = try JSONDecoder().decode(ClaudeCodeFormat1.self, from: data)
+            let format = try JSONDecoder().decode(ClaudeCodeFormat.self, from: data)
             let date = parseTimestamp(format.timestamp) ?? Date()
 
-            // Try to find tokens in various locations
-            var inputTokens: Int?
-            var outputTokens: Int?
-
-            // Check top-level usage
-            if let usage = format.usage {
-                inputTokens = usage.inputTokens ?? usage.input_tokens
-                outputTokens = usage.outputTokens ?? usage.output_tokens
-            }
-
-            // Check message.usage if not found
-            if inputTokens == nil, let messageUsage = format.message?.usage {
-                inputTokens = messageUsage.inputTokens ?? messageUsage.input_tokens
-                outputTokens = messageUsage.outputTokens ?? messageUsage.output_tokens
-            }
-
-            if let input = inputTokens, let output = outputTokens {
-                return ClaudeLogEntry(
-                    timestamp: date,
-                    model: format.model,
-                    inputTokens: input,
-                    outputTokens: output)
-            }
+            // Get tokens from message.usage
+            let inputTokens = format.message.usage.input_tokens
+            let outputTokens = format.message.usage.output_tokens
+            let cacheCreationTokens = format.message.usage.cache_creation_input_tokens
+            let cacheReadTokens = format.message.usage.cache_read_input_tokens
+            
+            return ClaudeLogEntry(
+                timestamp: date,
+                model: format.message.model,
+                inputTokens: inputTokens,
+                outputTokens: outputTokens,
+                cacheCreationTokens: cacheCreationTokens,
+                cacheReadTokens: cacheReadTokens,
+                costUSD: format.costUSD)
         } catch {
-            // Try next format
+            // Log decoding error for debugging
+            logger.debug("Failed to decode Claude Code format: \(error)")
         }
 
         return nil

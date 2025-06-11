@@ -226,6 +226,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let cacheKey = "com.vibemeter.claudeLogCache"
     private let cacheTimestampKey = "com.vibemeter.claudeLogCacheTimestamp"
     private let fileHashCacheKey = "com.vibemeter.claudeFileHashCache"
+    private let cacheVersionKey = "com.vibemeter.claudeLogCacheVersion"
+    
+    // Cache schema version - increment this when parser format changes
+    private let currentCacheVersion = 2 // Incremented for cache token support
 
     // Cache for parsed usage data
     private var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
@@ -285,6 +289,14 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.bookmarkManager = ClaudeLogBookmarkManager()
         self.fileScanner = ClaudeLogFileScanner()
         self.windowCalculator = ClaudeFiveHourWindowCalculator()
+        
+        // Check cache version and invalidate if outdated
+        let storedVersion = userDefaults.integer(forKey: cacheVersionKey)
+        if storedVersion < currentCacheVersion {
+            logger.info("Cache version outdated (stored: \(storedVersion), current: \(currentCacheVersion)). Clearing cache.")
+            invalidateCacheInternal()
+            userDefaults.set(currentCacheVersion, forKey: cacheVersionKey)
+        }
         
         // Set up access state
         self.hasAccess = bookmarkManager.hasAccess
@@ -420,6 +432,10 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     /// Invalidate the cache to force a refresh on next access
     public func invalidateCache() {
+        invalidateCacheInternal()
+    }
+    
+    private func invalidateCacheInternal() {
         cachedDailyUsage = nil
         cacheTimestamp = nil
         fileHashCache = [:]

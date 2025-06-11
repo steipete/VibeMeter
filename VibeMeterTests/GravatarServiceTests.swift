@@ -331,7 +331,7 @@ struct GravatarServiceTests {
 
                 // Verify hash properties
                 #expect(extractedHash.count == 64) // SHA256 is 64 hex chars
-                #expect(extractedHash.allSatisfy(\.isHexDigit))
+                #expect(try extractedHash.allSatisfy(\.isHexDigit))
                 #expect(extractedHash.hasPrefix(testCase.expectedHashPrefix))
             } else {
                 Issue.record("Could not extract hash from URL")
