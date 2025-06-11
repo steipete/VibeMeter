@@ -1,10 +1,6 @@
 import AppKit
 
-/// Example view that tracks network state changes using automatic observation.
-///
-/// This demonstrates how automatic observation tracking could be used for
-/// network state monitoring, though the timer-based approach in NetworkStateManager
-/// is actually more appropriate for checking stale data periodically.
+/// View that tracks network state changes using automatic observation.
 @MainActor
 final class ObservableNetworkStateView: ObservableTrackingView {
     private let networkStateManager: NetworkStateManager
