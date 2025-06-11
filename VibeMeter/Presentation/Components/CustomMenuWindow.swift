@@ -13,6 +13,7 @@ final class CustomMenuWindow: NSPanel {
     private let hostingController: NSHostingController<AnyView>
     private var retainedContentView: AnyView?
     private var isEventMonitoringActive = false
+    private var observableTrackingView: ObservableMenuWindowView?
 
     /// Closure to be called when window hides
     var onHide: (() -> Void)?
@@ -115,11 +116,12 @@ final class CustomMenuWindow: NSPanel {
         // Ensure the hosting controller's view is loaded
         // This is critical for Release builds
         _ = hostingController.view
-        hostingController.view.needsLayout = true
-        hostingController.view.layoutSubtreeIfNeeded()
 
         // Robust window display approach to prevent hanging
         displayWindowSafely()
+
+        // Set up observable tracking if we have Observable data to track
+        setupObservableTracking(relativeTo: statusItemButton)
     }
 
     /// Safely displays the window using multiple fallback strategies to prevent hanging.
@@ -269,6 +271,7 @@ final class CustomMenuWindow: NSPanel {
         // Immediately remove from screen (no animation) to avoid toggle state issues
         orderOut(nil)
         teardownEventMonitoring()
+        teardownObservableTracking()
         onHide?()
     }
 
@@ -325,12 +328,38 @@ final class CustomMenuWindow: NSPanel {
         false
     }
 
+    // MARK: - Observable Tracking
+
+    private func setupObservableTracking(relativeTo statusItemButton: NSStatusBarButton) {
+        // Only set up tracking if we can access the app delegate's Observable data
+        guard let appDelegate = NSApp.delegate as? AppDelegate else { return }
+
+        observableTrackingView = ObservableMenuWindowView(
+            menuWindow: self,
+            statusBarButton: statusItemButton,
+            userSession: appDelegate.userSession,
+            spendingData: appDelegate.spendingData)
+
+        if let trackingView = observableTrackingView,
+           let contentView {
+            trackingView.frame = contentView.bounds
+            trackingView.autoresizingMask = [.width, .height]
+            contentView.addSubview(trackingView)
+        }
+    }
+
+    private func teardownObservableTracking() {
+        observableTrackingView?.removeFromSuperview()
+        observableTrackingView = nil
+    }
+
     deinit {
         // Ensure proper cleanup of event monitoring
         // Since this class is @MainActor and deinit is called when deallocating,
         // we can assume we're on the main actor
         MainActor.assumeIsolated {
             teardownEventMonitoring()
+            teardownObservableTracking()
         }
     }
 }

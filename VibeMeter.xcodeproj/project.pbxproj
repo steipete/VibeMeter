@@ -79,6 +79,7 @@
 		541D351ED06D68512B6A1454 /* MultiProviderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B1E107BB8459764931771 /* MultiProviderSettingsView.swift */; };
 		568D9D9932981852406CFB77 /* BackgroundDataProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */; };
 		5B7508F9C4E3490F1A1ED2EA /* UserHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04951C33557BBDEB521C4094 /* UserHeaderView.swift */; };
+		5CD67645B73CA7A0CE6E030C /* ObservableStatusBarDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */; };
 		5FF91F38E130065AA4AB3EDD /* AppBehaviorSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1929813D40603B3B76562FB7 /* AppBehaviorSettingsManager.swift */; };
 		616980BC6DAE11B3A66FE8B2 /* MultiProviderDataProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C25A0EAC785B6D2D6A3B78C /* MultiProviderDataProcessor.swift */; };
 		61B88F3D2CED96D0AC2D8197 /* ProviderConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACAD9BAD5CDC5910A702765 /* ProviderConnectionStatus.swift */; };
@@ -95,6 +96,7 @@
 		71589296E2487C9158460184 /* CustomMenuWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB697A4C32F96C56898AAB /* CustomMenuWindow.swift */; };
 		757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */; };
 		78AF8A25EEA2CAF9CED813F6 /* MultiProviderLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04FE87449368272166427A /* MultiProviderLoginManager.swift */; };
+		78E8E1BC88160AA6E4680816 /* ObservableMenuWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */; };
 		796CF976003592E4B2038A11 /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0FC6641992F66EDA6F3D2C /* MockServices.swift */; };
 		7A8658BE233B83155E8836AD /* ProviderSpendingRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */; };
 		7AFBC5744D5988CBF61306E4 /* TestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D559EE0C5AFA04F5C38493 /* TestFixtures.swift */; };
@@ -121,6 +123,7 @@
 		8E7CD9EC492E5FA16F083AE7 /* CurrencyOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA9D480170CD60AB4088A4E /* CurrencyOrchestrator.swift */; };
 		8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */; };
 		8F1D8B713ADEF306C4A09B1D /* StatusBarObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89D1B5BE42F17E461AED87C /* StatusBarObserver.swift */; };
+		8F66E7E11A9C4E3F94EA7265 /* ObservableNetworkStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE90B6C384CBA374D5F687D5 /* ObservableNetworkStateView.swift */; };
 		974577B8217D1A58B9955CC6 /* VibeMeterMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73B3A7FDFD4B900C697D24 /* VibeMeterMainView.swift */; };
 		98642BBED52C9F47A7945AE7 /* GravatarServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C40BD4C01DF70BB2BE6AAB0 /* GravatarServiceTests.swift */; };
 		98A190F8119B90AD87D08F6F /* ClaudeCodeLogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A848B25F150D101A6A5C6A90 /* ClaudeCodeLogParser.swift */; };
@@ -174,6 +177,7 @@
 		CD8688848E2239335E043E5B /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D1DEC8FD0912AA3A504DC /* Encoding.swift */; };
 		CE177BE0F3B1CE0C8FE6D435 /* LoggingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8DC7F789AD441AA040AA41 /* LoggingServiceTests.swift */; };
 		CE29261080A36B96136DA822 /* ProviderHealthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21FBF5EB11048D0250897223 /* ProviderHealthModels.swift */; };
+		CE3CF9991E018C409F93AC86 /* ObservableTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */; };
 		CEF8CC0513F4E253D13652FD /* MultiProviderDataOrchestratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8401E7B97758ED6ED409A9 /* MultiProviderDataOrchestratorTests.swift */; };
 		CFA01D6B1ADA132F93BC50E2 /* ClaudeUsageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A092B03BC804C992757BBB49 /* ClaudeUsageData.swift */; };
 		CFC448B80958B4A20293262A /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34533F373FD70F1508DF046B /* PreviewData.swift */; };
@@ -253,6 +257,7 @@
 		04951C33557BBDEB521C4094 /* UserHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHeaderView.swift; sourceTree = "<group>"; };
 		059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Environment.swift"; sourceTree = "<group>"; };
 		05D5BC954CCD048D51520BAC /* MenuBarStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStateTests.swift; sourceTree = "<group>"; };
+		07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableTrackingView.swift; sourceTree = "<group>"; };
 		07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMover.swift; sourceTree = "<group>"; };
 		0B4110710538C58D14CEDB57 /* MultiProviderLoginManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLoginManagerTests.swift; sourceTree = "<group>"; };
@@ -349,6 +354,7 @@
 		7100C9DD1DC8F748909F4B2B /* StartupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupManager.swift; sourceTree = "<group>"; };
 		73006332A10A82BBB8CA094A /* ClaudeLogManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLogManager.swift; sourceTree = "<group>"; };
 		7362323CCD9F511D6C9549FE /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
+		75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableStatusBarDisplayView.swift; sourceTree = "<group>"; };
 		76D559EE0C5AFA04F5C38493 /* TestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixtures.swift; sourceTree = "<group>"; };
 		77E2B9D70E29CC6088F42096 /* SpendingLimitsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsManager.swift; sourceTree = "<group>"; };
 		7C24B03CB8F43901F88AFC36 /* SparkleUpdaterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdaterManager.swift; sourceTree = "<group>"; };
@@ -368,6 +374,7 @@
 		8C4DADD8170C9D18746C9ABD /* MockSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsManager.swift; sourceTree = "<group>"; };
 		8F54B8BED18F86069CAAC706 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		908F6A61E97329D239ABE126 /* CursorAPIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorAPIConstants.swift; sourceTree = "<group>"; };
+		91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableMenuWindowView.swift; sourceTree = "<group>"; };
 		92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDataProcessorTests.swift; sourceTree = "<group>"; };
 		93A0E5910E69B56D05D2C196 /* VibeMeterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeMeterApp.swift; sourceTree = "<group>"; };
 		93FF385A9B8A1BC823BF0A12 /* NoProvidersConfiguredView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoProvidersConfiguredView.swift; sourceTree = "<group>"; };
@@ -390,6 +397,7 @@
 		A96AD55C6554D8107202CFB8 /* ApplicationMoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMoverTests.swift; sourceTree = "<group>"; };
 		AAD500DAD229643D09226882 /* ClaudeQuotaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuotaView.swift; sourceTree = "<group>"; };
 		ADF171143CDE4ED1E68255D5 /* ShimmerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerEffect.swift; sourceTree = "<group>"; };
+		AE90B6C384CBA374D5F687D5 /* ObservableNetworkStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableNetworkStateView.swift; sourceTree = "<group>"; };
 		AF2FE815C9C73A3EA9DC1D7F /* ProviderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderProtocol.swift; sourceTree = "<group>"; };
 		B2529EEE274BC5AC39237CEC /* UserAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAvatarView.swift; sourceTree = "<group>"; };
 		B3A660FEB23175B667C549EA /* SessionStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStateManager.swift; sourceTree = "<group>"; };
@@ -674,6 +682,10 @@
 				161E99B569965C545579BA10 /* GaugeIcon.swift */,
 				C6B5D9C53CC36213616E28BF /* MenuBarState.swift */,
 				4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */,
+				91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */,
+				AE90B6C384CBA374D5F687D5 /* ObservableNetworkStateView.swift */,
+				75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */,
+				07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */,
 				A70930209D27A499EBAE553B /* ProviderIconView.swift */,
 				02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */,
 				96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */,
@@ -1161,6 +1173,10 @@
 				EDDFDA14BBD2E04F13A3ED35 /* GaugeIcon.swift in Sources */,
 				BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */,
 				3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */,
+				78E8E1BC88160AA6E4680816 /* ObservableMenuWindowView.swift in Sources */,
+				8F66E7E11A9C4E3F94EA7265 /* ObservableNetworkStateView.swift in Sources */,
+				5CD67645B73CA7A0CE6E030C /* ObservableStatusBarDisplayView.swift in Sources */,
+				CE3CF9991E018C409F93AC86 /* ObservableTrackingView.swift in Sources */,
 				06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */,
 				0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */,
 				80BD060425E695ACBF1AFCBA /* ProviderIconView.swift in Sources */,

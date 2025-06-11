@@ -5,6 +5,9 @@ struct ClaudeUsageReportView: View {
     @StateObject
     private var dataLoader = ClaudeUsageDataLoader()
 
+    @State
+    private var sortOrder = [KeyPathComparator(\DailyUsageSummary.date, order: .reverse)]
+
     // Pricing constants (per million tokens)
     private let inputTokenPrice: Double = 3.00 // $3 per million input tokens
     private let outputTokenPrice: Double = 15.00 // $15 per million output tokens
@@ -41,7 +44,7 @@ struct ClaudeUsageReportView: View {
 
             // Content
             Group {
-                if dataLoader.isLoading, dataLoader.dailyUsage.isEmpty {
+                if dataLoader.dailyUsage.isEmpty, dataLoader.isLoading {
                     VStack(spacing: 16) {
                         Spacer()
                         ProgressView()
@@ -98,60 +101,74 @@ struct ClaudeUsageReportView: View {
                     .padding()
                     Spacer()
                 } else {
-                    // Show loading indicator at the top if still processing
-                    if dataLoader.isLoading && dataLoader.totalFiles > 0 {
-                        VStack(spacing: 8) {
-                            HStack {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .scaleEffect(0.8)
+                    // Show data with loading indicator
+                    VStack(spacing: 0) {
+                        // Show loading indicator at the top if still processing
+                        if dataLoader.isLoading, dataLoader.totalFiles > 0 {
+                            VStack(spacing: 8) {
+                                HStack {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
 
-                                Text(dataLoader.loadingMessage)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    Text(dataLoader.loadingMessage)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
 
-                                Spacer()
+                                    Spacer()
+                                }
+
+                                ProgressView(
+                                    value: Double(dataLoader.filesProcessed),
+                                    total: Double(dataLoader.totalFiles))
+                                    .progressViewStyle(.linear)
                             }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial)
 
-                            ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
-                                .progressViewStyle(.linear)
+                            Divider()
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial)
 
-                        Divider()
-                    }
-
-                    // Table
-                    Table(of: DailyUsageSummary.self) {
-                        TableColumn("Date") { summary in
-                            Text(summary.date, format: .dateTime.year().month().day())
-                                .monospacedDigit()
-                        }
-                        .width(min: 100, ideal: 120)
-
-                        TableColumn("Input", value: \.formattedInput)
-                            .width(min: 80, ideal: 100)
-
-                        TableColumn("Output", value: \.formattedOutput)
-                            .width(min: 80, ideal: 100)
-
-                        TableColumn("Total Tokens", value: \.formattedTotal)
+                        // Table
+                        Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
+                            TableColumn("Date", value: \.date) { summary in
+                                Text(summary.date, format: .dateTime.year().month().day())
+                                    .monospacedDigit()
+                            }
                             .width(min: 100, ideal: 120)
 
-                        TableColumn("Cost (USD)") { summary in
-                            Text(summary.cost, format: .currency(code: "USD"))
-                                .monospacedDigit()
-                                .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                            TableColumn("Input", value: \.inputTokens) { summary in
+                                Text(summary.formattedInput)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 80, ideal: 100)
+
+                            TableColumn("Output", value: \.outputTokens) { summary in
+                                Text(summary.formattedOutput)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 80, ideal: 100)
+
+                            TableColumn("Total Tokens", value: \.totalTokens) { summary in
+                                Text(summary.formattedTotal)
+                                    .monospacedDigit()
+                            }
+                            .width(min: 100, ideal: 120)
+
+                            TableColumn("Cost (USD)", value: \.cost) { summary in
+                                Text(summary.cost, format: .currency(code: "USD"))
+                                    .monospacedDigit()
+                                    .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                            }
+                            .width(min: 80, ideal: 100)
+                        } rows: {
+                            ForEach(sortedSummaries) { summary in
+                                TableRow(summary)
+                            }
                         }
-                        .width(min: 80, ideal: 100)
-                    } rows: {
-                        ForEach(summaries) { summary in
-                            TableRow(summary)
-                        }
+                        .tableStyle(.inset(alternatesRowBackgrounds: true))
                     }
-                    .tableStyle(.inset(alternatesRowBackgrounds: true))
 
                     // Summary footer with material background
                     VStack(spacing: 0) {
@@ -224,6 +241,10 @@ struct ClaudeUsageReportView: View {
                                      inputPrice: inputTokenPrice,
                                      outputPrice: outputTokenPrice)
         }
+    }
+
+    private var sortedSummaries: [DailyUsageSummary] {
+        summaries.sorted(using: sortOrder)
     }
 
     private var totalInputTokens: Int {
@@ -352,10 +373,8 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
         let percentage = totalFiles > 0 ? Int((Double(filesProcessed) / Double(totalFiles)) * 100) : 0
         self.loadingMessage = "Processing files... \(percentage)% (\(filesProcessed)/\(totalFiles))"
 
-        // If we have some data, we're no longer in the initial loading state
-        if !dailyUsage.isEmpty {
-            self.isLoading = false
-        }
+        // Keep isLoading true until all files are processed
+        // This allows the progress bar to remain visible
     }
 
     func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]]) {

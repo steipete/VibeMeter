@@ -1,5 +1,5 @@
-import Foundation
 import AppKit
+import Foundation
 import os.log
 
 /// Manages security-scoped bookmarks for accessing Claude log files
