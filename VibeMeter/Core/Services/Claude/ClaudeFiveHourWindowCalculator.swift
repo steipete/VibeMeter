@@ -79,7 +79,9 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
     }
 
     /// Filter entries for a specific month
-    func filterEntriesForMonth(from dailyUsage: [Date: [ClaudeLogEntry]], month: Int, year: Int) -> [(Date, [ClaudeLogEntry])] {
+    func filterEntriesForMonth(from dailyUsage: [Date: [ClaudeLogEntry]], month: Int, year: Int) -> [(
+        Date,
+        [ClaudeLogEntry])] {
         let calendar = Calendar.current
         let components = DateComponents(year: year, month: month + 1) // month is 0-indexed
         guard let targetMonth = calendar.date(from: components) else {
@@ -97,7 +99,8 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
     }
 
     /// Calculate token statistics for a set of entries
-    func calculateTokenStatistics(for entries: [ClaudeLogEntry]) -> (inputTokens: Int, outputTokens: Int, totalCost: Double) {
+    func calculateTokenStatistics(for entries: [ClaudeLogEntry])
+        -> (inputTokens: Int, outputTokens: Int, totalCost: Double) {
         let totalInputTokens = entries.reduce(0) { $0 + $1.inputTokens }
         let totalOutputTokens = entries.reduce(0) { $0 + $1.outputTokens }
 

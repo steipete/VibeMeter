@@ -103,5 +103,7 @@
     <false/>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
+    <key>NSObservationTrackingEnabled</key>
+    <true/>
 </dict>
 </plist> 

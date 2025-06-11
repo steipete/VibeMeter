@@ -143,6 +143,7 @@
 		A8DC3253FBACD1BE87F89C21 /* UserDefaultsBacked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA604C8790C612FAE7D0450 /* UserDefaultsBacked.swift */; };
 		AA16ECE4938033919C13EA09 /* SwiftTestingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */; };
 		ACE15264B8BE8CA30810E110 /* MultiProviderLoginManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4110710538C58D14CEDB57 /* MultiProviderLoginManagerTests.swift */; };
+		AD5C88F0C7CAC9DFBEC90EC7 /* ObservableStatusBarButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059EB680525ABA5603AB5AD4 /* ObservableStatusBarButtonView.swift */; };
 		AFB622CE07606F24B1D5A5E5 /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF6772D33491484463E6488A /* ServiceProvider.swift */; };
 		B00249981600F4D79C42A838 /* SpendingLimitsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E2B9D70E29CC6088F42096 /* SpendingLimitsManager.swift */; };
 		B06CDDDED00014965F5AC18F /* CursorDataTransformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2359E6345428D45EED63FDE2 /* CursorDataTransformer.swift */; };
@@ -252,6 +253,7 @@
 		02495C910698EAD6700596AD /* FileDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDecoder.swift; sourceTree = "<group>"; };
 		04951C33557BBDEB521C4094 /* UserHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHeaderView.swift; sourceTree = "<group>"; };
 		059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Environment.swift"; sourceTree = "<group>"; };
+		059EB680525ABA5603AB5AD4 /* ObservableStatusBarButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableStatusBarButtonView.swift; sourceTree = "<group>"; };
 		05D5BC954CCD048D51520BAC /* MenuBarStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStateTests.swift; sourceTree = "<group>"; };
 		07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMover.swift; sourceTree = "<group>"; };
@@ -674,6 +676,7 @@
 				161E99B569965C545579BA10 /* GaugeIcon.swift */,
 				C6B5D9C53CC36213616E28BF /* MenuBarState.swift */,
 				4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */,
+				059EB680525ABA5603AB5AD4 /* ObservableStatusBarButtonView.swift */,
 				A70930209D27A499EBAE553B /* ProviderIconView.swift */,
 				02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */,
 				96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */,
@@ -1161,6 +1164,7 @@
 				EDDFDA14BBD2E04F13A3ED35 /* GaugeIcon.swift in Sources */,
 				BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */,
 				3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */,
+				AD5C88F0C7CAC9DFBEC90EC7 /* ObservableStatusBarButtonView.swift in Sources */,
 				06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */,
 				0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */,
 				80BD060425E695ACBF1AFCBA /* ProviderIconView.swift in Sources */,

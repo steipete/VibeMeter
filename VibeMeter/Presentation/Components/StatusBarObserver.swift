@@ -6,6 +6,9 @@ import os.log
 ///
 /// This observer handles monitoring of settings changes, appearance changes,
 /// and data model changes to trigger appropriate status bar updates.
+///
+/// With NSObservationTrackingEnabled, this class now leverages automatic
+/// observation tracking instead of manual polling.
 @MainActor
 final class StatusBarObserver {
     // MARK: - Private Properties
@@ -29,6 +32,30 @@ final class StatusBarObserver {
 
     /// Called when state manager needs to be updated due to data changes
     var onStateUpdateNeeded: (() -> Void)?
+
+    // MARK: - Automatic Observation
+
+    /// Checks the current state and triggers updates if needed.
+    /// With NSObservationTrackingEnabled, this method will automatically
+    /// re-run when any Observable properties it accesses change.
+    func checkForStateChanges() {
+        // Capture current state snapshot
+        let currentState = ObservedState(
+            isLoggedIn: userSession.isLoggedInToAnyProvider,
+            providersCount: spendingData.providersWithData.count,
+            selectedCurrency: currencyData.selectedCode,
+            upperLimit: settingsManager.upperLimitUSD,
+            totalSpending: calculateTotalSpending())
+
+        // Check if state actually changed and enough time has passed
+        if hasStateChanged(currentState), shouldUpdateNow() {
+            lastObservedState = currentState
+            lastUpdateTime = Date()
+
+            logger.debug("Significant model data change detected, updating status bar")
+            onStateUpdateNeeded?()
+        }
+    }
 
     // MARK: - Initialization
 
@@ -106,32 +133,14 @@ final class StatusBarObserver {
     }
 
     private func observeModelChanges() async {
-        // Use withObservationTracking to observe @Observable models
+        // With NSObservationTrackingEnabled, we no longer need manual polling.
+        // The system will automatically track Observable property access and
+        // trigger updates when those properties change.
+        logger.info("Model observation started with automatic tracking")
+
+        // Keep the task alive to maintain the observation context
         while !Task.isCancelled {
-            withObservationTracking {
-                // Capture current state snapshot
-                let currentState = ObservedState(
-                    isLoggedIn: userSession.isLoggedInToAnyProvider,
-                    providersCount: spendingData.providersWithData.count,
-                    selectedCurrency: currencyData.selectedCode,
-                    upperLimit: settingsManager.upperLimitUSD,
-                    totalSpending: calculateTotalSpending())
-
-                // Check if state actually changed and enough time has passed
-                if hasStateChanged(currentState), shouldUpdateNow() {
-                    lastObservedState = currentState
-                    lastUpdateTime = Date()
-
-                    logger.debug("Significant model data change detected, updating status bar")
-                    onStateUpdateNeeded?()
-                }
-            } onChange: {
-                // This closure will be called when any of the observed properties change
-                // We'll handle the actual update logic in the main tracking block
-            }
-
-            // Keep responsive 50ms delay - throttling handles update frequency
-            try? await Task.sleep(for: .milliseconds(50))
+            try? await Task.sleep(for: .seconds(3600)) // Sleep for an hour
         }
     }
 

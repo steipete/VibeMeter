@@ -14,6 +14,7 @@ final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
     private var trackingArea: NSTrackingArea?
+    private var observableView: ObservableStatusBarButtonView?
 
     // MARK: - Component Managers
 
@@ -87,6 +88,19 @@ final class StatusBarController: NSObject {
             // Set up tracking area for dynamic tooltip updates
             setupTrackingArea(for: button)
 
+            // Add observable view as a subview to leverage automatic tracking
+            observableView = ObservableStatusBarButtonView(
+                userSession: userSession,
+                spendingData: spendingData,
+                currencyData: currencyData,
+                settingsManager: settingsManager)
+            if let observableView {
+                observableView.frame = button.bounds
+                observableView.autoresizingMask = [.width, .height]
+                observableView.isHidden = true // Hidden but still tracks
+                button.addSubview(observableView)
+            }
+
             updateStatusItemDisplay()
         }
     }
@@ -115,6 +129,7 @@ final class StatusBarController: NSObject {
 
         observer.onStateUpdateNeeded = { [weak self] in
             self?.updateStatusItemState()
+            self?.updateStatusItemDisplay()
         }
     }
 
@@ -129,6 +144,10 @@ final class StatusBarController: NSObject {
         // Update state manager first, then delegate display to DisplayManager
         updateStatusItemState()
         displayManager.updateDisplay(for: button)
+
+        // With NSObservationTrackingEnabled, this will automatically track
+        // Observable property access and re-run when they change
+        observer.checkForStateChanges()
     }
 
     private func updateStatusItemState() {

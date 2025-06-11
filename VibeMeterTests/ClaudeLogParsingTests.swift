@@ -225,7 +225,7 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {"timestamp":"2024-01-10T15:30:00Z","model":"claude-3-5-sonnet","usage":{"input_tokens":1500,"output_tokens":800}}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
         #expect(entry != nil)
         #expect(entry?.inputTokens == 1500)
@@ -238,7 +238,7 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {"timestamp":"2024-01-10T16:00:00Z","model":"claude-3-5-sonnet","message":{"usage":{"inputTokens":2000,"outputTokens":1200}}}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
         #expect(entry != nil)
         #expect(entry?.inputTokens == 2000)
@@ -250,7 +250,7 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {"timestamp":"2024-01-10T16:30:00Z","event":"message","usage":{"inputTokens":3000,"outputTokens":1500}}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
         #expect(entry != nil)
         #expect(entry?.inputTokens == 3000)
@@ -263,7 +263,7 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {timestamp:"2024-01-10T17:00:00Z" "model":"claude-3-5-sonnet" "inputTokens": 4000, "outputTokens": 2000, extra_field}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
         #expect(entry != nil)
         #expect(entry?.inputTokens == 4000)
@@ -277,9 +277,9 @@ struct ClaudeLogParsingTests {
             "{\"type\":\"user\",\"message\":\"hello\"}",
             "{\"leafUuid\":\"123\",\"sessionId\":\"456\"}",
             "{\"parentUuid\":\"789\",\"data\":\"test\"}",
-            "{\"timestamp\":\"2024-01-10T18:00:00Z\",\"message\":\"no tokens here\"}"
+            "{\"timestamp\":\"2024-01-10T18:00:00Z\",\"message\":\"no tokens here\"}",
         ]
-        
+
         for line in nonRelevantLines {
             let entry = ClaudeCodeLogParser.parseLogLine(line)
             #expect(entry == nil)
@@ -292,9 +292,9 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {"parentUuid":"b466f005-5b11-4532-b72c-93006f87716f","isSidechain":false,"userType":"external","cwd":"/Users/steipete/Projects/VibeMeter","sessionId":"07c29a6a-07b2-4a35-aeb1-1f06d681a021","version":"1.0.17","message":{"id":"msg_01FiQEZV78tZd1oJNBMocio1","type":"message","role":"assistant","model":"claude-opus-4-20250514","content":[{"type":"text","text":"All changes have been committed successfully."}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":386,"cache_read_input_tokens":104929,"output_tokens":1,"service_tier":"standard"}},"requestId":"req_011CQ1B6WwgtsdNVGvKo1476","type":"assistant","uuid":"7f5176ce-7905-426c-9179-91b50b23e38a","timestamp":"2025-06-10T20:30:58.469Z"}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
-        
+
         #expect(entry != nil)
         #expect(entry?.model == "claude-opus-4-20250514")
         #expect(entry?.inputTokens == 1)
@@ -307,9 +307,9 @@ struct ClaudeLogParsingTests {
         let logLine = """
         {"message":{"usage":{"input_tokens":2,"cache_creation_input_tokens":645,"cache_read_input_tokens":78393,"output_tokens":125,"service_tier":"standard"},"model":"claude-opus-4-20250514"},"timestamp":"2025-06-10T20:30:38.321Z","type":"assistant"}
         """
-        
+
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
-        
+
         #expect(entry != nil)
         #expect(entry?.model == "claude-opus-4-20250514")
         #expect(entry?.inputTokens == 2)
