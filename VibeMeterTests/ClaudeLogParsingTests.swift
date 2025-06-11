@@ -217,9 +217,9 @@ struct ClaudeLogParsingTests {
             Issue.record("Failed to parse Claude Code log format")
         }
     }
-    
+
     // MARK: - New tests for enhanced parsing
-    
+
     @Test("Parse Claude Code top-level usage format")
     func parseClaudeCodeTopLevelFormat() {
         let logLine = """
@@ -232,7 +232,7 @@ struct ClaudeLogParsingTests {
         #expect(entry?.outputTokens == 800)
         #expect(entry?.model == "claude-3-5-sonnet")
     }
-    
+
     @Test("Parse Claude Code format with message.usage")
     func parseClaudeCodeMessageUsageFormat() {
         let logLine = """
@@ -244,7 +244,7 @@ struct ClaudeLogParsingTests {
         #expect(entry?.inputTokens == 2000)
         #expect(entry?.outputTokens == 1200)
     }
-    
+
     @Test("Parse Claude Code format with mixed case tokens")
     func parseClaudeCodeMixedCaseTokens() {
         let logLine = """
@@ -256,7 +256,7 @@ struct ClaudeLogParsingTests {
         #expect(entry?.inputTokens == 3000)
         #expect(entry?.outputTokens == 1500)
     }
-    
+
     @Test("Parse Claude Code format with regex fallback")
     func parseClaudeCodeRegexFallback() {
         // Malformed JSON that still contains token data
@@ -269,7 +269,7 @@ struct ClaudeLogParsingTests {
         #expect(entry?.inputTokens == 4000)
         #expect(entry?.outputTokens == 2000)
     }
-    
+
     @Test("Skip non-relevant log lines")
     func skipNonRelevantLines() {
         let nonRelevantLines = [
@@ -285,7 +285,7 @@ struct ClaudeLogParsingTests {
             #expect(entry == nil)
         }
     }
-    
+
     @Test("Parse actual Claude Opus 4 log format from VibeMeter session")
     func parseActualClaudeOpus4LogFormat() {
         // This is the actual format from Claude logs in ~/.claude/projects
@@ -300,7 +300,7 @@ struct ClaudeLogParsingTests {
         #expect(entry?.inputTokens == 1)
         #expect(entry?.outputTokens == 1)
     }
-    
+
     @Test("Parse Claude Code log entry with cache tokens")
     func parseClaudeCodeEntryWithCacheTokens() {
         // Test with cache tokens which VibeMeter currently doesn't track

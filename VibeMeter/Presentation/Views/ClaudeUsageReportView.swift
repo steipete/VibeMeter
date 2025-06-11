@@ -99,7 +99,7 @@ struct ClaudeUsageReportView: View {
                     Spacer()
                 } else {
                     // Show loading indicator at the top if still processing
-                    if dataLoader.isLoading, dataLoader.totalFiles > 0 {
+                    if dataLoader.isLoading && dataLoader.totalFiles > 0 {
                         VStack(spacing: 8) {
                             HStack {
                                 ProgressView()

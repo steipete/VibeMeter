@@ -77,14 +77,14 @@ final class MockClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendable 
         getDailyUsageCallCount += 1
         isProcessing = true
         defer { isProcessing = false }
-        
+
         // Simulate progress updates if delegate provided
-        if let delegate = delegate {
+        if let delegate {
             delegate.logProcessingDidStart(totalFiles: 5)
             delegate.logProcessingDidUpdate(filesProcessed: 5, dailyUsage: getDailyUsageResult)
             delegate.logProcessingDidComplete(dailyUsage: getDailyUsageResult)
         }
-        
+
         return getDailyUsageResult
     }
 

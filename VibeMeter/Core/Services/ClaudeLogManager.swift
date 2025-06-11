@@ -209,7 +209,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let userDefaults: UserDefaults
     private let authTokenManager = AuthenticationTokenManager()
     private let logProcessor = ClaudeLogProcessor()
-    
+
     // New components
     private let bookmarkManager: ClaudeLogBookmarkManager
     private let fileScanner: ClaudeLogFileScanner
@@ -227,7 +227,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let cacheTimestampKey = "com.vibemeter.claudeLogCacheTimestamp"
     private let fileHashCacheKey = "com.vibemeter.claudeFileHashCache"
     private let cacheVersionKey = "com.vibemeter.claudeLogCacheVersion"
-    
+
     // Cache schema version - increment this when parser format changes
     private let currentCacheVersion = 2 // Incremented for cache token support
 
@@ -289,7 +289,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         self.bookmarkManager = ClaudeLogBookmarkManager()
         self.fileScanner = ClaudeLogFileScanner()
         self.windowCalculator = ClaudeFiveHourWindowCalculator()
-        
+
         // Check cache version and invalidate if outdated
         let storedVersion = userDefaults.integer(forKey: cacheVersionKey)
         if storedVersion < currentCacheVersion {
@@ -297,7 +297,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             invalidateCacheInternal()
             userDefaults.set(currentCacheVersion, forKey: cacheVersionKey)
         }
-        
+
         // Set up access state
         self.hasAccess = bookmarkManager.hasAccess
 
@@ -328,7 +328,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     /// Request access to the Claude logs directory
     public func requestLogAccess() async -> Bool {
         let success = await bookmarkManager.requestLogAccess()
-        
+
         if success {
             hasAccess = true
             
@@ -340,7 +340,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
                 ProviderRegistry.shared.enableProvider(.claude)
             }
         }
-        
+
         return success
     }
 
@@ -348,7 +348,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public func revokeAccess() {
         bookmarkManager.revokeAccess()
         hasAccess = false
-        
+
         // Remove the dummy token to indicate Claude is "logged out"
         _ = authTokenManager.deleteToken(for: .claude)
     }
@@ -390,7 +390,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             delegate?.logProcessingDidFail(error: error)
             return [:]
         }
-        
+
         logger.info("ClaudeLogManager: Looking for Claude logs at: \(claudeURL.path)")
 
         guard fileScanner.claudeLogsExist(at: accessURL) else {
@@ -434,7 +434,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public func invalidateCache() {
         invalidateCacheInternal()
     }
-    
+
     private func invalidateCacheInternal() {
         cachedDailyUsage = nil
         cacheTimestamp = nil
