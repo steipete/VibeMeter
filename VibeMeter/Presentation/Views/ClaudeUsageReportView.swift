@@ -4,6 +4,9 @@ import SwiftUI
 struct ClaudeUsageReportView: View {
     @StateObject
     private var dataLoader = ClaudeUsageDataLoader()
+    
+    @State
+    private var sortOrder = [KeyPathComparator(\DailyUsageSummary.date, order: .reverse)]
 
     // Pricing constants (per million tokens)
     private let inputTokenPrice: Double = 3.00 // $3 per million input tokens
@@ -124,30 +127,39 @@ struct ClaudeUsageReportView: View {
                     }
 
                     // Table
-                    Table(of: DailyUsageSummary.self) {
-                        TableColumn("Date") { summary in
+                    Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
+                        TableColumn("Date", value: \.date) { summary in
                             Text(summary.date, format: .dateTime.year().month().day())
                                 .monospacedDigit()
                         }
                         .width(min: 100, ideal: 120)
 
-                        TableColumn("Input", value: \.formattedInput)
-                            .width(min: 80, ideal: 100)
+                        TableColumn("Input", value: \.inputTokens) { summary in
+                            Text(summary.formattedInput)
+                                .monospacedDigit()
+                        }
+                        .width(min: 80, ideal: 100)
 
-                        TableColumn("Output", value: \.formattedOutput)
-                            .width(min: 80, ideal: 100)
+                        TableColumn("Output", value: \.outputTokens) { summary in
+                            Text(summary.formattedOutput)
+                                .monospacedDigit()
+                        }
+                        .width(min: 80, ideal: 100)
 
-                        TableColumn("Total Tokens", value: \.formattedTotal)
-                            .width(min: 100, ideal: 120)
+                        TableColumn("Total Tokens", value: \.totalTokens) { summary in
+                            Text(summary.formattedTotal)
+                                .monospacedDigit()
+                        }
+                        .width(min: 100, ideal: 120)
 
-                        TableColumn("Cost (USD)") { summary in
+                        TableColumn("Cost (USD)", value: \.cost) { summary in
                             Text(summary.cost, format: .currency(code: "USD"))
                                 .monospacedDigit()
                                 .foregroundStyle(summary.cost > 10 ? .orange : .primary)
                         }
                         .width(min: 80, ideal: 100)
                     } rows: {
-                        ForEach(summaries) { summary in
+                        ForEach(sortedSummaries) { summary in
                             TableRow(summary)
                         }
                     }
@@ -224,6 +236,10 @@ struct ClaudeUsageReportView: View {
                                      inputPrice: inputTokenPrice,
                                      outputPrice: outputTokenPrice)
         }
+    }
+    
+    private var sortedSummaries: [DailyUsageSummary] {
+        summaries.sorted(using: sortOrder)
     }
 
     private var totalInputTokens: Int {
