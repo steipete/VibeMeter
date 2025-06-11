@@ -44,7 +44,7 @@ struct ClaudeUsageReportView: View {
 
             // Content
             Group {
-                if dataLoader.isLoading, dataLoader.dailyUsage.isEmpty {
+                if dataLoader.dailyUsage.isEmpty && dataLoader.isLoading {
                     VStack(spacing: 16) {
                         Spacer()
                         ProgressView()
@@ -84,7 +84,7 @@ struct ClaudeUsageReportView: View {
                         .buttonStyle(.borderedProminent)
                         Spacer()
                     }
-                } else if sortedDays.isEmpty, !dataLoader.isLoading {
+                } else if sortedDays.isEmpty && !dataLoader.isLoading {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "doc.text.magnifyingglass")
@@ -101,30 +101,32 @@ struct ClaudeUsageReportView: View {
                     .padding()
                     Spacer()
                 } else {
-                    // Show loading indicator at the top if still processing
-                    if dataLoader.isLoading && dataLoader.totalFiles > 0 {
-                        VStack(spacing: 8) {
-                            HStack {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .scaleEffect(0.8)
+                    // Show data with loading indicator
+                    VStack(spacing: 0) {
+                        // Show loading indicator at the top if still processing
+                        if dataLoader.isLoading && dataLoader.totalFiles > 0 {
+                            VStack(spacing: 8) {
+                                HStack {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
 
-                                Text(dataLoader.loadingMessage)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    Text(dataLoader.loadingMessage)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
 
-                                Spacer()
+                                    Spacer()
+                                }
+
+                                ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
+                                    .progressViewStyle(.linear)
                             }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial)
 
-                            ProgressView(value: Double(dataLoader.filesProcessed), total: Double(dataLoader.totalFiles))
-                                .progressViewStyle(.linear)
+                            Divider()
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial)
-
-                        Divider()
-                    }
 
                     // Table
                     Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
@@ -164,6 +166,7 @@ struct ClaudeUsageReportView: View {
                         }
                     }
                     .tableStyle(.inset(alternatesRowBackgrounds: true))
+                    }
 
                     // Summary footer with material background
                     VStack(spacing: 0) {
@@ -367,11 +370,9 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
 
         let percentage = totalFiles > 0 ? Int((Double(filesProcessed) / Double(totalFiles)) * 100) : 0
         self.loadingMessage = "Processing files... \(percentage)% (\(filesProcessed)/\(totalFiles))"
-
-        // If we have some data, we're no longer in the initial loading state
-        if !dailyUsage.isEmpty {
-            self.isLoading = false
-        }
+        
+        // Keep isLoading true until all files are processed
+        // This allows the progress bar to remain visible
     }
 
     func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]]) {
