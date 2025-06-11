@@ -14,7 +14,7 @@ final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
     private var trackingArea: NSTrackingArea?
-    private var observableView: ObservableStatusBarButtonView?
+    private var observableDisplayView: ObservableStatusBarDisplayView?
 
     // MARK: - Component Managers
 
@@ -88,17 +88,20 @@ final class StatusBarController: NSObject {
             // Set up tracking area for dynamic tooltip updates
             setupTrackingArea(for: button)
 
-            // Add observable view as a subview to leverage automatic tracking
-            observableView = ObservableStatusBarButtonView(
+            // Add observable display view to leverage automatic tracking
+            observableDisplayView = ObservableStatusBarDisplayView(
+                statusBarButton: button,
+                displayManager: displayManager,
+                stateManager: stateManager,
                 userSession: userSession,
                 spendingData: spendingData,
                 currencyData: currencyData,
-                settingsManager: settingsManager)
-            if let observableView {
-                observableView.frame = button.bounds
-                observableView.autoresizingMask = [.width, .height]
-                observableView.isHidden = true // Hidden but still tracks
-                button.addSubview(observableView)
+                settingsManager: settingsManager,
+                orchestrator: orchestrator)
+            if let observableDisplayView {
+                observableDisplayView.frame = button.bounds
+                observableDisplayView.autoresizingMask = [.width, .height]
+                button.addSubview(observableDisplayView)
             }
 
             updateStatusItemDisplay()
@@ -119,17 +122,13 @@ final class StatusBarController: NSObject {
     private func setupCallbacks() {
         // Set up animation controller callback
         animationController.onDisplayUpdateNeeded = { [weak self] in
-            self?.updateStatusItemDisplay()
+            self?.observableDisplayView?.setNeedsDisplayAndLayout()
         }
 
-        // Set up observer callbacks
+        // With automatic observation tracking, we don't need most callbacks
+        // Keep observer for non-Observable notifications (UserDefaults, appearance)
         observer.onDataChanged = { [weak self] in
-            self?.updateStatusItemDisplay()
-        }
-
-        observer.onStateUpdateNeeded = { [weak self] in
-            self?.updateStatusItemState()
-            self?.updateStatusItemDisplay()
+            self?.observableDisplayView?.setNeedsDisplayAndLayout()
         }
     }
 
@@ -139,66 +138,12 @@ final class StatusBarController: NSObject {
     }
 
     func updateStatusItemDisplay() {
-        guard let button = statusItem?.button else { return }
-
-        // Update state manager first, then delegate display to DisplayManager
-        updateStatusItemState()
-        displayManager.updateDisplay(for: button)
-
-        // With NSObservationTrackingEnabled, this will automatically track
-        // Observable property access and re-run when they change
-        observer.checkForStateChanges()
+        // With automatic observation tracking, this method is now much simpler
+        // The ObservableStatusBarDisplayView will handle updates automatically
+        observableDisplayView?.setNeedsDisplayAndLayout()
     }
 
-    private func updateStatusItemState() {
-        let isLoggedIn = userSession.isLoggedInToAnyProvider
-        let isFetchingData = orchestrator.isRefreshing.values.contains(true)
-        let providers = spendingData.providersWithData
-        let hasData = !providers.isEmpty
-
-        // Update state manager
-        if isFetchingData {
-            // Show loading animation only when fetching data (not during authentication)
-            stateManager.setState(.loading)
-        } else if !isLoggedIn {
-            stateManager.setState(.notLoggedIn)
-        } else if !hasData {
-            stateManager.setState(.loading)
-        } else {
-            // Check if we should display Claude quota instead of spending
-            let gaugeValue: Double
-            if settingsManager.displaySettingsManager.gaugeRepresentation == .claudeQuota,
-               userSession.isLoggedIn(to: .claude) {
-                // Calculate Claude 5-hour window usage
-                gaugeValue = calculateClaudeQuotaPercentage()
-            } else {
-                // Original logic for total spending
-                let totalSpendingUSD = spendingData.totalSpendingConverted(
-                    to: "USD",
-                    rates: currencyData.effectiveRates)
-
-                // Calculate gauge value based on whether money has been spent
-                if totalSpendingUSD > 0 {
-                    // Money has been spent - show spending as percentage of limit
-                    gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
-                } else {
-                    // No money spent - show requests used as percentage of available limit
-                    gaugeValue = calculateRequestUsagePercentage()
-                }
-            }
-
-            // Only set new data state if the value has changed significantly
-            if case .loading = stateManager.currentState {
-                stateManager.setState(.data(value: gaugeValue))
-            } else if case let .data(currentValue) = stateManager.currentState {
-                if abs(currentValue - gaugeValue) > 0.01 {
-                    stateManager.setState(.data(value: gaugeValue))
-                }
-            } else {
-                stateManager.setState(.data(value: gaugeValue))
-            }
-        }
-    }
+    // State update logic moved to ObservableStatusBarDisplayView
 
     @objc
     private func handleClick(_ sender: NSStatusBarButton) {
@@ -252,37 +197,7 @@ final class StatusBarController: NSObject {
         menuManager.showCustomWindow(relativeTo: button)
     }
 
-    /// Calculates the request usage percentage across all providers
-    private func calculateRequestUsagePercentage() -> Double {
-        let providers = spendingData.providersWithData
-
-        // Use same logic as ProviderUsageBadgeView for consistency
-        for provider in providers {
-            if let providerData = spendingData.getSpendingData(for: provider),
-               let usageData = providerData.usageData,
-               let maxRequests = usageData.maxRequests, maxRequests > 0 {
-                // Calculate percentage using same formula as progress bar
-                let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
-                return progress
-            }
-        }
-
-        return 0.0
-    }
-
-    /// Calculates the Claude 5-hour window quota percentage
-    private func calculateClaudeQuotaPercentage() -> Double {
-        // Get Claude provider data
-        guard let claudeData = spendingData.getSpendingData(for: .claude),
-              let usageData = claudeData.usageData else {
-            return 0.0
-        }
-
-        // For Claude, currentRequests represents the percentage used
-        // in the 5-hour window (0-100)
-        let percentageUsed = Double(usageData.currentRequests) / 100.0
-        return min(max(percentageUsed, 0.0), 1.0)
-    }
+    // Calculation methods moved to ObservableStatusBarDisplayView
 
     private func setupTrackingArea(for button: NSStatusBarButton) {
         // Remove existing tracking area if any
