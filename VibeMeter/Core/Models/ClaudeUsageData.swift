@@ -81,7 +81,14 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     }
 
     /// For testing and manual initialization
-    public init(timestamp: Date, model: String?, inputTokens: Int, outputTokens: Int, cacheCreationTokens: Int? = nil, cacheReadTokens: Int? = nil, costUSD: Double? = nil) {
+    public init(
+        timestamp: Date,
+        model: String?,
+        inputTokens: Int,
+        outputTokens: Int,
+        cacheCreationTokens: Int? = nil,
+        cacheReadTokens: Int? = nil,
+        costUSD: Double? = nil) {
         self.timestamp = timestamp
         self.model = model
         self.inputTokens = inputTokens
@@ -128,11 +135,11 @@ public struct ClaudeDailyUsage: Identifiable, Sendable {
     public var totalOutputTokens: Int {
         entries.reduce(0) { $0 + $1.outputTokens }
     }
-    
+
     public var totalCacheCreationTokens: Int {
         entries.reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
     }
-    
+
     public var totalCacheReadTokens: Int {
         entries.reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
     }

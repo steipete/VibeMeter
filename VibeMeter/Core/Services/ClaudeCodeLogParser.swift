@@ -18,9 +18,9 @@ enum ClaudeCodeLogParser {
         }
 
         // Must have message.usage structure with token data
-        guard line.contains("\"message\"") && 
-              line.contains("\"usage\"") && 
-              (line.contains("input_tokens") || line.contains("output_tokens")) else {
+        guard line.contains("\"message\""),
+              line.contains("\"usage\""),
+              line.contains("input_tokens") || line.contains("output_tokens") else {
             return nil
         }
 
@@ -120,7 +120,7 @@ enum ClaudeCodeLogParser {
             let outputTokens = format.message.usage.output_tokens
             let cacheCreationTokens = format.message.usage.cache_creation_input_tokens
             let cacheReadTokens = format.message.usage.cache_read_input_tokens
-            
+
             return ClaudeLogEntry(
                 timestamp: date,
                 model: format.message.model,
@@ -199,7 +199,7 @@ enum ClaudeCodeLogParser {
         if let date = ISO8601DateFormatter.vibeMeterStandard.date(from: timestamp) {
             return date
         }
-        
+
         // Try custom date formatters
         let dateFormatters = [
             { () -> DateFormatter in
@@ -213,13 +213,13 @@ enum ClaudeCodeLogParser {
                 return formatter
             }(),
         ]
-        
+
         for formatter in dateFormatters {
             if let date = formatter.date(from: timestamp) {
                 return date
             }
         }
-        
+
         return nil
     }
 }
