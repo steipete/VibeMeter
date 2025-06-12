@@ -76,6 +76,8 @@ check_warn() {
 
 # 1. Check Git status
 echo "📌 Git Status:"
+# Refresh the index to avoid false positives
+git update-index --refresh >/dev/null 2>&1 || true
 if git diff-index --quiet HEAD -- 2>/dev/null; then
     check_pass "Working directory is clean"
 else

@@ -37,25 +37,30 @@ struct ClaudeUsageReportView: View {
 
     @Environment(SettingsManager.self)
     private var settingsManager
+    
+    // MARK: - Header View
+    
+    private var headerView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Claude Token Usage Report")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .textSelection(.enabled)
+
+            Text(viewMode == .byDay ? "Daily breakdown of token usage and costs" : "Project breakdown of token usage and costs")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title and description
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Claude Token Usage Report")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .textSelection(.enabled)
-
-                Text(viewMode == .byDay ? "Daily breakdown of token usage and costs" : "Project breakdown of token usage and costs")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+            headerView
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
 
             // Progress bar when loading
             if dataLoader.isLoading, dataLoader.totalFiles > 0 {
