@@ -31,6 +31,9 @@ struct ClaudeUsageReportView: View {
     
     @State
     private var dateRangeEnd = Date()
+    
+    @State
+    private var animationTrigger = false
 
     @Environment(SettingsManager.self)
     private var settingsManager
@@ -100,14 +103,24 @@ struct ClaudeUsageReportView: View {
                     // Empty state (only show when not loading)
                     Spacer()
                     VStack(spacing: 12) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
+                        ZStack {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.largeTitle)
+                                .foregroundStyle(.secondary)
+                            
+                            // Fun sparkle animation
+                            Text("✨")
+                                .font(.title3)
+                                .offset(x: 25, y: -20)
+                                .rotationEffect(.degrees(animationTrigger ? 15 : -15))
+                                .scaleEffect(animationTrigger ? 1.2 : 0.8)
+                                .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animationTrigger)
+                        }
 
                         Text("No usage data found")
                             .font(.headline)
 
-                        Text(viewMode == .byDay ? "Start using Claude Code to see your token usage here" : "No projects found in the selected date range")
+                        Text(viewMode == .byDay ? "Start using Claude Code to see your token usage here 🚀" : "No projects found in the selected date range 📅")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -147,12 +160,14 @@ struct ClaudeUsageReportView: View {
                         TableColumn("Input", value: \.inputTokens) { summary in
                             Text(summary.formattedInput)
                                 .monospacedDigit()
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 80, ideal: 100)
 
                         TableColumn("Output", value: \.outputTokens) { summary in
                             Text(summary.formattedOutput)
                                 .monospacedDigit()
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 80, ideal: 100)
 
@@ -160,6 +175,7 @@ struct ClaudeUsageReportView: View {
                             Text(summary.formattedCacheCreation)
                                 .monospacedDigit()
                                 .foregroundStyle(summary.cacheCreationTokens > 0 ? .primary : .secondary)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 90, ideal: 110)
 
@@ -167,19 +183,22 @@ struct ClaudeUsageReportView: View {
                             Text(summary.formattedCacheRead)
                                 .monospacedDigit()
                                 .foregroundStyle(summary.cacheReadTokens > 0 ? .primary : .secondary)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 90, ideal: 110)
 
-                        TableColumn("Total Tokens", value: \.totalTokens) { summary in
+                        TableColumn("Total", value: \.totalTokens) { summary in
                             Text(summary.formattedTotal)
                                 .monospacedDigit()
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 100, ideal: 120)
 
-                        TableColumn("Cost (USD)", value: \.cost) { summary in
-                            Text(summary.cost, format: .currency(code: "USD"))
+                        TableColumn("Cost", value: \.cost) { summary in
+                            Text(VibeMeterCurrencyFormatter.format(summary.cost))
                                 .monospacedDigit()
                                 .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .width(min: 80, ideal: 100)
                         } rows: {
@@ -207,12 +226,14 @@ struct ClaudeUsageReportView: View {
                             TableColumn("Input", value: \.inputTokens) { summary in
                                 Text(summary.formattedInput)
                                     .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
                             
                             TableColumn("Output", value: \.outputTokens) { summary in
                                 Text(summary.formattedOutput)
                                     .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
                             
@@ -220,6 +241,7 @@ struct ClaudeUsageReportView: View {
                                 Text(summary.formattedCacheCreation)
                                     .monospacedDigit()
                                     .foregroundStyle(summary.cacheCreationTokens > 0 ? .primary : .secondary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 90, ideal: 110)
                             
@@ -227,19 +249,22 @@ struct ClaudeUsageReportView: View {
                                 Text(summary.formattedCacheRead)
                                     .monospacedDigit()
                                     .foregroundStyle(summary.cacheReadTokens > 0 ? .primary : .secondary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 90, ideal: 110)
                             
-                            TableColumn("Total Tokens", value: \.totalTokens) { summary in
+                            TableColumn("Total", value: \.totalTokens) { summary in
                                 Text(summary.formattedTotal)
                                     .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 100, ideal: 120)
                             
-                            TableColumn("Cost (USD)", value: \.cost) { summary in
-                                Text(summary.cost, format: .currency(code: "USD"))
+                            TableColumn("Cost", value: \.cost) { summary in
+                                Text(VibeMeterCurrencyFormatter.format(summary.cost))
                                     .monospacedDigit()
                                     .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
                             
@@ -271,7 +296,7 @@ struct ClaudeUsageReportView: View {
                                     Text("Input")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(totalInputTokens.formatted())
+                                    Text(TokenFormatter.format(totalInputTokens))
                                         .monospacedDigit()
                                 }
 
@@ -279,7 +304,7 @@ struct ClaudeUsageReportView: View {
                                     Text("Output")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(totalOutputTokens.formatted())
+                                    Text(TokenFormatter.format(totalOutputTokens))
                                         .monospacedDigit()
                                 }
 
@@ -287,7 +312,7 @@ struct ClaudeUsageReportView: View {
                                     Text("Total")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(totalTokens.formatted())
+                                    Text(TokenFormatter.format(totalTokens))
                                         .monospacedDigit()
                                 }
 
@@ -295,10 +320,33 @@ struct ClaudeUsageReportView: View {
                                     Text("Cost")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(totalCost, format: .currency(code: "USD"))
-                                        .monospacedDigit()
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(totalCost > 50 ? .orange : .primary)
+                                    HStack(spacing: 4) {
+                                        Text(VibeMeterCurrencyFormatter.format(totalCost))
+                                            .monospacedDigit()
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(totalCost > 50 ? .orange : .primary)
+                                        
+                                        // Fun element: Show different emoji based on spending
+                                        if totalCost > 100 {
+                                            Text("🔥")
+                                                .font(.caption)
+                                                .scaleEffect(1.2)
+                                                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: totalCost)
+                                                .help("Your tokens are on fire! 🚒")
+                                        } else if totalCost > 50 {
+                                            Text("💸")
+                                                .font(.caption)
+                                                .help("Money flying away!")
+                                        } else if totalCost > 20 {
+                                            Text("💰")
+                                                .font(.caption)
+                                                .help("Getting pricey")
+                                        } else if totalCost > 0 {
+                                            Text("✨")
+                                                .font(.caption)
+                                                .help("Nice and efficient!")
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -314,6 +362,9 @@ struct ClaudeUsageReportView: View {
             // Initialize cost strategy from settings
             selectedCostStrategy = settingsManager.displaySettingsManager.costCalculationStrategy
             refreshData()
+            
+            // Start animation
+            animationTrigger = true
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -507,23 +558,23 @@ private struct ProjectUsageSummary: Identifiable {
     let lastActivity: Date
     
     var formattedInput: String {
-        inputTokens.formatted()
+        inputTokens.formattedTokens
     }
     
     var formattedOutput: String {
-        outputTokens.formatted()
+        outputTokens.formattedTokens
     }
     
     var formattedCacheCreation: String {
-        cacheCreationTokens > 0 ? cacheCreationTokens.formatted() : "-"
+        cacheCreationTokens > 0 ? cacheCreationTokens.formattedTokens : "-"
     }
     
     var formattedCacheRead: String {
-        cacheReadTokens > 0 ? cacheReadTokens.formatted() : "-"
+        cacheReadTokens > 0 ? cacheReadTokens.formattedTokens : "-"
     }
     
     var formattedTotal: String {
-        totalTokens.formatted()
+        totalTokens.formattedTokens
     }
     
     init(projectName: String, entries: [ClaudeLogEntry], costStrategy: CostCalculationStrategy = .auto) {
@@ -573,23 +624,23 @@ private struct DailyUsageSummary: Identifiable {
     let models: [String]
 
     var formattedInput: String {
-        inputTokens.formatted()
+        inputTokens.formattedTokens
     }
 
     var formattedOutput: String {
-        outputTokens.formatted()
+        outputTokens.formattedTokens
     }
 
     var formattedCacheCreation: String {
-        cacheCreationTokens > 0 ? cacheCreationTokens.formatted() : "-"
+        cacheCreationTokens > 0 ? cacheCreationTokens.formattedTokens : "-"
     }
 
     var formattedCacheRead: String {
-        cacheReadTokens > 0 ? cacheReadTokens.formatted() : "-"
+        cacheReadTokens > 0 ? cacheReadTokens.formattedTokens : "-"
     }
 
     var formattedTotal: String {
-        totalTokens.formatted()
+        totalTokens.formattedTokens
     }
 
     init(date: Date, entries: [ClaudeLogEntry], costStrategy: CostCalculationStrategy = .auto) {
