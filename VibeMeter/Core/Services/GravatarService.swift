@@ -28,8 +28,9 @@ public final class GravatarService {
         let hashed = SHA256.hash(data: inputData)
         let hashString = hashed.map { String(format: "%02x", $0) }.joined()
 
-        // Double the size for retina displays
-        let retinaSize = size * 2
+        // Double the size for retina displays, with overflow protection
+        let clampedSize = max(0, min(size, Int.max / 2))
+        let retinaSize = clampedSize * 2
         let urlString = "https://www.gravatar.com/avatar/\(hashString)?s=\(retinaSize)&d=mp"
 
         return URL(string: urlString)
