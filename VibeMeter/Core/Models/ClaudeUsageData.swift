@@ -10,12 +10,14 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     public let cacheCreationTokens: Int?
     public let cacheReadTokens: Int?
     public let costUSD: Double?
+    public let projectName: String?
 
     private enum CodingKeys: String, CodingKey {
         case timestamp
         case model
         case message
         case costUSD
+        case projectName
     }
 
     private enum MessageKeys: String, CodingKey {
@@ -51,6 +53,7 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
 
         self.model = try container.decodeIfPresent(String.self, forKey: .model)
         self.costUSD = try container.decodeIfPresent(Double.self, forKey: .costUSD)
+        self.projectName = try container.decodeIfPresent(String.self, forKey: .projectName)
 
         let messageContainer = try container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         let usageContainer = try messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
@@ -70,6 +73,7 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
 
         try container.encodeIfPresent(model, forKey: .model)
         try container.encodeIfPresent(costUSD, forKey: .costUSD)
+        try container.encodeIfPresent(projectName, forKey: .projectName)
 
         var messageContainer = container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         var usageContainer = messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
@@ -88,7 +92,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         outputTokens: Int,
         cacheCreationTokens: Int? = nil,
         cacheReadTokens: Int? = nil,
-        costUSD: Double? = nil) {
+        costUSD: Double? = nil,
+        projectName: String? = nil) {
         self.timestamp = timestamp
         self.model = model
         self.inputTokens = inputTokens
@@ -96,6 +101,38 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         self.cacheCreationTokens = cacheCreationTokens
         self.cacheReadTokens = cacheReadTokens
         self.costUSD = costUSD
+        self.projectName = projectName
+    }
+
+    /// Calculate cost based on the selected strategy
+    public func calculateCost(strategy: CostCalculationStrategy = .auto) -> Double {
+        switch strategy {
+        case .auto:
+            // Use predefined cost if available, otherwise calculate
+            if let predefinedCost = costUSD {
+                predefinedCost
+            } else {
+                calculateCostFromTokens()
+            }
+
+        case .calculate:
+            // Always calculate from tokens
+            calculateCostFromTokens()
+
+        case .display:
+            // Only use predefined cost, return 0 if not available
+            costUSD ?? 0.0
+        }
+    }
+
+    /// Calculate cost from token usage
+    private func calculateCostFromTokens() -> Double {
+        let pricing = ClaudeModelPricingTier.pricing(for: model)
+        return pricing.calculateCost(
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            cacheCreationTokens: cacheCreationTokens ?? 0,
+            cacheReadTokens: cacheReadTokens ?? 0)
     }
 }
 
@@ -148,8 +185,22 @@ public struct ClaudeDailyUsage: Identifiable, Sendable {
         totalInputTokens + totalOutputTokens + totalCacheCreationTokens + totalCacheReadTokens
     }
 
-    /// Calculate cost in USD
-    public func calculateCost(inputPricePerMillion: Double = 3.0, outputPricePerMillion: Double = 15.0) -> Double {
+    /// Calculate cost in USD using the specified strategy
+    public func calculateCost(strategy: CostCalculationStrategy = .auto) -> Double {
+        switch strategy {
+        case .auto, .calculate:
+            // For daily aggregates, sum individual entry costs
+            entries.reduce(0.0) { $0 + $1.calculateCost(strategy: strategy) }
+
+        case .display:
+            // Only sum entries that have predefined costs
+            entries.reduce(0.0) { $0 + ($1.costUSD ?? 0.0) }
+        }
+    }
+
+    /// Calculate cost with custom pricing (legacy method for backwards compatibility)
+    public func calculateCostWithPricing(inputPricePerMillion: Double = 3.0,
+                                         outputPricePerMillion: Double = 15.0) -> Double {
         let inputCost = Double(totalInputTokens) / 1_000_000 * inputPricePerMillion
         let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPricePerMillion
         return inputCost + outputCost
