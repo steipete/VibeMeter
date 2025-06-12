@@ -6,6 +6,64 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
+            <title>VibeMeter 2.0.0-beta.1</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.zip</link>
+            <sparkle:version>200</sparkle:version>
+            <sparkle:shortVersionString>2.0.0-beta.1</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 2.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><h3>🚀 New Features</h3>
+<ul>
+<li><strong>Claude AI Support</strong> - Added comprehensive Claude usage tracking via local log file analysis</li>
+<li><strong>Dual-Mode Menu Bar Gauge</strong> - Toggle between total spending and Claude 5-hour window quota display</li>
+<li><strong>5-Hour Window Tracking</strong> - Real-time monitoring of Claude's rolling quota with visual progress bar</li>
+<li><strong>Token Counting</strong> - Integrated Tiktoken library with o200k_base encoding for accurate token calculation</li>
+<li><strong>Daily Usage Breakdown</strong> - New detailed view showing Claude token usage per day with cost calculation</li>
+<li><strong>No-Login Authentication</strong> - Claude integration works without login, using secure folder access instead</li>
+<li><strong>Claude Subscription Tiers</strong> - Added support for Free, Pro ($20), Max 5× ($100), and Max 20× ($200) tiers</li>
+<li><strong>Automatic Re-authentication</strong> - Cursor sessions now automatically re-authenticate when cookies expire</li>
+<li><strong>Official Claude Icon</strong> - Extracted and integrated the official Claude app icon for better recognition</li>
+<li><strong>Login Consent Flow</strong> - New consent dialog explains credential handling before Cursor login</li>
+</ul>
+<h3>🎨 UI Improvements</h3>
+<ul>
+<li><strong>ClaudeQuotaView</strong> - Dedicated 5-hour window progress display in the popover</li>
+<li><strong>ClaudeDetailView</strong> - Table view with daily token usage breakdown and costs</li>
+<li><strong>Gauge Representation Setting</strong> - New toggle in settings to switch between spending/quota display</li>
+<li><strong>Claude Account Type Setting</strong> - Select subscription tier for accurate quota calculations</li>
+<li><strong>Provider Configuration</strong> - Login/Grant Access buttons now always visible with auto-enable on click</li>
+<li><strong>Settings Navigation</strong> - Configure Providers button opens directly to Providers tab</li>
+<li><strong>Menu Bar Highlight</strong> - Button highlight state now properly syncs with popover visibility</li>
+<li><strong>Improved Provider Dialog</strong> - Larger dialog (600×700) with better layout and removed logout button</li>
+</ul>
+<h3>🔧 Technical Improvements</h3>
+<ul>
+<li><strong>Refactored ClaudeLogManager</strong> - Made testable with dependency injection and protocol-based design</li>
+<li><strong>Comprehensive Test Suite</strong> - Added extensive tests for Claude provider functionality with mocks</li>
+<li><strong>Sandbox Security</strong> - Implemented security-scoped bookmarks for safe folder access</li>
+<li><strong>Protocol-Based Architecture</strong> - ClaudeLogManagerProtocol enables better testing and flexibility</li>
+<li><strong>Folder Access Validation</strong> - Validates home directory selection and cleans up invalid bookmarks</li>
+<li><strong>Credential Storage</strong> - Secure storage of Cursor credentials in macOS Keychain for auto-auth</li>
+<li><strong>CAPTCHA Detection</strong> - Automatic detection and user notification when manual intervention needed</li>
+<li><strong>WebView Preloading</strong> - Login page preloads in background while consent dialog is shown</li>
+<li><strong>Parallel Log Processing</strong> - Claude log files now process in parallel across all CPU cores for faster performance</li>
+</ul>
+<h3>🐛 Bug Fixes</h3>
+<ul>
+<li><strong>Fixed Claude initialization race condition</strong> - Claude now properly initializes before data refresh</li>
+<li><strong>Fixed provider error messages</strong> - Shortened error messages to prevent UI truncation</li>
+<li><strong>Fixed directory picker</strong> - Now pre-selects actual home directory instead of sandboxed path</li>
+<li><strong>Fixed Claude directory validation</strong> - Properly handles sandboxed environments and accepts any directory containing .claude/projects</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#200---2025-06-12">View full changelog</a></p></div>
+            ]]></description>
+            <pubDate>Thu, 12 Jun 2025 14:35:00 -0700</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.zip"
+                length="7655219"
+                type="application/zip"
+                sparkle:edSignature="CEdNqp41RrkEBygB8RIIGt1siHo5vq8ng3n0af9YnlkxjDPP5dbiGuP6syr8z5EzuxXOyPhRriuFV8ELb8dPAQ==" />
+        </item>
+        <item>
             <title>VibeMeter 1.1.0-beta.1</title>
             <link>https://github.com/steipete/VibeMeter/releases/download/v1.1.0-beta.1/VibeMeter-1.1.0-beta.1.dmg</link>
             <sparkle:version>110</sparkle:version>
