@@ -254,7 +254,9 @@ struct ClaudeDataModelTests {
         let window = FiveHourWindow(
             used: 75,
             total: 100,
-            resetDate: Date().addingTimeInterval(3600) // 1 hour from now
+            resetDate: Date().addingTimeInterval(3600), // 1 hour from now
+            tokensUsed: 75000,
+            estimatedTokenLimit: 100000
         )
 
         #expect(window.remaining == 25)
@@ -268,7 +270,9 @@ struct ClaudeDataModelTests {
         let window = FiveHourWindow(
             used: 100,
             total: 100,
-            resetDate: Date().addingTimeInterval(3600))
+            resetDate: Date().addingTimeInterval(3600),
+            tokensUsed: 100000,
+            estimatedTokenLimit: 100000)
 
         #expect(window.remaining == 0)
         #expect(window.percentageUsed == 100)

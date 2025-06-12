@@ -206,9 +206,9 @@ public actor ClaudeProvider: ProviderProtocol {
         logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.used)% (real-time)")
 
         // Convert to ProviderUsageData format
-        // used is already a percentage (0-100)
-        let currentRequests = Int(fiveHourWindow.used)
-        let maxRequests = Int(fiveHourWindow.total)
+        // Use actual token counts instead of percentages
+        let currentRequests = fiveHourWindow.tokensUsed
+        let maxRequests = fiveHourWindow.estimatedTokenLimit
 
         return ProviderUsageData(
             currentRequests: currentRequests,

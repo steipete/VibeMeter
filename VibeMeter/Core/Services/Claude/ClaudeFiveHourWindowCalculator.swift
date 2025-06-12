@@ -63,7 +63,9 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
             return FiveHourWindow(
                 used: usagePercentage,
                 total: 100,
-                resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60))
+                resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60),
+                tokensUsed: totalTokensUsed,
+                estimatedTokenLimit: estimatedTokenLimit)
         } else {
             // Free tier - daily limit based on message count
             let calendar = Calendar.current
@@ -86,10 +88,17 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
             nextResetComponents.timeZone = TimeZone(identifier: "America/Los_Angeles")
             let resetDate = calendar.date(from: nextResetComponents) ?? now
 
+            // For free tier, we'll calculate tokens for the daily usage
+            let todayTokensUsed = todayEntries.reduce(0) { $0 + $1.inputTokens + $1.outputTokens }
+            // Estimate based on message limit and average tokens per message
+            let estimatedDailyTokenLimit = dailyLimit * 4000
+            
             return FiveHourWindow(
                 used: usagePercentage,
                 total: 100,
-                resetDate: resetDate)
+                resetDate: resetDate,
+                tokensUsed: todayTokensUsed,
+                estimatedTokenLimit: estimatedDailyTokenLimit)
         }
     }
 

@@ -349,6 +349,8 @@ extension ClaudeLogManagerMock {
         return FiveHourWindow(
             used: min(usageRatio * 100, 100),
             total: 100,
-            resetDate: resetDate)
+            resetDate: resetDate,
+            tokensUsed: 0, // Test doesn't use actual tokens
+            estimatedTokenLimit: 100000)
     }
 }

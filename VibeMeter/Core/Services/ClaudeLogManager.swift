@@ -625,12 +625,12 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     public func getCurrentWindowUsage() async -> FiveHourWindow {
         guard let accessURL = bookmarkManager.resolveBookmark() else {
             logger.warning("No access to Claude logs for real-time updates")
-            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60))
+            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60), tokensUsed: 0, estimatedTokenLimit: 0)
         }
         defer { accessURL.stopAccessingSecurityScopedResource() }
 
         guard let claudeURL = bookmarkManager.getClaudeLogsURL() else {
-            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60))
+            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60), tokensUsed: 0, estimatedTokenLimit: 0)
         }
 
         // Get entries from the last 5 hours

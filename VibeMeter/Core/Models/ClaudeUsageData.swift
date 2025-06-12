@@ -141,6 +141,8 @@ public struct FiveHourWindow: Sendable {
     public let used: Double
     public let total: Double
     public let resetDate: Date
+    public let tokensUsed: Int
+    public let estimatedTokenLimit: Int
 
     public var remaining: Double {
         max(0, total - used)
@@ -156,6 +158,10 @@ public struct FiveHourWindow: Sendable {
 
     public var isExhausted: Bool {
         remaining <= 0
+    }
+    
+    public var tokensRemaining: Int {
+        max(0, estimatedTokenLimit - tokensUsed)
     }
 }
 

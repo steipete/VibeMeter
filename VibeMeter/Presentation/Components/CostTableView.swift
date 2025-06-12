@@ -280,7 +280,7 @@ struct CostTableView: View {
                     // Show 5-hour window usage for Pro accounts
                     if let usageData = providerData.usageData {
                         HStack(spacing: 8) {
-                            Text("5-hour window:")
+                            Text("5h-window:")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
 
@@ -300,8 +300,8 @@ struct CostTableView: View {
                             }
                             .frame(height: 6)
 
-                            if let maxRequests = usageData.maxRequests {
-                                Text("\(usageData.currentRequests)/\(maxRequests) messages")
+                            if let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                                Text("\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .fixedSize()
