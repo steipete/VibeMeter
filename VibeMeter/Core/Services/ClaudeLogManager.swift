@@ -408,6 +408,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         // Get all JSONL files in the directory and subdirectories
         let jsonlFiles = fileScanner.findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
+        
+        // Log sample of files for debugging
+        if jsonlFiles.count > 0 {
+            logger.info("ClaudeLogManager: First few files: \(jsonlFiles.prefix(3).map { $0.lastPathComponent }.joined(separator: ", "))")
+        }
 
         // Notify delegate of start
         delegate?.logProcessingDidStart(totalFiles: jsonlFiles.count)
@@ -420,6 +425,12 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
         let totalEntries = dailyUsage.values.flatMap(\.self).count
         logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
+        
+        // Log the dates we found for debugging
+        if !dailyUsage.isEmpty {
+            let dates = dailyUsage.keys.sorted().map { DateFormatter.localizedString(from: $0, dateStyle: .short, timeStyle: .none) }
+            logger.info("ClaudeLogManager: Found data for dates: \(dates.joined(separator: ", "))")
+        }
 
         // Update caches
         self.cachedDailyUsage = dailyUsage

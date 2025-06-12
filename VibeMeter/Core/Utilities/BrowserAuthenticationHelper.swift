@@ -13,6 +13,7 @@ enum BrowserAuthenticationHelper {
     ///
     /// - Parameter authToken: The WorkosCursorSessionToken value
     /// - Returns: True if successful, false if fallback to unauthenticated URL is needed
+    @MainActor
     @discardableResult
     static func openCursorDashboardWithAuth(authToken: String) -> Bool {
         let htmlContent = """
@@ -48,6 +49,7 @@ enum BrowserAuthenticationHelper {
     /// Opens a URL using the default system browser.
     ///
     /// - Parameter url: The URL to open
+    @MainActor
     static func openURL(_ url: URL) {
         NSWorkspace.shared.open(url)
     }
