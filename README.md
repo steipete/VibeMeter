@@ -309,6 +309,10 @@ Vibe Meter follows clean architecture principles:
 - **Service Layer** - Modular services for API clients, authentication, and notifications
 - **Protocol-Oriented Design** - Extensive use of protocols for testability and flexibility
 
+## 🙏 Acknowledgments
+
+- **Cost Calculation** - Thanks to [ryoppippi/ccusage](https://github.com/ryoppippi/ccusage) for helping with Claude cost calculation logic
+
 ## 🔐 Privacy & Security
 
 - **Local Authentication** - Login credentials never stored, uses secure web authentication
