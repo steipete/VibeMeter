@@ -212,14 +212,33 @@ final class CustomMenuWindow: NSPanel {
     /// Calculates optimal window frame position with screen boundary awareness
     private func calculateOptimalFrame(relativeTo statusFrame: NSRect, preferredSize: NSSize) -> NSRect {
         guard let screen = NSScreen.main else {
-            // Fallback to simple positioning
-            let x = statusFrame.midX - preferredSize.width / 2
-            let y = statusFrame.minY - preferredSize.height - 5
+            // Fallback to top-right positioning when screen is not available
+            // Use a reasonable default screen size for positioning
+            let defaultScreenWidth: CGFloat = 1920
+            let defaultScreenHeight: CGFloat = 1080
+            let rightMargin: CGFloat = 10
+            let menuBarHeight: CGFloat = 25
+            let gap: CGFloat = 5
+            
+            let x = defaultScreenWidth - preferredSize.width - rightMargin
+            let y = defaultScreenHeight - menuBarHeight - preferredSize.height - gap
             return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
         }
 
         let screenFrame = screen.visibleFrame
         let gap: CGFloat = 5
+
+        // Check if the status frame appears to be invalid (too close to origin)
+        // This can happen when the menu bar icon is hidden by apps like Ice
+        if statusFrame.midX < 100 && statusFrame.midY < 100 {
+            // Fall back to top-right positioning
+            let rightMargin: CGFloat = 10
+            
+            let x = screenFrame.maxX - preferredSize.width - rightMargin
+            let y = screenFrame.maxY - preferredSize.height - gap
+            
+            return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
+        }
 
         // Start with centered position below status item
         var x = statusFrame.midX - preferredSize.width / 2
@@ -252,13 +271,13 @@ final class CustomMenuWindow: NSPanel {
         guard let screen = NSScreen.main else { return }
 
         let screenFrame = screen.visibleFrame
-        let menuBarHeight: CGFloat = 25 // Standard menu bar height
         let rightMargin: CGFloat = 10
         let gap: CGFloat = 5
 
         // Position at top right, just below the menu bar
+        // Note: visibleFrame already excludes the menu bar
         let x = screenFrame.maxX - preferredSize.width - rightMargin
-        let y = screenFrame.maxY - menuBarHeight - preferredSize.height - gap
+        let y = screenFrame.maxY - preferredSize.height - gap
 
         let fallbackFrame = NSRect(
             origin: NSPoint(x: x, y: y),
