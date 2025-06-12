@@ -58,10 +58,10 @@
             ]]></description>
             <pubDate>Thu, 12 Jun 2025 14:35:00 -0700</pubDate>
             <enclosure 
-                url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.zip"
-                length="7655219"
-                type="application/zip"
-                sparkle:edSignature="CEdNqp41RrkEBygB8RIIGt1siHo5vq8ng3n0af9YnlkxjDPP5dbiGuP6syr8z5EzuxXOyPhRriuFV8ELb8dPAQ==" />
+                url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.dmg"
+                length="8441306"
+                type="application/octet-stream"
+                sparkle:edSignature="bGn3PyiZ6OHv4STPcaLa8jPFoIP/vb1wHQhE5vyi18pl4EpyHtqSy5rYzP1WkLEoThPiRd5Ee3mN+riDaMc2AQ==" />
         </item>
         <item>
             <title>VibeMeter 1.1.0-beta.1</title>
