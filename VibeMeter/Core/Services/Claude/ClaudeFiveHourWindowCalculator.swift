@@ -21,40 +21,62 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
             .flatMap(\.self)
             .filter { $0.timestamp >= fiveHoursAgo }
 
-        // Calculate total tokens used
+        // Calculate total tokens used in this window
         let totalInputTokens = recentEntries.reduce(0) { $0 + $1.inputTokens }
         let totalOutputTokens = recentEntries.reduce(0) { $0 + $1.outputTokens }
+        let totalTokensUsed = totalInputTokens + totalOutputTokens
+
+        // Calculate average tokens per message from recent data
+        let messageCount = recentEntries.count
+        let avgTokensPerMessage = messageCount > 0 ? totalTokensUsed / messageCount : 3000
 
         // Get account type from settings
         let accountType = settingsManager.sessionSettingsManager.claudeAccountType
 
-        // For Pro/Team accounts, calculate based on message count approximation
-        // Since we don't have exact token limits, we'll estimate based on messages
+        // For Pro/Team accounts, calculate based on estimated token limits
         if accountType.usesFiveHourWindow, let messagesPerWindow = accountType.messagesPerFiveHours {
-            // Estimate average tokens per message (input + output)
-            // Average message might be ~2000 tokens input + ~1000 tokens output
-            let avgTokensPerMessage = 3000
-            let estimatedTokenLimit = messagesPerWindow * avgTokensPerMessage
+            // Use dynamic token limit based on historical usage patterns
+            // Claude Pro typically allows ~45 messages per 5 hours for average conversations
+            // But this varies significantly based on conversation complexity
 
-            let totalTokensUsed = totalInputTokens + totalOutputTokens
-            let usageRatio = Double(totalTokensUsed) / Double(estimatedTokenLimit)
+            // Calculate an adaptive limit based on current usage pattern
+            let estimatedTokenLimit: Int
+            if messageCount > 0 {
+                // If we have recent messages, extrapolate based on current usage
+                let messagesRemaining = max(0, messagesPerWindow - messageCount)
+                estimatedTokenLimit = totalTokensUsed + (messagesRemaining * avgTokensPerMessage)
+            } else {
+                // No recent messages, use conservative estimate
+                // Assume average of 4000 tokens per message for Claude Pro
+                estimatedTokenLimit = messagesPerWindow * 4000
+            }
+
+            // Calculate usage percentage (0-100)
+            let usagePercentage = estimatedTokenLimit > 0
+                ? min(Double(totalTokensUsed) / Double(estimatedTokenLimit) * 100, 100)
+                : 0
+
+            logger
+                .info(
+                    "🎯 Claude 5-hour window: \(messageCount) messages, \(totalTokensUsed) tokens used, estimated limit: \(estimatedTokenLimit), usage: \(usagePercentage)%")
 
             return FiveHourWindow(
-                used: min(usageRatio * 100, 100),
+                used: usagePercentage,
                 total: 100,
                 resetDate: fiveHoursAgo.addingTimeInterval(5 * 60 * 60))
         } else {
-            // Free tier - daily limit
-            // Calculate usage for the whole day
+            // Free tier - daily limit based on message count
             let calendar = Calendar.current
             let startOfDay = calendar.startOfDay(for: now)
             let todayEntries = dailyUsage.values
                 .flatMap(\.self)
                 .filter { $0.timestamp >= startOfDay }
 
-            let messageCount = todayEntries.count
+            let todayMessageCount = todayEntries.count
             let dailyLimit = accountType.dailyMessageLimit ?? 50
-            let usageRatio = Double(messageCount) / Double(dailyLimit)
+            let usagePercentage = dailyLimit > 0
+                ? min(Double(todayMessageCount) / Double(dailyLimit) * 100, 100)
+                : 0
 
             // Reset at midnight PT
             var nextResetComponents = calendar.dateComponents([.year, .month, .day], from: now)
@@ -65,7 +87,7 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
             let resetDate = calendar.date(from: nextResetComponents) ?? now
 
             return FiveHourWindow(
-                used: min(usageRatio * 100, 100),
+                used: usagePercentage,
                 total: 100,
                 resetDate: resetDate)
         }

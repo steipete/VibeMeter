@@ -60,10 +60,11 @@ public final class PricingDataManager: @unchecked Sendable {
         loadCachedData()
     }
 
-    // MARK: - Disposable Protocol
+    // MARK: - Deinitialization
 
     deinit {
-        clearCache()
+        // Don't call clearCache() here as it uses async dispatch
+        // which can create retain cycles during deinitialization
     }
 
     // MARK: - Public Methods

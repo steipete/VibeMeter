@@ -1,4 +1,5 @@
 import AppKit
+import os
 
 /// A view that automatically tracks Observable properties for status bar display updates.
 ///
@@ -119,6 +120,7 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
             if settingsManager.displaySettingsManager.gaugeRepresentation == .claudeQuota,
                userSession.isLoggedIn(to: .claude) {
                 gaugeValue = calculateClaudeQuotaPercentage()
+                // Logger.vibeMeter(category: "StatusBar").info("🎨 Claude gauge value: \(gaugeValue) (percentage: \(gaugeValue * 100)%)")
             } else {
                 let totalSpendingUSD = spendingData.totalSpendingConverted(
                     to: "USD",
@@ -163,6 +165,8 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
             return 0.0
         }
 
+        // currentRequests already contains the percentage (0-100) from FiveHourWindow
+        // Convert to 0-1 range for the gauge
         let percentageUsed = Double(usageData.currentRequests) / 100.0
         return min(max(percentageUsed, 0.0), 1.0)
     }

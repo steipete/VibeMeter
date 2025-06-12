@@ -170,7 +170,7 @@ struct MockNetworkService: MockService {
 
     @MainActor
     mutating func configureResponse(_ data: Data, for method: String = "fetch") {
-        responseBuilder.setResponse(data, for: method)
+        _ = responseBuilder.setResponse(data, for: method)
     }
 }
 

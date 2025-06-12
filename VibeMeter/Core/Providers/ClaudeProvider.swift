@@ -99,17 +99,14 @@ public actor ClaudeProvider: ProviderProtocol {
             // Calculate cost using the new pricing manager with smart mode selection
             var totalDailyCost = 0.0
 
+            // Get cost calculation strategy from settings
+            let costStrategy = await MainActor.run {
+                settingsManager.displaySettingsManager.costCalculationStrategy
+            }
+
             for entry in entries {
-                let tokens = TokenUsage(
-                    inputTokens: entry.inputTokens,
-                    outputTokens: entry.outputTokens)
-
-                // Calculate cost based on model
-                let cost = await pricingManager.calculateCost(
-                    tokens: tokens,
-                    model: entry.model ?? "claude-3-5-sonnet",
-                    mode: .calculate)
-
+                // Use the entry's calculateCost method with the strategy
+                let cost = entry.calculateCost(strategy: costStrategy)
                 totalDailyCost += cost
             }
 
@@ -133,20 +130,18 @@ public actor ClaudeProvider: ProviderProtocol {
         var totalOutputTokens = 0
         var totalCost = 0.0
 
+        // Get cost calculation strategy from settings
+        let costStrategy = await MainActor.run {
+            settingsManager.displaySettingsManager.costCalculationStrategy
+        }
+
         for (_, entries) in monthlyEntries {
             for entry in entries {
                 totalInputTokens += entry.inputTokens
                 totalOutputTokens += entry.outputTokens
 
-                let tokens = TokenUsage(
-                    inputTokens: entry.inputTokens,
-                    outputTokens: entry.outputTokens)
-
-                let cost = await pricingManager.calculateCost(
-                    tokens: tokens,
-                    model: entry.model ?? "claude-3-5-sonnet",
-                    mode: .calculate)
-
+                // Use the entry's calculateCost method with the strategy
+                let cost = entry.calculateCost(strategy: costStrategy)
                 totalCost += cost
             }
         }
@@ -205,13 +200,13 @@ public actor ClaudeProvider: ProviderProtocol {
     public func fetchUsageData(authToken _: String) async throws -> ProviderUsageData {
         logger.info("Claude: fetchUsageData called")
 
-        // Calculate 5-hour window usage for Pro accounts
-        let dailyUsage = try await getDailyUsageWithCache()
-        let fiveHourWindow = await logManager.calculateFiveHourWindow(from: dailyUsage)
+        // Use real-time window usage for accurate gauge updates
+        let fiveHourWindow = await logManager.getCurrentWindowUsage()
 
-        logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.used)/\(fiveHourWindow.total) messages")
+        logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.used)% (real-time)")
 
         // Convert to ProviderUsageData format
+        // used is already a percentage (0-100)
         let currentRequests = Int(fiveHourWindow.used)
         let maxRequests = Int(fiveHourWindow.total)
 
@@ -244,8 +239,8 @@ public actor ClaudeProvider: ProviderProtocol {
 
     /// Get five-hour window usage data
     func getFiveHourWindowUsage() async throws -> FiveHourWindow {
-        let dailyUsage = try await getDailyUsageWithCache()
-        return await logManager.calculateFiveHourWindow(from: dailyUsage)
+        // Use real-time data for accurate current window usage
+        await logManager.getCurrentWindowUsage()
     }
 
     /// Get daily usage breakdown
@@ -283,6 +278,7 @@ public actor ClaudeProvider: ProviderProtocol {
                 .authenticationFailed(reason: "Grant folder access in settings")
         }
 
+        // Fetch data with parallel processing
         let usage = await logManager.getDailyUsage()
 
         // Update cache

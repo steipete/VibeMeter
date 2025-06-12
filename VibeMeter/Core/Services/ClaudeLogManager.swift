@@ -10,6 +10,10 @@ actor ClaudeLogProcessor {
     private let logger = Logger.vibeMeter(category: "ClaudeLogProcessor")
     private let fileManager = FileManager.default
 
+    // Ultra-fast parallel processing
+    private let processingQueue = DispatchQueue(label: "log.processing", attributes: .concurrent)
+    private let processingGroup = DispatchGroup()
+
     /// Process all log files and return daily usage with progress updates
     func processLogFiles(
         _ fileURLs: [URL],
@@ -17,42 +21,77 @@ actor ClaudeLogProcessor {
         progressHandler: (@Sendable (Int, [Date: [ClaudeLogEntry]]) async -> Void)? = nil) async -> (entries: [
         Date: [ClaudeLogEntry]
     ], updatedCache: [String: Data]) {
-        var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-        var updatedCache = cache
-        var filesProcessed = 0
+        // Use actor for thread-safe collection of results
+        actor ResultCollector {
+            var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
+            var updatedCache: [String: Data]
+            var filesProcessed = 0
 
-        logger.info("Processing \(fileURLs.count) log files")
+            init(cache: [String: Data]) {
+                self.updatedCache = cache
+            }
 
-        // Process files one by one for streaming updates
-        for fileURL in fileURLs {
-            if let result = await processFile(fileURL, existingCache: cache) {
-                let (entries, fileKey, fileHash) = result
-
-                // Update cache
+            func addResult(entries: [ClaudeLogEntry], fileKey: String, fileHash: Data) {
                 updatedCache[fileKey] = fileHash
+                filesProcessed += 1
 
                 // Group by day
                 for entry in entries {
                     let day = Calendar.current.startOfDay(for: entry.timestamp)
                     dailyUsage[day, default: []].append(entry)
                 }
+            }
 
+            func incrementProcessedCount() {
                 filesProcessed += 1
+            }
 
-                // Send progress update
-                if let progressHandler {
-                    await progressHandler(filesProcessed, dailyUsage)
+            func getResults() -> ([Date: [ClaudeLogEntry]], [String: Data], Int) {
+                (dailyUsage, updatedCache, filesProcessed)
+            }
+        }
+
+        let collector = ResultCollector(cache: cache)
+
+        // Use all available processors for maximum parallelism
+        let processorCount = ProcessInfo.processInfo.activeProcessorCount
+        logger.info("Processing \(fileURLs.count) log files using \(processorCount) processors")
+
+        // Process all files concurrently with TRUE parallelism
+        await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self, returning: Void.self) { group in
+            // Add all tasks at once - Swift concurrency will manage the actual parallelism
+            for fileURL in fileURLs {
+                group.addTask(priority: .high) { [self] in
+                    // Process file without actor isolation to allow true parallelism
+                    return await self.processFileParallel(fileURL, existingCache: cache)
                 }
-            } else {
-                filesProcessed += 1
+            }
 
-                // Still send progress update even if no entries found
+            // Collect results as they complete
+            var processedCount = 0
+            for await result in group {
+                processedCount += 1
+                
+                if let (entries, fileKey, fileHash) = result {
+                    await collector.addResult(entries: entries, fileKey: fileKey, fileHash: fileHash)
+                } else {
+                    await collector.incrementProcessedCount()
+                }
+
+                // Send progress update if handler provided
                 if let progressHandler {
-                    await progressHandler(filesProcessed, dailyUsage)
+                    let (currentDailyUsage, _, currentFilesProcessed) = await collector.getResults()
+                    await progressHandler(currentFilesProcessed, currentDailyUsage)
+                }
+                
+                // Log progress periodically
+                if processedCount % 10 == 0 {
+                    logger.debug("Processed \(processedCount)/\(fileURLs.count) files")
                 }
             }
         }
 
+        let (dailyUsage, updatedCache, _) = await collector.getResults()
         let totalEntries = dailyUsage.values.flatMap(\.self).count
         logger.info("Processed \(totalEntries) total entries across all files")
 
@@ -61,103 +100,203 @@ actor ClaudeLogProcessor {
 
     private func processFile(_ fileURL: URL, existingCache: [String: Data]) async -> ([ClaudeLogEntry], String, Data)? {
         let fileKey = fileURL.lastPathComponent
+        let projectName = extractProjectName(from: fileURL)
 
         do {
-            // Skip small files (optimization #6)
-            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
-            let fileSize = attributes[.size] as? Int64 ?? 0
-            if fileSize < 100 { // Skip tiny files
-                logger.trace("Skipping tiny file: \(fileKey) (\(fileSize) bytes)")
-                return nil
+            // Use memory-mapped files for zero-copy access
+            let fileData = try Data(contentsOf: fileURL, options: .alwaysMapped)
+
+            // Skip tiny files
+            guard fileData.count > 100 else { return nil }
+
+            // Ultra-fast hash calculation (only first and last 1KB)
+            let hashData: Data
+            if fileData.count > 2048 {
+                var hasher = SHA256()
+                fileData.withUnsafeBytes { bytes in
+                    hasher.update(bufferPointer: UnsafeRawBufferPointer(start: bytes.baseAddress, count: 1024))
+                    hasher.update(bufferPointer: UnsafeRawBufferPointer(
+                        start: bytes.baseAddress! + fileData.count - 1024,
+                        count: 1024))
+                }
+                hashData = Data(hasher.finalize())
+            } else {
+                hashData = Data(SHA256.hash(data: fileData))
             }
 
-            // Use memory-mapped files for better performance (optimization #4)
-            let fileData = try Data(contentsOf: fileURL, options: .mappedIfSafe)
-
-            // Calculate SHA-256 hash
-            let hash = SHA256.hash(data: fileData)
-            let hashData = Data(hash)
-
-            // Check if file hasn't changed
+            // Check cache
             if let cachedHash = existingCache[fileKey], cachedHash == hashData {
-                logger.debug("Skipping unchanged file: \(fileKey)")
                 return nil
             }
 
-            // Parse the file
-            let entries = parseFileData(fileData)
-            logger.debug("Parsed \(entries.count) entries from \(fileKey)")
+            // Parse the file data
+            let entries = parseFileData(fileData, projectName: projectName)
 
             return (entries, fileKey, hashData)
         } catch {
-            logger.error("Failed to process file \(fileKey): \(error)")
             return nil
         }
     }
 
-    private func parseFileData(_ data: Data) -> [ClaudeLogEntry] {
-        var entries: [ClaudeLogEntry] = []
-        var linesProcessed = 0
-        var linesWithTokens = 0
+    // Non-actor isolated method for true parallel processing
+    nonisolated private func processFileParallel(_ fileURL: URL, existingCache: [String: Data]) async -> ([ClaudeLogEntry], String, Data)? {
+        let fileKey = fileURL.lastPathComponent
+        let projectName = extractProjectNameParallel(from: fileURL)
 
-        // Use autoreleasepool for better memory management with large files
-        autoreleasepool {
-            var buffer = Data()
+        do {
+            // Use memory-mapped files for zero-copy access
+            let fileData = try Data(contentsOf: fileURL, options: .alwaysMapped)
 
-            // Process data in chunks for memory efficiency
-            let chunkSize = 65536 // 64KB
-            var offset = 0
+            // Skip tiny files
+            guard fileData.count > 100 else { return nil }
 
-            // Pre-allocate capacity based on estimated entries per chunk
-            // Assuming average line size of ~500 bytes
-            let estimatedEntriesPerChunk = chunkSize / 500
-            entries.reserveCapacity(estimatedEntriesPerChunk * (data.count / chunkSize + 1))
-
-            while offset < data.count {
-                // Use autoreleasepool for each chunk to free memory immediately
-                autoreleasepool {
-                    let end = min(offset + chunkSize, data.count)
-                    let chunk = data.subdata(in: offset ..< end)
-                    buffer.append(chunk)
-                    offset = end
-
-                    // Process complete lines
-                    while let newlineRange = buffer.range(of: Data("\n".utf8)) {
-                        let lineData = buffer.subdata(in: 0 ..< newlineRange.lowerBound)
-                        buffer.removeSubrange(0 ... newlineRange.lowerBound)
-
-                        linesProcessed += 1
-                        if let entry = parseLogLine(lineData) {
-                            entries.append(entry)
-                            linesWithTokens += 1
-                        }
-                    }
+            // Ultra-fast hash calculation (only first and last 1KB)
+            let hashData: Data
+            if fileData.count > 2048 {
+                var hasher = SHA256()
+                fileData.withUnsafeBytes { bytes in
+                    hasher.update(bufferPointer: UnsafeRawBufferPointer(start: bytes.baseAddress, count: 1024))
+                    hasher.update(bufferPointer: UnsafeRawBufferPointer(
+                        start: bytes.baseAddress! + fileData.count - 1024,
+                        count: 1024))
                 }
+                hashData = Data(hasher.finalize())
+            } else {
+                hashData = Data(SHA256.hash(data: fileData))
             }
 
-            // Process any remaining data
-            if !buffer.isEmpty {
-                linesProcessed += 1
-                if let entry = parseLogLine(buffer) {
-                    entries.append(entry)
-                    linesWithTokens += 1
-                }
+            // Check cache
+            if let cachedHash = existingCache[fileKey], cachedHash == hashData {
+                return nil
             }
+
+            // Parse the file data in parallel
+            let entries = parseFileDataParallel(fileData, projectName: projectName)
+
+            return (entries, fileKey, hashData)
+        } catch {
+            return nil
+        }
+    }
+
+    private func extractProjectName(from fileURL: URL) -> String {
+        // Get the parent directory name (e.g., "-Users-steipete-Projects-VibeMeter")
+        let parentDirectory = fileURL.deletingLastPathComponent().lastPathComponent
+
+        // Convert back to human-readable format
+        // Replace leading dash and convert dashes to slashes
+        var projectPath = parentDirectory
+        if projectPath.hasPrefix("-") {
+            projectPath = String(projectPath.dropFirst())
+        }
+        projectPath = projectPath.replacingOccurrences(of: "-", with: "/")
+
+        // Extract just the project name (last component)
+        let pathComponents = projectPath.split(separator: "/")
+        if let projectName = pathComponents.last {
+            return String(projectName)
         }
 
-        if linesProcessed > 0 {
-            logger.debug("Processed \(linesProcessed) lines, found \(linesWithTokens) with token data")
+        return parentDirectory
+    }
+
+    // Non-isolated version for parallel processing
+    nonisolated private func extractProjectNameParallel(from fileURL: URL) -> String {
+        // Get the parent directory name (e.g., "-Users-steipete-Projects-VibeMeter")
+        let parentDirectory = fileURL.deletingLastPathComponent().lastPathComponent
+
+        // Convert back to human-readable format
+        // Replace leading dash and convert dashes to slashes
+        var projectPath = parentDirectory
+        if projectPath.hasPrefix("-") {
+            projectPath = String(projectPath.dropFirst())
+        }
+        projectPath = projectPath.replacingOccurrences(of: "-", with: "/")
+
+        // Extract just the project name (last component)
+        let pathComponents = projectPath.split(separator: "/")
+        if let projectName = pathComponents.last {
+            return String(projectName)
+        }
+
+        return parentDirectory
+    }
+
+    private func parseFileData(_ data: Data, projectName: String? = nil) -> [ClaudeLogEntry] {
+        var entries: [ClaudeLogEntry] = []
+        entries.reserveCapacity(1000) // Pre-allocate for typical file sizes
+
+        // Use direct byte processing for better performance
+        data.withUnsafeBytes { bytes in
+            let buffer = bytes.bindMemory(to: UInt8.self)
+            var lineStart = 0
+
+            for i in 0 ..< buffer.count {
+                if buffer[i] == 0x0A { // '\n'
+                    let lineLength = i - lineStart
+                    if lineLength > 0 {
+                        // Create string from line bytes
+                        let lineData = Data(bytes: buffer.baseAddress! + lineStart, count: lineLength)
+                        if let lineString = String(data: lineData, encoding: .utf8),
+                           let entry = ClaudeCodeLogParser.parseLogLine(lineString, projectName: projectName) {
+                            entries.append(entry)
+                        }
+                    }
+                    lineStart = i + 1
+                }
+            }
+
+            // Handle last line if no trailing newline
+            if lineStart < buffer.count {
+                let lineLength = buffer.count - lineStart
+                let lineData = Data(bytes: buffer.baseAddress! + lineStart, count: lineLength)
+                if let lineString = String(data: lineData, encoding: .utf8),
+                   let entry = ClaudeCodeLogParser.parseLogLine(lineString, projectName: projectName) {
+                    entries.append(entry)
+                }
+            }
         }
 
         return entries
     }
 
-    private func parseLogLine(_ data: Data) -> ClaudeLogEntry? {
-        guard let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !line.isEmpty else { return nil }
+    // Non-isolated version for parallel processing
+    nonisolated private func parseFileDataParallel(_ data: Data, projectName: String? = nil) -> [ClaudeLogEntry] {
+        var entries: [ClaudeLogEntry] = []
+        entries.reserveCapacity(1000) // Pre-allocate for typical file sizes
 
-        // Use the flexible ClaudeCodeLogParser
-        return ClaudeCodeLogParser.parseLogLine(line)
+        // Use direct byte processing for better performance
+        data.withUnsafeBytes { bytes in
+            let buffer = bytes.bindMemory(to: UInt8.self)
+            var lineStart = 0
+
+            for i in 0 ..< buffer.count {
+                if buffer[i] == 0x0A { // '\n'
+                    let lineLength = i - lineStart
+                    if lineLength > 0 {
+                        // Create string from line bytes
+                        let lineData = Data(bytes: buffer.baseAddress! + lineStart, count: lineLength)
+                        if let lineString = String(data: lineData, encoding: .utf8),
+                           let entry = ClaudeCodeLogParser.parseLogLine(lineString, projectName: projectName) {
+                            entries.append(entry)
+                        }
+                    }
+                    lineStart = i + 1
+                }
+            }
+
+            // Handle last line if no trailing newline
+            if lineStart < buffer.count {
+                let lineLength = buffer.count - lineStart
+                let lineData = Data(bytes: buffer.baseAddress! + lineStart, count: lineLength)
+                if let lineString = String(data: lineData, encoding: .utf8),
+                   let entry = ClaudeCodeLogParser.parseLogLine(lineString, projectName: projectName) {
+                    entries.append(entry)
+                }
+            }
+        }
+
+        return entries
     }
 }
 
@@ -165,7 +304,7 @@ actor ClaudeLogProcessor {
 
 /// Protocol for receiving progress updates during log processing
 @MainActor
-public protocol ClaudeLogProgressDelegate: AnyObject {
+public protocol ClaudeLogProgressDelegate: AnyObject, Sendable {
     func logProcessingDidStart(totalFiles: Int)
     func logProcessingDidUpdate(filesProcessed: Int, dailyUsage: [Date: [ClaudeLogEntry]])
     func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]])
@@ -185,6 +324,7 @@ public protocol ClaudeLogManagerProtocol: AnyObject, Sendable {
     func getDailyUsageWithProgress(delegate: ClaudeLogProgressDelegate?) async -> [Date: [ClaudeLogEntry]]
     func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow
     func countTokens(in text: String) -> Int
+    func getCurrentWindowUsage() async -> FiveHourWindow
 }
 
 /// Manages access to Claude log files and parses usage data
@@ -229,7 +369,7 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let cacheVersionKey = "com.vibemeter.claudeLogCacheVersion"
 
     // Cache schema version - increment this when parser format changes
-    private let currentCacheVersion = 2 // Incremented for cache token support
+    private let currentCacheVersion = 4 // Incremented for progressive loading support
 
     // Cache for parsed usage data
     private var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
@@ -408,27 +548,44 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         // Get all JSONL files in the directory and subdirectories
         let jsonlFiles = fileScanner.findJSONLFiles(in: claudeURL)
         logger.info("ClaudeLogManager: Found \(jsonlFiles.count) JSONL files to process")
-        
+
         // Log sample of files for debugging
-        if jsonlFiles.count > 0 {
-            logger.info("ClaudeLogManager: First few files: \(jsonlFiles.prefix(3).map { $0.lastPathComponent }.joined(separator: ", "))")
+        if !jsonlFiles.isEmpty {
+            let firstFiles = jsonlFiles.prefix(3).map(\.lastPathComponent).joined(separator: ", ")
+            logger.info("ClaudeLogManager: First few files: \(firstFiles)")
         }
 
         // Notify delegate of start
         delegate?.logProcessingDidStart(totalFiles: jsonlFiles.count)
 
-        // Process files using the background actor without progress handler
-        // to avoid Sendable issues with delegate capture
+        // Create a progress handler that properly captures the delegate
+        let progressHandler: (@Sendable (Int, [Date: [ClaudeLogEntry]]) async -> Void)? = if let delegate {
+            { filesProcessed, currentDailyUsage in
+                await MainActor.run {
+                    delegate.logProcessingDidUpdate(
+                        filesProcessed: filesProcessed,
+                        dailyUsage: currentDailyUsage)
+                }
+            }
+        } else {
+            nil
+        }
+
+        // Process files using the background actor with parallel processing
         let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(
             jsonlFiles,
-            usingCache: fileHashCache)
+            usingCache: fileHashCache,
+            progressHandler: progressHandler)
 
         let totalEntries = dailyUsage.values.flatMap(\.self).count
         logger.info("ClaudeLogManager: Parsed \(totalEntries) total log entries from \(dailyUsage.count) days")
-        
+
         // Log the dates we found for debugging
         if !dailyUsage.isEmpty {
-            let dates = dailyUsage.keys.sorted().map { DateFormatter.localizedString(from: $0, dateStyle: .short, timeStyle: .none) }
+            let dates = dailyUsage.keys.sorted().map { DateFormatter.localizedString(
+                from: $0,
+                dateStyle: .short,
+                timeStyle: .none) }
             logger.info("ClaudeLogManager: Found data for dates: \(dates.joined(separator: ", "))")
         }
 
@@ -462,6 +619,55 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     /// Count tokens in text using Tiktoken
     public func countTokens(in text: String) -> Int {
         tiktoken?.countTokens(in: text) ?? 0
+    }
+
+    /// Get real-time usage for the current 5-hour window (optimized for frequent updates)
+    public func getCurrentWindowUsage() async -> FiveHourWindow {
+        guard let accessURL = bookmarkManager.resolveBookmark() else {
+            logger.warning("No access to Claude logs for real-time updates")
+            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60))
+        }
+        defer { accessURL.stopAccessingSecurityScopedResource() }
+
+        guard let claudeURL = bookmarkManager.getClaudeLogsURL() else {
+            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60))
+        }
+
+        // Get entries from the last 5 hours
+        let fiveHoursAgo = Date().addingTimeInterval(-5 * 60 * 60)
+        var recentEntries: [ClaudeLogEntry] = []
+
+        // First check today's log file for recent entries
+        if let todaysLogFile = fileScanner.findTodaysLogFile(in: claudeURL) {
+            logger.debug("Processing today's log file for real-time updates")
+
+            // Process today's file without cache (for real-time accuracy)
+            let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:])
+            let entries = dailyUsage.values.flatMap(\.self)
+            let recentFromToday = entries.filter { $0.timestamp >= fiveHoursAgo }
+            recentEntries.append(contentsOf: recentFromToday)
+            logger.debug("Found \(recentFromToday.count) recent entries in today's log")
+        }
+
+        // If we need more data (crossing day boundary), check cached data
+        if Calendar.current.startOfDay(for: Date()) > fiveHoursAgo {
+            // We need data from yesterday too
+            if let cachedData = cachedDailyUsage {
+                let yesterdayEntries = cachedData.values.flatMap(\.self)
+                    .filter { $0.timestamp >= fiveHoursAgo && $0.timestamp < Calendar.current.startOfDay(for: Date()) }
+                recentEntries.append(contentsOf: yesterdayEntries)
+                logger.debug("Added \(yesterdayEntries.count) entries from cache")
+            }
+        }
+
+        // Build daily usage map for window calculation
+        var windowDailyUsage: [Date: [ClaudeLogEntry]] = [:]
+        for entry in recentEntries {
+            let day = Calendar.current.startOfDay(for: entry.timestamp)
+            windowDailyUsage[day, default: []].append(entry)
+        }
+
+        return windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)
     }
 
     // MARK: - Private Methods

@@ -74,4 +74,29 @@ final class ClaudeLogFileScanner: @unchecked Sendable {
     func getClaudeLogsURL(from baseURL: URL) -> URL {
         baseURL.appendingPathComponent(logDirectoryName)
     }
+
+    /// Find today's JSONL log file
+    func findTodaysLogFile(in directory: URL) -> URL? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let todayString = dateFormatter.string(from: Date())
+
+        logger.debug("Looking for today's log file with date: \(todayString)")
+
+        if let enumerator = fileManager.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
+            for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
+                let filename = fileURL.lastPathComponent
+                if filename.contains(todayString) {
+                    logger.info("Found today's log file: \(filename)")
+                    return fileURL
+                }
+            }
+        }
+
+        logger.debug("No log file found for today (\(todayString))")
+        return nil
+    }
 }

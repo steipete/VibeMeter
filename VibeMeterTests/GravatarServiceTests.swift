@@ -271,6 +271,15 @@ struct GravatarServiceTests {
             if let url = result?.absoluteString {
                 #expect(url.contains("gravatar.com"))
                 #expect(url.contains("?s="))
+
+                // Verify size clamping works correctly
+                if size == Int.max {
+                    // Should be clamped to prevent overflow
+                    #expect(url.contains("?s=\(Int.max - 1)") || url.contains("?s=\(Int.max)"))
+                } else if size < 0 {
+                    // Negative sizes should be clamped to 0
+                    #expect(url.contains("?s=0"))
+                }
             }
         }
 

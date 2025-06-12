@@ -315,7 +315,7 @@ struct ClaudeDataModelTests {
             entries: entries)
 
         // Pro tier pricing: $3 per 1M input, $15 per 1M output
-        let cost = dailyUsage.calculateCost(
+        let cost = dailyUsage.calculateCostWithPricing(
             inputPricePerMillion: 3.0,
             outputPricePerMillion: 15.0)
 

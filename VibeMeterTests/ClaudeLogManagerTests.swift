@@ -100,6 +100,11 @@ final class MockClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendable 
         lastCountTokensInput = text
         return countTokensResult
     }
+
+    @MainActor
+    func getCurrentWindowUsage() async -> FiveHourWindow {
+        calculateFiveHourWindowResult
+    }
 }
 
 // MARK: - ClaudeLogManager Tests

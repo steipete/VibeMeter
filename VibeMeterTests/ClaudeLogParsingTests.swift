@@ -105,7 +105,8 @@ struct ClaudeLogParsingTests {
 
             if let data = logLine.data(using: .utf8),
                let entry = try? JSONDecoder().decode(ClaudeLogEntry.self, from: data) {
-                #expect(entry.timestamp != nil)
+                // timestamp is non-optional, so just verify it's a valid date
+                #expect(entry.timestamp.timeIntervalSince1970 > 0)
             } else {
                 Issue.record("Failed to parse timestamp: \(timestamp)")
             }
@@ -315,5 +316,116 @@ struct ClaudeLogParsingTests {
         #expect(entry?.inputTokens == 2)
         #expect(entry?.outputTokens == 125)
         // Note: cache tokens are ignored in current implementation
+    }
+
+    // MARK: - Performance-Critical Path Tests
+
+    @Test("Test single-pass pattern detection efficiency")
+    func singlePassPatternDetection() {
+        // Test that pattern detection correctly identifies log types
+        let testCases: [(line: String, shouldParse: Bool, description: String)] = [
+            ("""
+            {"type":"summary","timestamp":"2025-01-06T10:30:00Z","data":"summary"}
+            """, false, "Should skip summary lines"),
+            ("""
+            {"type":"user","message":"Hello"}
+            """, false, "Should skip user lines"),
+            ("""
+            {"leafUuid":"123","timestamp":"2025-01-06T10:30:00Z"}
+            """, false, "Should skip leafUuid lines"),
+            ("""
+            {"message":{"usage":{"input_tokens":100,"output_tokens":50}},"timestamp":"2025-01-06T10:30:00Z"}
+            """, true, "Should parse valid token data"),
+            ("""
+            {"message":{"content":"Hello"},"timestamp":"2025-01-06T10:30:00Z"}
+            """, false, "Should skip lines without usage data"),
+        ]
+
+        for testCase in testCases {
+            let entry = ClaudeCodeLogParser.parseLogLine(testCase.line)
+            #expect((entry != nil) == testCase.shouldParse, "\(testCase.description)")
+        }
+    }
+
+    @Test("Test Claude Code format with costUSD and version")
+    func claudeCodeFormatWithCostAndVersion() {
+        let logLine = """
+        {"timestamp":"2025-01-06T10:30:00Z","version":"1.0.17","message":{"model":"claude-3-5-sonnet","usage":{"input_tokens":1000,"output_tokens":500}},"costUSD":0.015}
+        """
+
+        let entry = ClaudeCodeLogParser.parseLogLine(logLine)
+        #expect(entry != nil)
+        #expect(entry?.inputTokens == 1000)
+        #expect(entry?.outputTokens == 500)
+        #expect(entry?.costUSD == 0.015)
+    }
+
+    @Test("Test regex fallback with various token field formats")
+    func regexFallbackVariousFormats() {
+        let testCases = [
+            // Space after key
+            """
+            {"timestamp":"2025-01-06T10:30:00Z","input_tokens" :2000,"output_tokens" :1000}
+            """,
+            // No quotes around field names (invalid JSON but regex should handle)
+            """
+            {timestamp:"2025-01-06T10:30:00Z",input_tokens:3000,output_tokens:1500}
+            """,
+            // Mixed quotes
+            """
+            {"timestamp":'2025-01-06T10:30:00Z',"input_tokens":4000,'output_tokens':2000}
+            """,
+        ]
+
+        for logLine in testCases {
+            let entry = ClaudeCodeLogParser.parseLogLine(logLine)
+            #expect(entry != nil, "Should parse: \(logLine)")
+            #expect(entry?.inputTokens ?? 0 > 0)
+            #expect(entry?.outputTokens ?? 0 > 0)
+        }
+    }
+
+    @Test("Test timestamp parsing with cached formatters")
+    func timestampParsingPerformance() {
+        let timestamps = [
+            "2025-01-06T10:30:00.123Z", // ISO8601 with milliseconds
+            "2025-01-06T10:30:00Z", // ISO8601 without milliseconds
+            "2025-01-06T10:30:00.123456Z", // ISO8601 with microseconds
+            "2025-01-06T10:30:00.123+00:00", // ISO8601 with timezone offset
+            "2025-01-06T10:30:00+00:00", // ISO8601 with timezone offset, no millis
+        ]
+
+        for timestamp in timestamps {
+            let logLine = """
+            {"timestamp":"\(timestamp)","message":{"usage":{"input_tokens":100,"output_tokens":50}}}
+            """
+
+            let entry = ClaudeCodeLogParser.parseLogLine(logLine)
+            #expect(entry != nil, "Should parse timestamp: \(timestamp)")
+            #expect(entry?.timestamp != nil)
+        }
+    }
+
+    @Test("Test project name preservation")
+    func projectNamePreservation() {
+        let projectName = "VibeMeter"
+        let logLine = """
+        {"timestamp":"2025-01-06T10:30:00Z","message":{"usage":{"input_tokens":100,"output_tokens":50}}}
+        """
+
+        let entry = ClaudeCodeLogParser.parseLogLine(logLine, projectName: projectName)
+        #expect(entry != nil)
+        #expect(entry?.projectName == projectName)
+    }
+
+    @Test("Skip synthetic entries")
+    func skipSyntheticEntries() {
+        // Test synthetic entries (API errors with zero tokens)
+        let syntheticLine = """
+        {"message":{"model":"<synthetic>","usage":{"input_tokens":0,"output_tokens":0}}}
+        """
+
+        let entry = ClaudeCodeLogParser.parseLogLine(syntheticLine)
+        #expect(entry == nil, "Synthetic entries should be filtered out")
     }
 }

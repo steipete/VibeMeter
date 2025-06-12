@@ -51,10 +51,12 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         window.setContentSize(NSSize(width: 900, height: 650))
         window.minSize = NSSize(width: 700, height: 500)
 
-        // Configure for visual effect
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .visible
-        window.isMovableByWindowBackground = true
+        // Configure for toolbar
+        window.titlebarAppearsTransparent = false
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = false
+        window.toolbar = NSToolbar()
+        window.toolbarStyle = .unified
 
         // Add visual effect to window
         window.backgroundColor = .clear
@@ -67,14 +69,17 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         guard let window else { return }
 
         // Create the SwiftUI view with material background
-        let contentView = ZStack {
-            // Material background
-            VisualEffectBackground()
+        let contentView = NavigationStack {
+            ZStack {
+                // Material background
+                VisualEffectBackground()
 
-            // Main content
-            ClaudeUsageReportView()
-                .background(.clear)
+                // Main content
+                ClaudeUsageReportView()
+                    .background(.clear)
+            }
         }
+        .environment(SettingsManager.shared)
 
         // Create hosting controller and set as content
         let hostingController = NSHostingController(rootView: contentView)

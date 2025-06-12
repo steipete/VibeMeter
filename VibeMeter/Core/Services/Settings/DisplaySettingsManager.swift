@@ -24,6 +24,7 @@ public final class DisplaySettingsManager {
         static let refreshIntervalMinutes = "refreshIntervalMinutes"
         static let menuBarDisplayMode = "menuBarDisplayMode"
         static let gaugeRepresents = "gaugeRepresents"
+        static let costCalculationStrategy = "costCalculationStrategy"
     }
 
     // MARK: - Display Preferences
@@ -75,6 +76,14 @@ public final class DisplaySettingsManager {
         }
     }
 
+    /// Cost calculation strategy for Claude usage
+    public var costCalculationStrategy: CostCalculationStrategy {
+        didSet {
+            userDefaults.set(costCalculationStrategy.rawValue, forKey: Keys.costCalculationStrategy)
+            logger.debug("Cost calculation strategy set to: \(self.costCalculationStrategy.displayName)")
+        }
+    }
+
     // MARK: - Initialization
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -98,6 +107,14 @@ public final class DisplaySettingsManager {
             gaugeRepresentation = gaugeRep
         } else {
             gaugeRepresentation = .totalSpending // Default to total spending
+        }
+
+        // Initialize cost calculation strategy
+        if let strategyString = userDefaults.string(forKey: Keys.costCalculationStrategy),
+           let strategy = CostCalculationStrategy(rawValue: strategyString) {
+            costCalculationStrategy = strategy
+        } else {
+            costCalculationStrategy = .auto // Default to auto
         }
 
         // Validate refresh interval

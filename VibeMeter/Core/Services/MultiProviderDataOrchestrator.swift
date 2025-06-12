@@ -355,23 +355,78 @@ public final class MultiProviderDataOrchestrator {
         for provider in ServiceProvider.allCases {
             refreshTasks[provider]?.cancel()
 
-            refreshTasks[provider] = Task { [weak self] in
-                for await _ in AsyncTimerSequence.seconds(intervalSeconds) {
-                    guard let self else { break }
+            if provider == .claude {
+                // Special handling for Claude with adaptive refresh rate
+                refreshTasks[provider] = Task { [weak self] in
+                    while !Task.isCancelled {
+                        guard let self else { break }
 
-                    await MainActor.run {
-                        guard ProviderRegistry.shared.isEnabled(provider),
-                              self.userSessionData.isLoggedIn(to: provider) else { return }
+                        // Check usage level to determine refresh interval
+                        let refreshInterval = await self.getClaudeRefreshInterval()
 
-                        self.logger.info("Timer fired for \(provider.displayName), refreshing data")
+                        try? await Task.sleep(for: .seconds(refreshInterval))
+
+                        guard !Task.isCancelled else { break }
+
+                        await MainActor.run {
+                            guard ProviderRegistry.shared.isEnabled(provider),
+                                  self.userSessionData.isLoggedIn(to: provider) else { return }
+
+                            self.logger
+                                .info("Claude adaptive timer fired (interval: \(refreshInterval)s), refreshing data")
+                        }
+
+                        await self.refreshData(for: provider, showSyncedMessage: false)
                     }
+                }
+            } else {
+                // Regular timer for other providers
+                refreshTasks[provider] = Task { [weak self] in
+                    for await _ in AsyncTimerSequence.seconds(intervalSeconds) {
+                        guard let self else { break }
 
-                    await self.refreshData(for: provider, showSyncedMessage: false)
+                        await MainActor.run {
+                            guard ProviderRegistry.shared.isEnabled(provider),
+                                  self.userSessionData.isLoggedIn(to: provider) else { return }
 
-                    // Check if task was cancelled
-                    if Task.isCancelled { break }
+                            self.logger.info("Timer fired for \(provider.displayName), refreshing data")
+                        }
+
+                        await self.refreshData(for: provider, showSyncedMessage: false)
+
+                        // Check if task was cancelled
+                        if Task.isCancelled { break }
+                    }
                 }
             }
         }
+    }
+
+    /// Determine refresh interval for Claude based on current usage
+    private func getClaudeRefreshInterval() async -> TimeInterval {
+        // Get current usage percentage
+        if let claudeData = spendingData.getSpendingData(for: .claude),
+           let usageData = claudeData.usageData {
+            let usagePercentage = Double(usageData.currentRequests) // Already 0-100
+
+            // Adaptive refresh rates based on usage
+            switch usagePercentage {
+            case 80 ... 100:
+                // Very high usage: refresh every 30 seconds
+                return 30
+            case 60 ..< 80:
+                // High usage: refresh every minute
+                return 60
+            case 40 ..< 60:
+                // Medium usage: refresh every 2 minutes
+                return 120
+            default:
+                // Low usage: use normal interval
+                return Double(settingsManager.refreshIntervalMinutes * 60)
+            }
+        }
+
+        // Default to normal interval
+        return Double(settingsManager.refreshIntervalMinutes * 60)
     }
 }

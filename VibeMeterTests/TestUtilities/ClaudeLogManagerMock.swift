@@ -139,6 +139,11 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
         return countTokensResult
     }
 
+    func getCurrentWindowUsage() async -> FiveHourWindow {
+        recordCall("getCurrentWindowUsage")
+        return calculateFiveHourWindowResult
+    }
+
     // MARK: - Mock Control Methods
 
     func setHasAccess(_ value: Bool) {
