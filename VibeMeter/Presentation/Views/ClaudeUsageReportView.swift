@@ -13,7 +13,7 @@ struct ClaudeUsageReportView: View {
 
     @State
     private var sortOrder = [KeyPathComparator(\DailyUsageSummary.date, order: .reverse)]
-    
+
     @State
     private var projectSortOrder = [KeyPathComparator(\ProjectUsageSummary.projectName)]
 
@@ -22,24 +22,24 @@ struct ClaudeUsageReportView: View {
 
     @State
     private var selectedCostStrategy: CostCalculationStrategy = .auto
-    
+
     @State
     private var viewMode: ClaudeUsageViewMode = .byDay
-    
+
     @State
     private var dateRangeStart = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
-    
+
     @State
     private var dateRangeEnd = Date()
-    
+
     @State
     private var animationTrigger = false
 
     @Environment(SettingsManager.self)
     private var settingsManager
-    
+
     // MARK: - Header View
-    
+
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Claude Token Usage Report")
@@ -47,7 +47,8 @@ struct ClaudeUsageReportView: View {
                 .fontWeight(.semibold)
                 .textSelection(.enabled)
 
-            Text(viewMode == .byDay ? "Daily breakdown of token usage and costs" : "Project breakdown of token usage and costs")
+            Text(viewMode == .byDay ? "Daily breakdown of token usage and costs" :
+                "Project breakdown of token usage and costs")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
@@ -104,7 +105,7 @@ struct ClaudeUsageReportView: View {
                         .buttonStyle(.borderedProminent)
                         Spacer()
                     }
-                } else if (viewMode == .byDay ? sortedDays.isEmpty : projectSummaries.isEmpty), !dataLoader.isLoading {
+                } else if viewMode == .byDay ? sortedDays.isEmpty : projectSummaries.isEmpty, !dataLoader.isLoading {
                     // Empty state (only show when not loading)
                     Spacer()
                     VStack(spacing: 12) {
@@ -112,26 +113,30 @@ struct ClaudeUsageReportView: View {
                             Image(systemName: "doc.text.magnifyingglass")
                                 .font(.largeTitle)
                                 .foregroundStyle(.secondary)
-                            
+
                             // Fun sparkle animation
                             Text("✨")
                                 .font(.title3)
                                 .offset(x: 25, y: -20)
                                 .rotationEffect(.degrees(animationTrigger ? 15 : -15))
                                 .scaleEffect(animationTrigger ? 1.2 : 0.8)
-                                .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animationTrigger)
+                                .animation(
+                                    .easeInOut(duration: 2).repeatForever(autoreverses: true),
+                                    value: animationTrigger)
                         }
 
                         Text("No usage data found")
                             .font(.headline)
 
-                        Text(viewMode == .byDay ? "Start using Claude Code to see your token usage here 🚀" : "No projects found in the selected date range 📅")
+                        Text(viewMode == .byDay ? "Start using Claude Code to see your token usage here 🚀" :
+                            "No projects found in the selected date range 📅")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding()
                     Spacer()
-                } else if (viewMode == .byDay ? sortedDays.isEmpty : projectSummaries.isEmpty), dataLoader.isLoading, dataLoader.filesProcessed == 0 {
+                } else if viewMode == .byDay ? sortedDays.isEmpty : projectSummaries.isEmpty, dataLoader.isLoading,
+                          dataLoader.filesProcessed == 0 {
                     // Initial loading state (before any data)
                     VStack(spacing: 16) {
                         Spacer()
@@ -146,66 +151,66 @@ struct ClaudeUsageReportView: View {
                     }
                 } else {
                     // Show table (even if still loading more data)
-                    
+
                     if viewMode == .byDay {
                         // Daily view table
                         Table(of: DailyUsageSummary.self, sortOrder: $sortOrder) {
-                        TableColumn("Date", value: \.date) { summary in
-                            Text(summary.date, format: .dateTime.year().month().day())
-                                .monospacedDigit()
-                        }
-                        .width(min: 100, ideal: 120)
+                            TableColumn("Date", value: \.date) { summary in
+                                Text(summary.date, format: .dateTime.year().month().day())
+                                    .monospacedDigit()
+                            }
+                            .width(min: 100, ideal: 120)
 
-                        TableColumn("Models") { summary in
-                            Text(summary.models.joined(separator: ", "))
-                                .font(.system(.body, design: .monospaced))
-                        }
-                        .width(min: 150, ideal: 200)
+                            TableColumn("Models") { summary in
+                                Text(summary.models.joined(separator: ", "))
+                                    .font(.system(.body, design: .monospaced))
+                            }
+                            .width(min: 150, ideal: 200)
 
-                        TableColumn("Input", value: \.inputTokens) { summary in
-                            Text(summary.formattedInput)
-                                .monospacedDigit()
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 80, ideal: 100)
+                            TableColumn("Input", value: \.inputTokens) { summary in
+                                Text(summary.formattedInput)
+                                    .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 80, ideal: 100)
 
-                        TableColumn("Output", value: \.outputTokens) { summary in
-                            Text(summary.formattedOutput)
-                                .monospacedDigit()
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 80, ideal: 100)
+                            TableColumn("Output", value: \.outputTokens) { summary in
+                                Text(summary.formattedOutput)
+                                    .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 80, ideal: 100)
 
-                        TableColumn("Cache Create", value: \.cacheCreationTokens) { summary in
-                            Text(summary.formattedCacheCreation)
-                                .monospacedDigit()
-                                .foregroundStyle(summary.cacheCreationTokens > 0 ? .primary : .secondary)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 90, ideal: 110)
+                            TableColumn("Cache Create", value: \.cacheCreationTokens) { summary in
+                                Text(summary.formattedCacheCreation)
+                                    .monospacedDigit()
+                                    .foregroundStyle(summary.cacheCreationTokens > 0 ? .primary : .secondary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 90, ideal: 110)
 
-                        TableColumn("Cache Read", value: \.cacheReadTokens) { summary in
-                            Text(summary.formattedCacheRead)
-                                .monospacedDigit()
-                                .foregroundStyle(summary.cacheReadTokens > 0 ? .primary : .secondary)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 90, ideal: 110)
+                            TableColumn("Cache Read", value: \.cacheReadTokens) { summary in
+                                Text(summary.formattedCacheRead)
+                                    .monospacedDigit()
+                                    .foregroundStyle(summary.cacheReadTokens > 0 ? .primary : .secondary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 90, ideal: 110)
 
-                        TableColumn("Total", value: \.totalTokens) { summary in
-                            Text(summary.formattedTotal)
-                                .monospacedDigit()
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 100, ideal: 120)
+                            TableColumn("Total", value: \.totalTokens) { summary in
+                                Text(summary.formattedTotal)
+                                    .monospacedDigit()
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 100, ideal: 120)
 
-                        TableColumn("Cost", value: \.cost) { summary in
-                            Text(VibeMeterCurrencyFormatter.format(summary.cost))
-                                .monospacedDigit()
-                                .foregroundStyle(summary.cost > 10 ? .orange : .primary)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .width(min: 80, ideal: 100)
+                            TableColumn("Cost", value: \.cost) { summary in
+                                Text(VibeMeterCurrencyFormatter.format(summary.cost))
+                                    .monospacedDigit()
+                                    .foregroundStyle(summary.cost > 10 ? .orange : .primary)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .width(min: 80, ideal: 100)
                         } rows: {
                             ForEach(sortedSummaries) { summary in
                                 TableRow(summary)
@@ -221,27 +226,27 @@ struct ClaudeUsageReportView: View {
                                     .truncationMode(.middle)
                             }
                             .width(min: 150, ideal: 250)
-                            
+
                             TableColumn("Models") { summary in
                                 Text(summary.models.joined(separator: ", "))
                                     .font(.system(.body, design: .monospaced))
                             }
                             .width(min: 150, ideal: 200)
-                            
+
                             TableColumn("Input", value: \.inputTokens) { summary in
                                 Text(summary.formattedInput)
                                     .monospacedDigit()
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
-                            
+
                             TableColumn("Output", value: \.outputTokens) { summary in
                                 Text(summary.formattedOutput)
                                     .monospacedDigit()
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
-                            
+
                             TableColumn("Cache Create", value: \.cacheCreationTokens) { summary in
                                 Text(summary.formattedCacheCreation)
                                     .monospacedDigit()
@@ -249,7 +254,7 @@ struct ClaudeUsageReportView: View {
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 90, ideal: 110)
-                            
+
                             TableColumn("Cache Read", value: \.cacheReadTokens) { summary in
                                 Text(summary.formattedCacheRead)
                                     .monospacedDigit()
@@ -257,14 +262,14 @@ struct ClaudeUsageReportView: View {
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 90, ideal: 110)
-                            
+
                             TableColumn("Total", value: \.totalTokens) { summary in
                                 Text(summary.formattedTotal)
                                     .monospacedDigit()
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 100, ideal: 120)
-                            
+
                             TableColumn("Cost", value: \.cost) { summary in
                                 Text(VibeMeterCurrencyFormatter.format(summary.cost))
                                     .monospacedDigit()
@@ -272,7 +277,7 @@ struct ClaudeUsageReportView: View {
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                             .width(min: 80, ideal: 100)
-                            
+
                             TableColumn("Last Activity", value: \.lastActivity) { summary in
                                 Text(summary.lastActivity, format: .dateTime.month().day())
                                     .monospacedDigit()
@@ -330,13 +335,15 @@ struct ClaudeUsageReportView: View {
                                             .monospacedDigit()
                                             .fontWeight(.semibold)
                                             .foregroundStyle(totalCost > 50 ? .orange : .primary)
-                                        
+
                                         // Fun element: Show different emoji based on spending
                                         if totalCost > 100 {
                                             Text("🔥")
                                                 .font(.caption)
                                                 .scaleEffect(1.2)
-                                                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: totalCost)
+                                                .animation(
+                                                    .easeInOut(duration: 0.5).repeatForever(autoreverses: true),
+                                                    value: totalCost)
                                                 .help("Your tokens are on fire! 🚒")
                                         } else if totalCost > 50 {
                                             Text("💸")
@@ -367,72 +374,107 @@ struct ClaudeUsageReportView: View {
             // Initialize cost strategy from settings
             selectedCostStrategy = settingsManager.displaySettingsManager.costCalculationStrategy
             refreshData()
-            
+
             // Start animation
             animationTrigger = true
         }
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                // View mode picker
-                Picker("", selection: $viewMode) {
-                    ForEach(ClaudeUsageViewMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
+            ToolbarItem(placement: .automatic) {
+                HStack(spacing: 24) {
+                    // View mode picker
+                    VStack(spacing: 4) {
+                        Picker("", selection: $viewMode) {
+                            ForEach(ClaudeUsageViewMode.allCases, id: \.self) { mode in
+                                Text(mode.rawValue).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(width: 200)
+
+                        Text("View Mode")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 200)
-            }
-            
-            ToolbarItemGroup(placement: .automatic) {
-                // Project filter (only in By Day mode)
-                if viewMode == .byDay && !dataLoader.availableProjects.isEmpty {
-                    Picker("Project", selection: $selectedProject) {
-                        Text("All Projects").tag("All Projects")
-                        Divider()
-                        ForEach(dataLoader.availableProjects, id: \.self) { project in
-                            Text(project).tag(project)
+
+                    // Project filter (only in By Day mode)
+                    if viewMode == .byDay, !dataLoader.availableProjects.isEmpty {
+                        VStack(spacing: 4) {
+                            Picker("", selection: $selectedProject) {
+                                Text("All Projects").tag("All Projects")
+                                Divider()
+                                ForEach(dataLoader.availableProjects, id: \.self) { project in
+                                    Text(project).tag(project)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .frame(width: 200)
+
+                            Text("Project")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .frame(maxWidth: 200)
-                }
-                
-                // Date range selector (only in By Project mode)
-                if viewMode == .byProject {
-                    HStack(spacing: 8) {
-                        Text("Date Range:")
-                            .font(.subheadline)
+
+                    // Date range selector (only in By Project mode)
+                    if viewMode == .byProject {
+                        VStack(spacing: 4) {
+                            HStack(spacing: 8) {
+                                DatePicker("", selection: $dateRangeStart, displayedComponents: .date)
+                                    .labelsHidden()
+                                    .datePickerStyle(.compact)
+
+                                Text("to")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+
+                                DatePicker(
+                                    "",
+                                    selection: $dateRangeEnd,
+                                    in: dateRangeStart ... Date(),
+                                    displayedComponents: .date)
+                                    .labelsHidden()
+                                    .datePickerStyle(.compact)
+                            }
+
+                            Text("Date Range")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    // Cost calculation strategy selector
+                    VStack(spacing: 4) {
+                        Picker("", selection: $selectedCostStrategy) {
+                            ForEach(CostCalculationStrategy.allCases, id: \.self) { strategy in
+                                Text(strategy.displayName).tag(strategy)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .frame(width: 220)
+
+                        Text("Cost Strategy")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
-                        
-                        DatePicker("", selection: $dateRangeStart, displayedComponents: .date)
-                            .labelsHidden()
-                            .datePickerStyle(.compact)
-                        
-                        Text("to")
-                            .font(.subheadline)
+                    }
+
+                    // Refresh button
+                    VStack(spacing: 4) {
+                        Button(action: refreshData) {
+                            Image(systemName: "arrow.clockwise")
+                                .imageScale(.medium)
+                        }
+                        .disabled(dataLoader.isLoading)
+                        .buttonStyle(.plain)
+
+                        Text("Refresh")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
-                        
-                        DatePicker("", selection: $dateRangeEnd, in: dateRangeStart...Date(), displayedComponents: .date)
-                            .labelsHidden()
-                            .datePickerStyle(.compact)
                     }
                 }
-
-                // Cost calculation strategy selector
-                Picker("Cost Strategy", selection: $selectedCostStrategy) {
-                    ForEach(CostCalculationStrategy.allCases, id: \.self) { strategy in
-                        Text(strategy.displayName).tag(strategy)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(maxWidth: 220)
-
-                // Refresh button
-                Button(action: refreshData) {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                }
-                .disabled(dataLoader.isLoading)
+                .padding(.vertical, 4)
             }
         }
     }
@@ -468,63 +510,63 @@ struct ClaudeUsageReportView: View {
     private var sortedSummaries: [DailyUsageSummary] {
         summaries.sorted(using: sortOrder)
     }
-    
+
     // Project summaries for "By Project" view
     private var projectSummaries: [ProjectUsageSummary] {
         // Filter entries by date range
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: dateRangeStart)
         let endOfDay = calendar.startOfDay(for: dateRangeEnd).addingTimeInterval(24 * 60 * 60)
-        
+
         let filteredEntries = dataLoader.dailyUsage.flatMap { date, entries -> [ClaudeLogEntry] in
-            guard date >= startOfDay && date < endOfDay else { return [] }
+            guard date >= startOfDay, date < endOfDay else { return [] }
             return entries
         }
-        
+
         // Group by project
         let entriesByProject = Dictionary(grouping: filteredEntries) { entry in
             entry.projectName ?? "Unknown"
         }
-        
+
         // Create summaries
         return entriesByProject.map { projectName, entries in
             ProjectUsageSummary(projectName: projectName, entries: entries, costStrategy: selectedCostStrategy)
         }
     }
-    
+
     private var sortedProjectSummaries: [ProjectUsageSummary] {
         projectSummaries.sorted(using: projectSortOrder)
     }
 
     private var totalInputTokens: Int {
         if viewMode == .byDay {
-            return filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.inputTokens }
+            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.inputTokens }
         } else {
-            return projectSummaries.reduce(0) { $0 + $1.inputTokens }
+            projectSummaries.reduce(0) { $0 + $1.inputTokens }
         }
     }
 
     private var totalOutputTokens: Int {
         if viewMode == .byDay {
-            return filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.outputTokens }
+            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.outputTokens }
         } else {
-            return projectSummaries.reduce(0) { $0 + $1.outputTokens }
+            projectSummaries.reduce(0) { $0 + $1.outputTokens }
         }
     }
 
     private var totalCacheCreationTokens: Int {
         if viewMode == .byDay {
-            return filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
+            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
         } else {
-            return projectSummaries.reduce(0) { $0 + $1.cacheCreationTokens }
+            projectSummaries.reduce(0) { $0 + $1.cacheCreationTokens }
         }
     }
 
     private var totalCacheReadTokens: Int {
         if viewMode == .byDay {
-            return filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
+            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
         } else {
-            return projectSummaries.reduce(0) { $0 + $1.cacheReadTokens }
+            projectSummaries.reduce(0) { $0 + $1.cacheReadTokens }
         }
     }
 
@@ -535,9 +577,10 @@ struct ClaudeUsageReportView: View {
     private var totalCost: Double {
         if viewMode == .byDay {
             // Calculate costs based on the selected strategy
-            return filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.calculateCost(strategy: selectedCostStrategy) }
+            filteredDailyUsage.values.flatMap(\.self)
+                .reduce(0) { $0 + $1.calculateCost(strategy: selectedCostStrategy) }
         } else {
-            return projectSummaries.reduce(0) { $0 + $1.cost }
+            projectSummaries.reduce(0) { $0 + $1.cost }
         }
     }
 
@@ -561,27 +604,27 @@ private struct ProjectUsageSummary: Identifiable {
     let cost: Double
     let models: [String]
     let lastActivity: Date
-    
+
     var formattedInput: String {
         inputTokens.formattedTokens
     }
-    
+
     var formattedOutput: String {
         outputTokens.formattedTokens
     }
-    
+
     var formattedCacheCreation: String {
         cacheCreationTokens > 0 ? cacheCreationTokens.formattedTokens : "-"
     }
-    
+
     var formattedCacheRead: String {
         cacheReadTokens > 0 ? cacheReadTokens.formattedTokens : "-"
     }
-    
+
     var formattedTotal: String {
         totalTokens.formattedTokens
     }
-    
+
     init(projectName: String, entries: [ClaudeLogEntry], costStrategy: CostCalculationStrategy = .auto) {
         self.projectName = projectName
         self.inputTokens = entries.reduce(0) { $0 + $1.inputTokens }
@@ -589,10 +632,10 @@ private struct ProjectUsageSummary: Identifiable {
         self.cacheCreationTokens = entries.reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
         self.cacheReadTokens = entries.reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
         self.totalTokens = inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens
-        
+
         // Calculate cost based on the selected strategy
         self.cost = entries.reduce(0) { $0 + $1.calculateCost(strategy: costStrategy) }
-        
+
         // Get unique models used, sorted, and filter out "synthetic" entries
         let uniqueModels = Set<String>(entries.compactMap { entry in
             guard let model = entry.model else { return nil }
@@ -611,7 +654,7 @@ private struct ProjectUsageSummary: Identifiable {
             return model
         })
         self.models = Array(uniqueModels).sorted()
-        
+
         // Get last activity date
         self.lastActivity = entries.map(\.timestamp).max() ?? Date()
     }

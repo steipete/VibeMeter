@@ -351,6 +351,6 @@ extension ClaudeLogManagerMock {
             total: 100,
             resetDate: resetDate,
             tokensUsed: 0, // Test doesn't use actual tokens
-            estimatedTokenLimit: 100000)
+            estimatedTokenLimit: 100_000)
     }
 }

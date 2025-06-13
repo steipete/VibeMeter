@@ -92,7 +92,7 @@ final class ClaudeFiveHourWindowCalculator: @unchecked Sendable {
             let todayTokensUsed = todayEntries.reduce(0) { $0 + $1.inputTokens + $1.outputTokens }
             // Estimate based on message limit and average tokens per message
             let estimatedDailyTokenLimit = dailyLimit * 4000
-            
+
             return FiveHourWindow(
                 used: usagePercentage,
                 total: 100,

@@ -48,11 +48,10 @@ public actor ClaudeProvider: ProviderProtocol {
 
         // Return local user info based on system username
         let username = NSUserName()
-        let email = "\(username)@local"
 
-        logger.info("Claude: Fetched user info - username: \(username), email: \(email)")
+        logger.info("Claude: Fetched user info - username: \(username)")
         return ProviderUserInfo(
-            email: email,
+            email: username,
             provider: .claude)
     }
 

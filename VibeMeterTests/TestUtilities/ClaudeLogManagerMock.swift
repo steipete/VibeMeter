@@ -22,7 +22,7 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
         total: 100,
         resetDate: Date().addingTimeInterval(3600),
         tokensUsed: 50000,
-        estimatedTokenLimit: 100000)
+        estimatedTokenLimit: 100_000)
     var countTokensResult = 0
 
     // MARK: - Captured Parameters
@@ -70,7 +70,12 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
 
         // If we have a pre-configured result, return it
         // Check if it's different from the default value
-        let defaultWindow = FiveHourWindow(used: 50, total: 100, resetDate: Date().addingTimeInterval(3600), tokensUsed: 50000, estimatedTokenLimit: 100000)
+        let defaultWindow = FiveHourWindow(
+            used: 50,
+            total: 100,
+            resetDate: Date().addingTimeInterval(3600),
+            tokensUsed: 50000,
+            estimatedTokenLimit: 100_000)
         if calculateFiveHourWindowResult.used != defaultWindow.used ||
             calculateFiveHourWindowResult.total != defaultWindow.total {
             return calculateFiveHourWindowResult
@@ -121,7 +126,7 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
             let messageCount = todayEntries.count
             let dailyLimit = mockAccountType.dailyMessageLimit ?? 50
             let usageRatio = Double(messageCount) / Double(dailyLimit)
-            
+
             // Calculate tokens for today
             let todayTokensUsed = todayEntries.reduce(0) { $0 + $1.inputTokens + $1.outputTokens }
             let estimatedDailyTokenLimit = dailyLimit * 3000
@@ -176,9 +181,12 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
             tokensUsed: Int(used * 1000),
             estimatedTokenLimit: Int(total * 1000))
     }
-    
+
     /// Set token window usage with explicit token counts
-    func setTokenWindowUsage(tokensUsed: Int, estimatedTokenLimit: Int, resetDate: Date = Date().addingTimeInterval(3600)) {
+    func setTokenWindowUsage(
+        tokensUsed: Int,
+        estimatedTokenLimit: Int,
+        resetDate: Date = Date().addingTimeInterval(3600)) {
         let percentageUsed = estimatedTokenLimit > 0 ? Double(tokensUsed) / Double(estimatedTokenLimit) * 100 : 0
         calculateFiveHourWindowResult = FiveHourWindow(
             used: percentageUsed,
@@ -201,7 +209,7 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
             total: 100,
             resetDate: Date().addingTimeInterval(3600),
             tokensUsed: 50000,
-            estimatedTokenLimit: 100000)
+            estimatedTokenLimit: 100_000)
         countTokensResult = 0
         capturedCountTokensText = nil
         capturedCalculateFiveHourWindowUsage = nil
@@ -247,7 +255,6 @@ extension ClaudeLogManagerMock {
             total: 100,
             resetDate: Date().addingTimeInterval(1800), // 30 minutes
             tokensUsed: 95000,
-            estimatedTokenLimit: 100000
-        )
+            estimatedTokenLimit: 100_000)
     }
 }

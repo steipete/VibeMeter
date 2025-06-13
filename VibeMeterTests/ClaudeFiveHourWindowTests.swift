@@ -275,7 +275,12 @@ struct ClaudeWindowDisplayTests {
         ]
 
         for (used, expected) in testCases {
-            let window = FiveHourWindow(used: used, total: 100, resetDate: Date(), tokensUsed: Int(used * 1000), estimatedTokenLimit: 100000)
+            let window = FiveHourWindow(
+                used: used,
+                total: 100,
+                resetDate: Date(),
+                tokensUsed: Int(used * 1000),
+                estimatedTokenLimit: 100_000)
             let formatted = String(format: "%.0f%%", window.percentageUsed)
             #expect(formatted == expected)
         }
@@ -296,7 +301,12 @@ struct ClaudeWindowDisplayTests {
 
         for (hours, expectedPattern) in testCases {
             let resetDate = Date().addingTimeInterval(hours * 3600)
-            let window = FiveHourWindow(used: 50, total: 100, resetDate: resetDate, tokensUsed: 50000, estimatedTokenLimit: 100000)
+            let window = FiveHourWindow(
+                used: 50,
+                total: 100,
+                resetDate: resetDate,
+                tokensUsed: 50000,
+                estimatedTokenLimit: 100_000)
 
             let formatted = formatter.localizedString(for: window.resetDate, relativeTo: Date())
             #expect(formatted.contains(expectedPattern))
@@ -306,17 +316,32 @@ struct ClaudeWindowDisplayTests {
     @Test("Window state descriptions")
     func windowStateDescriptions() {
         // Available
-        let available = FiveHourWindow(used: 25, total: 100, resetDate: Date().addingTimeInterval(3600), tokensUsed: 25000, estimatedTokenLimit: 100000)
+        let available = FiveHourWindow(
+            used: 25,
+            total: 100,
+            resetDate: Date().addingTimeInterval(3600),
+            tokensUsed: 25000,
+            estimatedTokenLimit: 100_000)
         #expect(!available.isExhausted)
         #expect(available.remaining == 75)
 
         // Warning threshold (>80%)
-        let warning = FiveHourWindow(used: 85, total: 100, resetDate: Date().addingTimeInterval(3600), tokensUsed: 85000, estimatedTokenLimit: 100000)
+        let warning = FiveHourWindow(
+            used: 85,
+            total: 100,
+            resetDate: Date().addingTimeInterval(3600),
+            tokensUsed: 85000,
+            estimatedTokenLimit: 100_000)
         #expect(!warning.isExhausted)
         #expect(warning.percentageUsed > 80)
 
         // Exhausted
-        let exhausted = FiveHourWindow(used: 100, total: 100, resetDate: Date().addingTimeInterval(3600), tokensUsed: 100000, estimatedTokenLimit: 100000)
+        let exhausted = FiveHourWindow(
+            used: 100,
+            total: 100,
+            resetDate: Date().addingTimeInterval(3600),
+            tokensUsed: 100_000,
+            estimatedTokenLimit: 100_000)
         #expect(exhausted.isExhausted)
         #expect(exhausted.remaining == 0)
     }

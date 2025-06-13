@@ -89,7 +89,9 @@ final class CoreBPE {
         var i = 0
         while i < data.count {
             var found = false
-            for length in (1 ... min(10, data.count - i)).reversed() {
+            // Try all possible lengths, starting from longest
+            let maxLength = min(data.count - i, bytePairRanks.keys.map(\.count).max() ?? 1)
+            for length in (1 ... maxLength).reversed() {
                 let substr = data[i ..< i + length]
                 if let rank = bytePairRanks[substr] {
                     result.append(rank)

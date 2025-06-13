@@ -133,7 +133,15 @@ final class StatusBarDisplayManager {
         let hasData = !spendingData.providersWithData.isEmpty
         let displayMode = settingsManager.menuBarDisplayMode
 
-        if displayMode.showsMoney, stateManager.currentState.showsGauge, hasData {
+        // First check if we should show money text at all
+        guard displayMode.showsMoney else {
+            // Icon only mode - ensure title is cleared
+            button.title = ""
+            return
+        }
+
+        // Only show money if we have data and the current state shows gauge
+        if stateManager.currentState.showsGauge, hasData {
             let totalSpending = spendingData.totalSpendingConverted(
                 to: currencyData.selectedCode,
                 rates: currencyData.effectiveRates)

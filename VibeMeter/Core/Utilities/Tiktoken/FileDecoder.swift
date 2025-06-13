@@ -1,5 +1,6 @@
 import Foundation
 
+/// Decodes tiktoken vocabulary files
 enum FileDecoder {
     static func decode(data: Data) throws -> (bytePairRanks: [Data: Int], specialTokens: [String: Int]) {
         guard let content = String(data: data, encoding: .utf8) else {
@@ -9,26 +10,22 @@ enum FileDecoder {
         var bytePairRanks: [Data: Int] = [:]
         var specialTokens: [String: Int] = [:]
 
+        // Parse line by line
         let lines = content.split(separator: "\n")
 
         for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { continue }
+            let parts = line.split(separator: " ", maxSplits: 1)
+            guard parts.count == 2 else { continue }
 
-            let parts = trimmed.split(separator: " ", maxSplits: 1)
-            guard parts.count == 2,
-                  let rank = Int(parts[1]) else {
-                continue
-            }
+            let tokenStr = String(parts[0])
+            guard let rank = Int(String(parts[1])) else { continue }
 
-            let tokenString = String(parts[0])
-
-            // Check if it's a special token (enclosed in angle brackets)
-            if tokenString.hasPrefix("<"), tokenString.hasSuffix(">") {
-                specialTokens[tokenString] = rank
+            if tokenStr.hasPrefix("<|"), tokenStr.hasSuffix("|>") {
+                // Special token
+                specialTokens[tokenStr] = rank
             } else {
-                // Decode base64 token to bytes
-                if let tokenData = Data(base64Encoded: tokenString) {
+                // Regular token - decode base64
+                if let tokenData = Data(base64Encoded: tokenStr) {
                     bytePairRanks[tokenData] = rank
                 }
             }

@@ -26,7 +26,7 @@ final class MockClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendable 
         total: 100,
         resetDate: Date().addingTimeInterval(3600),
         tokensUsed: 50000,
-        estimatedTokenLimit: 100000)
+        estimatedTokenLimit: 100_000)
     @MainActor
     var countTokensResult = 1000
 
@@ -226,8 +226,7 @@ struct ClaudeLogManagerTests {
             total: 100,
             resetDate: now.addingTimeInterval(2 * 3600), // Reset in 2 hours
             tokensUsed: 15000,
-            estimatedTokenLimit: 100000
-        )
+            estimatedTokenLimit: 100_000)
 
         let window = mock.calculateFiveHourWindow(from: [now: recentEntries])
 
@@ -248,7 +247,7 @@ struct ClaudeLogManagerTests {
             total: 100,
             resetDate: Calendar.current.startOfDay(for: today).addingTimeInterval(24 * 3600),
             tokensUsed: 50000,
-            estimatedTokenLimit: 100000)
+            estimatedTokenLimit: 100_000)
 
         let window = mock.calculateFiveHourWindow(from: [today: entries])
 
@@ -346,7 +345,12 @@ struct FiveHourWindowTests {
     @Test("Five hour window calculations")
     func fiveHourWindowCalculations() {
         let resetDate = Date().addingTimeInterval(3600)
-        let window = FiveHourWindow(used: 75, total: 100, resetDate: resetDate, tokensUsed: 75000, estimatedTokenLimit: 100000)
+        let window = FiveHourWindow(
+            used: 75,
+            total: 100,
+            resetDate: resetDate,
+            tokensUsed: 75000,
+            estimatedTokenLimit: 100_000)
 
         #expect(window.used == 75)
         #expect(window.total == 100)
@@ -360,11 +364,21 @@ struct FiveHourWindowTests {
     @Test("Five hour window edge cases")
     func fiveHourWindowEdgeCases() {
         // Over 100% usage
-        let overUsed = FiveHourWindow(used: 150, total: 100, resetDate: Date(), tokensUsed: 150000, estimatedTokenLimit: 100000)
+        let overUsed = FiveHourWindow(
+            used: 150,
+            total: 100,
+            resetDate: Date(),
+            tokensUsed: 150_000,
+            estimatedTokenLimit: 100_000)
         #expect(overUsed.used == 150)
 
         // Zero usage
-        let noUsage = FiveHourWindow(used: 0, total: 100, resetDate: Date(), tokensUsed: 0, estimatedTokenLimit: 100000)
+        let noUsage = FiveHourWindow(
+            used: 0,
+            total: 100,
+            resetDate: Date(),
+            tokensUsed: 0,
+            estimatedTokenLimit: 100_000)
         #expect(noUsage.used == 0)
     }
 }

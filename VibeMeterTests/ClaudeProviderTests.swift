@@ -57,7 +57,7 @@ struct ClaudeProviderTests {
         let userInfo = try await provider.fetchUserInfo(authToken: "dummy_token")
 
         #expect(userInfo.provider == .claude)
-        #expect(userInfo.email.hasSuffix("@local"))
+        #expect(userInfo.email == NSUserName())
         #expect(userInfo.teamId == nil)
     }
 
@@ -256,8 +256,7 @@ struct ClaudeDataModelTests {
             total: 100,
             resetDate: Date().addingTimeInterval(3600), // 1 hour from now
             tokensUsed: 75000,
-            estimatedTokenLimit: 100000
-        )
+            estimatedTokenLimit: 100_000)
 
         #expect(window.remaining == 25)
         #expect(window.percentageUsed == 75)
@@ -271,8 +270,8 @@ struct ClaudeDataModelTests {
             used: 100,
             total: 100,
             resetDate: Date().addingTimeInterval(3600),
-            tokensUsed: 100000,
-            estimatedTokenLimit: 100000)
+            tokensUsed: 100_000,
+            estimatedTokenLimit: 100_000)
 
         #expect(window.remaining == 0)
         #expect(window.percentageUsed == 100)

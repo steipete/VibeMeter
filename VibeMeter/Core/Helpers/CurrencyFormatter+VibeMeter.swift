@@ -7,15 +7,15 @@ public enum VibeMeterCurrencyFormatter {
         if amount < 1000 {
             // Use native currency formatting for amounts under $1,000
             let formatter = FloatingPointFormatStyle<Double>.Currency(code: currencyCode, locale: .current)
-            
+
             // Apply precision based on amount
             switch amount {
-            case 0..<0.01:
+            case 0 ..< 0.01:
                 return formatter.precision(.fractionLength(2)).format(amount)
-            case 0.01..<10.0:
+            case 0.01 ..< 10.0:
                 return formatter.precision(.fractionLength(2)).format(amount)
-            case 10.0..<100.0:
-                return formatter.precision(.fractionLength(0...1)).format(amount)
+            case 10.0 ..< 100.0:
+                return formatter.precision(.fractionLength(0 ... 1)).format(amount)
             default: // 100.0..<1000.0
                 return formatter.precision(.fractionLength(0)).format(amount)
             }
@@ -38,7 +38,7 @@ public extension Double {
     var formattedCurrency: String {
         VibeMeterCurrencyFormatter.format(self)
     }
-    
+
     /// Formats currency with a specific currency code
     func formattedCurrency(code: String) -> String {
         VibeMeterCurrencyFormatter.format(self, currencyCode: code)

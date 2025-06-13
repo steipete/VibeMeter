@@ -409,24 +409,24 @@ public final class MultiProviderDataOrchestrator {
            let usageData = claudeData.usageData {
             let usagePercentage = Double(usageData.currentRequests) // Already 0-100
 
-            // Adaptive refresh rates based on usage
+            // Adaptive refresh rates based on usage - less aggressive to reduce CPU
             switch usagePercentage {
-            case 80 ... 100:
-                // Very high usage: refresh every 30 seconds
-                return 30
-            case 60 ..< 80:
-                // High usage: refresh every minute
+            case 90 ... 100:
+                // Very high usage: refresh every minute (was 30 seconds)
                 return 60
-            case 40 ..< 60:
-                // Medium usage: refresh every 2 minutes
+            case 70 ..< 90:
+                // High usage: refresh every 2 minutes (was 60 seconds)
                 return 120
+            case 50 ..< 70:
+                // Medium usage: refresh every 3 minutes (was 120 seconds)
+                return 180
             default:
-                // Low usage: use normal interval
-                return Double(settingsManager.refreshIntervalMinutes * 60)
+                // Low usage: use normal interval (minimum 5 minutes)
+                return max(Double(settingsManager.refreshIntervalMinutes * 60), 300)
             }
         }
 
-        // Default to normal interval
-        return Double(settingsManager.refreshIntervalMinutes * 60)
+        // Default to normal interval (minimum 5 minutes)
+        return max(Double(settingsManager.refreshIntervalMinutes * 60), 300)
     }
 }

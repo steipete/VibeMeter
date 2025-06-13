@@ -159,7 +159,7 @@ public struct FiveHourWindow: Sendable {
     public var isExhausted: Bool {
         remaining <= 0
     }
-    
+
     public var tokensRemaining: Int {
         max(0, estimatedTokenLimit - tokensUsed)
     }

@@ -71,7 +71,7 @@ actor ClaudeLogProcessor {
             var processedCount = 0
             for await result in group {
                 processedCount += 1
-                
+
                 if let (entries, fileKey, fileHash) = result {
                     await collector.addResult(entries: entries, fileKey: fileKey, fileHash: fileHash)
                 } else {
@@ -83,7 +83,7 @@ actor ClaudeLogProcessor {
                     let (currentDailyUsage, _, currentFilesProcessed) = await collector.getResults()
                     await progressHandler(currentFilesProcessed, currentDailyUsage)
                 }
-                
+
                 // Log progress periodically
                 if processedCount % 10 == 0 {
                     logger.debug("Processed \(processedCount)/\(fileURLs.count) files")
@@ -139,7 +139,9 @@ actor ClaudeLogProcessor {
     }
 
     // Non-actor isolated method for true parallel processing
-    nonisolated private func processFileParallel(_ fileURL: URL, existingCache: [String: Data]) async -> ([ClaudeLogEntry], String, Data)? {
+    private nonisolated func processFileParallel(_ fileURL: URL,
+                                                 existingCache: [String: Data]) async
+        -> ([ClaudeLogEntry], String, Data)? {
         let fileKey = fileURL.lastPathComponent
         let projectName = extractProjectNameParallel(from: fileURL)
 
@@ -201,7 +203,7 @@ actor ClaudeLogProcessor {
     }
 
     // Non-isolated version for parallel processing
-    nonisolated private func extractProjectNameParallel(from fileURL: URL) -> String {
+    private nonisolated func extractProjectNameParallel(from fileURL: URL) -> String {
         // Get the parent directory name (e.g., "-Users-steipete-Projects-VibeMeter")
         let parentDirectory = fileURL.deletingLastPathComponent().lastPathComponent
 
@@ -261,7 +263,7 @@ actor ClaudeLogProcessor {
     }
 
     // Non-isolated version for parallel processing
-    nonisolated private func parseFileDataParallel(_ data: Data, projectName: String? = nil) -> [ClaudeLogEntry] {
+    private nonisolated func parseFileDataParallel(_ data: Data, projectName: String? = nil) -> [ClaudeLogEntry] {
         var entries: [ClaudeLogEntry] = []
         entries.reserveCapacity(1000) // Pre-allocate for typical file sizes
 
@@ -410,6 +412,16 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     }
 
     private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
+
+    // Current window cache for debouncing
+    private var currentWindowCache: FiveHourWindow?
+    private var currentWindowCacheTime: Date?
+    private let currentWindowCacheDuration: TimeInterval = 10 // 10 seconds cache for real-time updates
+
+    // Today's log file cache
+    private var todaysLogCache: [ClaudeLogEntry]?
+    private var todaysLogCacheURL: URL?
+    private var todaysLogCacheModificationDate: Date?
 
     private lazy var tiktoken: Tiktoken? = {
         do {
@@ -609,6 +621,11 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         cachedDailyUsage = nil
         cacheTimestamp = nil
         fileHashCache = [:]
+        currentWindowCache = nil
+        currentWindowCacheTime = nil
+        todaysLogCache = nil
+        todaysLogCacheURL = nil
+        todaysLogCacheModificationDate = nil
     }
 
     /// Calculate the current 5-hour window usage
@@ -623,14 +640,32 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
 
     /// Get real-time usage for the current 5-hour window (optimized for frequent updates)
     public func getCurrentWindowUsage() async -> FiveHourWindow {
+        // Check if we have a valid cached result
+        if let cachedWindow = currentWindowCache,
+           let cacheTime = currentWindowCacheTime,
+           Date().timeIntervalSince(cacheTime) < currentWindowCacheDuration {
+            logger.debug("Returning cached current window usage (age: \(Date().timeIntervalSince(cacheTime))s)")
+            return cachedWindow
+        }
+
         guard let accessURL = bookmarkManager.resolveBookmark() else {
             logger.warning("No access to Claude logs for real-time updates")
-            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60), tokensUsed: 0, estimatedTokenLimit: 0)
+            return FiveHourWindow(
+                used: 0,
+                total: 100,
+                resetDate: Date().addingTimeInterval(5 * 60 * 60),
+                tokensUsed: 0,
+                estimatedTokenLimit: 0)
         }
         defer { accessURL.stopAccessingSecurityScopedResource() }
 
         guard let claudeURL = bookmarkManager.getClaudeLogsURL() else {
-            return FiveHourWindow(used: 0, total: 100, resetDate: Date().addingTimeInterval(5 * 60 * 60), tokensUsed: 0, estimatedTokenLimit: 0)
+            return FiveHourWindow(
+                used: 0,
+                total: 100,
+                resetDate: Date().addingTimeInterval(5 * 60 * 60),
+                tokensUsed: 0,
+                estimatedTokenLimit: 0)
         }
 
         // Get entries from the last 5 hours
@@ -641,9 +676,45 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
         if let todaysLogFile = fileScanner.findTodaysLogFile(in: claudeURL) {
             logger.debug("Processing today's log file for real-time updates")
 
-            // Process today's file without cache (for real-time accuracy)
-            let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:])
-            let entries = dailyUsage.values.flatMap(\.self)
+            // Check if we can use cached data
+            var entries: [ClaudeLogEntry] = []
+
+            if let cachedURL = todaysLogCacheURL,
+               cachedURL == todaysLogFile,
+               let cachedEntries = todaysLogCache,
+               let cachedModDate = todaysLogCacheModificationDate {
+                // Check if file hasn't been modified
+                if let attributes = try? fileManager.attributesOfItem(atPath: todaysLogFile.path),
+                   let currentModDate = attributes[.modificationDate] as? Date,
+                   currentModDate == cachedModDate {
+                    logger.debug("Using cached today's log entries (no file changes)")
+                    entries = cachedEntries
+                } else {
+                    // File was modified, need to reprocess
+                    logger.debug("Today's log file was modified, reprocessing")
+                    let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:])
+                    entries = dailyUsage.values.flatMap(\.self)
+
+                    // Update cache
+                    todaysLogCache = entries
+                    todaysLogCacheURL = todaysLogFile
+                    if let attributes = try? fileManager.attributesOfItem(atPath: todaysLogFile.path) {
+                        todaysLogCacheModificationDate = attributes[.modificationDate] as? Date
+                    }
+                }
+            } else {
+                // No cache or different file, process it
+                let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:])
+                entries = dailyUsage.values.flatMap(\.self)
+
+                // Cache the results
+                todaysLogCache = entries
+                todaysLogCacheURL = todaysLogFile
+                if let attributes = try? fileManager.attributesOfItem(atPath: todaysLogFile.path) {
+                    todaysLogCacheModificationDate = attributes[.modificationDate] as? Date
+                }
+            }
+
             let recentFromToday = entries.filter { $0.timestamp >= fiveHoursAgo }
             recentEntries.append(contentsOf: recentFromToday)
             logger.debug("Found \(recentFromToday.count) recent entries in today's log")
@@ -667,7 +738,13 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
             windowDailyUsage[day, default: []].append(entry)
         }
 
-        return windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)
+        let window = windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)
+
+        // Cache the result
+        currentWindowCache = window
+        currentWindowCacheTime = Date()
+
+        return window
     }
 
     // MARK: - Private Methods

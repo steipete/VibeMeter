@@ -65,7 +65,7 @@ struct CostTableView: View {
 
             if let totalSpending = currentSpendingDisplay {
                 Text(totalSpending)
-                    .font(.title2.weight(.semibold).monospaced())
+                    .font(.body.weight(.semibold).monospaced())
                     .foregroundStyle(.primary)
                     .accessibilityLabel("Total spending: \(totalSpending)")
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
@@ -301,7 +301,8 @@ struct CostTableView: View {
                             .frame(height: 6)
 
                             if let maxRequests = usageData.maxRequests, maxRequests > 0 {
-                                Text("\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
+                                Text(
+                                    "\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .fixedSize()

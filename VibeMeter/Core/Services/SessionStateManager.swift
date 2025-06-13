@@ -78,7 +78,7 @@ public final class SessionStateManager {
                     logger.info("Claude has token but no session, initializing...")
                     userSessionData.handleLoginSuccess(
                         for: .claude,
-                        email: "\(NSUserName())@local",
+                        email: NSUserName(),
                         teamName: nil,
                         teamId: nil)
                 }

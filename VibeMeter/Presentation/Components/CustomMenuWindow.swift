@@ -219,7 +219,7 @@ final class CustomMenuWindow: NSPanel {
             let rightMargin: CGFloat = 10
             let menuBarHeight: CGFloat = 25
             let gap: CGFloat = 5
-            
+
             let x = defaultScreenWidth - preferredSize.width - rightMargin
             let y = defaultScreenHeight - menuBarHeight - preferredSize.height - gap
             return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
@@ -230,13 +230,13 @@ final class CustomMenuWindow: NSPanel {
 
         // Check if the status frame appears to be invalid (too close to origin)
         // This can happen when the menu bar icon is hidden by apps like Ice
-        if statusFrame.midX < 100 && statusFrame.midY < 100 {
+        if statusFrame.midX < 100, statusFrame.midY < 100 {
             // Fall back to top-right positioning
             let rightMargin: CGFloat = 10
-            
+
             let x = screenFrame.maxX - preferredSize.width - rightMargin
             let y = screenFrame.maxY - preferredSize.height - gap
-            
+
             return NSRect(origin: NSPoint(x: x, y: y), size: preferredSize)
         }
 
