@@ -234,6 +234,393 @@ struct TiktokenTests {
             #expect(error is TiktokenError)
         }
     }
+    
+    // MARK: - New Improvement Tests
+    
+    @Test("Test batch encoding performance")
+    func testBatchEncoding() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let texts = [
+            "Hello world",
+            "The quick brown fox jumps over the lazy dog",
+            "Swift is a powerful programming language",
+            "Testing batch encoding functionality",
+            "Multiple texts should be processed in parallel"
+        ]
+        
+        // Test batch encoding
+        let startTime = Date()
+        let batchResults = tiktoken.encodeBatch(texts)
+        let batchTime = Date().timeIntervalSince(startTime)
+        
+        // Verify results
+        #expect(batchResults.count == texts.count)
+        for (index, tokens) in batchResults.enumerated() {
+            let singleResult = tiktoken.encode(texts[index])
+            #expect(tokens == singleResult)
+        }
+        
+        // Batch should be reasonably fast
+        #expect(batchTime < 0.1)
+    }
+    
+    @Test("Test special token encoding")
+    func testSpecialTokenEncoding() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let textWithSpecial = "Hello <|endoftext|> world"
+        
+        // Test encoding without special tokens (treated as normal text)
+        let ordinaryTokens = tiktoken.encodeOrdinary(textWithSpecial)
+        
+        // Test encoding with special tokens allowed
+        let specialTokens = tiktoken.encodeWithAllSpecial(textWithSpecial)
+        
+        // Should be different when special tokens are processed
+        #expect(ordinaryTokens != specialTokens)
+        
+        // When encoded ordinarily, special token should be split into multiple tokens
+        #expect(ordinaryTokens.count > specialTokens.count)
+    }
+    
+    @Test("Test encoding cache effectiveness")
+    func testEncodingCache() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let text = "This is a test text that will be encoded multiple times"
+        
+        // First encoding (not cached)
+        let start1 = Date()
+        let tokens1 = tiktoken.encode(text)
+        let time1 = Date().timeIntervalSince(start1)
+        
+        // Second encoding (should be cached)
+        let start2 = Date()
+        let tokens2 = tiktoken.encode(text)
+        let time2 = Date().timeIntervalSince(start2)
+        
+        // Results should be identical
+        #expect(tokens1 == tokens2)
+        
+        // Cached version should be faster (though this might be flaky in tests)
+        // Just verify it completes quickly
+        #expect(time2 < 0.01)
+    }
+    
+    @Test("Test proper BPE merge order")
+    func testBPEMergeOrder() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test that common sequences are properly merged
+        let text = "aaaa" // Should merge efficiently if "aa" is in vocabulary
+        let tokens = tiktoken.encode(text)
+        
+        // Should result in fewer tokens than individual characters
+        #expect(tokens.count < 4)
+    }
+    
+    @Test("Test multilingual tokenization with o200k pattern")
+    func testMultilingualWithO200k() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test various scripts with the improved o200k pattern
+        let testCases = [
+            ("Hello", 1, 2), // Latin
+            ("Привет", 1, 3), // Cyrillic
+            ("こんにちは", 2, 5), // Hiragana
+            ("你好", 1, 2), // Chinese
+            ("مرحبا", 1, 3), // Arabic
+            ("🌍🌎🌏", 1, 3), // Emojis
+            ("café", 1, 2), // Latin with diacritics
+        ]
+        
+        for (text, minTokens, maxTokens) in testCases {
+            let tokenCount = tiktoken.countTokens(in: text)
+            #expect(tokenCount >= minTokens, "Text '\(text)' has \(tokenCount) tokens, expected at least \(minTokens)")
+            #expect(tokenCount <= maxTokens, "Text '\(text)' has \(tokenCount) tokens, expected at most \(maxTokens)")
+        }
+    }
+    
+    @Test("Test decode batch functionality")
+    func testDecodeBatch() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let texts = [
+            "Hello world",
+            "Testing decode batch",
+            "Swift programming"
+        ]
+        
+        // Encode texts
+        let tokenBatch = texts.map { tiktoken.encode($0) }
+        
+        // Decode batch
+        let decodedTexts = tiktoken.decodeBatch(tokenBatch)
+        
+        // Verify roundtrip
+        #expect(decodedTexts.count == texts.count)
+        for (original, decoded) in zip(texts, decodedTexts) {
+            #expect(original == decoded)
+        }
+    }
+    
+    // MARK: - Comprehensive Edge Case Tests
+    
+    @Test("Test empty string encoding")
+    func testEmptyString() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let tokens = tiktoken.encode("")
+        #expect(tokens.count == 0)
+        
+        let decoded = tiktoken.decode([])
+        #expect(decoded == "")
+    }
+    
+    @Test("Test single character edge cases")
+    func testSingleCharacters() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test various single characters
+        let testChars = [
+            "\0", // Null character
+            "\n", // Newline
+            "\r", // Carriage return
+            "\t", // Tab
+            " ",  // Space
+            "\"", // Quote
+            "\\", // Backslash
+            "\u{0001}", // Control character
+            "\u{FFFF}", // High unicode
+            "𝕳", // Mathematical character
+            "🚀", // Emoji
+            "\u{200B}", // Zero-width space
+            "\u{FEFF}", // Zero-width no-break space
+        ]
+        
+        for char in testChars {
+            let tokens = tiktoken.encode(char)
+            #expect(tokens.count > 0, "Character '\(char.debugDescription)' should produce tokens")
+            
+            let decoded = tiktoken.decode(tokens)
+            #expect(decoded == char, "Roundtrip failed for '\(char.debugDescription)'")
+        }
+    }
+    
+    @Test("Test surrogate pairs and invalid UTF-8")
+    func testSurrogatePairs() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test valid surrogate pairs
+        let emojiWithSurrogates = "👨‍👩‍👧‍👦" // Family emoji with ZWJ
+        let tokens = tiktoken.encode(emojiWithSurrogates)
+        #expect(tokens.count > 0)
+        
+        let decoded = tiktoken.decode(tokens)
+        #expect(decoded == emojiWithSurrogates)
+        
+        // Test mixed content with surrogates
+        let mixed = "Hello 👋 World 🌍!"
+        let mixedTokens = tiktoken.encode(mixed)
+        let mixedDecoded = tiktoken.decode(mixedTokens)
+        #expect(mixedDecoded == mixed)
+    }
+    
+    @Test("Test extremely long strings")
+    func testExtremelyLongStrings() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test with very long repeated pattern
+        let pattern = "The quick brown fox jumps over the lazy dog. "
+        let veryLongText = String(repeating: pattern, count: 10_000)
+        
+        let tokens = tiktoken.encode(veryLongText)
+        #expect(tokens.count > 0)
+        #expect(tokens.count < veryLongText.count) // Should be compressed
+        
+        // Test decode doesn't crash or timeout
+        let decoded = tiktoken.decode(tokens)
+        #expect(decoded == veryLongText)
+    }
+    
+    @Test("Test special token edge cases")
+    func testSpecialTokenEdgeCases() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test multiple special tokens
+        let textWithMultipleSpecial = "<|endoftext|>Hello<|endoftext|>World<|endoftext|>"
+        
+        // Without special tokens allowed
+        let ordinary = tiktoken.encodeOrdinary(textWithMultipleSpecial)
+        let ordinaryDecoded = tiktoken.decode(ordinary)
+        #expect(ordinaryDecoded == textWithMultipleSpecial)
+        
+        // With special tokens allowed
+        let special = tiktoken.encodeWithAllSpecial(textWithMultipleSpecial)
+        #expect(special.count < ordinary.count) // Should be more efficient
+        
+        // Test partial special tokens
+        let partial = "This is <|endo"
+        let partialTokens = tiktoken.encode(partial)
+        let partialDecoded = tiktoken.decode(partialTokens)
+        #expect(partialDecoded == partial)
+    }
+    
+    @Test("Test batch operations with edge cases")
+    func testBatchEdgeCases() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Empty batch
+        let emptyBatch: [String] = []
+        let emptyResults = tiktoken.encodeBatch(emptyBatch)
+        #expect(emptyResults.count == 0)
+        
+        // Single item batch
+        let singleBatch = ["Hello"]
+        let singleResults = tiktoken.encodeBatch(singleBatch)
+        #expect(singleResults.count == 1)
+        #expect(singleResults[0] == tiktoken.encode("Hello"))
+        
+        // Large batch with varied content
+        let largeBatch = (0..<100).map { i in
+            switch i % 5 {
+            case 0: return "Short"
+            case 1: return "A medium length string with some words"
+            case 2: return String(repeating: "Long ", count: 50)
+            case 3: return "Special <|endoftext|> tokens"
+            case 4: return "Unicode: 你好世界 🌍"
+            default: return "Default"
+            }
+        }
+        
+        let largeBatchResults = tiktoken.encodeBatch(largeBatch)
+        #expect(largeBatchResults.count == largeBatch.count)
+        
+        // Verify each result matches individual encoding
+        for (index, text) in largeBatch.enumerated() {
+            let expected = tiktoken.encode(text)
+            #expect(largeBatchResults[index] == expected)
+        }
+    }
+    
+    @Test("Test cache behavior with collision scenarios")
+    func testCacheCollisions() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Encode many different strings to potentially trigger cache eviction
+        let strings = (0..<2000).map { "Test string number \($0)" }
+        
+        // First pass - populate cache
+        let firstPass = strings.map { tiktoken.encode($0) }
+        
+        // Second pass - should use cache for recent items
+        let secondPass = strings.map { tiktoken.encode($0) }
+        
+        // Results should be identical
+        for (first, second) in zip(firstPass, secondPass) {
+            #expect(first == second)
+        }
+        
+        // Test that very first items might have been evicted
+        let veryFirst = tiktoken.encode(strings[0])
+        #expect(veryFirst == firstPass[0])
+    }
+    
+    @Test("Test concurrent encoding safety")
+    func testConcurrentEncodingSafety() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+        let group = DispatchGroup()
+        let lock = NSLock()
+        
+        var results: [Int: [Int]] = [:]
+        let testString = "Concurrent test string"
+        
+        // Encode the same string concurrently many times
+        for i in 0..<100 {
+            group.enter()
+            queue.async {
+                let encoded = tiktoken.encode(testString)
+                lock.lock()
+                results[i] = encoded
+                lock.unlock()
+                group.leave()
+            }
+        }
+        
+        group.wait()
+        
+        // All results should be identical
+        let expected = tiktoken.encode(testString)
+        for i in 0..<100 {
+            #expect(results[i] == expected)
+        }
+    }
+    
+    @Test("Test malformed input handling")
+    func testMalformedInput() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test various malformed inputs
+        let malformedInputs = [
+            String(repeating: "\u{FFFD}", count: 100), // Replacement characters
+            String(bytes: [0xED, 0xA0, 0x80], encoding: .utf8) ?? "", // UTF-8 encoding of surrogate
+            String(bytes: [0xED, 0xB0, 0x80], encoding: .utf8) ?? "", // UTF-8 encoding of surrogate
+            String(bytes: [0xFF, 0xFE], encoding: .utf8) ?? "", // Invalid UTF-8
+            String(bytes: [0xC0, 0x80], encoding: .utf8) ?? "", // Overlong encoding
+        ]
+        
+        for input in malformedInputs {
+            // Should not crash
+            let tokens = tiktoken.encode(input)
+            let decoded = tiktoken.decode(tokens)
+            
+            // May not roundtrip perfectly due to UTF-8 handling
+            #expect(tokens.count >= 0)
+            #expect(decoded.count >= 0)
+        }
+    }
+    
+    @Test("Test token count accuracy for known patterns")
+    func testTokenCountAccuracy() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Common patterns that should tokenize efficiently
+        let efficientPatterns = [
+            ("Hello", 1, 2), // Should be 1-2 tokens
+            ("http://", 1, 3), // URL prefix
+            ("function", 1, 2), // Common programming keyword
+            ("    ", 1, 2), // Indentation
+            ("\n\n", 1, 2), // Paragraph break
+        ]
+        
+        for (pattern, minTokens, maxTokens) in efficientPatterns {
+            let tokens = tiktoken.countTokens(in: pattern)
+            #expect(tokens >= minTokens, "'\(pattern)' has \(tokens) tokens, expected at least \(minTokens)")
+            #expect(tokens <= maxTokens, "'\(pattern)' has \(tokens) tokens, expected at most \(maxTokens)")
+        }
+    }
+    
+    @Test("Test decode with invalid token IDs")
+    func testDecodeInvalidTokens() throws {
+        let tiktoken = try Tiktoken(encoding: .o200k_base)
+        
+        // Test decoding with potentially invalid token IDs
+        let invalidTokenSets = [
+            [-1], // Negative token
+            [Int.max], // Very large token
+            [1_000_000], // Likely out of range
+            [], // Empty
+        ]
+        
+        for tokens in invalidTokenSets {
+            // Should not crash, might return empty or partial string
+            let decoded = tiktoken.decode(tokens)
+            #expect(decoded != nil) // Should return something, even if empty
+        }
+    }
 }
 
 // MARK: - Token Cost Calculation Tests

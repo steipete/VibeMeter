@@ -1,7 +1,7 @@
 import Foundation
 
 /// Corrected Byte Pair Encoding implementation based on tiktoken
-final class CoreBPEFixed {
+final class CoreBPEFixed: @unchecked Sendable {
     private let bytePairRanks: [Data: Int]
     private let tokenEncoder: [String: Int]
     private let tokenDecoder: [Int: String]
@@ -137,9 +137,9 @@ final class CoreBPEFixed {
 
 extension CoreBPEFixed {
     /// Optimized version with caching for common sequences
-    private struct Cache {
+    private final class Cache: @unchecked Sendable {
         static let shared = Cache()
-        private var cache = NSCache<NSData, NSArray>()
+        private let cache = NSCache<NSData, NSArray>()
 
         func get(_ data: Data) -> [Int]? {
             cache.object(forKey: data as NSData) as? [Int]
