@@ -61,7 +61,7 @@ actor ClaudeLogProcessor {
         await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self, returning: Void.self) { group in
             // Add all tasks at once - Swift concurrency will manage the actual parallelism
             for fileURL in fileURLs {
-                group.addTask(priority: .high) { [self] in
+                group.addTask(priority: .background) { [self] in
                     // Process file without actor isolation to allow true parallelism
                     return await self.processFileParallel(fileURL, existingCache: cache)
                 }
