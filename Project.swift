@@ -61,7 +61,7 @@ let project = Project(
             .debug(
                 name: "Debug",
                 settings: [
-                    "CODE_SIGN_IDENTITY": "Sign to Run Locally",
+                    "CODE_SIGN_IDENTITY": "-",
                     "CODE_SIGN_STYLE": "Automatic",
                     "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["DEBUG"],
                     "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
@@ -70,6 +70,10 @@ let project = Project(
                     "SWIFT_TREAT_WARNINGS_AS_ERRORS": false,
                     // Enable code coverage
                     "ENABLE_CODE_COVERAGE": true,
+                    // Disable hardened runtime for debug builds to avoid warnings
+                    "ENABLE_HARDENED_RUNTIME": false,
+                    // Enable app sandbox
+                    "ENABLE_APP_SANDBOX": true,
                 ],
                 xcconfig: nil),
             .release(
@@ -79,6 +83,10 @@ let project = Project(
                     "CODE_SIGN_STYLE": "Automatic",
                     "DEVELOPMENT_TEAM": "Y5PE65HELJ",
                     "SWIFT_OPTIMIZATION_LEVEL": "-O",
+                    // Enable hardened runtime for release builds
+                    "ENABLE_HARDENED_RUNTIME": true,
+                    // Enable app sandbox
+                    "ENABLE_APP_SANDBOX": true,
                 ],
                 xcconfig: nil),
         ]),
