@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// View mode for the Claude usage report
-enum ClaudeUsageViewMode: String, CaseIterable {
+enum ClaudeUsageViewMode: String, CaseIterable, Sendable {
     case byDay = "By Day"
     case byProject = "By Project"
 }
@@ -10,6 +10,12 @@ enum ClaudeUsageViewMode: String, CaseIterable {
 struct ClaudeUsageReportView: View {
     @StateObject
     private var dataLoader = ClaudeUsageDataLoader()
+    
+    // Debounced versions of rapidly updating values
+    @DebouncedState(duration: .claudeProgress)
+    private var debouncedFilesProcessed: Int = 0
+    @DebouncedState(duration: .claudeMessage)
+    private var debouncedLoadingMessage: String = ""
 
     @State
     private var sortOrder = [KeyPathComparator(\DailyUsageSummary.date, order: .reverse)]
@@ -67,12 +73,12 @@ struct ClaudeUsageReportView: View {
             if dataLoader.isLoading, dataLoader.totalFiles > 0 {
                 VStack(spacing: 6) {
                     ProgressView(
-                        value: Double(dataLoader.filesProcessed),
+                        value: Double(debouncedFilesProcessed),
                         total: Double(dataLoader.totalFiles))
                         .progressViewStyle(.linear)
                         .padding(.horizontal)
 
-                    Text(dataLoader.loadingMessage)
+                    Text(debouncedLoadingMessage)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -377,6 +383,16 @@ struct ClaudeUsageReportView: View {
 
             // Start animation
             animationTrigger = true
+            
+            // Initialize debounced values with current dataLoader values
+            debouncedFilesProcessed = dataLoader.filesProcessed
+            debouncedLoadingMessage = dataLoader.loadingMessage
+        }
+        .onChange(of: dataLoader.filesProcessed) { _, newValue in
+            debouncedFilesProcessed = newValue
+        }
+        .onChange(of: dataLoader.loadingMessage) { _, newValue in
+            debouncedLoadingMessage = newValue
         }
         .toolbar {
             ToolbarItem(placement: .automatic) {
@@ -593,7 +609,7 @@ struct ClaudeUsageReportView: View {
 
 // MARK: - Data Models
 
-private struct ProjectUsageSummary: Identifiable {
+private struct ProjectUsageSummary: Identifiable, Sendable {
     let id = UUID()
     let projectName: String
     let inputTokens: Int
@@ -660,7 +676,7 @@ private struct ProjectUsageSummary: Identifiable {
     }
 }
 
-private struct DailyUsageSummary: Identifiable {
+private struct DailyUsageSummary: Identifiable, Sendable {
     let id = UUID()
     let date: Date
     let inputTokens: Int
