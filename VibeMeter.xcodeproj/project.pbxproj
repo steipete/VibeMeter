@@ -136,7 +136,6 @@
 		8E7CD9EC492E5FA16F083AE7 /* CurrencyOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA9D480170CD60AB4088A4E /* CurrencyOrchestrator.swift */; };
 		8EB3D618593A2FF0AB884A0E /* LoggedInContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C37B744DA11E72204F1E7E /* LoggedInContentView.swift */; };
 		8F1D8B713ADEF306C4A09B1D /* StatusBarObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89D1B5BE42F17E461AED87C /* StatusBarObserver.swift */; };
-		8F5510ECFB3CC8DFBF955FA2 /* DebouncedState+Performance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29E81BE50A1F8933BAD63E65 /* DebouncedState+Performance.swift */; };
 		974577B8217D1A58B9955CC6 /* VibeMeterMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73B3A7FDFD4B900C697D24 /* VibeMeterMainView.swift */; };
 		98642BBED52C9F47A7945AE7 /* GravatarServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C40BD4C01DF70BB2BE6AAB0 /* GravatarServiceTests.swift */; };
 		98A190F8119B90AD87D08F6F /* ClaudeCodeLogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A848B25F150D101A6A5C6A90 /* ClaudeCodeLogParser.swift */; };
@@ -318,7 +317,6 @@
 		26DF5BA07AAF602D61257F73 /* PricingDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingDataManagerTests.swift; sourceTree = "<group>"; };
 		270C8DC4B520802F1516D87B /* UserDefaultsBackedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsBackedTests.swift; sourceTree = "<group>"; };
 		282444495F49CDC4BD6ED7E6 /* ClaudeProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProviderTests.swift; sourceTree = "<group>"; };
-		29E81BE50A1F8933BAD63E65 /* DebouncedState+Performance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DebouncedState+Performance.swift"; sourceTree = "<group>"; };
 		2A7B27A5840D363DC7593601 /* ProviderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDetailView.swift; sourceTree = "<group>"; };
 		2A8AA2E75C300A3F965B0550 /* AsyncTimerSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTimerSequence.swift; sourceTree = "<group>"; };
 		2BA20DE0E26D709D6A79669F /* ProviderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderFactory.swift; sourceTree = "<group>"; };
@@ -685,7 +683,6 @@
 				3C87AACEEAA2ED12E4DF95E6 /* CurrencyConversionHelper.swift */,
 				18B7956AA1E1A43F74416D28 /* DebouncedState.swift */,
 				F5392E3520D9BB70DB4F6088 /* DebouncedState+ClaudeUsage.swift */,
-				29E81BE50A1F8933BAD63E65 /* DebouncedState+Performance.swift */,
 				6381307F45705F22ABD8293D /* KeychainHelper.swift */,
 				ED0B5A578E2D63827397C55E /* NetworkRetryHandler.swift */,
 				1DD3AE4E36401E8FD3CA8065 /* NetworkRetryHandler+Providers.swift */,
@@ -1234,7 +1231,6 @@
 				C1D7AD0BE1685ED2228B7414 /* CollectionExtensions.swift in Sources */,
 				DE01302F5B784AD9FD98D961 /* CurrencyConversionHelper.swift in Sources */,
 				0655AB812EF59B11D3DACFF7 /* DebouncedState+ClaudeUsage.swift in Sources */,
-				8F5510ECFB3CC8DFBF955FA2 /* DebouncedState+Performance.swift in Sources */,
 				226701A3C4E0EE5C3D12AE72 /* DebouncedState.swift in Sources */,
 				ED619157F710B8BF7ED271D2 /* KeychainHelper.swift in Sources */,
 				69B9BF817033BB94E94B8E05 /* NSApplication+openSettings.swift in Sources */,
