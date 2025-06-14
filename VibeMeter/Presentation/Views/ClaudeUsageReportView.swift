@@ -395,102 +395,74 @@ struct ClaudeUsageReportView: View {
             debouncedLoadingMessage = newValue
         }
         .toolbar {
-            ToolbarItem(placement: .automatic) {
-                HStack(spacing: 24) {
-                    // View mode picker
-                    VStack(spacing: 4) {
-                        Picker("", selection: $viewMode) {
-                            ForEach(ClaudeUsageViewMode.allCases, id: \.self) { mode in
-                                Text(mode.rawValue).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        .frame(width: 200)
-
-                        Text("View Mode")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            ToolbarItemGroup(placement: .automatic) {
+                // View mode picker
+                Picker(selection: $viewMode) {
+                    ForEach(ClaudeUsageViewMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
                     }
-
-                    // Project filter (only in By Day mode)
-                    if viewMode == .byDay, !dataLoader.availableProjects.isEmpty {
-                        VStack(spacing: 4) {
-                            Picker("", selection: $selectedProject) {
-                                Text("All Projects").tag("All Projects")
-                                Divider()
-                                ForEach(dataLoader.availableProjects, id: \.self) { project in
-                                    Text(project).tag(project)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                            .frame(width: 200)
-
-                            Text("Project")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    // Date range selector (only in By Project mode)
-                    if viewMode == .byProject {
-                        VStack(spacing: 4) {
-                            HStack(spacing: 8) {
-                                DatePicker("", selection: $dateRangeStart, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-
-                                Text("to")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-
-                                DatePicker(
-                                    "",
-                                    selection: $dateRangeEnd,
-                                    in: dateRangeStart ... Date(),
-                                    displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-                            }
-
-                            Text("Date Range")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    // Cost calculation strategy selector
-                    VStack(spacing: 4) {
-                        Picker("", selection: $selectedCostStrategy) {
-                            ForEach(CostCalculationStrategy.allCases, id: \.self) { strategy in
-                                Text(strategy.displayName).tag(strategy)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                        .frame(width: 220)
-
-                        Text("Cost Strategy")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    // Refresh button
-                    VStack(spacing: 4) {
-                        Button(action: refreshData) {
-                            Image(systemName: "arrow.clockwise")
-                                .imageScale(.medium)
-                        }
-                        .disabled(dataLoader.isLoading)
-                        .buttonStyle(.plain)
-
-                        Text("Refresh")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                } label: {
+                    Label("View Mode", systemImage: "calendar")
                 }
-                .padding(.vertical, 4)
+                .pickerStyle(.segmented)
+                .help("Switch between daily and project views")
+                .frame(width: 180)
+                
+                // Project filter (only in By Day mode)
+                if viewMode == .byDay, !dataLoader.availableProjects.isEmpty {
+                    Picker(selection: $selectedProject) {
+                        Text("All Projects").tag("All Projects")
+                        Divider()
+                        ForEach(dataLoader.availableProjects, id: \.self) { project in
+                            Text(project).tag(project)
+                        }
+                    } label: {
+                        Label("Project", systemImage: "folder")
+                    }
+                    .pickerStyle(.menu)
+                    .help("Filter by project")
+                    .frame(width: 180)
+                }
+                
+                // Date range selector (only in By Project mode)
+                if viewMode == .byProject {
+                    HStack(spacing: 6) {
+                        DatePicker(selection: $dateRangeStart, displayedComponents: .date) {
+                            Label("Start Date", systemImage: "calendar")
+                        }
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        
+                        Text("to")
+                            .foregroundStyle(.secondary)
+                        
+                        DatePicker(selection: $dateRangeEnd, in: dateRangeStart...Date(), displayedComponents: .date) {
+                            Label("End Date", systemImage: "calendar")
+                        }
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                    }
+                    .help("Select date range")
+                }
+                
+                // Cost calculation strategy selector
+                Picker(selection: $selectedCostStrategy) {
+                    ForEach(CostCalculationStrategy.allCases, id: \.self) { strategy in
+                        Text(strategy.displayName).tag(strategy)
+                    }
+                } label: {
+                    Label("Cost Strategy", systemImage: "dollarsign.circle")
+                }
+                .pickerStyle(.menu)
+                .help("Select cost calculation strategy")
+                .frame(width: 200)
+                
+                // Refresh button
+                Button(action: refreshData) {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
+                .help("Refresh usage data")
+                .disabled(dataLoader.isLoading)
             }
         }
     }
@@ -858,3 +830,4 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
     .frame(width: 900, height: 650)
     .preferredColorScheme(.light)
 }
+
