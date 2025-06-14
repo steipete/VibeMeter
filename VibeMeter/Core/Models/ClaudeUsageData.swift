@@ -137,7 +137,7 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
 }
 
 /// Represents the 5-hour window usage for Claude Pro accounts
-public struct FiveHourWindow: Sendable {
+public struct FiveHourWindow: Sendable, Equatable {
     public let used: Double
     public let total: Double
     public let resetDate: Date
