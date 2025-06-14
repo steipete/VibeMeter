@@ -8,15 +8,19 @@ struct TiktokenMinimalTest {
     @Test("Basic tokenizer functionality")
     func testBasicTokenizer() throws {
         // Check if vocabulary file exists in bundle
+        // In unit tests, resources are typically in the main bundle
         guard let vocabURL = Bundle.main.url(forResource: "o200k_base", withExtension: "tiktoken") else {
-            // Try alternative bundle
-            let testBundle = Bundle(for: ClaudeLogManager.self)
-            guard let altURL = testBundle.url(forResource: "o200k_base", withExtension: "tiktoken") else {
-                Issue.record("Vocabulary file not found in any bundle")
-                return
+            // If not found, try looking in all bundles
+            for bundle in Bundle.allBundles {
+                if let url = bundle.url(forResource: "o200k_base", withExtension: "tiktoken") {
+                    print("Found vocabulary in bundle: \(bundle.bundleIdentifier ?? "unknown") at \(url)")
+                    break
+                }
             }
-            print("Found vocabulary in test bundle: \(altURL)")
+            Issue.record("Vocabulary file not found in any bundle. Make sure o200k_base.tiktoken is included in the test target's resources.")
+            return
         }
+        print("Found vocabulary at: \(vocabURL)")
         
         // Try to initialize tokenizer
         do {

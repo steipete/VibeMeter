@@ -126,11 +126,8 @@ public final class Tiktoken: @unchecked Sendable {
             return texts.map { encode($0) }
         }
         
-        // Use a thread-safe dictionary approach
-        let resultsLock = NSLock()
-        var results: [Int: [Int]] = [:]
-        
-        // Process in parallel
+        // Use thread-safe results container
+        let results = ConcurrentResults<[Int]>()
         let queue = DispatchQueue(label: "tiktoken.batch", attributes: .concurrent)
         let group = DispatchGroup()
         
@@ -138,9 +135,7 @@ public final class Tiktoken: @unchecked Sendable {
             group.enter()
             queue.async { [self] in
                 let encoded = self.encode(text)
-                resultsLock.lock()
-                results[index] = encoded
-                resultsLock.unlock()
+                results.set(encoded, for: index)
                 group.leave()
             }
         }
@@ -148,7 +143,7 @@ public final class Tiktoken: @unchecked Sendable {
         group.wait()
         
         // Convert to ordered array
-        return (0..<texts.count).map { results[$0]! }
+        return results.getAllValues(count: texts.count)
     }
     
     /// Decode multiple token sequences in parallel
@@ -162,11 +157,8 @@ public final class Tiktoken: @unchecked Sendable {
             return tokenBatch.map { decode($0) }
         }
         
-        // Use a thread-safe dictionary approach
-        let resultsLock = NSLock()
-        var results: [Int: String] = [:]
-        
-        // Process in parallel
+        // Use thread-safe results container
+        let results = ConcurrentResults<String>()
         let queue = DispatchQueue(label: "tiktoken.decode.batch", attributes: .concurrent)
         let group = DispatchGroup()
         
@@ -174,9 +166,7 @@ public final class Tiktoken: @unchecked Sendable {
             group.enter()
             queue.async { [self] in
                 let decoded = self.decode(tokens)
-                resultsLock.lock()
-                results[index] = decoded
-                resultsLock.unlock()
+                results.set(decoded, for: index)
                 group.leave()
             }
         }
@@ -184,7 +174,7 @@ public final class Tiktoken: @unchecked Sendable {
         group.wait()
         
         // Convert to ordered array
-        return (0..<tokenBatch.count).map { results[$0]! }
+        return results.getAllValues(count: tokenBatch.count)
     }
     
     // MARK: - Private Methods
@@ -222,9 +212,30 @@ public enum TiktokenError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case let .encodingNotFound(encoding):
-            "Encoding file not found: \(encoding).tiktoken"
+            return "Encoding file not found: \(encoding).tiktoken"
         case .invalidVocabularyFormat:
-            "Invalid vocabulary file format"
+            return "Invalid vocabulary file format"
+        }
+    }
+}
+
+
+// MARK: - Thread-Safe Results Container
+
+/// Thread-safe container for concurrent results
+private final class ConcurrentResults<T: Sendable>: @unchecked Sendable {
+    private var storage: [Int: T] = [:]
+    private let queue = DispatchQueue(label: "tiktoken.results", attributes: .concurrent)
+    
+    func set(_ value: T, for index: Int) {
+        queue.async(flags: .barrier) {
+            self.storage[index] = value
+        }
+    }
+    
+    func getAllValues(count: Int) -> [T] {
+        queue.sync {
+            (0..<count).compactMap { storage[$0] }
         }
     }
 }

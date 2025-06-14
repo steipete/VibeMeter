@@ -3,7 +3,7 @@ import simd
 
 /// SIMD-optimized Byte Pair Encoding implementation
 final class CoreBPESIMD: @unchecked Sendable {
-    private let bytePairRanks: [Data: Int]
+    let bytePairRanks: [Data: Int]  // Made internal for SIMDMergeFinder
     private let tokenEncoder: [String: Int]
     private let tokenDecoder: [Int: String]
     private let specialTokens: [String: Int]
@@ -132,34 +132,22 @@ final class CoreBPESIMD: @unchecked Sendable {
             return bytePairEncodingScalar(data)
         }
 
-        // Convert to byte array once for efficiency
-        let bytes = [UInt8](data)
+        // Use SIMD-optimized merge finder
+        let mergeFinder = SIMDMergeFinder(bytePairRanks: bytePairRanks)
         
         // Start with individual bytes as parts
-        var parts: [Data] = bytes.map { Data([$0]) }
+        var parts: [Data] = data.map { Data([$0]) }
         
         // Keep merging until no more merges are possible
         while parts.count > 1 {
-            var minRank = Int.max
-            var minIndex = -1
-            
-            // Find the pair with minimum rank (highest priority)
-            for i in 0 ..< parts.count - 1 {
-                let pair = parts[i] + parts[i + 1]
-                if let rank = bytePairRanks[pair], rank < minRank {
-                    minRank = rank
-                    minIndex = i
-                }
-            }
-            
-            // If no mergeable pair found, break
-            if minIndex == -1 {
+            // Find the best merge using SIMD
+            guard let (mergeIndex, _) = mergeFinder.findBestMerge(in: parts) else {
                 break
             }
             
             // Merge the pair
-            parts[minIndex] = parts[minIndex] + parts[minIndex + 1]
-            parts.remove(at: minIndex + 1)
+            parts[mergeIndex] = parts[mergeIndex] + parts[mergeIndex + 1]
+            parts.remove(at: mergeIndex + 1)
         }
         
         // Convert parts to token IDs
