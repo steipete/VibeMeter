@@ -27,13 +27,36 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         if let existingWindow = sharedWindow {
             // Window already exists, just bring it to front
             existingWindow.showWindow(nil)
-            existingWindow.window?.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            if let window = existingWindow.window {
+                // First, ensure the app is active
+                NSApp.activate(ignoringOtherApps: true)
+                // Make the window key and bring to front
+                window.makeKeyAndOrderFront(nil)
+                // Ensure window is on the active space
+                window.collectionBehavior = [.moveToActiveSpace, .managed]
+                // Force window to front by setting level temporarily
+                window.level = .floating
+                DispatchQueue.main.async {
+                    window.level = .normal
+                }
+            }
         } else {
             // Create new window
             let windowController = ClaudeUsageReportWindowController()
             windowController.showWindow(nil)
             sharedWindow = windowController
+            
+            // Ensure new window appears in foreground
+            if let window = windowController.window {
+                NSApp.activate(ignoringOtherApps: true)
+                window.makeKeyAndOrderFront(nil)
+                window.collectionBehavior = [.moveToActiveSpace, .managed]
+                // Force window to front by setting level temporarily
+                window.level = .floating
+                DispatchQueue.main.async {
+                    window.level = .normal
+                }
+            }
         }
     }
 
@@ -46,6 +69,9 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.isReleasedWhenClosed = false
         window.center()
+        
+        // Configure window behavior to ensure it appears in foreground
+        window.collectionBehavior = [.moveToActiveSpace, .managed, .fullScreenAuxiliary]
 
         // Set minimum and initial size
         window.setContentSize(NSSize(width: 900, height: 650))
@@ -55,7 +81,6 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = false
-        window.toolbar = NSToolbar()
         window.toolbarStyle = .unified
 
         // Add visual effect to window
