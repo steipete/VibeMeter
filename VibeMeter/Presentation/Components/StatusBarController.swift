@@ -130,6 +130,11 @@ final class StatusBarController: NSObject {
         observer.onDataChanged = { [weak self] in
             self?.observableDisplayView?.setNeedsDisplayAndLayout()
         }
+        
+        // Invalidate icon cache when appearance changes
+        observer.onAppearanceChanged = { [weak self] in
+            self?.displayManager.invalidateIconCache()
+        }
     }
 
     private func startComponents() {

@@ -24,6 +24,12 @@ final class StatusBarObserver {
     private var lastObservedState: ObservedState?
     private var lastUpdateTime: Date = .distantPast
     private let updateThrottleInterval: TimeInterval = 0.5 // 500ms minimum between updates
+    
+    // Debounced state for spending data updates
+    private let debouncedStateGroup = DebouncedGroup<ObservedState?>(
+        initialModel: nil,
+        duration: .milliseconds(300)
+    )
 
     // MARK: - Callbacks
 
@@ -32,6 +38,9 @@ final class StatusBarObserver {
 
     /// Called when state manager needs to be updated due to data changes
     var onStateUpdateNeeded: (() -> Void)?
+    
+    /// Called when appearance changes (dark/light mode)
+    var onAppearanceChanged: (() -> Void)?
 
     // MARK: - Automatic Observation
 
@@ -47,14 +56,8 @@ final class StatusBarObserver {
             upperLimit: settingsManager.upperLimitUSD,
             totalSpending: calculateTotalSpending())
 
-        // Check if state actually changed and enough time has passed
-        if hasStateChanged(currentState), shouldUpdateNow() {
-            lastObservedState = currentState
-            lastUpdateTime = Date()
-
-            logger.debug("Significant model data change detected, updating status bar")
-            onStateUpdateNeeded?()
-        }
+        // Update the debounced state - this will automatically delay updates
+        debouncedStateGroup.update(currentState)
     }
 
     // MARK: - Initialization
@@ -70,6 +73,9 @@ final class StatusBarObserver {
         self.settingsManager = settingsManager
 
         logger.info("StatusBarObserver initialized")
+        
+        // Set up observation of debounced state changes
+        setupDebouncedStateObservation()
     }
 
     // MARK: - Public Methods
@@ -110,6 +116,27 @@ final class StatusBarObserver {
     }
 
     // MARK: - Private Methods
+    
+    private func setupDebouncedStateObservation() {
+        // Use Combine to observe debounced state changes
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            
+            // Monitor the debounced state group for changes
+            for await _ in debouncedStateGroup.$model.values {
+                guard let newState = debouncedStateGroup.model else { continue }
+                
+                // Check if state actually changed
+                if hasStateChanged(newState), shouldUpdateNow() {
+                    lastObservedState = newState
+                    lastUpdateTime = Date()
+                    
+                    logger.debug("Debounced state change detected, updating status bar")
+                    onStateUpdateNeeded?()
+                }
+            }
+        }
+    }
 
     private func observeSettingsChanges() async {
         let notificationSequence = NotificationCenter.default.notifications(
@@ -128,6 +155,7 @@ final class StatusBarObserver {
             logger.debug("Appearance changed, updating status bar")
             // Delay slightly to ensure the appearance change has propagated
             try? await Task.sleep(for: .milliseconds(100))
+            onAppearanceChanged?()
             onDataChanged?()
         }
     }

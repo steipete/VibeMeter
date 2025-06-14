@@ -14,6 +14,8 @@ final class StatusBarAnimationController {
     private var periodicTimer: Timer?
     private let stateManager: MenuBarStateManager
     private var lastRenderedValue: Double = 0
+    private var lastUpdateTime: Date = .distantPast
+    private var consecutiveNoChangeUpdates: Int = 0
     private let logger = Logger.vibeMeter(category: "StatusBarAnimationController")
 
     // MARK: - Callbacks
@@ -74,13 +76,26 @@ final class StatusBarAnimationController {
 
                 let valueChanged = abs(self.stateManager.animatedGaugeValue - self.lastRenderedValue) > 0.001
 
-                // Always update animation state, but only update display if needed
+                // Smart update skipping logic
+                let now = Date()
+                let timeSinceLastUpdate = now.timeIntervalSince(self.lastUpdateTime)
+                
                 if isActivelyAnimating || valueChanged {
+                    // Always update when animating or values changed
                     self.onDisplayUpdateNeeded?()
                     self.lastRenderedValue = self.stateManager.animatedGaugeValue
+                    self.lastUpdateTime = now
+                    self.consecutiveNoChangeUpdates = 0
                 } else {
-                    // Still call display update but change detection will prevent unnecessary work
-                    self.onDisplayUpdateNeeded?()
+                    // Skip updates if nothing has changed
+                    self.consecutiveNoChangeUpdates += 1
+                    
+                    // Only force an update every 10 seconds when idle, or if we just started
+                    if timeSinceLastUpdate > 10.0 || self.consecutiveNoChangeUpdates == 1 {
+                        self.onDisplayUpdateNeeded?()
+                        self.lastUpdateTime = now
+                    }
+                    // Otherwise, completely skip the update to save CPU
                 }
 
                 // Adapt timer frequency based on animation state
@@ -92,8 +107,8 @@ final class StatusBarAnimationController {
                     // Medium frequency for value changes (15fps)
                     0.067
                 } else {
-                    // Low frequency when idle (5fps)
-                    0.2
+                    // Low frequency when idle (~3.3fps)
+                    0.3
                 }
 
                 // Only restart timer if frequency needs to change significantly

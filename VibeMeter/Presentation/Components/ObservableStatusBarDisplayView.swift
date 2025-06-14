@@ -63,10 +63,16 @@ final class ObservableStatusBarDisplayView: ObservableTrackingView {
         _ = currencyData.selectedSymbol
         _ = currencyData.effectiveRates
 
-        // Settings
+        // Settings - track display mode changes
+        let previousDisplayMode = settingsManager.menuBarDisplayMode
         _ = settingsManager.menuBarDisplayMode
         _ = settingsManager.upperLimitUSD
         _ = settingsManager.displaySettingsManager.gaugeRepresentation
+        
+        // Check if display mode changed and invalidate cache if needed
+        if previousDisplayMode != settingsManager.menuBarDisplayMode {
+            displayManager.invalidateIconCache()
+        }
 
         // Orchestrator state
         _ = orchestrator.isRefreshing

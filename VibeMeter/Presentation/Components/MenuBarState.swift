@@ -71,6 +71,12 @@ class MenuBarStateManager {
     private var costAnimationStartTime: TimeInterval = 0
     private var costTransitionStartValue: Double = 0
     private var costTransitionTargetValue: Double = 0
+    
+    // Debounced cost value to reduce rapid updates
+    private let debouncedCost = DebouncedGroup<Double>(
+        initialModel: 0.0,
+        duration: .milliseconds(300)
+    )
 
     /// Duration for loading animation cycle (0→1→0)
     private let loadingCycleDuration: TimeInterval = 4.0
@@ -80,6 +86,27 @@ class MenuBarStateManager {
 
     /// Duration for cost transitions (shorter for snappier feel)
     private let costTransitionDuration: TimeInterval = 0.3
+    
+    init() {
+        // Set up observation of debounced cost changes
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            
+            // Monitor debounced cost changes
+            for await _ in debouncedCost.$model.values {
+                let newValue = debouncedCost.model
+                
+                // Only animate if the value has changed significantly (more than $0.01)
+                guard abs(newValue - self.costTransitionTargetValue) > 0.01 else { continue }
+                
+                // Start cost transition
+                self.isCostTransitioning = true
+                self.costTransitionStartValue = self.animatedCostValue
+                self.costTransitionTargetValue = newValue
+                self.costAnimationStartTime = Date().timeIntervalSinceReferenceDate
+            }
+        }
+    }
 
     /// Update the state with optional animation
     func setState(_ newState: MenuBarState) {
@@ -110,17 +137,12 @@ class MenuBarStateManager {
         if animatedCostValue == 0.0, costTransitionTargetValue == 0.0 {
             animatedCostValue = newValue
             costTransitionTargetValue = newValue
+            debouncedCost.update(newValue)
             return
         }
 
-        // Only animate if the value has changed significantly (more than $0.01)
-        guard abs(newValue - costTransitionTargetValue) > 0.01 else { return }
-
-        // Start cost transition
-        isCostTransitioning = true
-        costTransitionStartValue = animatedCostValue
-        costTransitionTargetValue = newValue
-        costAnimationStartTime = Date().timeIntervalSinceReferenceDate
+        // Update the debounced cost value - animation will be triggered by the observer
+        debouncedCost.update(newValue)
     }
 
     /// Immediately set the cost value without animation (for currency changes)

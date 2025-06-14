@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// This enum captures all possible states a provider connection can be in,
 /// from disconnected to various error states, with appropriate visual representations.
-public enum ProviderConnectionStatus: Equatable, Codable, Sendable {
+public enum ProviderConnectionStatus: Equatable, Hashable, Codable, Sendable {
     case disconnected // Not logged in
     case connecting // Currently authenticating
     case connected // Authenticated and working
