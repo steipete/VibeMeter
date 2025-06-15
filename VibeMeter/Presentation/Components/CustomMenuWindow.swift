@@ -13,7 +13,6 @@ final class CustomMenuWindow: NSPanel {
     private let hostingController: NSHostingController<AnyView>
     private var retainedContentView: AnyView?
     private var isEventMonitoringActive = false
-    private var observableTrackingView: ObservableMenuWindowView?
 
     /// Closure to be called when window hides
     var onHide: (() -> Void)?
@@ -120,8 +119,7 @@ final class CustomMenuWindow: NSPanel {
         // Robust window display approach to prevent hanging
         displayWindowSafely()
 
-        // Set up observable tracking if we have Observable data to track
-        setupObservableTracking(relativeTo: statusItemButton)
+        // Observable tracking handled by the SwiftUI content view itself
     }
 
     /// Safely displays the window using multiple fallback strategies to prevent hanging.
@@ -290,7 +288,7 @@ final class CustomMenuWindow: NSPanel {
         // Immediately remove from screen (no animation) to avoid toggle state issues
         orderOut(nil)
         teardownEventMonitoring()
-        teardownObservableTracking()
+        // Observable tracking handled by SwiftUI content view
         onHide?()
     }
 
@@ -349,28 +347,6 @@ final class CustomMenuWindow: NSPanel {
 
     // MARK: - Observable Tracking
 
-    private func setupObservableTracking(relativeTo statusItemButton: NSStatusBarButton) {
-        // Only set up tracking if we can access the app delegate's Observable data
-        guard let appDelegate = NSApp.delegate as? AppDelegate else { return }
-
-        observableTrackingView = ObservableMenuWindowView(
-            menuWindow: self,
-            statusBarButton: statusItemButton,
-            userSession: appDelegate.userSession,
-            spendingData: appDelegate.spendingData)
-
-        if let trackingView = observableTrackingView,
-           let contentView {
-            trackingView.frame = contentView.bounds
-            trackingView.autoresizingMask = [.width, .height]
-            contentView.addSubview(trackingView)
-        }
-    }
-
-    private func teardownObservableTracking() {
-        observableTrackingView?.removeFromSuperview()
-        observableTrackingView = nil
-    }
 
     deinit {
         // Ensure proper cleanup of event monitoring
@@ -378,7 +354,7 @@ final class CustomMenuWindow: NSPanel {
         // we can assume we're on the main actor
         MainActor.assumeIsolated {
             teardownEventMonitoring()
-            teardownObservableTracking()
+            // Observable tracking handled by SwiftUI content view
         }
     }
 }

@@ -30,7 +30,7 @@ let project = Project(
             "INFOPLIST_KEY_NSHumanReadableCopyright": "Copyright © 2025 Peter Steinberger",
             "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
             "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/../Frameworks",
-            "MACOSX_DEPLOYMENT_TARGET": "15.0",
+            "MACOSX_DEPLOYMENT_TARGET": "14.0",
             "MARKETING_VERSION": "2.0.0",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.steipete.vibemeter",
             "PRODUCT_NAME": "$(TARGET_NAME)",

@@ -131,9 +131,9 @@ final class StatusBarController: NSObject {
             self?.observableDisplayView?.setNeedsDisplayAndLayout()
         }
         
-        // Invalidate icon cache when appearance changes
-        observer.onAppearanceChanged = { [weak self] in
-            self?.displayManager.invalidateIconCache()
+        // State update callback for significant data changes
+        observer.onStateUpdateNeeded = { [weak self] in
+            self?.updateStatusItemDisplay()
         }
     }
 
@@ -143,12 +143,56 @@ final class StatusBarController: NSObject {
     }
 
     func updateStatusItemDisplay() {
-        // With automatic observation tracking, this method is now much simpler
-        // The ObservableStatusBarDisplayView will handle updates automatically
+        guard let button = statusItem?.button else { return }
+
+        // Update state manager first, then update display
+        updateStatusItemState()
+        displayManager.updateDisplay(for: button)
+        
+        // Also update the observable view if present
         observableDisplayView?.setNeedsDisplayAndLayout()
     }
 
-    // State update logic moved to ObservableStatusBarDisplayView
+    private func updateStatusItemState() {
+        let isLoggedIn = userSession.isLoggedInToAnyProvider
+        let isFetchingData = orchestrator.isRefreshing.values.contains(true)
+        let providers = spendingData.providersWithData
+        let hasData = !providers.isEmpty
+
+        // Update state manager
+        if isFetchingData {
+            stateManager.setState(.loading)
+        } else if !isLoggedIn {
+            stateManager.setState(.notLoggedIn)
+        } else if !hasData {
+            stateManager.setState(.loading)
+        } else {
+            let gaugeValue: Double
+            if settingsManager.displaySettingsManager.gaugeRepresentation == .claudeQuota,
+               userSession.isLoggedIn(to: .claude) {
+                gaugeValue = calculateClaudeQuotaPercentage()
+            } else {
+                let totalSpendingUSD = spendingData.totalSpendingConverted(
+                    to: "USD",
+                    rates: currencyData.effectiveRates)
+
+                if totalSpendingUSD > 0 {
+                    gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
+                } else {
+                    gaugeValue = calculateRequestUsagePercentage()
+                }
+            }
+
+            // Only update if value changed significantly
+            if case let .data(currentValue) = stateManager.currentState {
+                if abs(currentValue - gaugeValue) > 0.01 {
+                    stateManager.setState(.data(value: gaugeValue))
+                }
+            } else {
+                stateManager.setState(.data(value: gaugeValue))
+            }
+        }
+    }
 
     @objc
     private func handleClick(_ sender: NSStatusBarButton) {
@@ -202,7 +246,32 @@ final class StatusBarController: NSObject {
         menuManager.showCustomWindow(relativeTo: button)
     }
 
-    // Calculation methods moved to ObservableStatusBarDisplayView
+    private func calculateRequestUsagePercentage() -> Double {
+        let providers = spendingData.providersWithData
+
+        for provider in providers {
+            if let providerData = spendingData.getSpendingData(for: provider),
+               let usageData = providerData.usageData,
+               let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                return progress
+            }
+        }
+
+        return 0.0
+    }
+
+    private func calculateClaudeQuotaPercentage() -> Double {
+        guard let claudeData = spendingData.getSpendingData(for: .claude),
+              let usageData = claudeData.usageData else {
+            return 0.0
+        }
+
+        // currentRequests already contains the percentage (0-100) from FiveHourWindow
+        // Convert to 0-1 range for the gauge
+        let percentageUsed = Double(usageData.currentRequests) / 100.0
+        return min(max(percentageUsed, 0.0), 1.0)
+    }
 
     private func setupTrackingArea(for button: NSStatusBarButton) {
         // Remove existing tracking area if any
@@ -246,6 +315,7 @@ final class StatusBarController: NSObject {
         let freshTooltip = tooltipProvider.createTooltipText()
         button.toolTip = freshTooltip
     }
+
 
     deinit {
         // Since deinit cannot be marked as @MainActor, we need to assume we're on the main actor

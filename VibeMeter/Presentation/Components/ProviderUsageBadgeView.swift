@@ -67,10 +67,18 @@ struct ProviderUsageBadgeView: View {
     }
 
     private func usageText(current: Int, max: Int) -> some View {
-        Text("\(current)/\(max)")
+        // For Claude provider, format tokens with k/M suffixes
+        let displayText: String
+        if provider == .claude {
+            displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
+        } else {
+            displayText = "\(current)/\(max)"
+        }
+        
+        return Text(displayText)
             .font(.caption.monospaced())
             .foregroundStyle(.secondary)
-            .accessibilityLabel("\(current) of \(max) requests used")
+            .accessibilityLabel("\(current) of \(max) \(provider == .claude ? "tokens" : "requests") used")
     }
 
     private var loadingView: some View {

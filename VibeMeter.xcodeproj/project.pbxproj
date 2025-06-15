@@ -108,7 +108,6 @@
 		71589296E2487C9158460184 /* CustomMenuWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB697A4C32F96C56898AAB /* CustomMenuWindow.swift */; };
 		757721252B816D20E0F66A05 /* ProviderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8672AF7DE25D7BF7330C2E41 /* ProviderRowView.swift */; };
 		78AF8A25EEA2CAF9CED813F6 /* MultiProviderLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04FE87449368272166427A /* MultiProviderLoginManager.swift */; };
-		78E8E1BC88160AA6E4680816 /* ObservableMenuWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */; };
 		796CF976003592E4B2038A11 /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0FC6641992F66EDA6F3D2C /* MockServices.swift */; };
 		7A8658BE233B83155E8836AD /* ProviderSpendingRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */; };
 		7AFBC5744D5988CBF61306E4 /* TestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D559EE0C5AFA04F5C38493 /* TestFixtures.swift */; };
@@ -169,6 +168,7 @@
 		B3DA0FCF09CFA013C16F4492 /* SIMDMergeFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F9956C6B7A90F2595E204E /* SIMDMergeFinder.swift */; };
 		B438864424DC6E739B52047B /* ProviderStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */; };
 		B440EC23532D99A89E9C3B00 /* NetworkRetryHandler+Providers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD3AE4E36401E8FD3CA8065 /* NetworkRetryHandler+Providers.swift */; };
+		B45BD90506EA13CB108F7ED4 /* ProviderUsageBadgeViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF81C003B4F1C45BFF4D50F5 /* ProviderUsageBadgeViewTests.swift */; };
 		B5E609DC40007F61B0F57308 /* ExchangeRateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9595CD1AD619E6C481437036 /* ExchangeRateManager.swift */; };
 		B6CF4C4BB9883DDE9FD3A28C /* CursorAutoAuthenticationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E3330745D50008D0181887 /* CursorAutoAuthenticationTests.swift */; };
 		B77D717C7802A85537CD6349 /* CurrencyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7ADDB1E042E38FED4B239E /* CurrencyManager.swift */; };
@@ -194,7 +194,6 @@
 		CD8688848E2239335E043E5B /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D1DEC8FD0912AA3A504DC /* Encoding.swift */; };
 		CE177BE0F3B1CE0C8FE6D435 /* LoggingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8DC7F789AD441AA040AA41 /* LoggingServiceTests.swift */; };
 		CE29261080A36B96136DA822 /* ProviderHealthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21FBF5EB11048D0250897223 /* ProviderHealthModels.swift */; };
-		CE3CF9991E018C409F93AC86 /* ObservableTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */; };
 		CEF8CC0513F4E253D13652FD /* MultiProviderDataOrchestratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8401E7B97758ED6ED409A9 /* MultiProviderDataOrchestratorTests.swift */; };
 		CF494AFBC584D87CF531B084 /* TokenDebugger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE1C898E6364F4384A15DBB /* TokenDebugger.swift */; };
 		CFA01D6B1ADA132F93BC50E2 /* ClaudeUsageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A092B03BC804C992757BBB49 /* ClaudeUsageData.swift */; };
@@ -277,7 +276,6 @@
 		04951C33557BBDEB521C4094 /* UserHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHeaderView.swift; sourceTree = "<group>"; };
 		059938B6A45576B6F61BD58E /* ProcessInfo+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Environment.swift"; sourceTree = "<group>"; };
 		05D5BC954CCD048D51520BAC /* MenuBarStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStateTests.swift; sourceTree = "<group>"; };
-		07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableTrackingView.swift; sourceTree = "<group>"; };
 		07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		08F9956C6B7A90F2595E204E /* SIMDMergeFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIMDMergeFinder.swift; sourceTree = "<group>"; };
 		0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMover.swift; sourceTree = "<group>"; };
@@ -407,7 +405,6 @@
 		8C4DADD8170C9D18746C9ABD /* MockSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsManager.swift; sourceTree = "<group>"; };
 		8F54B8BED18F86069CAAC706 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		908F6A61E97329D239ABE126 /* CursorAPIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorAPIConstants.swift; sourceTree = "<group>"; };
-		91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableMenuWindowView.swift; sourceTree = "<group>"; };
 		92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDataProcessorTests.swift; sourceTree = "<group>"; };
 		93A0E5910E69B56D05D2C196 /* VibeMeterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeMeterApp.swift; sourceTree = "<group>"; };
 		93D6DE00F92CC20A93C6285F /* CostCalculationStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostCalculationStrategyTests.swift; sourceTree = "<group>"; };
@@ -433,6 +430,7 @@
 		AAD500DAD229643D09226882 /* ClaudeQuotaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuotaView.swift; sourceTree = "<group>"; };
 		ADF171143CDE4ED1E68255D5 /* ShimmerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerEffect.swift; sourceTree = "<group>"; };
 		AF2FE815C9C73A3EA9DC1D7F /* ProviderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderProtocol.swift; sourceTree = "<group>"; };
+		AF81C003B4F1C45BFF4D50F5 /* ProviderUsageBadgeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderUsageBadgeViewTests.swift; sourceTree = "<group>"; };
 		B2529EEE274BC5AC39237CEC /* UserAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAvatarView.swift; sourceTree = "<group>"; };
 		B3A660FEB23175B667C549EA /* SessionStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStateManager.swift; sourceTree = "<group>"; };
 		B591A044220230D927DB399B /* ProvidersSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvidersSettingsView.swift; sourceTree = "<group>"; };
@@ -738,9 +736,7 @@
 				161E99B569965C545579BA10 /* GaugeIcon.swift */,
 				C6B5D9C53CC36213616E28BF /* MenuBarState.swift */,
 				4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */,
-				91313277B71503E5B8993140 /* ObservableMenuWindowView.swift */,
 				75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */,
-				07AE30AFD373136771B41B31 /* ObservableTrackingView.swift */,
 				A70930209D27A499EBAE553B /* ProviderIconView.swift */,
 				02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */,
 				96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */,
@@ -919,6 +915,7 @@
 				26DF5BA07AAF602D61257F73 /* PricingDataManagerTests.swift */,
 				7D6E1751574DF947C28B4048 /* ProgressColorTests.swift */,
 				F04F8B936436212D02F8F7FE /* ProviderConnectionStatusTests.swift */,
+				AF81C003B4F1C45BFF4D50F5 /* ProviderUsageBadgeViewTests.swift */,
 				3D664A9FA300689BE83E77FF /* SettingsManagerTests.swift */,
 				1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */,
 				D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */,
@@ -1120,6 +1117,7 @@
 				BD491B4CED74DD7366C7BF91 /* PricingDataManagerTests.swift in Sources */,
 				6A58555A03C1ADC3532003FC /* ProgressColorTests.swift in Sources */,
 				C4D6599FA8F0AB68F29EB7FE /* ProviderConnectionStatusTests.swift in Sources */,
+				B45BD90506EA13CB108F7ED4 /* ProviderUsageBadgeViewTests.swift in Sources */,
 				3B98EB13BD13B2375FE03238 /* SettingsManagerTests.swift in Sources */,
 				C33D4B994D668FAC2935D1C6 /* SparkleUpdaterManagerTests.swift in Sources */,
 				0DED20E09192DFB74E04FFBB /* StartupManagerTests.swift in Sources */,
@@ -1261,9 +1259,7 @@
 				EDDFDA14BBD2E04F13A3ED35 /* GaugeIcon.swift in Sources */,
 				BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */,
 				3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */,
-				78E8E1BC88160AA6E4680816 /* ObservableMenuWindowView.swift in Sources */,
 				5CD67645B73CA7A0CE6E030C /* ObservableStatusBarDisplayView.swift in Sources */,
-				CE3CF9991E018C409F93AC86 /* ObservableTrackingView.swift in Sources */,
 				06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */,
 				0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */,
 				80BD060425E695ACBF1AFCBA /* ProviderIconView.swift in Sources */,
@@ -1421,7 +1417,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
@@ -1619,7 +1615,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
