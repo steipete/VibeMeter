@@ -5,7 +5,7 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2025-06-12
+## [2.0.0] - 2025-06-15
 
 ### 🚀 New Features
 - **Claude AI Support** - Added comprehensive Claude usage tracking via local log file analysis
@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Settings Navigation** - Configure Providers button opens directly to Providers tab
 - **Menu Bar Highlight** - Button highlight state now properly syncs with popover visibility
 - **Improved Provider Dialog** - Larger dialog (600×700) with better layout and removed logout button
+- **Right-Aligned Toolbar Controls** - Cost strategy picker and refresh button now right-aligned in Claude usage report
+- **Icon-Only Mode Fix** - Menu bar text now displays correctly when in icon-only mode
 
 ### 🔧 Technical Improvements
 - **Refactored ClaudeLogManager** - Made testable with dependency injection and protocol-based design
@@ -39,12 +41,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CAPTCHA Detection** - Automatic detection and user notification when manual intervention needed
 - **WebView Preloading** - Login page preloads in background while consent dialog is shown
 - **Parallel Log Processing** - Claude log files now process in parallel across all CPU cores for faster performance
+- **SIMD-Accelerated Tokenizer** - Integrated optimized BPE encoder for 2-3x faster token counting
+- **Enhanced Security** - Enabled hardened runtime and improved app sandboxing
+- **Performance Optimizations** - Reduced menu bar update frequency and improved log view debouncing
+- **macOS 14 Compatibility** - Reverted to macOS 14 support by removing automatic observation tracking
 
 ### 🐛 Bug Fixes
 - **Fixed Claude initialization race condition** - Claude now properly initializes before data refresh
 - **Fixed provider error messages** - Shortened error messages to prevent UI truncation
 - **Fixed directory picker** - Now pre-selects actual home directory instead of sandboxed path
 - **Fixed Claude directory validation** - Properly handles sandboxed environments and accepts any directory containing .claude/projects
+- **Fixed token window display** - Claude token window now properly comes to foreground
+- **Fixed toolbar layout** - Improved toolbar organization with proper button placement
+- **Fixed icon fallback** - Better handling when provider icons are not found
 
 ## [1.1.0] - 2025-06-10
 

@@ -2,7 +2,8 @@ import XCTest
 @testable import VibeMeter
 
 final class ProviderUsageBadgeViewTests: XCTestCase {
-    func testClaudeTokenFormatting() {
+    @MainActor
+    func testClaudeTokenFormatting() async throws {
         // Test that Claude tokens are formatted with k/M suffixes
         let spendingData = MultiProviderSpendingData()
         
@@ -28,7 +29,8 @@ final class ProviderUsageBadgeViewTests: XCTestCase {
         XCTAssertEqual(TokenFormatter.format(1_500_000), "1.5M")
     }
     
-    func testNonClaudeProviderFormatting() {
+    @MainActor
+    func testNonClaudeProviderFormatting() async throws {
         // Test that non-Claude providers show raw numbers
         let spendingData = MultiProviderSpendingData()
         

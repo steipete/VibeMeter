@@ -44,7 +44,7 @@ struct ProviderDetailView: View {
     @State
     private var claudeAccountType: ClaudePricingTier = .pro
 
-    @StateObject
+    @State
     private var claudeLogManager = ClaudeLogManager.shared
 
     private let providerRegistry = ProviderRegistry.shared

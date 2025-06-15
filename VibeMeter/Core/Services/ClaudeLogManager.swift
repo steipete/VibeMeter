@@ -331,7 +331,8 @@ public protocol ClaudeLogManagerProtocol: AnyObject, Sendable {
 
 /// Manages access to Claude log files and parses usage data
 @MainActor
-public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol, @unchecked Sendable {
+@Observable
+public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendable {
     // MARK: - Singleton (for backward compatibility)
 
     private static let _shared = MainActor.assumeIsolated {
@@ -357,11 +358,8 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private let fileScanner: ClaudeLogFileScanner
     private let windowCalculator: ClaudeFiveHourWindowCalculator
 
-    @Published
     public private(set) var hasAccess = false
-    @Published
     public private(set) var isProcessing = false
-    @Published
     public private(set) var lastError: Error?
 
     // Cache keys for UserDefaults
@@ -423,14 +421,17 @@ public final class ClaudeLogManager: ObservableObject, ClaudeLogManagerProtocol,
     private var todaysLogCacheURL: URL?
     private var todaysLogCacheModificationDate: Date?
 
-    private lazy var tiktoken: Tiktoken? = {
-        do {
-            return try Tiktoken(encoding: .o200k_base)
-        } catch {
-            logger.error("Failed to initialize Tiktoken: \(error.localizedDescription)")
-            return nil
+    private var _tiktoken: Tiktoken?
+    private var tiktoken: Tiktoken? {
+        if _tiktoken == nil {
+            do {
+                _tiktoken = try Tiktoken(encoding: .o200k_base)
+            } catch {
+                logger.error("Failed to initialize Tiktoken: \(error.localizedDescription)")
+            }
         }
-    }()
+        return _tiktoken
+    }
 
     // MARK: - Initialization
 

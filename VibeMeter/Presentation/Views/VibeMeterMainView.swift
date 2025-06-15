@@ -12,7 +12,7 @@ struct VibeMeterMainView: View {
     let loginManager: MultiProviderLoginManager
     let onRefresh: () async -> Void
 
-    @StateObject
+    @State
     private var claudeLogManager = ClaudeLogManager.shared
 
     var body: some View {

@@ -78,6 +78,15 @@ public final class PricingDataManager: @unchecked Sendable {
             return directMatch
         }
 
+        // Normalize common variations
+        let normalizedModel = model
+            .replacingOccurrences(of: "claude-3-5-sonnet", with: "claude-3.5-sonnet")
+            .replacingOccurrences(of: "claude-3-5-haiku", with: "claude-3.5-haiku")
+
+        if normalizedModel != model, let match = pricing[normalizedModel] {
+            return match
+        }
+
         // Try variations
         let variations = [
             model,
@@ -93,8 +102,29 @@ public final class PricingDataManager: @unchecked Sendable {
             }
         }
 
-        // Try partial matches
+        // Try partial matches - find the best match based on model type
         let lowerModel = model.lowercased()
+        
+        // Check for specific model types first
+        if lowerModel.contains("sonnet") {
+            // Return the latest Sonnet pricing
+            if let sonnetPricing = pricing["claude-3-5-sonnet-20241022"] {
+                return sonnetPricing
+            }
+            if let sonnetPricing = pricing["claude-3.5-sonnet"] {
+                return sonnetPricing
+            }
+        } else if lowerModel.contains("haiku") {
+            if let haikuPricing = pricing["claude-3-5-haiku-20241022"] {
+                return haikuPricing
+            }
+        } else if lowerModel.contains("opus") {
+            if let opusPricing = pricing["claude-3-opus-20240229"] {
+                return opusPricing
+            }
+        }
+        
+        // Fallback to general partial matching
         for (key, value) in pricing {
             if key.lowercased().contains(lowerModel) || lowerModel.contains(key.lowercased()) {
                 return value

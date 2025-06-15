@@ -158,24 +158,40 @@ public actor ClaudeProvider: ProviderProtocol {
         let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
 
         // Calculate individual costs using pricing manager
-        // For display purposes, use estimated costs based on Claude 3.5 Sonnet
-        let defaultModel = "claude-3-5-sonnet"
-        let inputTokenUsage = TokenUsage(inputTokens: 1_000_000, outputTokens: 0)
-        let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: 1_000_000)
+        // Use the most common model from the entries, or default to Claude 3.5 Sonnet
+        let modelCounts = allEntries.reduce(into: [String: Int]()) { counts, entry in
+            let model = entry.model ?? "claude-3-5-sonnet"
+            counts[model, default: 0] += 1
+        }
+        let mostCommonModel = modelCounts.max(by: { $0.value < $1.value })?.key ?? "claude-3-5-sonnet"
+        
+        // Calculate costs directly for the actual token counts
+        let inputTokenUsage = TokenUsage(inputTokens: totalInputTokens, outputTokens: 0)
+        let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: totalOutputTokens)
 
-        let inputPricePerMillion = await pricingManager.calculateCost(
+        let inputCost = await pricingManager.calculateCost(
             tokens: inputTokenUsage,
-            model: defaultModel,
+            model: mostCommonModel,
             mode: .calculate)
-        let outputPricePerMillion = await pricingManager.calculateCost(
+        let outputCost = await pricingManager.calculateCost(
             tokens: outputTokenUsage,
-            model: defaultModel,
+            model: mostCommonModel,
             mode: .calculate)
 
-        let inputCost = Double(totalInputTokens) / 1_000_000 * inputPricePerMillion
-        let outputCost = Double(totalOutputTokens) / 1_000_000 * outputPricePerMillion
-
-        let costFormatter = NumberFormatter.vibeMeterCurrency(with: "USD")
+        // Use a custom formatter for small token costs
+        let costFormatter = NumberFormatter()
+        costFormatter.numberStyle = .currency
+        costFormatter.currencyCode = "USD"
+        costFormatter.usesGroupingSeparator = false
+        
+        // For very small amounts, show more decimal places
+        if inputCost < 0.01 || outputCost < 0.01 {
+            costFormatter.minimumFractionDigits = 2
+            costFormatter.maximumFractionDigits = 4
+        } else {
+            costFormatter.minimumFractionDigits = 0
+            costFormatter.maximumFractionDigits = 2
+        }
 
         let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
         let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
@@ -202,17 +218,17 @@ public actor ClaudeProvider: ProviderProtocol {
         // Use real-time window usage for accurate gauge updates
         let fiveHourWindow = await logManager.getCurrentWindowUsage()
 
-        logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.used)% (real-time)")
+        logger.info("Claude: 5-hour window - Used: \(fiveHourWindow.percentageUsed)% (real-time)")
 
         // Convert to ProviderUsageData format
-        // Use actual token counts instead of percentages
-        let currentRequests = fiveHourWindow.tokensUsed
-        let maxRequests = fiveHourWindow.estimatedTokenLimit
-
+        // For Claude quota gauge representation, we need to pass the percentage as currentRequests
+        // This is expected by calculateClaudeQuotaPercentage() in StatusBarController
+        let percentageAsInt = Int(fiveHourWindow.percentageUsed)
+        
         return ProviderUsageData(
-            currentRequests: currentRequests,
-            totalRequests: currentRequests,
-            maxRequests: maxRequests,
+            currentRequests: percentageAsInt,  // Pass percentage (0-100) for gauge
+            totalRequests: fiveHourWindow.tokensUsed,  // Keep actual token count for display
+            maxRequests: 100,  // Max percentage is always 100
             startOfMonth: Date().startOfMonth,
             provider: .claude)
     }

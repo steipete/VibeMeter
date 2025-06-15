@@ -48,8 +48,9 @@ public struct DebouncedState<Value> {
 // MARK: - Storage
 
 @MainActor
-private final class Storage<Value>: ObservableObject {
-    @Published var value: Value
+@Observable
+private final class Storage<Value> {
+    var value: Value
     private var updateTask: Task<Void, Never>?
     private let duration: Duration
     

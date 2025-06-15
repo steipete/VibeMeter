@@ -14,7 +14,7 @@ struct ProviderRowView: View {
     let settingsManager: any SettingsManagerProtocol
     let showDetail: () -> Void
 
-    @StateObject
+    @State
     private var claudeLogManager = ClaudeLogManager.shared
 
     @State

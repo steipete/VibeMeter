@@ -144,9 +144,9 @@ struct ClaudeProviderTests {
         let usage = try await provider.fetchUsageData(authToken: "dummy_token")
 
         #expect(usage.provider == .claude)
-        #expect(usage.currentRequests == 75)
-        #expect(usage.maxRequests == 100)
-        #expect(logManager.callCount(for: "getDailyUsage") == 1)
+        #expect(usage.currentRequests == 75)  // Should be percentage (75%)
+        #expect(usage.maxRequests == 100)  // Max percentage is always 100
+        #expect(logManager.callCount(for: "getCurrentWindowUsage") == 1)
         #expect(logManager.callCount(for: "calculateFiveHourWindow") == 1)
     }
 

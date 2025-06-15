@@ -212,6 +212,23 @@ struct CostTableView: View {
         hasher.combine(providers.count)
         return hasher.finalize()
     }
+    
+    // MARK: - Window Time Helper
+    
+    private func windowTimeRangeText(for providerData: ProviderSpendingData) -> String {
+        // For Claude Pro accounts, the window is a rolling 5-hour period
+        let now = Date()
+        let windowStart = now.addingTimeInterval(-5 * 60 * 60) // 5 hours ago
+        
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        
+        let startTimeString = formatter.string(from: windowStart)
+        let endTimeString = formatter.string(from: now)
+        
+        return "\(startTimeString) - \(endTimeString)"
+    }
 
     // MARK: - Helper Views
 
@@ -279,34 +296,41 @@ struct CostTableView: View {
 
                     // Show 5-hour window usage for Pro accounts
                     if let usageData = providerData.usageData {
-                        HStack(spacing: 8) {
-                            Text("5h-window:")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color.secondary.opacity(0.2))
-                                        .frame(height: 6)
-
-                                    if let maxRequests = usageData.maxRequests, maxRequests > 0 {
-                                        let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(progress > 0.8 ? Color.orange : Color.accentColor)
-                                            .frame(width: geometry.size.width * progress, height: 6)
-                                    }
-                                }
-                            }
-                            .frame(height: 6)
-
-                            if let maxRequests = usageData.maxRequests, maxRequests > 0 {
-                                Text(
-                                    "\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Text("5h-window:")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                    .fixedSize()
+
+                                GeometryReader { geometry in
+                                    ZStack(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 3)
+                                            .fill(Color.secondary.opacity(0.2))
+                                            .frame(height: 6)
+
+                                        if let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                                            let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(progress > 0.8 ? Color.orange : Color.accentColor)
+                                                .frame(width: geometry.size.width * progress, height: 6)
+                                        }
+                                    }
+                                }
+                                .frame(height: 6)
+
+                                if let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                                    Text(
+                                        "\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize()
+                                }
                             }
+                            
+                            // Add window time range display
+                            Text(windowTimeRangeText(for: providerData))
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
                         }
                         .padding(.leading, 32)
                     }

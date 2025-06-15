@@ -8,7 +8,7 @@ enum ClaudeUsageViewMode: String, CaseIterable, Sendable {
 
 /// Displays a detailed daily token usage report for Claude
 struct ClaudeUsageReportView: View {
-    @StateObject
+    @State
     private var dataLoader = ClaudeUsageDataLoader()
     
     // Debounced versions of rapidly updating values
@@ -69,21 +69,7 @@ struct ClaudeUsageReportView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
-            // Progress bar when loading
-            if dataLoader.isLoading, dataLoader.totalFiles > 0 {
-                VStack(spacing: 6) {
-                    ProgressView(
-                        value: Double(debouncedFilesProcessed),
-                        total: Double(dataLoader.totalFiles))
-                        .progressViewStyle(.linear)
-                        .padding(.horizontal)
-
-                    Text(debouncedLoadingMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.bottom, 12)
-            }
+            progressBarView
 
             // Content
             VStack(spacing: 0) {
@@ -717,20 +703,14 @@ private struct DailyUsageSummary: Identifiable, Sendable {
 
 /// Observable object that handles loading Claude usage data with progress updates
 @MainActor
-final class ClaudeUsageDataLoader: ObservableObject {
-    @Published
+@Observable
+final class ClaudeUsageDataLoader {
     var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-    @Published
     var isLoading = false
-    @Published
     var errorMessage: String?
-    @Published
     var loadingMessage = "Loading usage data..."
-    @Published
     var filesProcessed = 0
-    @Published
     var totalFiles = 0
-    @Published
     var availableProjects: [String] = []
 
     private let claudeLogManager = ClaudeLogManager.shared
