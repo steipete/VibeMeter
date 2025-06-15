@@ -15,8 +15,8 @@ final class StatusBarDisplayManagerTests: XCTestCase {
     
     // MARK: - Setup
     
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         
         stateManager = MenuBarStateManager()
         settingsManager = MockSettingsManager()
@@ -34,7 +34,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
         )
     }
     
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         sut = nil
         stateManager = nil
         settingsManager = nil
@@ -43,7 +43,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
         currencyData = nil
         mockButton = nil
         
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
     
     // MARK: - Menu Bar Display Mode Tests

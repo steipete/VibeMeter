@@ -142,12 +142,12 @@ struct CostTableView: View {
     // MARK: - Helper Properties
 
     private var formattedWarningLimit: String {
-        guard let settingsManager else { return "" }
+        guard settingsManager != nil else { return "" }
         return "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))"
     }
 
     private var formattedUpperLimit: String {
-        guard let settingsManager else { return "" }
+        guard settingsManager != nil else { return "" }
         return "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))"
     }
 

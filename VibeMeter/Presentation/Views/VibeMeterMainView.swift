@@ -16,10 +16,10 @@ struct VibeMeterMainView: View {
     private var claudeLogManager = ClaudeLogManager.shared
 
     var body: some View {
-        if let settingsManager = settingsManager,
+        if settingsManager != nil,
            let userSessionData = userSessionData,
-           let loginManager = loginManager,
-           let onRefresh = onRefresh {
+           loginManager != nil,
+           onRefresh != nil {
             Group {
                 if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
                     LoggedInContentView()
