@@ -6,10 +6,10 @@ import SwiftUI
 /// general preferences, provider management, and spending limits. It serves as
 /// the primary configuration hub for the VibeMeter application.
 struct MultiProviderSettingsView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager
-    let orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.userSessionData) private var userSessionData
+    @Environment(\.loginManager) private var loginManager
+    @Environment(\.dataOrchestrator) private var orchestrator
 
     @State
     private var showingProviderDetail: ServiceProvider?

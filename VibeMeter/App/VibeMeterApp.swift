@@ -45,11 +45,13 @@ struct VibeMeterApp: App {
     var body: some Scene {
         // Settings window using multi-provider architecture
         Settings {
-            MultiProviderSettingsView(
-                settingsManager: settingsManager,
-                userSessionData: appDelegate.userSession,
-                loginManager: appDelegate.loginManager,
-                orchestrator: appDelegate.multiProviderOrchestrator)
+            MultiProviderSettingsView()
+                .vibeMeterEnvironment(
+                    settingsManager: settingsManager,
+                    userSessionData: appDelegate.userSession,
+                    loginManager: appDelegate.loginManager,
+                    dataOrchestrator: appDelegate.multiProviderOrchestrator
+                )
                 .environment(appDelegate.spendingData)
                 .environment(appDelegate.currencyData)
                 .environment(gravatarService)

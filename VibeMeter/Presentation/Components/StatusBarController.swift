@@ -107,13 +107,14 @@ final class StatusBarController: NSObject {
     private func setupCallbacks() {
         // Set up animation controller callback
         animationController.onDisplayUpdateNeeded = { [weak self] in
-            self?.observableDisplayView?.setNeedsDisplayAndLayout()
+            guard let self, let button = self.statusItem?.button else { return }
+            self.displayManager.updateDisplay(for: button)
         }
 
-        // With automatic observation tracking, we don't need most callbacks
         // Keep observer for non-Observable notifications (UserDefaults, appearance)
         observer.onDataChanged = { [weak self] in
-            self?.observableDisplayView?.setNeedsDisplayAndLayout()
+            guard let self, let button = self.statusItem?.button else { return }
+            self.displayManager.updateDisplay(for: button)
         }
         
         // State update callback for significant data changes
@@ -136,7 +137,7 @@ final class StatusBarController: NSObject {
             guard let self else { return }
             
             while !Task.isCancelled {
-                await withObservationTracking {
+                withObservationTracking {
                     // Access all the properties we want to observe
                     _ = self.spendingData.totalSpendingUSD
                     _ = self.currencyData.selectedCode
@@ -164,9 +165,6 @@ final class StatusBarController: NSObject {
         // Update state manager first, then update display
         updateStatusItemState()
         displayManager.updateDisplay(for: button)
-        
-        // Also update the observable view if present
-        observableDisplayView?.setNeedsDisplayAndLayout()
     }
 
     private func updateStatusItemState() {
@@ -337,6 +335,7 @@ final class StatusBarController: NSObject {
         // Since deinit cannot be marked as @MainActor, we need to assume we're on the main actor
         // since StatusBarController is @MainActor and deinit is called when the actor is being deallocated
         MainActor.assumeIsolated {
+            observationTask?.cancel()
             animationController.stopTimers()
             observer.stopObserving()
 
