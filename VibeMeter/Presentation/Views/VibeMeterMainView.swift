@@ -7,37 +7,103 @@ import SwiftUI
 /// interface when no providers are connected.
 @MainActor
 struct VibeMeterMainView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager
-    let onRefresh: () async -> Void
+    // Support both initializer and environment injection patterns
+    private let injectedSettingsManager: (any SettingsManagerProtocol)?
+    private let injectedUserSessionData: MultiProviderUserSessionData?
+    private let injectedLoginManager: MultiProviderLoginManager?
+    private let injectedOnRefresh: (() async -> Void)?
+    
+    @Environment(\.settingsManager) private var envSettingsManager
+    @Environment(\.userSessionData) private var envUserSessionData
+    @Environment(\.loginManager) private var envLoginManager
+    @Environment(\.refreshAction) private var envRefreshAction
+    
+    // Computed properties that prefer environment values but fall back to injected ones
+    private var settingsManager: (any SettingsManagerProtocol)? {
+        envSettingsManager ?? injectedSettingsManager
+    }
+    
+    private var userSessionData: MultiProviderUserSessionData? {
+        envUserSessionData ?? injectedUserSessionData
+    }
+    
+    private var loginManager: MultiProviderLoginManager? {
+        envLoginManager ?? injectedLoginManager
+    }
+    
+    private var onRefresh: (() async -> Void)? {
+        envRefreshAction ?? injectedOnRefresh
+    }
+    
+    // New environment-based initializer
+    init() {
+        self.injectedSettingsManager = nil
+        self.injectedUserSessionData = nil
+        self.injectedLoginManager = nil
+        self.injectedOnRefresh = nil
+    }
+    
+    // Legacy initializer for backward compatibility
+    init(
+        settingsManager: any SettingsManagerProtocol,
+        userSessionData: MultiProviderUserSessionData,
+        loginManager: MultiProviderLoginManager,
+        onRefresh: @escaping () async -> Void
+    ) {
+        self.injectedSettingsManager = settingsManager
+        self.injectedUserSessionData = userSessionData
+        self.injectedLoginManager = loginManager
+        self.injectedOnRefresh = onRefresh
+    }
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared
 
     var body: some View {
-        Group {
-            if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
-                LoggedInContentView(
-                    settingsManager: settingsManager,
-                    userSessionData: userSessionData,
-                    loginManager: loginManager,
-                    onRefresh: onRefresh)
-            } else {
-                NoProvidersConfiguredView(
-                    onConfigureProviders: {
-                        // Open settings window to the providers tab
-                        openSettingsToProvidersTab()
-                    })
+        if let settingsManager = settingsManager,
+           let userSessionData = userSessionData,
+           let loginManager = loginManager,
+           let onRefresh = onRefresh {
+            Group {
+                if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
+                    LoggedInContentView(
+                        settingsManager: settingsManager,
+                        userSessionData: userSessionData,
+                        loginManager: loginManager,
+                        onRefresh: onRefresh)
+                } else {
+                    NoProvidersConfiguredView(
+                        onConfigureProviders: {
+                            // Open settings window to the providers tab
+                            openSettingsToProvidersTab()
+                        })
+                }
             }
+            .frame(minWidth: 320)
+            .fixedSize()
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("VibeMeter main interface")
+            .accessibilityHint(userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess ?
+                "Shows AI service spending dashboard and controls" :
+                "Shows login options for AI service providers")
+        } else {
+            // Fallback view when dependencies are missing
+            VStack(spacing: 16) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.largeTitle)
+                    .foregroundStyle(.orange)
+                
+                Text("Configuration Error")
+                    .font(.headline)
+                
+                Text("Required dependencies not available")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(minWidth: 320)
+            .fixedSize()
+            .padding()
         }
-        .frame(minWidth: 320)
-        .fixedSize()
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("VibeMeter main interface")
-        .accessibilityHint(userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess ?
-            "Shows AI service spending dashboard and controls" :
-            "Shows login options for AI service providers")
         .onKeyPress(.escape) {
             // Modern key handling for ESC to close menu
             // Look for any borderless window that might be our menu

@@ -76,16 +76,19 @@ final class StatusBarMenuManager {
         // Hide any existing context menu first
         // Note: Context menu hiding is handled by the StatusBarController
 
-        // Create the main view with all dependencies
-        let mainView = VibeMeterMainView(
-            settingsManager: settingsManager,
-            userSessionData: userSession,
-            loginManager: loginManager,
-            onRefresh: {
-                Task {
-                    await orchestrator.refreshAllProviders(showSyncedMessage: true)
+        // Create the main view with all dependencies via environment
+        let mainView = VibeMeterMainView()
+            .vibeMeterEnvironment(
+                settingsManager: settingsManager,
+                userSessionData: userSession,
+                loginManager: loginManager,
+                dataOrchestrator: orchestrator,
+                refreshAction: {
+                    Task {
+                        await orchestrator.refreshAllProviders(showSyncedMessage: true)
+                    }
                 }
-            })
+            )
             .environment(spendingData)
             .environment(currencyData)
 

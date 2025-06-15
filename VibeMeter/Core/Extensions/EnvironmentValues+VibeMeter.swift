@@ -24,12 +24,13 @@ private struct DataOrchestratorKey: EnvironmentKey {
 
 /// Environment key for ProviderRegistry dependency
 private struct ProviderRegistryKey: EnvironmentKey {
+    @MainActor
     static let defaultValue: ProviderRegistry = .shared
 }
 
 /// Environment key for refresh action callback
 private struct RefreshActionKey: EnvironmentKey {
-    static let defaultValue: (() async -> Void)? = nil
+    static let defaultValue: (@Sendable () async -> Void)? = nil
 }
 
 // MARK: - EnvironmentValues Extensions
@@ -66,7 +67,7 @@ extension EnvironmentValues {
     }
     
     /// The refresh action callback for triggering data updates
-    var refreshAction: (() async -> Void)? {
+    var refreshAction: (@Sendable () async -> Void)? {
         get { self[RefreshActionKey.self] }
         set { self[RefreshActionKey.self] = newValue }
     }
@@ -101,7 +102,7 @@ extension View {
     }
     
     /// Injects the refresh action into the environment
-    func refreshAction(_ action: @escaping () async -> Void) -> some View {
+    func refreshAction(_ action: @escaping @Sendable () async -> Void) -> some View {
         environment(\.refreshAction, action)
     }
     
@@ -111,7 +112,7 @@ extension View {
         userSessionData: MultiProviderUserSessionData,
         loginManager: MultiProviderLoginManager,
         dataOrchestrator: MultiProviderDataOrchestrator? = nil,
-        refreshAction: (() async -> Void)? = nil
+        refreshAction: (@Sendable () async -> Void)? = nil
     ) -> some View {
         self
             .settingsManager(settingsManager)
