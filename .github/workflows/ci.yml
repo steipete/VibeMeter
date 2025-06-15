@@ -31,7 +31,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and Test
-    runs-on: ghcr.io/cirruslabs/macos-runner:sequoia-xxl
+    runs-on: ghcr.io/cirruslabs/macos-runner:sequoia-xl
     timeout-minutes: 30
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
