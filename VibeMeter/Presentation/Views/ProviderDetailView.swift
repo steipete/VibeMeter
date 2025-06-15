@@ -32,11 +32,15 @@ private struct RadioButton: View {
 /// settings. It appears as a sheet when users want to manage individual provider connections.
 struct ProviderDetailView: View {
     let provider: ServiceProvider
-    
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
+
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.providerRegistry)
+    private var providerRegistry: ProviderRegistry
 
     @Environment(\.dismiss)
     private var dismiss

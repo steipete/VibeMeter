@@ -164,7 +164,7 @@ public actor ClaudeProvider: ProviderProtocol {
             counts[model, default: 0] += 1
         }
         let mostCommonModel = modelCounts.max(by: { $0.value < $1.value })?.key ?? "claude-3-5-sonnet"
-        
+
         // Calculate costs directly for the actual token counts
         let inputTokenUsage = TokenUsage(inputTokens: totalInputTokens, outputTokens: 0)
         let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: totalOutputTokens)
@@ -183,7 +183,7 @@ public actor ClaudeProvider: ProviderProtocol {
         costFormatter.numberStyle = .currency
         costFormatter.currencyCode = "USD"
         costFormatter.usesGroupingSeparator = false
-        
+
         // For very small amounts, show more decimal places
         if inputCost < 0.01 || outputCost < 0.01 {
             costFormatter.minimumFractionDigits = 2
@@ -224,11 +224,11 @@ public actor ClaudeProvider: ProviderProtocol {
         // For Claude quota gauge representation, we need to pass the percentage as currentRequests
         // This is expected by calculateClaudeQuotaPercentage() in StatusBarController
         let percentageAsInt = Int(fiveHourWindow.percentageUsed)
-        
+
         return ProviderUsageData(
-            currentRequests: percentageAsInt,  // Pass percentage (0-100) for gauge
-            totalRequests: fiveHourWindow.tokensUsed,  // Keep actual token count for display
-            maxRequests: 100,  // Max percentage is always 100
+            currentRequests: percentageAsInt, // Pass percentage (0-100) for gauge
+            totalRequests: fiveHourWindow.tokensUsed, // Keep actual token count for display
+            maxRequests: 100, // Max percentage is always 100
             startOfMonth: Date().startOfMonth,
             provider: .claude)
     }

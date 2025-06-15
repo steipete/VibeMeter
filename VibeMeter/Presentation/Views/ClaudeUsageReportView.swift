@@ -10,7 +10,7 @@ enum ClaudeUsageViewMode: String, CaseIterable, Sendable {
 struct ClaudeUsageReportView: View {
     @State
     private var dataLoader = ClaudeUsageDataLoader()
-    
+
     // Debounced versions of rapidly updating values
     @DebouncedState(duration: .claudeProgress)
     private var debouncedFilesProcessed: Int = 0
@@ -383,7 +383,7 @@ struct ClaudeUsageReportView: View {
 
             // Start animation
             animationTrigger = true
-            
+
             // Initialize debounced values with current dataLoader values
             debouncedFilesProcessed = dataLoader.filesProcessed
             debouncedLoadingMessage = dataLoader.loadingMessage
@@ -407,7 +407,7 @@ struct ClaudeUsageReportView: View {
                 .pickerStyle(.segmented)
                 .help("Switch between daily and project views")
                 .frame(width: 180)
-                
+
                 // Project filter (only in By Day mode)
                 if viewMode == .byDay, !dataLoader.availableProjects.isEmpty {
                     Picker(selection: $selectedProject) {
@@ -423,7 +423,7 @@ struct ClaudeUsageReportView: View {
                     .help("Filter by project")
                     .frame(width: 180)
                 }
-                
+
                 // Date range selector (only in By Project mode)
                 if viewMode == .byProject {
                     HStack(spacing: 6) {
@@ -432,11 +432,12 @@ struct ClaudeUsageReportView: View {
                         }
                         .datePickerStyle(.compact)
                         .labelsHidden()
-                        
+
                         Text("to")
                             .foregroundStyle(.secondary)
-                        
-                        DatePicker(selection: $dateRangeEnd, in: dateRangeStart...Date(), displayedComponents: .date) {
+
+                        DatePicker(selection: $dateRangeEnd, in: dateRangeStart ... Date(),
+                                   displayedComponents: .date) {
                             Label("End Date", systemImage: "calendar")
                         }
                         .datePickerStyle(.compact)
@@ -445,7 +446,7 @@ struct ClaudeUsageReportView: View {
                     .help("Select date range")
                 }
             }
-            
+
             ToolbarItemGroup(placement: .primaryAction) {
                 // Cost calculation strategy selector
                 Picker(selection: $selectedCostStrategy) {
@@ -458,7 +459,7 @@ struct ClaudeUsageReportView: View {
                 .pickerStyle(.menu)
                 .help("Select cost calculation strategy")
                 .frame(width: 250)
-                
+
                 // Refresh button
                 Button(action: refreshData) {
                     Label("Refresh", systemImage: "arrow.clockwise")
@@ -826,4 +827,3 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
     .frame(width: 900, height: 650)
     .preferredColorScheme(.light)
 }
-

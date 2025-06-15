@@ -68,13 +68,12 @@ struct ProviderUsageBadgeView: View {
 
     private func usageText(current: Int, max: Int) -> some View {
         // For Claude provider, format tokens with k/M suffixes
-        let displayText: String
-        if provider == .claude {
-            displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
+        let displayText = if provider == .claude {
+            "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
         } else {
-            displayText = "\(current)/\(max)"
+            "\(current)/\(max)"
         }
-        
+
         return Text(displayText)
             .font(.caption.monospaced())
             .foregroundStyle(.secondary)

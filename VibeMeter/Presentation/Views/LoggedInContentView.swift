@@ -6,10 +6,14 @@ import SwiftUI
 /// provider details, spending limits, and action buttons. It provides a compact yet comprehensive
 /// overview of current spending across all connected providers.
 struct LoggedInContentView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.refreshAction) private var onRefresh: (@Sendable () async -> Void)?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.refreshAction)
+    private var onRefresh: (@Sendable () async -> Void)?
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData

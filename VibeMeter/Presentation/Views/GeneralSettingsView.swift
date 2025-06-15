@@ -7,7 +7,8 @@ import SwiftUI
 /// and menu bar display options. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var hasUserMadeCurrencyChoice = UserDefaults.standard
@@ -138,7 +139,7 @@ struct GeneralSettingsView: View {
                 startupManager.setLaunchAtLogin(enabled: newValue)
             })
     }
-    
+
     private var menuBarDisplayModeBinding: Binding<MenuBarDisplayMode> {
         Binding(
             get: { settingsManager?.menuBarDisplayMode ?? .iconOnly },
@@ -148,7 +149,7 @@ struct GeneralSettingsView: View {
                 }
             })
     }
-    
+
     private var refreshIntervalBinding: Binding<Int> {
         Binding(
             get: { settingsManager?.refreshIntervalMinutes ?? 30 },

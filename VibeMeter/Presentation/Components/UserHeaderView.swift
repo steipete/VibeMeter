@@ -6,7 +6,8 @@ import SwiftUI
 /// It provides a quick overview of the current session state and user identity across
 /// all connected service providers.
 struct UserHeaderView: View {
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
 
     var body: some View {
         HStack(spacing: 10) {
@@ -39,7 +40,7 @@ struct UserHeaderView: View {
 
     private var providerCountText: String {
         guard let userSessionData else { return "No providers connected" }
-        
+
         let providers = userSessionData.loggedInProviders
         let count = providers.count
 

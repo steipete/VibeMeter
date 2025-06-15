@@ -347,7 +347,6 @@ final class CustomMenuWindow: NSPanel {
 
     // MARK: - Observable Tracking
 
-
     deinit {
         // Ensure proper cleanup of event monitoring
         // Since this class is @MainActor and deinit is called when deallocating,

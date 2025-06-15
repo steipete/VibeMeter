@@ -7,9 +7,11 @@ import SwiftUI
 /// sections with proper visual hierarchy. It includes currency conversion, progress indicators,
 /// and spending threshold warnings with color-coded visual feedback.
 struct CostTableView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+
     let showTimestamps: Bool
 
     @Environment(MultiProviderSpendingData.self)
@@ -212,21 +214,21 @@ struct CostTableView: View {
         hasher.combine(providers.count)
         return hasher.finalize()
     }
-    
+
     // MARK: - Window Time Helper
-    
-    private func windowTimeRangeText(for providerData: ProviderSpendingData) -> String {
+
+    private func windowTimeRangeText(for _: ProviderSpendingData) -> String {
         // For Claude Pro accounts, the window is a rolling 5-hour period
         let now = Date()
         let windowStart = now.addingTimeInterval(-5 * 60 * 60) // 5 hours ago
-        
+
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         formatter.dateStyle = .none
-        
+
         let startTimeString = formatter.string(from: windowStart)
         let endTimeString = formatter.string(from: now)
-        
+
         return "\(startTimeString) - \(endTimeString)"
     }
 
@@ -309,7 +311,9 @@ struct CostTableView: View {
                                             .frame(height: 6)
 
                                         if let maxRequests = usageData.maxRequests, maxRequests > 0 {
-                                            let progress = min(Double(usageData.currentRequests) / Double(maxRequests), 1.0)
+                                            let progress = min(
+                                                Double(usageData.currentRequests) / Double(maxRequests),
+                                                1.0)
                                             RoundedRectangle(cornerRadius: 3)
                                                 .fill(progress > 0.8 ? Color.orange : Color.accentColor)
                                                 .frame(width: geometry.size.width * progress, height: 6)
@@ -326,7 +330,7 @@ struct CostTableView: View {
                                         .fixedSize()
                                 }
                             }
-                            
+
                             // Add window time range display
                             Text(windowTimeRangeText(for: providerData))
                                 .font(.caption)

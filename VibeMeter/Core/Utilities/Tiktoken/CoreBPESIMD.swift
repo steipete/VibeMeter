@@ -3,7 +3,7 @@ import simd
 
 /// SIMD-optimized Byte Pair Encoding implementation
 final class CoreBPESIMD: @unchecked Sendable {
-    let bytePairRanks: [Data: Int]  // Made internal for SIMDMergeFinder
+    let bytePairRanks: [Data: Int] // Made internal for SIMDMergeFinder
     private let tokenEncoder: [String: Int]
     private let tokenDecoder: [Int: String]
     private let specialTokens: [String: Int]
@@ -46,21 +46,21 @@ final class CoreBPESIMD: @unchecked Sendable {
     func encode(_ text: String, allowedSpecial: Set<String> = []) -> [Int] {
         // Build regex for special tokens that should be treated as special
         let specialTokenPattern = buildSpecialTokenRegex(allowedSpecial: allowedSpecial)
-        
+
         // If no special tokens are allowed or present, encode ordinarily
         if allowedSpecial.isEmpty || !containsSpecialTokens(text, pattern: specialTokenPattern) {
             return encodeOrdinary(text)
         }
-        
+
         // Split text by special tokens and encode parts
         var tokens: [Int] = []
         var lastEnd = text.startIndex
-        
+
         // Find all special token matches
         let nsText = text as NSString
-        let matches = specialTokenPattern?.matches(in: text, options: [], 
-                                                  range: NSRange(location: 0, length: nsText.length)) ?? []
-        
+        let matches = specialTokenPattern?.matches(in: text, options: [],
+                                                   range: NSRange(location: 0, length: nsText.length)) ?? []
+
         for match in matches {
             if let range = Range(match.range, in: text) {
                 // Encode text before the special token
@@ -68,44 +68,44 @@ final class CoreBPESIMD: @unchecked Sendable {
                     let piece = String(text[lastEnd ..< range.lowerBound])
                     tokens.append(contentsOf: encodeOrdinary(piece))
                 }
-                
+
                 // Add the special token
                 let specialToken = String(text[range])
                 if let tokenId = specialTokens[specialToken] {
                     tokens.append(tokenId)
                 }
-                
+
                 lastEnd = range.upperBound
             }
         }
-        
+
         // Encode any remaining text
         if lastEnd < text.endIndex {
             let remaining = String(text[lastEnd...])
             tokens.append(contentsOf: encodeOrdinary(remaining))
         }
-        
+
         return tokens
     }
-    
+
     // Default encode method for backward compatibility
     func encode(_ text: String) -> [Int] {
         encode(text, allowedSpecial: [])
     }
-    
+
     private func buildSpecialTokenRegex(allowedSpecial: Set<String>) -> NSRegularExpression? {
         if allowedSpecial.isEmpty {
             return nil
         }
-        
+
         let pattern = allowedSpecial.map { NSRegularExpression.escapedPattern(for: $0) }
             .joined(separator: "|")
-        
+
         return try? NSRegularExpression(pattern: "(\(pattern))", options: [])
     }
-    
+
     private func containsSpecialTokens(_ text: String, pattern: NSRegularExpression?) -> Bool {
-        guard let pattern = pattern else { return false }
+        guard let pattern else { return false }
         let range = NSRange(location: 0, length: (text as NSString).length)
         return pattern.firstMatch(in: text, options: [], range: range) != nil
     }
@@ -134,22 +134,22 @@ final class CoreBPESIMD: @unchecked Sendable {
 
         // Use SIMD-optimized merge finder
         let mergeFinder = SIMDMergeFinder(bytePairRanks: bytePairRanks)
-        
+
         // Start with individual bytes as parts
         var parts: [Data] = data.map { Data([$0]) }
-        
+
         // Keep merging until no more merges are possible
         while parts.count > 1 {
             // Find the best merge using SIMD
             guard let (mergeIndex, _) = mergeFinder.findBestMerge(in: parts) else {
                 break
             }
-            
+
             // Merge the pair
             parts[mergeIndex] = parts[mergeIndex] + parts[mergeIndex + 1]
             parts.remove(at: mergeIndex + 1)
         }
-        
+
         // Convert parts to token IDs
         var result: [Int] = []
         for part in parts {
@@ -157,7 +157,7 @@ final class CoreBPESIMD: @unchecked Sendable {
                 result.append(rank)
             }
         }
-        
+
         return result
     }
 
@@ -166,17 +166,17 @@ final class CoreBPESIMD: @unchecked Sendable {
         if data.isEmpty {
             return []
         }
-        
+
         // Start with individual bytes as parts
         var parts: [Data] = (0 ..< data.count).map { i in
             Data([data[i]])
         }
-        
+
         // Keep merging until no more merges are possible
         while parts.count > 1 {
             var minRank = Int.max
             var minIndex = -1
-            
+
             // Find the pair with minimum rank (highest priority)
             for i in 0 ..< parts.count - 1 {
                 let pair = parts[i] + parts[i + 1]
@@ -185,17 +185,17 @@ final class CoreBPESIMD: @unchecked Sendable {
                     minIndex = i
                 }
             }
-            
+
             // If no mergeable pair found, break
             if minIndex == -1 {
                 break
             }
-            
+
             // Merge the pair
             parts[minIndex] = parts[minIndex] + parts[minIndex + 1]
             parts.remove(at: minIndex + 1)
         }
-        
+
         // Convert parts to token IDs
         var result: [Int] = []
         for part in parts {
@@ -203,7 +203,7 @@ final class CoreBPESIMD: @unchecked Sendable {
                 result.append(rank)
             }
         }
-        
+
         return result
     }
 

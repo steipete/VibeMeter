@@ -6,12 +6,17 @@ import SwiftUI
 /// login/logout capabilities, and access to detailed provider information. Users can
 /// manage multiple provider connections from this centralized interface.
 struct ProvidersSettingsView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.dataOrchestrator) private var orchestrator: MultiProviderDataOrchestrator?
-    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
-    
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.dataOrchestrator)
+    private var orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.providerRegistry)
+    private var providerRegistry: ProviderRegistry
+
     @Binding
     var showingProviderDetail: ServiceProvider?
 
@@ -69,7 +74,7 @@ struct ProvidersSettingsView: View {
 
     private func setupLoginCallbacks() {
         guard let loginManager else { return }
-        
+
         loginManager.onLoginSuccess = { provider in
             Task {
                 await updateUserSessionForProvider(provider)
@@ -99,10 +104,10 @@ struct ProvidersSettingsView: View {
 
         guard let loginManager, let token = loginManager.getAuthToken(for: provider) else {
             userSessionData?.handleLoginFailure(for: provider,
-                                               error: NSError(domain: "SettingsView", code: 1,
-                                                              userInfo: [
-                                                                  NSLocalizedDescriptionKey: "No auth token found",
-                                                              ]))
+                                                error: NSError(domain: "SettingsView", code: 1,
+                                                               userInfo: [
+                                                                   NSLocalizedDescriptionKey: "No auth token found",
+                                                               ]))
             return
         }
 

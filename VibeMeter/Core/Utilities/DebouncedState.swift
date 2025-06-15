@@ -23,19 +23,18 @@ import SwiftUI
 @MainActor
 public struct DebouncedState<Value> {
     private var storage: Storage<Value>
-    
+
     public var wrappedValue: Value {
         get { storage.value }
         nonmutating set { storage.updateDebounced(newValue) }
     }
-    
+
     public var projectedValue: Binding<Value> {
         Binding(
             get: { storage.value },
-            set: { storage.updateDebounced($0) }
-        )
+            set: { storage.updateDebounced($0) })
     }
-    
+
     /// Initialize with a default value and optional debounce duration
     /// - Parameters:
     ///   - wrappedValue: The initial value
@@ -53,12 +52,12 @@ private final class Storage<Value> {
     var value: Value
     private var updateTask: Task<Void, Never>?
     private let duration: Duration
-    
+
     init(initialValue: Value, duration: Duration) {
         self.value = initialValue
         self.duration = duration
     }
-    
+
     func updateDebounced(_ newValue: Value) {
         updateTask?.cancel()
         updateTask = Task { [weak self, duration] in
@@ -80,9 +79,11 @@ private final class Storage<Value> {
 public struct DebouncedModifier<Value: Equatable & Sendable>: ViewModifier {
     let source: Value
     let duration: Duration
-    @Binding var destination: Value
-    @State private var updateTask: Task<Void, Never>?
-    
+    @Binding
+    var destination: Value
+    @State
+    private var updateTask: Task<Void, Never>?
+
     public func body(content: Content) -> some View {
         content
             .onChange(of: source) { _, newValue in
@@ -110,13 +111,11 @@ public extension View {
     func debounced<Value: Equatable & Sendable>(
         _ source: Value,
         duration: Duration = .milliseconds(300),
-        to destination: Binding<Value>
-    ) -> some View {
+        to destination: Binding<Value>) -> some View {
         modifier(DebouncedModifier(
             source: source,
             duration: duration,
-            destination: destination
-        ))
+            destination: destination))
     }
 }
 
@@ -131,15 +130,13 @@ public extension View {
     func onChangeDebounced<Value: Equatable & Sendable>(
         of value: Value,
         duration: Duration = .milliseconds(300),
-        perform action: @escaping (Value) -> Void
-    ) -> some View {
+        perform action: @escaping (Value) -> Void) -> some View {
         self
-            .onChange(of: value) { _, _ in }  // Ensure onChange infrastructure is set up
+            .onChange(of: value) { _, _ in } // Ensure onChange infrastructure is set up
             .modifier(DebouncedChangeModifier(
                 value: value,
                 duration: duration,
-                action: action
-            ))
+                action: action))
     }
 }
 
@@ -147,9 +144,10 @@ private struct DebouncedChangeModifier<Value: Equatable & Sendable>: ViewModifie
     let value: Value
     let duration: Duration
     let action: (Value) -> Void
-    
-    @State private var updateTask: Task<Void, Never>?
-    
+
+    @State
+    private var updateTask: Task<Void, Never>?
+
     func body(content: Content) -> some View {
         content
             .onChange(of: value) { _, newValue in
@@ -183,15 +181,16 @@ public extension DebouncedState where Value: ExpressibleByNilLiteral {
 /// Debounces multiple related values as a group
 @MainActor
 public final class DebouncedGroup<Model>: ObservableObject {
-    @Published public private(set) var model: Model
+    @Published
+    public private(set) var model: Model
     private var updateTask: Task<Void, Never>?
     private let duration: Duration
-    
+
     public init(initialModel: Model, duration: Duration = .milliseconds(300)) {
         self.model = initialModel
         self.duration = duration
     }
-    
+
     public func update(_ newModel: Model) {
         updateTask?.cancel()
         updateTask = Task { [weak self, duration] in
@@ -205,7 +204,7 @@ public final class DebouncedGroup<Model>: ObservableObject {
             }
         }
     }
-    
+
     public func update<T>(keyPath: WritableKeyPath<Model, T>, value: T) {
         var newModel = model
         newModel[keyPath: keyPath] = value

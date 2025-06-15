@@ -87,8 +87,7 @@ final class StatusBarMenuManager {
                     Task {
                         await orchestrator.refreshAllProviders(showSyncedMessage: true)
                     }
-                }
-            )
+                })
             .environment(spendingData)
             .environment(currencyData)
 

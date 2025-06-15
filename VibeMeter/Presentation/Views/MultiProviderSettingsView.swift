@@ -6,10 +6,14 @@ import SwiftUI
 /// general preferences, provider management, and spending limits. It serves as
 /// the primary configuration hub for the VibeMeter application.
 struct MultiProviderSettingsView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.dataOrchestrator) private var orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.dataOrchestrator)
+    private var orchestrator: MultiProviderDataOrchestrator?
 
     @State
     private var showingProviderDetail: ServiceProvider?
@@ -41,9 +45,9 @@ struct MultiProviderSettingsView: View {
                     .tag(MultiProviderSettingsTab.limits)
 
                 AdvancedSettingsView()
-                .tabItem {
-                    Label("Advanced", systemImage: "gearshape.2")
-                }
+                    .tabItem {
+                        Label("Advanced", systemImage: "gearshape.2")
+                    }
                     .tag(MultiProviderSettingsTab.advanced)
 
                 AboutView()
@@ -67,10 +71,10 @@ struct MultiProviderSettingsView: View {
                 Image(systemName: "exclamationmark.triangle")
                     .font(.largeTitle)
                     .foregroundStyle(.orange)
-                
+
                 Text("Configuration Error")
                     .font(.headline)
-                
+
                 Text("Required dependencies are not available.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

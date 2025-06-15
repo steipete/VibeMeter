@@ -6,8 +6,10 @@ import SwiftUI
 /// with currency conversion display. It shows both USD amounts (stored values)
 /// and converted amounts in the user's selected currency for better understanding.
 struct SpendingLimitsView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
 
     @Environment(CurrencyData.self)
     private var currencyData

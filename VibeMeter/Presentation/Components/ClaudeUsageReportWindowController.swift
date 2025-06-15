@@ -45,7 +45,7 @@ final class ClaudeUsageReportWindowController: NSWindowController {
             let windowController = ClaudeUsageReportWindowController()
             windowController.showWindow(nil)
             sharedWindow = windowController
-            
+
             // Ensure new window appears in foreground
             if let window = windowController.window {
                 NSApp.activate(ignoringOtherApps: true)
@@ -69,7 +69,7 @@ final class ClaudeUsageReportWindowController: NSWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.isReleasedWhenClosed = false
         window.center()
-        
+
         // Configure window behavior to ensure it appears in foreground
         window.collectionBehavior = [.moveToActiveSpace, .managed, .fullScreenAuxiliary]
 

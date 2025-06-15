@@ -116,7 +116,7 @@ final class StatusBarController: NSObject {
             guard let self, let button = self.statusItem?.button else { return }
             self.displayManager.updateDisplay(for: button)
         }
-        
+
         // State update callback for significant data changes
         observer.onStateUpdateNeeded = { [weak self] in
             self?.updateStatusItemDisplay()
@@ -127,15 +127,15 @@ final class StatusBarController: NSObject {
         animationController.startTimers()
         observer.startObserving()
     }
-    
+
     private func startObservationTracking() {
         // Cancel any existing observation task
         observationTask?.cancel()
-        
+
         // Create a new observation task
         observationTask = Task { [weak self] in
             guard let self else { return }
-            
+
             while !Task.isCancelled {
                 withObservationTracking {
                     // Access all the properties we want to observe
@@ -329,7 +329,6 @@ final class StatusBarController: NSObject {
         let freshTooltip = tooltipProvider.createTooltipText()
         button.toolTip = freshTooltip
     }
-
 
     deinit {
         // Since deinit cannot be marked as @MainActor, we need to assume we're on the main actor

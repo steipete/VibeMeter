@@ -7,17 +7,21 @@ import SwiftUI
 /// interface when no providers are connected.
 @MainActor
 struct VibeMeterMainView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.refreshAction) private var onRefresh: (@Sendable () async -> Void)?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.refreshAction)
+    private var onRefresh: (@Sendable () async -> Void)?
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared
 
     var body: some View {
         if settingsManager != nil,
-           let userSessionData = userSessionData,
+           let userSessionData,
            loginManager != nil,
            onRefresh != nil {
             Group {
@@ -44,10 +48,10 @@ struct VibeMeterMainView: View {
                 Image(systemName: "exclamationmark.triangle")
                     .font(.largeTitle)
                     .foregroundStyle(.orange)
-                
+
                 Text("Configuration Error")
                     .font(.headline)
-                
+
                 Text("Required dependencies not available")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -66,7 +70,8 @@ struct VibeMeterMainView: View {
                             if event.keyCode == 53 { // ESC key
                                 // Look for any borderless window that might be our menu
                                 for window in NSApp.windows {
-                                    if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
+                                    if window.styleMask.contains(.borderless), window.isVisible,
+                                       window.level == .popUpMenu {
                                         window.orderOut(nil)
                                         return nil // Consume the event
                                     }
@@ -74,8 +79,7 @@ struct VibeMeterMainView: View {
                             }
                             return event // Pass through other events
                         }
-                    }
-            )
+                    })
         }
     }
 }
@@ -88,7 +92,7 @@ struct VibeMeterMainView: View {
         .userSessionData(MultiProviderUserSessionData())
         .loginManager(MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
-        .refreshAction { }
+        .refreshAction {}
         .environment(MultiProviderSpendingData())
         .environment(CurrencyData())
 }
@@ -127,7 +131,7 @@ struct VibeMeterMainView: View {
         .userSessionData(userSessionData)
         .loginManager(MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
-        .refreshAction { }
+        .refreshAction {}
         .environment(spendingData)
         .environment(CurrencyData())
 }

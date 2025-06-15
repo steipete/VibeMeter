@@ -79,7 +79,7 @@ final class StatusBarAnimationController {
                 // Smart update skipping logic
                 let now = Date()
                 let timeSinceLastUpdate = now.timeIntervalSince(self.lastUpdateTime)
-                
+
                 if isActivelyAnimating || valueChanged {
                     // Always update when animating or values changed
                     self.onDisplayUpdateNeeded?()
@@ -89,7 +89,7 @@ final class StatusBarAnimationController {
                 } else {
                     // Skip updates if nothing has changed
                     self.consecutiveNoChangeUpdates += 1
-                    
+
                     // Only force an update every 10 seconds when idle, or if we just started
                     if timeSinceLastUpdate > 10.0 || self.consecutiveNoChangeUpdates == 1 {
                         self.onDisplayUpdateNeeded?()

@@ -27,7 +27,7 @@ private struct ProviderRegistryKey: EnvironmentKey {
     static var defaultValue: ProviderRegistry {
         // Access shared instance lazily to avoid concurrency issues
         MainActor.assumeIsolated {
-            return .shared
+            .shared
         }
     }
 }
@@ -45,31 +45,31 @@ extension EnvironmentValues {
         get { self[SettingsManagerKey.self] }
         set { self[SettingsManagerKey.self] = newValue }
     }
-    
+
     /// The user session data for all providers
     var userSessionData: MultiProviderUserSessionData? {
         get { self[UserSessionDataKey.self] }
         set { self[UserSessionDataKey.self] = newValue }
     }
-    
+
     /// The login manager for handling provider authentication
     var loginManager: MultiProviderLoginManager? {
         get { self[LoginManagerKey.self] }
         set { self[LoginManagerKey.self] = newValue }
     }
-    
+
     /// The main data orchestrator for coordinating provider operations
     var dataOrchestrator: MultiProviderDataOrchestrator? {
         get { self[DataOrchestratorKey.self] }
         set { self[DataOrchestratorKey.self] = newValue }
     }
-    
+
     /// The provider registry for managing enabled/disabled providers
     var providerRegistry: ProviderRegistry {
         get { self[ProviderRegistryKey.self] }
         set { self[ProviderRegistryKey.self] = newValue }
     }
-    
+
     /// The refresh action callback for triggering data updates
     var refreshAction: (@Sendable () async -> Void)? {
         get { self[RefreshActionKey.self] }
@@ -84,40 +84,39 @@ extension View {
     func settingsManager(_ manager: any SettingsManagerProtocol) -> some View {
         environment(\.settingsManager, manager)
     }
-    
+
     /// Injects the user session data into the environment
     func userSessionData(_ data: MultiProviderUserSessionData) -> some View {
         environment(\.userSessionData, data)
     }
-    
+
     /// Injects the login manager into the environment
     func loginManager(_ manager: MultiProviderLoginManager) -> some View {
         environment(\.loginManager, manager)
     }
-    
+
     /// Injects the data orchestrator into the environment
     func dataOrchestrator(_ orchestrator: MultiProviderDataOrchestrator) -> some View {
         environment(\.dataOrchestrator, orchestrator)
     }
-    
+
     /// Injects the provider registry into the environment
     func providerRegistry(_ registry: ProviderRegistry) -> some View {
         environment(\.providerRegistry, registry)
     }
-    
+
     /// Injects the refresh action into the environment
     func refreshAction(_ action: @escaping @Sendable () async -> Void) -> some View {
         environment(\.refreshAction, action)
     }
-    
+
     /// Convenience method to inject all VibeMeter dependencies at once
     func vibeMeterEnvironment(
         settingsManager: any SettingsManagerProtocol,
         userSessionData: MultiProviderUserSessionData,
         loginManager: MultiProviderLoginManager,
         dataOrchestrator: MultiProviderDataOrchestrator? = nil,
-        refreshAction: (@Sendable () async -> Void)? = nil
-    ) -> some View {
+        refreshAction: (@Sendable () async -> Void)? = nil) -> some View {
         self
             .settingsManager(settingsManager)
             .userSessionData(userSessionData)
@@ -140,16 +139,17 @@ protocol EnvironmentDependent {
 struct RequireEnvironmentDependencies: ViewModifier {
     let requiredDependencies: [KeyPath<EnvironmentValues, Any?>]
     let onMissing: () -> Void
-    
-    @Environment(\.self) private var environment
-    
+
+    @Environment(\.self)
+    private var environment
+
     func body(content: Content) -> some View {
         content
             .onAppear {
                 validateDependencies()
             }
     }
-    
+
     private func validateDependencies() {
         for keyPath in requiredDependencies {
             if environment[keyPath: keyPath] == nil {
@@ -166,12 +166,10 @@ extension View {
         _ dependencies: KeyPath<EnvironmentValues, Any?>...,
         onMissing: @escaping () -> Void = {
             assertionFailure("Required environment dependencies are missing")
-        }
-    ) -> some View {
+        }) -> some View {
         modifier(RequireEnvironmentDependencies(
             requiredDependencies: dependencies,
-            onMissing: onMissing
-        ))
+            onMissing: onMissing))
     }
 }
 
@@ -182,13 +180,14 @@ extension View {
 struct SafeEnvironment<Value> {
     private let keyPath: KeyPath<EnvironmentValues, Value?>
     private let fallback: Value
-    @Environment(\.self) private var environment
-    
+    @Environment(\.self)
+    private var environment
+
     init(_ keyPath: KeyPath<EnvironmentValues, Value?>, fallback: Value) {
         self.keyPath = keyPath
         self.fallback = fallback
     }
-    
+
     var wrappedValue: Value {
         environment[keyPath: keyPath] ?? fallback
     }
@@ -197,16 +196,16 @@ struct SafeEnvironment<Value> {
 // MARK: - Debug Helpers
 
 #if DEBUG
-extension EnvironmentValues {
-    /// Debug helper to print all custom VibeMeter environment values
-    func debugPrintVibeMeterEnvironment() {
-        print("=== VibeMeter Environment Values ===")
-        print("SettingsManager: \(settingsManager != nil ? "✓" : "✗")")
-        print("UserSessionData: \(userSessionData != nil ? "✓" : "✗")")
-        print("LoginManager: \(loginManager != nil ? "✓" : "✗")")
-        print("DataOrchestrator: \(dataOrchestrator != nil ? "✓" : "✗")")
-        print("RefreshAction: \(refreshAction != nil ? "✓" : "✗")")
-        print("===================================")
+    extension EnvironmentValues {
+        /// Debug helper to print all custom VibeMeter environment values
+        func debugPrintVibeMeterEnvironment() {
+            print("=== VibeMeter Environment Values ===")
+            print("SettingsManager: \(settingsManager != nil ? "✓" : "✗")")
+            print("UserSessionData: \(userSessionData != nil ? "✓" : "✗")")
+            print("LoginManager: \(loginManager != nil ? "✓" : "✗")")
+            print("DataOrchestrator: \(dataOrchestrator != nil ? "✓" : "✗")")
+            print("RefreshAction: \(refreshAction != nil ? "✓" : "✗")")
+            print("===================================")
+        }
     }
-}
 #endif

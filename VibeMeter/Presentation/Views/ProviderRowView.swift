@@ -9,11 +9,15 @@ import SwiftUI
 struct ProviderRowView: View {
     let provider: ServiceProvider
     let showDetail: () -> Void
-    
-    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
-    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
-    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager)
+    private var loginManager: MultiProviderLoginManager?
+    @Environment(\.providerRegistry)
+    private var providerRegistry: ProviderRegistry
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared

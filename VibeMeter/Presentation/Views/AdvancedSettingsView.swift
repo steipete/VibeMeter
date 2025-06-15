@@ -6,7 +6,8 @@ import SwiftUI
 /// This view contains settings for update channels, dock visibility, and other
 /// advanced options that most users won't need to change frequently.
 struct AdvancedSettingsView: View {
-    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.settingsManager)
+    private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var isCheckingForUpdates = false
@@ -94,7 +95,7 @@ struct AdvancedSettingsView: View {
                 NSApp.setActivationPolicy(newValue ? .regular : .accessory)
             })
     }
-    
+
     private var updateChannelBinding: Binding<UpdateChannel> {
         Binding(
             get: { (settingsManager as? SettingsManager)?.updateChannel ?? .stable },

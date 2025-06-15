@@ -12,21 +12,21 @@ final class StatusBarDisplayManager {
 
     /// Threshold for detecting currency changes based on animated value difference (in currency units)
     private static let currencyChangeThreshold: Double = 0.5
-    
+
     /// Maximum number of cached icons to keep in memory
     private static let maxIconCacheSize = 50
 
     // With automatic observation tracking, we no longer need complex state comparison
-    
+
     // MARK: - Icon Cache Types
-    
+
     private struct IconCacheKey: Hashable {
         let state: MenuBarState
         let gaugeValue: Int // Quantized to reduce variations (0-100)
         let isDarkMode: Bool
         let hasProviderIssues: Bool
         let connectionStatus: ProviderConnectionStatus?
-        
+
         // Custom equality to handle MenuBarState.data case
         static func == (lhs: IconCacheKey, rhs: IconCacheKey) -> Bool {
             // Compare all properties except state first
@@ -36,7 +36,7 @@ final class StatusBarDisplayManager {
                   lhs.connectionStatus == rhs.connectionStatus else {
                 return false
             }
-            
+
             // Custom comparison for MenuBarState
             switch (lhs.state, rhs.state) {
             case (.notLoggedIn, .notLoggedIn):
@@ -50,7 +50,7 @@ final class StatusBarDisplayManager {
                 return false
             }
         }
-        
+
         func hash(into hasher: inout Hasher) {
             // Hash only the enum case, not associated values
             switch state {
@@ -82,7 +82,7 @@ final class StatusBarDisplayManager {
     private var lastCurrencyCode: String?
     private var lastTooltip: String = ""
     private var lastAccessibilityDescription: String = ""
-    
+
     // Icon cache
     private var iconCache: [IconCacheKey: NSImage] = [:]
 
@@ -123,7 +123,7 @@ final class StatusBarDisplayManager {
         updateTitle(button: button)
         updateTooltipAndAccessibility(button: button)
     }
-    
+
     /// Invalidates the icon cache, forcing re-rendering on next update
     /// Call this when display-affecting settings change (e.g., appearance, display mode)
     func invalidateIconCache() {
@@ -143,22 +143,21 @@ final class StatusBarDisplayManager {
         if shouldShowIcon {
             // Quantize gauge value to reduce cache variations (0.01 precision = 0-100 range)
             let quantizedValue = Int(stateManager.animatedGaugeValue * 100)
-            
+
             // Create cache key
             let cacheKey = IconCacheKey(
                 state: stateManager.currentState,
                 gaugeValue: quantizedValue,
                 isDarkMode: isDarkMode,
                 hasProviderIssues: spendingData.hasProviderIssues,
-                connectionStatus: spendingData.hasProviderIssues ? spendingData.overallConnectionStatus : nil
-            )
-            
+                connectionStatus: spendingData.hasProviderIssues ? spendingData.overallConnectionStatus : nil)
+
             // Check cache first
             if let cachedIcon = iconCache[cacheKey] {
                 button.image = cachedIcon
                 return
             }
-            
+
             // Icon not in cache, render it
             let colorScheme: ColorScheme = isDarkMode ? .dark : .light
             let shouldAnimate = false // Let automatic tracking handle updates smoothly
@@ -199,17 +198,17 @@ final class StatusBarDisplayManager {
             if let nsImage = renderer.nsImage {
                 nsImage.size = NSSize(width: 18, height: 18)
                 nsImage.isTemplate = true
-                
+
                 // Cache the rendered image
                 iconCache[cacheKey] = nsImage
-                
+
                 // Evict old entries if cache is too large
                 if iconCache.count > Self.maxIconCacheSize {
                     // Clear entire cache when limit reached (simple strategy)
                     iconCache.removeAll()
                     iconCache[cacheKey] = nsImage // Re-add the current icon
                 }
-                
+
                 button.image = nsImage
             } else {
                 print("GaugeIcon rendering failed, using fallback")

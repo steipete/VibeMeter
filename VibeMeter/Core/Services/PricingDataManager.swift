@@ -104,7 +104,7 @@ public final class PricingDataManager: @unchecked Sendable {
 
         // Try partial matches - find the best match based on model type
         let lowerModel = model.lowercased()
-        
+
         // Check for specific model types first
         if lowerModel.contains("sonnet") {
             // Return the latest Sonnet pricing
@@ -123,7 +123,7 @@ public final class PricingDataManager: @unchecked Sendable {
                 return opusPricing
             }
         }
-        
+
         // Fallback to general partial matching
         for (key, value) in pricing {
             if key.lowercased().contains(lowerModel) || lowerModel.contains(key.lowercased()) {
