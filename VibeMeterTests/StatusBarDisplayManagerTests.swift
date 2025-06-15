@@ -1,7 +1,7 @@
 import XCTest
 @testable import VibeMeter
 
-// Remove @MainActor from the test class to avoid Swift 6 concurrency issues
+@MainActor
 final class StatusBarDisplayManagerTests: XCTestCase {
     // MARK: - Properties
     
@@ -18,36 +18,30 @@ final class StatusBarDisplayManagerTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         
-        // Run setup on MainActor synchronously
-        try MainActor.assumeIsolated {
-            stateManager = MenuBarStateManager()
-            settingsManager = MockSettingsManager()
-            userSession = MultiProviderUserSessionData()
-            spendingData = MultiProviderSpendingData()
-            currencyData = CurrencyData()
-            mockButton = NSStatusBarButton()
-            
-            sut = StatusBarDisplayManager(
-                stateManager: stateManager,
-                settingsManager: settingsManager,
-                userSession: userSession,
-                spendingData: spendingData,
-                currencyData: currencyData
-            )
-        }
+        stateManager = MenuBarStateManager()
+        settingsManager = MockSettingsManager()
+        userSession = MultiProviderUserSessionData()
+        spendingData = MultiProviderSpendingData()
+        currencyData = CurrencyData()
+        mockButton = NSStatusBarButton()
+        
+        sut = StatusBarDisplayManager(
+            stateManager: stateManager,
+            settingsManager: settingsManager,
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData
+        )
     }
     
     override func tearDownWithError() throws {
-        // Run teardown on MainActor synchronously
-        MainActor.assumeIsolated {
-            sut = nil
-            stateManager = nil
-            settingsManager = nil
-            userSession = nil
-            spendingData = nil
-            currencyData = nil
-            mockButton = nil
-        }
+        sut = nil
+        stateManager = nil
+        settingsManager = nil
+        userSession = nil
+        spendingData = nil
+        currencyData = nil
+        mockButton = nil
         
         try super.tearDownWithError()
     }
@@ -55,7 +49,6 @@ final class StatusBarDisplayManagerTests: XCTestCase {
     // MARK: - Menu Bar Display Mode Tests
     
     func testIconOnlyModeShowsNoText() throws {
-        try MainActor.assumeIsolated {
             // Given
             settingsManager.menuBarDisplayMode = .iconOnly
             userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -83,11 +76,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             // Then
             XCTAssertEqual(mockButton.title, "", "Icon only mode should not display any text")
             XCTAssertNotNil(mockButton.image, "Icon only mode should display an icon")
-        }
     }
     
     func testMoneyOnlyModeShowsNoIcon() throws {
-        try MainActor.assumeIsolated {
             // Given
             settingsManager.menuBarDisplayMode = .moneyOnly
             userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -118,11 +109,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertNotEqual(mockButton.title, "", "Money only mode should display text")
             XCTAssertTrue(mockButton.title.contains("$"), "Money only mode should include currency symbol")
             XCTAssertNil(mockButton.image, "Money only mode should not display an icon")
-        }
     }
     
     func testBothModeShowsIconAndText() throws {
-        try MainActor.assumeIsolated {
             // Given
             settingsManager.menuBarDisplayMode = .both
             userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -153,11 +142,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertNotEqual(mockButton.title, "", "Both mode should display text")
             XCTAssertTrue(mockButton.title.contains("$"), "Both mode should include currency symbol")
             XCTAssertNotNil(mockButton.image, "Both mode should display an icon")
-        }
     }
     
     func testNoDataAlwaysShowsIcon() throws {
-        try MainActor.assumeIsolated {
             // Given
             let modes: [MenuBarDisplayMode] = [.iconOnly, .moneyOnly, .both]
             
@@ -174,11 +161,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
                 XCTAssertNotNil(mockButton.image, "Should always show icon when there's no data, even in \(mode) mode")
                 XCTAssertEqual(mockButton.title, "", "Should not show text when there's no data in \(mode) mode")
             }
-        }
     }
     
     func testTextSpacingWithIcon() throws {
-        try MainActor.assumeIsolated {
             // Given
             settingsManager.menuBarDisplayMode = .both
             userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -207,11 +192,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             
             // Then
             XCTAssertTrue(mockButton.title.hasPrefix("  "), "Text should have spacing when icon is shown")
-        }
     }
     
     func testTextNoSpacingWithoutIcon() throws {
-        try MainActor.assumeIsolated {
             // Given
             settingsManager.menuBarDisplayMode = .moneyOnly
             userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -241,6 +224,5 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             // Then
             XCTAssertFalse(mockButton.title.hasPrefix("  "), "Text should not have spacing when icon is not shown")
             XCTAssertTrue(mockButton.title.hasPrefix("$"), "Text should start with currency symbol")
-        }
     }
 }

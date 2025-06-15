@@ -14,7 +14,7 @@ final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
     private var trackingArea: NSTrackingArea?
-    private var observableDisplayView: ObservableStatusBarDisplayView?
+    private var observationTask: Task<Void, Never>?
 
     // MARK: - Component Managers
 
@@ -69,6 +69,7 @@ final class StatusBarController: NSObject {
         setupMenuManager()
         setupCallbacks()
         startComponents()
+        startObservationTracking()
     }
 
     private func setupStatusItem() {
@@ -87,22 +88,6 @@ final class StatusBarController: NSObject {
 
             // Set up tracking area for dynamic tooltip updates
             setupTrackingArea(for: button)
-
-            // Add observable display view to leverage automatic tracking
-            observableDisplayView = ObservableStatusBarDisplayView(
-                statusBarButton: button,
-                displayManager: displayManager,
-                stateManager: stateManager,
-                userSession: userSession,
-                spendingData: spendingData,
-                currencyData: currencyData,
-                settingsManager: settingsManager,
-                orchestrator: orchestrator)
-            if let observableDisplayView {
-                observableDisplayView.frame = button.bounds
-                observableDisplayView.autoresizingMask = [.width, .height]
-                button.addSubview(observableDisplayView)
-            }
 
             updateStatusItemDisplay()
         }
@@ -140,6 +125,37 @@ final class StatusBarController: NSObject {
     private func startComponents() {
         animationController.startTimers()
         observer.startObserving()
+    }
+    
+    private func startObservationTracking() {
+        // Cancel any existing observation task
+        observationTask?.cancel()
+        
+        // Create a new observation task
+        observationTask = Task { [weak self] in
+            guard let self else { return }
+            
+            while !Task.isCancelled {
+                await withObservationTracking {
+                    // Access all the properties we want to observe
+                    _ = self.spendingData.totalSpendingUSD
+                    _ = self.currencyData.selectedCode
+                    _ = self.currencyData.selectedSymbol
+                    _ = self.settingsManager.menuBarDisplayMode
+                    _ = self.userSession.isLoggedInToAnyProvider
+                    _ = self.stateManager.currentState
+                    _ = self.stateManager.animatedGaugeValue
+                    _ = self.stateManager.animatedCostValue
+                    _ = self.orchestrator.isRefreshing
+                } onChange: {
+                    // When any of the observed properties change, update the display
+                    Task { @MainActor [weak self] in
+                        guard let self, let button = self.statusItem?.button else { return }
+                        self.displayManager.updateDisplay(for: button)
+                    }
+                }
+            }
+        }
     }
 
     func updateStatusItemDisplay() {

@@ -89,7 +89,6 @@
 		541D351ED06D68512B6A1454 /* MultiProviderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386B1E107BB8459764931771 /* MultiProviderSettingsView.swift */; };
 		568D9D9932981852406CFB77 /* BackgroundDataProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DB6F5DBDDE506C29C62C7B /* BackgroundDataProcessorTests.swift */; };
 		5B7508F9C4E3490F1A1ED2EA /* UserHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04951C33557BBDEB521C4094 /* UserHeaderView.swift */; };
-		5CD67645B73CA7A0CE6E030C /* ObservableStatusBarDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */; };
 		5FF91F38E130065AA4AB3EDD /* AppBehaviorSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1929813D40603B3B76562FB7 /* AppBehaviorSettingsManager.swift */; };
 		60B6DF08B05487DA2599BFD5 /* TiktokenMinimalTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2D41499006C79A800E2BF2 /* TiktokenMinimalTest.swift */; };
 		616980BC6DAE11B3A66FE8B2 /* MultiProviderDataProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C25A0EAC785B6D2D6A3B78C /* MultiProviderDataProcessor.swift */; };
@@ -383,7 +382,6 @@
 		7100C9DD1DC8F748909F4B2B /* StartupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupManager.swift; sourceTree = "<group>"; };
 		73006332A10A82BBB8CA094A /* ClaudeLogManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLogManager.swift; sourceTree = "<group>"; };
 		7362323CCD9F511D6C9549FE /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
-		75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableStatusBarDisplayView.swift; sourceTree = "<group>"; };
 		76414ED53FD52C917C012A10 /* CoreBPEFixed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBPEFixed.swift; sourceTree = "<group>"; };
 		76D559EE0C5AFA04F5C38493 /* TestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixtures.swift; sourceTree = "<group>"; };
 		77E2B9D70E29CC6088F42096 /* SpendingLimitsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsManager.swift; sourceTree = "<group>"; };
@@ -736,7 +734,6 @@
 				161E99B569965C545579BA10 /* GaugeIcon.swift */,
 				C6B5D9C53CC36213616E28BF /* MenuBarState.swift */,
 				4D76B65958CD4E3541A4E3E8 /* NetworkStatusIndicator.swift */,
-				75E81C8AEFF71BFA0532FCF7 /* ObservableStatusBarDisplayView.swift */,
 				A70930209D27A499EBAE553B /* ProviderIconView.swift */,
 				02110BAFA20EAD5108173BF4 /* ProviderSpendingRowView.swift */,
 				96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */,
@@ -1259,7 +1256,6 @@
 				EDDFDA14BBD2E04F13A3ED35 /* GaugeIcon.swift in Sources */,
 				BA3B02D7BACBA124F160DE1D /* MenuBarState.swift in Sources */,
 				3F3B05AAFFCA99C020C4D198 /* NetworkStatusIndicator.swift in Sources */,
-				5CD67645B73CA7A0CE6E030C /* ObservableStatusBarDisplayView.swift in Sources */,
 				06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */,
 				0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */,
 				80BD060425E695ACBF1AFCBA /* ProviderIconView.swift in Sources */,
