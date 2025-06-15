@@ -444,7 +444,9 @@ struct ClaudeUsageReportView: View {
                     }
                     .help("Select date range")
                 }
-                
+            }
+            
+            ToolbarItemGroup(placement: .primaryAction) {
                 // Cost calculation strategy selector
                 Picker(selection: $selectedCostStrategy) {
                     ForEach(CostCalculationStrategy.allCases, id: \.self) { strategy in
@@ -455,7 +457,7 @@ struct ClaudeUsageReportView: View {
                 }
                 .pickerStyle(.menu)
                 .help("Select cost calculation strategy")
-                .frame(width: 200)
+                .frame(width: 250)
                 
                 // Refresh button
                 Button(action: refreshData) {
