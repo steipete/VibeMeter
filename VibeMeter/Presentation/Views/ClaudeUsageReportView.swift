@@ -69,7 +69,21 @@ struct ClaudeUsageReportView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
-            progressBarView
+            // Progress bar when loading
+            if dataLoader.isLoading, dataLoader.totalFiles > 0 {
+                VStack(spacing: 6) {
+                    ProgressView(
+                        value: Double(debouncedFilesProcessed),
+                        total: Double(dataLoader.totalFiles))
+                        .progressViewStyle(.linear)
+                        .padding(.horizontal)
+
+                    Text(debouncedLoadingMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 12)
+            }
 
             // Content
             VStack(spacing: 0) {
