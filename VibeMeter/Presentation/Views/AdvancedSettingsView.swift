@@ -6,8 +6,7 @@ import SwiftUI
 /// This view contains settings for update channels, dock visibility, and other
 /// advanced options that most users won't need to change frequently.
 struct AdvancedSettingsView: View {
-    @Bindable
-    var settingsManager: SettingsManager
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var isCheckingForUpdates = false
@@ -31,7 +30,7 @@ struct AdvancedSettingsView: View {
                 HStack {
                     Text("Update Channel")
                     Spacer()
-                    Picker("", selection: $settingsManager.updateChannel) {
+                    Picker("", selection: updateChannelBinding) {
                         ForEach(UpdateChannel.allCases) { channel in
                             Text(channel.displayName).tag(channel)
                         }
@@ -39,7 +38,7 @@ struct AdvancedSettingsView: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Text(settingsManager.updateChannel.description)
+                Text((settingsManager as? SettingsManager)?.updateChannel.description ?? "")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -87,10 +86,22 @@ struct AdvancedSettingsView: View {
 
     private var showInDockBinding: Binding<Bool> {
         Binding(
-            get: { settingsManager.showInDock },
+            get: { (settingsManager as? SettingsManager)?.showInDock ?? false },
             set: { newValue in
-                settingsManager.showInDock = newValue
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.showInDock = newValue
+                }
                 NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+            })
+    }
+    
+    private var updateChannelBinding: Binding<UpdateChannel> {
+        Binding(
+            get: { (settingsManager as? SettingsManager)?.updateChannel ?? .stable },
+            set: { newValue in
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.updateChannel = newValue
+                }
             })
     }
 
@@ -111,6 +122,7 @@ struct AdvancedSettingsView: View {
 // MARK: - Preview
 
 #Preview("Advanced Settings") {
-    AdvancedSettingsView(settingsManager: SettingsManager.shared)
+    AdvancedSettingsView()
+        .settingsManager(SettingsManager.shared)
         .frame(width: 620, height: 400)
 }

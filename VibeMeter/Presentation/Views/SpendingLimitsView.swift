@@ -6,8 +6,8 @@ import SwiftUI
 /// with currency conversion display. It shows both USD amounts (stored values)
 /// and converted amounts in the user's selected currency for better understanding.
 struct SpendingLimitsView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
 
     @Environment(CurrencyData.self)
     private var currencyData
@@ -18,11 +18,6 @@ struct SpendingLimitsView: View {
     private var upperLimitText: String = ""
     @State
     private var showingResetAlert = false
-
-    init(settingsManager: any SettingsManagerProtocol, userSessionData: MultiProviderUserSessionData) {
-        self.settingsManager = settingsManager
-        self.userSessionData = userSessionData
-    }
 
     var body: some View {
         NavigationStack {
@@ -35,8 +30,8 @@ struct SpendingLimitsView: View {
             .navigationTitle("Spending Limits")
             .onAppear {
                 // Initialize text fields with current values
-                warningLimitText = String(format: "%.2f", settingsManager.warningLimitUSD)
-                upperLimitText = String(format: "%.2f", settingsManager.upperLimitUSD)
+                warningLimitText = String(format: "%.2f", settingsManager?.warningLimitUSD ?? 0)
+                upperLimitText = String(format: "%.2f", settingsManager?.upperLimitUSD ?? 0)
             }
         }
     }
@@ -44,13 +39,15 @@ struct SpendingLimitsView: View {
     // MARK: - Computed Properties
 
     private var convertedWarningLimit: Double {
-        currencyData
+        guard let settingsManager else { return 0 }
+        return currencyData
             .convertAmount(settingsManager.warningLimitUSD, from: "USD", to: currencyData.selectedCode) ??
             settingsManager.warningLimitUSD
     }
 
     private var convertedUpperLimit: Double {
-        currencyData
+        guard let settingsManager else { return 0 }
+        return currencyData
             .convertAmount(settingsManager.upperLimitUSD, from: "USD", to: currencyData.selectedCode) ?? settingsManager
             .upperLimitUSD
     }
@@ -60,7 +57,7 @@ struct SpendingLimitsView: View {
     private var warningLimitSection: some View {
         Section {
             limitContent(
-                amountUSD: settingsManager.warningLimitUSD,
+                amountUSD: settingsManager?.warningLimitUSD ?? 0,
                 convertedAmount: convertedWarningLimit,
                 description: "You'll receive a notification when spending exceeds this amount.")
         } header: {
@@ -71,7 +68,7 @@ struct SpendingLimitsView: View {
     private var upperLimitSection: some View {
         Section {
             limitContent(
-                amountUSD: settingsManager.upperLimitUSD,
+                amountUSD: settingsManager?.upperLimitUSD ?? 0,
                 convertedAmount: convertedUpperLimit,
                 description: "You'll receive a critical notification when spending exceeds this amount.")
         } header: {
@@ -146,9 +143,9 @@ struct SpendingLimitsView: View {
     private func updateLimitValue(from text: String, description: String) {
         if let value = Double(text), value >= 0 {
             if description.contains("critical") {
-                settingsManager.upperLimitUSD = value
+                settingsManager?.upperLimitUSD = value
             } else {
-                settingsManager.warningLimitUSD = value
+                settingsManager?.warningLimitUSD = value
             }
         }
     }
@@ -193,9 +190,9 @@ struct SpendingLimitsView: View {
 }
 
 #Preview {
-    SpendingLimitsView(
-        settingsManager: MockSettingsManager(),
-        userSessionData: PreviewData.mockUserSession())
+    SpendingLimitsView()
+        .settingsManager(MockSettingsManager())
+        .userSessionData(PreviewData.mockUserSession())
         .environment(PreviewData.mockCurrencyData())
         .frame(width: 600, height: 400)
 }

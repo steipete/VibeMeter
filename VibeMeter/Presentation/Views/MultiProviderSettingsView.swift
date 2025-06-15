@@ -18,9 +18,9 @@ struct MultiProviderSettingsView: View {
     private var selectedTab: MultiProviderSettingsTab = .general
 
     var body: some View {
-        if let settingsManager = settingsManager,
-           let userSessionData = userSessionData,
-           let loginManager = loginManager {
+        if settingsManager != nil,
+           userSessionData != nil,
+           loginManager != nil {
             TabView(selection: $selectedTab) {
                 GeneralSettingsView()
                     .tabItem {

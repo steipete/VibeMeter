@@ -7,7 +7,7 @@ import SwiftUI
 /// build details, developer credits, and links to external resources like
 /// GitHub repository and support channels.
 struct AboutView: View {
-    let orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.dataOrchestrator) private var orchestrator: MultiProviderDataOrchestrator?
     var appName: String {
         Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
             Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "Vibe Meter"
@@ -176,6 +176,6 @@ struct InteractiveAppIcon: View {
 // MARK: - Preview
 
 #Preview("About View") {
-    AboutView(orchestrator: nil)
+    AboutView()
         .frame(width: 570, height: 600)
 }

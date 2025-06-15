@@ -49,7 +49,7 @@ struct VibeMeterApp: App {
                 .settingsManager(settingsManager)
                 .userSessionData(appDelegate.userSession)
                 .loginManager(appDelegate.loginManager)
-                .dataOrchestrator(appDelegate.multiProviderOrchestrator)
+                .environment(\.dataOrchestrator, appDelegate.multiProviderOrchestrator)
                 .environment(appDelegate.spendingData)
                 .environment(appDelegate.currencyData)
                 .environment(gravatarService)

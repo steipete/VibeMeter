@@ -32,9 +32,11 @@ private struct RadioButton: View {
 /// settings. It appears as a sheet when users want to manage individual provider connections.
 struct ProviderDetailView: View {
     let provider: ServiceProvider
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager
+    
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
+    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
 
     @Environment(\.dismiss)
     private var dismiss
@@ -46,19 +48,6 @@ struct ProviderDetailView: View {
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared
-
-    private let providerRegistry = ProviderRegistry.shared
-
-    init(
-        provider: ServiceProvider,
-        settingsManager: any SettingsManagerProtocol,
-        userSessionData: MultiProviderUserSessionData,
-        loginManager: MultiProviderLoginManager) {
-        self.provider = provider
-        self.settingsManager = settingsManager
-        self.userSessionData = userSessionData
-        self.loginManager = loginManager
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -85,7 +74,7 @@ struct ProviderDetailView: View {
 
             // Content
             VStack(alignment: .leading, spacing: 24) {
-                if let session = userSessionData.getSession(for: provider) {
+                if let session = userSessionData?.getSession(for: provider) {
                     connectionStatusSection(session: session)
                     providerSettingsSection
                 }
@@ -95,9 +84,9 @@ struct ProviderDetailView: View {
 
             // Footer buttons
             HStack {
-                if !userSessionData.isLoggedIn(to: provider) {
+                if !(userSessionData?.isLoggedIn(to: provider) ?? false) {
                     Button("Login") {
-                        loginManager.showLoginWindow(for: provider)
+                        loginManager?.showLoginWindow(for: provider)
                     }
                     .buttonStyle(.borderedProminent)
                 }
@@ -313,19 +302,17 @@ struct ProviderDetailView: View {
         teamName: "Example Team",
         teamId: 123)
 
-    return ProviderDetailView(
-        provider: .cursor,
-        settingsManager: MockSettingsManager(),
-        userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
+    return ProviderDetailView(provider: .cursor)
+        .settingsManager(MockSettingsManager())
+        .userSessionData(userSessionData)
+        .loginManager(MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
 }
 
 #Preview("Provider Detail - Not Logged In") {
-    ProviderDetailView(
-        provider: .cursor,
-        settingsManager: MockSettingsManager(),
-        userSessionData: MultiProviderUserSessionData(),
-        loginManager: MultiProviderLoginManager(
+    ProviderDetailView(provider: .cursor)
+        .settingsManager(MockSettingsManager())
+        .userSessionData(MultiProviderUserSessionData())
+        .loginManager(MultiProviderLoginManager(
             providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
 }

@@ -379,28 +379,22 @@ private struct RadioButton: View {
         return data
     }()
 
-    ProviderRowView(
-        provider: .cursor,
-        userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        providerRegistry: ProviderRegistry.shared,
-        settingsManager: MockSettingsManager(),
-        showDetail: {})
+    ProviderRowView(provider: .cursor, showDetail: {})
+        .userSessionData(userSessionData)
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .settingsManager(MockSettingsManager())
         .padding()
         .frame(width: 600)
         .background(Color(NSColor.windowBackgroundColor))
 }
 
 #Preview("Provider Row - Not Connected") {
-    ProviderRowView(
-        provider: .cursor,
-        userSessionData: MultiProviderUserSessionData(),
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        providerRegistry: ProviderRegistry.shared,
-        settingsManager: MockSettingsManager(),
-        showDetail: {})
+    ProviderRowView(provider: .cursor, showDetail: {})
+        .userSessionData(MultiProviderUserSessionData())
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .settingsManager(MockSettingsManager())
         .padding()
         .frame(width: 600)
         .background(Color(NSColor.windowBackgroundColor))
@@ -414,14 +408,11 @@ private struct RadioButton: View {
         return data
     }()
 
-    ProviderRowView(
-        provider: .cursor,
-        userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        providerRegistry: ProviderRegistry.shared,
-        settingsManager: MockSettingsManager(),
-        showDetail: {})
+    ProviderRowView(provider: .cursor, showDetail: {})
+        .userSessionData(userSessionData)
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .settingsManager(MockSettingsManager())
         .padding()
         .frame(width: 600)
         .background(Color(NSColor.windowBackgroundColor))

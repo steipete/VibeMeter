@@ -10,6 +10,7 @@
 		02B987FD12A370CCB947E056 /* NetworkStateManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5545E83A8CA05D3F0CF65477 /* NetworkStateManagerTests.swift */; };
 		032E9E7CE6CE3990756B892D /* BackgroundDataProcessorMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1463D2727E6B8F5BA31E5649 /* BackgroundDataProcessorMocks.swift */; };
 		04A3B2C9AAC57959F3C1B100 /* UserDefaultsBackedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270C8DC4B520802F1516D87B /* UserDefaultsBackedTests.swift */; };
+		061EE83100CCCF69958601F0 /* EnvironmentValues+VibeMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C0D789FA71C4DBDA0983CA /* EnvironmentValues+VibeMeter.swift */; };
 		0655AB812EF59B11D3DACFF7 /* DebouncedState+ClaudeUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5392E3520D9BB70DB4F6088 /* DebouncedState+ClaudeUsage.swift */; };
 		06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672B29645EFF1F6E88DF4F2B /* ProviderInteractionHandler.swift */; };
 		077884B7746093BDBD42AA23 /* MultiProviderDataOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F480F8E8FA5A8C70F6619 /* MultiProviderDataOrchestrator.swift */; };
@@ -324,6 +325,7 @@
 		342D9EAA4CE979807C63FF68 /* TokenDebuggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenDebuggerTests.swift; sourceTree = "<group>"; };
 		34533F373FD70F1508DF046B /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		361705F5E57667204920498C /* CursorResponseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorResponseModels.swift; sourceTree = "<group>"; };
+		37C0D789FA71C4DBDA0983CA /* EnvironmentValues+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+VibeMeter.swift"; sourceTree = "<group>"; };
 		37E56DF65F990A04A4334C30 /* MultiProviderErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderErrorHandler.swift; sourceTree = "<group>"; };
 		386B1E107BB8459764931771 /* MultiProviderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderSettingsView.swift; sourceTree = "<group>"; };
 		388BF6C63ABED6DBC016E815 /* String+Scanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Scanner.swift"; sourceTree = "<group>"; };
@@ -713,6 +715,7 @@
 			children = (
 				7362323CCD9F511D6C9549FE /* Color+Theme.swift */,
 				F8965BACF17F4F3279E5317E /* DateFormatter+VibeMeter.swift */,
+				37C0D789FA71C4DBDA0983CA /* EnvironmentValues+VibeMeter.swift */,
 				D2FD2BDE953D0620D8A6A6C6 /* Error+NetworkRetry.swift */,
 				BD16768B17C2CD9CC7E9F676 /* Logger+VibeMeter.swift */,
 				1BDE95F8B3B61195BF2A6CEC /* NumberFormatter+VibeMeter.swift */,
@@ -1156,6 +1159,7 @@
 				BFC06D21B7FE855C6ADD9720 /* VibeMeterApp.swift in Sources */,
 				132DCCF25B60E1BD58F2AA68 /* Color+Theme.swift in Sources */,
 				69A0FAC2B00AD9E7362DCB67 /* DateFormatter+VibeMeter.swift in Sources */,
+				061EE83100CCCF69958601F0 /* EnvironmentValues+VibeMeter.swift in Sources */,
 				9D3356453CE255ABA8927666 /* Error+NetworkRetry.swift in Sources */,
 				18B0519B39772778BCAB4F52 /* Logger+VibeMeter.swift in Sources */,
 				413F47079CBDF5C90FD4D84D /* NumberFormatter+VibeMeter.swift in Sources */,

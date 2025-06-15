@@ -141,7 +141,7 @@ struct GeneralSettingsView: View {
     
     private var menuBarDisplayModeBinding: Binding<MenuBarDisplayMode> {
         Binding(
-            get: { settingsManager?.menuBarDisplayMode ?? .percentage },
+            get: { settingsManager?.menuBarDisplayMode ?? .iconOnly },
             set: { newValue in
                 if let settingsManager = settingsManager as? SettingsManager {
                     settingsManager.menuBarDisplayMode = newValue

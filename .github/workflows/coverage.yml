@@ -9,22 +9,49 @@ on:
 jobs:
   coverage:
     name: Generate Code Coverage
-    runs-on: macos-14
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
     - name: Select Xcode
-      run: sudo xcode-select -s /Applications/Xcode_16.2.app
-      
-    - name: Install Tuist
       run: |
-        curl -Ls https://install.tuist.io | bash
-        echo "/usr/local/bin" >> $GITHUB_PATH
+        sudo xcode-select -s $DEVELOPER_DIR
+        xcodebuild -version
+        swift --version
+
+    - name: Cache build dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/DerivedData
+          ~/.tuist/Cache
+          ~/Library/Caches/tuist
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift', 'mise.toml') }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ hashFiles('**/Project.swift', '**/Tuist.swift', 'mise.toml') }}-
+          ${{ runner.os }}-build-
+      
+    - name: Install build tools
+      run: |
+        # Install mise if not present
+        if ! command -v mise &> /dev/null; then
+          curl https://mise.run | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
+        
+        # Install Tuist via mise
+        mise install
+        eval "$(mise activate bash)"
         
     - name: Generate Xcode project
-      run: ./scripts/generate-xcproj.sh
+      run: |
+        eval "$(mise activate bash)"
+        ./scripts/generate-xcproj.sh
       
     - name: Build and test with coverage
       run: |
@@ -32,6 +59,7 @@ jobs:
           -workspace VibeMeter.xcworkspace \
           -scheme VibeMeter \
           -configuration Debug \
+          -derivedDataPath build/DerivedData \
           -enableCodeCoverage YES \
           -resultBundlePath TestResults.xcresult \
           -quiet
