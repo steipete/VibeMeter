@@ -7,8 +7,7 @@ import SwiftUI
 /// and menu bar display options. It provides the core configuration
 /// options that affect the overall application experience.
 struct GeneralSettingsView: View {
-    @Bindable
-    var settingsManager: SettingsManager
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var hasUserMadeCurrencyChoice = UserDefaults.standard
@@ -30,12 +29,15 @@ struct GeneralSettingsView: View {
         }
         .task {
             // Sync launch at login status
-            settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
+            if let settingsManager = settingsManager as? SettingsManager {
+                settingsManager.launchAtLoginEnabled = startupManager.isLaunchAtLoginEnabled
+            }
 
             // Auto-detect system currency on first launch
-            if !hasUserMadeCurrencyChoice, settingsManager.selectedCurrencyCode == "USD" {
+            if !hasUserMadeCurrencyChoice, settingsManager?.selectedCurrencyCode == "USD" {
                 if let systemCurrencyCode = currencyManager.systemCurrencyCode,
-                   currencyManager.isValidCurrencyCode(systemCurrencyCode) {
+                   currencyManager.isValidCurrencyCode(systemCurrencyCode),
+                   let settingsManager = settingsManager as? SettingsManager {
                     settingsManager.selectedCurrencyCode = systemCurrencyCode
                     hasUserMadeCurrencyChoice = true
                     UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
@@ -66,7 +68,7 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Menu Bar Display")
                     Spacer()
-                    Picker("", selection: $settingsManager.menuBarDisplayMode) {
+                    Picker("", selection: menuBarDisplayModeBinding) {
                         ForEach(MenuBarDisplayMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)
                         }
@@ -74,7 +76,7 @@ struct GeneralSettingsView: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Text(settingsManager.menuBarDisplayMode.description)
+                Text(settingsManager?.menuBarDisplayMode.description ?? "")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -84,7 +86,7 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Refresh Interval")
                     Spacer()
-                    Picker("", selection: $settingsManager.refreshIntervalMinutes) {
+                    Picker("", selection: refreshIntervalBinding) {
                         ForEach(SettingsManager.refreshIntervalOptions, id: \.self) { minutes in
                             Text(formatInterval(minutes)).tag(minutes)
                         }
@@ -128,18 +130,42 @@ struct GeneralSettingsView: View {
 
     private var launchAtLoginBinding: Binding<Bool> {
         Binding(
-            get: { settingsManager.launchAtLoginEnabled },
+            get: { (settingsManager as? SettingsManager)?.launchAtLoginEnabled ?? false },
             set: { newValue in
-                settingsManager.launchAtLoginEnabled = newValue
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.launchAtLoginEnabled = newValue
+                }
                 startupManager.setLaunchAtLogin(enabled: newValue)
+            })
+    }
+    
+    private var menuBarDisplayModeBinding: Binding<MenuBarDisplayMode> {
+        Binding(
+            get: { settingsManager?.menuBarDisplayMode ?? .percentage },
+            set: { newValue in
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.menuBarDisplayMode = newValue
+                }
+            })
+    }
+    
+    private var refreshIntervalBinding: Binding<Int> {
+        Binding(
+            get: { settingsManager?.refreshIntervalMinutes ?? 30 },
+            set: { newValue in
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.refreshIntervalMinutes = newValue
+                }
             })
     }
 
     private var currencyBinding: Binding<String> {
         Binding(
-            get: { settingsManager.selectedCurrencyCode },
+            get: { settingsManager?.selectedCurrencyCode ?? "USD" },
             set: { newValue in
-                settingsManager.selectedCurrencyCode = newValue
+                if let settingsManager = settingsManager as? SettingsManager {
+                    settingsManager.selectedCurrencyCode = newValue
+                }
                 hasUserMadeCurrencyChoice = true
                 UserDefaults.standard.set(true, forKey: SettingsManager.Keys.hasUserCurrencyPreference)
             })
@@ -159,6 +185,7 @@ struct GeneralSettingsView: View {
 // MARK: - Preview
 
 #Preview("General Settings") {
-    GeneralSettingsView(settingsManager: SettingsManager.shared)
+    GeneralSettingsView()
+        .settingsManager(SettingsManager.shared)
         .frame(width: 620, height: 550)
 }

@@ -7,7 +7,7 @@ import SwiftUI
 /// data refresh with loading animation, settings access, and application termination.
 /// Each button includes hover states and appropriate visual feedback.
 struct ActionButtonsView: View {
-    let onRefresh: () async -> Void
+    @Environment(\.refreshAction) private var onRefresh: (@Sendable () async -> Void)?
 
     @State
     private var isRefreshing = false
@@ -66,7 +66,7 @@ struct ActionButtonsView: View {
     private func refreshData() {
         Task {
             isRefreshing = true
-            await onRefresh()
+            await onRefresh?()
             isRefreshing = false
         }
     }
@@ -83,10 +83,11 @@ struct ActionButtonsView: View {
 // MARK: - Preview
 
 #Preview {
-    ActionButtonsView(onRefresh: {
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-    })
-    .padding()
-    .frame(width: 280)
-    .background(Color(NSColor.windowBackgroundColor))
+    ActionButtonsView()
+        .refreshAction {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+        }
+        .padding()
+        .frame(width: 280)
+        .background(Color(NSColor.windowBackgroundColor))
 }

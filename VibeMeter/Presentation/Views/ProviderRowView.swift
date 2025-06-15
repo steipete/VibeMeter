@@ -8,11 +8,12 @@ import SwiftUI
 /// to manage multiple service provider connections in a consistent list format.
 struct ProviderRowView: View {
     let provider: ServiceProvider
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager
-    let providerRegistry: ProviderRegistry
-    let settingsManager: any SettingsManagerProtocol
     let showDetail: () -> Void
+    
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
+    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared
@@ -27,11 +28,11 @@ struct ProviderRowView: View {
     private var animation
 
     private var session: ProviderSessionState? {
-        userSessionData.getSession(for: provider)
+        userSessionData?.getSession(for: provider)
     }
 
     private var isLoggedIn: Bool {
-        userSessionData.isLoggedIn(to: provider)
+        userSessionData?.isLoggedIn(to: provider) ?? false
     }
 
     private var isEnabled: Bool {
@@ -128,7 +129,7 @@ struct ProviderRowView: View {
                                     let granted = await claudeLogManager.requestLogAccess()
                                     if granted {
                                         // Trigger login success flow for Claude
-                                        loginManager.onLoginSuccess?(provider)
+                                        loginManager?.onLoginSuccess?(provider)
                                     }
                                 }
                             }
@@ -142,14 +143,14 @@ struct ProviderRowView: View {
                                 if !isEnabled {
                                     ProviderRegistry.shared.enableProvider(provider)
                                 }
-                                loginManager.showLoginWindow(for: provider)
+                                loginManager?.showLoginWindow(for: provider)
                             }
                             .buttonStyle(.borderedProminent)
                         }
 
                         if isLoggedIn {
                             Button("Logout") {
-                                loginManager.logOut(from: provider)
+                                loginManager?.logOut(from: provider)
                             }
                             .buttonStyle(.bordered)
                         }

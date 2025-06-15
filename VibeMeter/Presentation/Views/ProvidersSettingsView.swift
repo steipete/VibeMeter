@@ -6,14 +6,14 @@ import SwiftUI
 /// login/logout capabilities, and access to detailed provider information. Users can
 /// manage multiple provider connections from this centralized interface.
 struct ProvidersSettingsView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager
-    let orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
+    @Environment(\.dataOrchestrator) private var orchestrator: MultiProviderDataOrchestrator?
+    @Environment(\.providerRegistry) private var providerRegistry: ProviderRegistry
+    
     @Binding
     var showingProviderDetail: ServiceProvider?
-
-    private let providerRegistry = ProviderRegistry.shared
 
     var body: some View {
         NavigationStack {
@@ -22,16 +22,12 @@ struct ProvidersSettingsView: View {
                     ForEach(ServiceProvider.allCases) { provider in
                         ProviderRowView(
                             provider: provider,
-                            userSessionData: userSessionData,
-                            loginManager: loginManager,
-                            providerRegistry: providerRegistry,
-                            settingsManager: settingsManager,
                             showDetail: {
                                 showingProviderDetail = provider
                             })
                             .id({
-                                let email = userSessionData.getSession(for: provider)?.userEmail ?? "none"
-                                let isLoggedIn = userSessionData.isLoggedIn(to: provider)
+                                let email = userSessionData?.getSession(for: provider)?.userEmail ?? "none"
+                                let isLoggedIn = userSessionData?.isLoggedIn(to: provider) ?? false
                                 return "\(provider.rawValue)-\(email)-\(isLoggedIn)"
                             }())
                     }
@@ -72,6 +68,8 @@ struct ProvidersSettingsView: View {
     }
 
     private func setupLoginCallbacks() {
+        guard let loginManager else { return }
+        
         loginManager.onLoginSuccess = { provider in
             Task {
                 await updateUserSessionForProvider(provider)
@@ -79,7 +77,7 @@ struct ProvidersSettingsView: View {
         }
 
         loginManager.onLoginFailure = { provider, error in
-            userSessionData.handleLoginFailure(for: provider, error: error)
+            userSessionData?.handleLoginFailure(for: provider, error: error)
         }
 
         loginManager.onLoginDismiss = { _ in
@@ -91,7 +89,7 @@ struct ProvidersSettingsView: View {
         // Claude uses folder access, not auth tokens
         if provider == .claude {
             // For Claude, we just mark it as logged in with a placeholder email
-            userSessionData.handleLoginSuccess(
+            userSessionData?.handleLoginSuccess(
                 for: provider,
                 email: "Local Claude User",
                 teamName: nil,
@@ -99,8 +97,8 @@ struct ProvidersSettingsView: View {
             return
         }
 
-        guard let token = loginManager.getAuthToken(for: provider) else {
-            userSessionData.handleLoginFailure(for: provider,
+        guard let loginManager, let token = loginManager.getAuthToken(for: provider) else {
+            userSessionData?.handleLoginFailure(for: provider,
                                                error: NSError(domain: "SettingsView", code: 1,
                                                               userInfo: [
                                                                   NSLocalizedDescriptionKey: "No auth token found",
@@ -109,6 +107,7 @@ struct ProvidersSettingsView: View {
         }
 
         do {
+            guard let settingsManager else { return }
             let providerFactory = ProviderFactory(settingsManager: settingsManager)
             let providerClient = providerFactory.createProvider(for: provider)
 
@@ -127,14 +126,14 @@ struct ProvidersSettingsView: View {
                 }
             }
 
-            userSessionData.handleLoginSuccess(
+            userSessionData?.handleLoginSuccess(
                 for: provider,
                 email: userInfo.email,
                 teamName: teamName,
                 teamId: teamId)
 
         } catch {
-            userSessionData.handleLoginFailure(for: provider, error: error)
+            userSessionData?.handleLoginFailure(for: provider, error: error)
         }
     }
 }
@@ -155,13 +154,11 @@ struct ProvidersSettingsView: View {
     @Previewable @State
     var showingProviderDetail: ServiceProvider?
 
-    ProvidersSettingsView(
-        settingsManager: MockSettingsManager(),
-        userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        orchestrator: nil,
-        showingProviderDetail: $showingProviderDetail)
+    ProvidersSettingsView(showingProviderDetail: $showingProviderDetail)
+        .settingsManager(MockSettingsManager())
+        .userSessionData(userSessionData)
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
         .frame(width: 570, height: 400)
 }
 
@@ -169,12 +166,10 @@ struct ProvidersSettingsView: View {
     @Previewable @State
     var showingProviderDetail: ServiceProvider?
 
-    ProvidersSettingsView(
-        settingsManager: MockSettingsManager(),
-        userSessionData: MultiProviderUserSessionData(),
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        orchestrator: nil,
-        showingProviderDetail: $showingProviderDetail)
+    ProvidersSettingsView(showingProviderDetail: $showingProviderDetail)
+        .settingsManager(MockSettingsManager())
+        .userSessionData(MultiProviderUserSessionData())
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
         .frame(width: 570, height: 400)
 }
