@@ -282,6 +282,17 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
 
                 // Cache the results
                 cacheManager.cacheTodaysLog(entries, for: todaysLogFile, fileManager: fileManager)
+                
+                // Also update the daily usage cache with today's data
+                let todayDate = Calendar.current.startOfDay(for: Date())
+                if var cachedDaily = cacheManager.cachedDailyUsage {
+                    cachedDaily[todayDate] = entries
+                    cacheManager.cachedDailyUsage = cachedDaily
+                } else {
+                    cacheManager.cachedDailyUsage = [todayDate: entries]
+                }
+                
+                logger.info("Cached \(entries.count) entries for today in daily usage cache")
             }
 
             let recentFromToday = entries.filter { $0.timestamp >= fiveHoursAgo }
@@ -301,10 +312,20 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         }
 
         // Build daily usage map for window calculation
+        // Include all of today's data for proper calculation, not just 5-hour window
         var windowDailyUsage: [Date: [ClaudeLogEntry]] = [:]
+        
+        // Add all recent entries (5-hour window)
         for entry in recentEntries {
             let day = Calendar.current.startOfDay(for: entry.timestamp)
             windowDailyUsage[day, default: []].append(entry)
+        }
+        
+        // Also include all of today's entries for accurate token counting
+        let todayDate = Calendar.current.startOfDay(for: Date())
+        if let todaysCachedData = cacheManager.cachedDailyUsage?[todayDate] {
+            // Merge today's full data with what we already have
+            windowDailyUsage[todayDate] = todaysCachedData
         }
 
         let window = windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)

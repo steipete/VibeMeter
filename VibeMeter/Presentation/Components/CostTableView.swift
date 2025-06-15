@@ -324,11 +324,20 @@ struct CostTableView: View {
 
                                 if let maxRequests = usageData.maxRequests, maxRequests > 0 {
                                     // currentRequests is a percentage (0-100), totalRequests is the actual token count
-                                    Text(
-                                        "\(TokenFormatter.format(usageData.totalRequests)) tokens (\(usageData.currentRequests)%)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .fixedSize()
+                                    if providerData.connectionStatus == .syncing || 
+                                       (usageData.totalRequests == 0 && usageData.currentRequests == 0 && providerData.connectionStatus == .connected) {
+                                        // Show loading state while data is being fetched
+                                        Text("Loading...")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .fixedSize()
+                                    } else {
+                                        Text(
+                                            "\(TokenFormatter.format(usageData.totalRequests)) tokens (\(usageData.currentRequests)%)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .fixedSize()
+                                    }
                                 }
                             }
 
