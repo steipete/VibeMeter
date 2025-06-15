@@ -103,7 +103,7 @@ struct CoreBPETests {
 
         // Should encode as: "the" (261) + " " (32) + "c" (99) + "a" (97) + "t" (116)
         // But depends on regex matching
-        #expect(encoded.count > 0, "Encoding should produce tokens")
+        #expect(!encoded.isEmpty, "Encoding should produce tokens")
     }
 
     // MARK: - Special Token Tests

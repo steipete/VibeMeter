@@ -34,7 +34,7 @@ struct TokenDebuggerTests {
         let text = "Hello 🌍! Test\n\tNewline and tab."
         let viz = debugger.visualizeTokens(text)
 
-        #expect(viz.segments.count > 0)
+        #expect(!viz.segments.isEmpty)
 
         // Verify all segments have valid colors
         for segment in viz.segments {
@@ -161,7 +161,7 @@ struct VocabularyValidatorTests {
         let result = await validator.validate(vocabularyURL: url)
 
         #expect(!result.isValid)
-        #expect(result.errors.count > 0)
+        #expect(!result.errors.isEmpty)
         #expect(result.errors.contains { error in
             if case .fileNotFound = error { return true }
             return false

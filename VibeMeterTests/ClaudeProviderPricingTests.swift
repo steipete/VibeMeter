@@ -59,7 +59,7 @@ struct ClaudeProviderPricingTests {
             teamId: nil)
 
         #expect(invoice.provider == .claude)
-        #expect(invoice.items.count > 0)
+        #expect(!invoice.items.isEmpty)
 
         // Verify that costs were calculated
         let totalCents = invoice.items.reduce(0) { $0 + $1.cents }
@@ -107,7 +107,7 @@ struct ClaudeProviderPricingTests {
             teamId: nil)
 
         // Should use default claude-3-5-sonnet pricing
-        #expect(invoice.items.count > 0)
+        #expect(!invoice.items.isEmpty)
         let totalCents = invoice.items.reduce(0) { $0 + $1.cents }
         #expect(totalCents == 1) // (1000 * 0.000003) + (500 * 0.000015) = 0.0105 = 1 cent
     }

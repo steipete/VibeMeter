@@ -7,18 +7,21 @@ import Testing
 @Suite("Gauge Calculation Tests", .tags(.gauge))
 struct GaugeCalculationTests {
     // MARK: - Test Helpers
+    
+    struct TestComponents {
+        let controller: StatusBarController
+        let settingsManager: MockSettingsManager
+        let spendingData: MultiProviderSpendingData
+        let userSession: MultiProviderUserSessionData
+        let stateManager: MenuBarStateManager
+    }
 
     @MainActor
     private func createTestController(
         totalSpending: Double = 0,
         currentRequests: Int = 0,
         maxRequests: Int = 500,
-        upperLimit: Double = 300) -> (
-        controller: StatusBarController,
-        settingsManager: MockSettingsManager,
-        spendingData: MultiProviderSpendingData,
-        userSession: MultiProviderUserSessionData,
-        stateManager: MenuBarStateManager) {
+        upperLimit: Double = 300) -> TestComponents {
         let settingsManager = MockSettingsManager()
         settingsManager.upperLimitUSD = upperLimit
 
@@ -81,7 +84,13 @@ struct GaugeCalculationTests {
                 teamName: "Test Team")
         }
 
-        return (controller, settingsManager, spendingData, userSession, stateManager)
+        return TestComponents(
+            controller: controller,
+            settingsManager: settingsManager,
+            spendingData: spendingData,
+            userSession: userSession,
+            stateManager: stateManager
+        )
     }
 
     // MARK: - Basic Calculation Tests

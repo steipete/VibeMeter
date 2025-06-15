@@ -116,15 +116,15 @@ struct CoreBPESIMDPerformanceTests {
         #expect(simd.encode("a") == [97])
 
         // Very short strings (less than SIMD width)
-        #expect(simd.encode("hi").count > 0)
+        #expect(!simd.encode("hi").isEmpty)
 
         // Exactly SIMD width (16 bytes)
         let sixteenBytes = "0123456789abcdef"
-        #expect(simd.encode(sixteenBytes).count > 0)
+        #expect(!simd.encode(sixteenBytes).isEmpty)
 
         // Just over SIMD width
         let seventeenBytes = "0123456789abcdefg"
-        #expect(simd.encode(seventeenBytes).count > 0)
+        #expect(!simd.encode(seventeenBytes).isEmpty)
     }
 
     // MARK: - Performance Tests

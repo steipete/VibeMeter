@@ -19,7 +19,9 @@ struct ClaudeLogParsingTests {
 
     private func createLogLineWithExtraFields() -> String {
         """
-        {"timestamp":"2025-01-06T10:30:00.000Z","type":"assistant","model":"claude-3-5-sonnet","message":{"role":"assistant","content":"Hello","usage":{"input_tokens":150,"output_tokens":75}},"metadata":{"request_id":"123"}}
+        {"timestamp":"2025-01-06T10:30:00.000Z","type":"assistant","model":"claude-3-5-sonnet",\
+        "message":{"role":"assistant","content":"Hello","usage":{"input_tokens":150,"output_tokens":75}},\
+        "metadata":{"request_id":"123"}}
         """
     }
 
@@ -117,7 +119,11 @@ struct ClaudeLogParsingTests {
     func parseRealWorldFormat() {
         // This is a more realistic log line structure based on typical Claude API responses
         let logLine = """
-        {"timestamp":"2025-01-06T10:30:00.123Z","level":"info","type":"api_response","model":"claude-3-5-sonnet-20241022","message":{"id":"msg_01XYZ","type":"message","role":"assistant","content":[{"type":"text","text":"Hello! How can I help you today?"}],"model":"claude-3-5-sonnet-20241022","stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":25,"output_tokens":12}}}
+        {"timestamp":"2025-01-06T10:30:00.123Z","level":"info","type":"api_response",\
+        "model":"claude-3-5-sonnet-20241022","message":{"id":"msg_01XYZ","type":"message",\
+        "role":"assistant","content":[{"type":"text","text":"Hello! How can I help you today?"}],\
+        "model":"claude-3-5-sonnet-20241022","stop_reason":"end_turn","stop_sequence":null,\
+        "usage":{"input_tokens":25,"output_tokens":12}}}
         """
 
         if let data = logLine.data(using: .utf8),
@@ -206,7 +212,9 @@ struct ClaudeLogParsingTests {
     func claudeCodeLogFormat() {
         // Claude Code might have a different log format
         let claudeCodeFormat = """
-        {"timestamp":"2025-01-06T10:30:00.000Z","event":"api_call","model":"claude-3-5-sonnet","message":{"role":"assistant","usage":{"input_tokens":500,"output_tokens":250,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}
+        {"timestamp":"2025-01-06T10:30:00.000Z","event":"api_call","model":"claude-3-5-sonnet",\
+        "message":{"role":"assistant","usage":{"input_tokens":500,"output_tokens":250,\
+        "cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}
         """
 
         if let data = claudeCodeFormat.data(using: .utf8),
@@ -291,7 +299,16 @@ struct ClaudeLogParsingTests {
     func parseActualClaudeOpus4LogFormat() {
         // This is the actual format from Claude logs in ~/.claude/projects
         let logLine = """
-        {"parentUuid":"b466f005-5b11-4532-b72c-93006f87716f","isSidechain":false,"userType":"external","cwd":"/Users/steipete/Projects/VibeMeter","sessionId":"07c29a6a-07b2-4a35-aeb1-1f06d681a021","version":"1.0.17","message":{"id":"msg_01FiQEZV78tZd1oJNBMocio1","type":"message","role":"assistant","model":"claude-opus-4-20250514","content":[{"type":"text","text":"All changes have been committed successfully."}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":386,"cache_read_input_tokens":104929,"output_tokens":1,"service_tier":"standard"}},"requestId":"req_011CQ1B6WwgtsdNVGvKo1476","type":"assistant","uuid":"7f5176ce-7905-426c-9179-91b50b23e38a","timestamp":"2025-06-10T20:30:58.469Z"}
+        {"parentUuid":"b466f005-5b11-4532-b72c-93006f87716f","isSidechain":false,\
+        "userType":"external","cwd":"/Users/steipete/Projects/VibeMeter",\
+        "sessionId":"07c29a6a-07b2-4a35-aeb1-1f06d681a021","version":"1.0.17",\
+        "message":{"id":"msg_01FiQEZV78tZd1oJNBMocio1","type":"message","role":"assistant",\
+        "model":"claude-opus-4-20250514","content":[{"type":"text",\
+        "text":"All changes have been committed successfully."}],"stop_reason":null,\
+        "stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":386,\
+        "cache_read_input_tokens":104929,"output_tokens":1,"service_tier":"standard"}},\
+        "requestId":"req_011CQ1B6WwgtsdNVGvKo1476","type":"assistant",\
+        "uuid":"7f5176ce-7905-426c-9179-91b50b23e38a","timestamp":"2025-06-10T20:30:58.469Z"}
         """
 
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
@@ -306,7 +323,9 @@ struct ClaudeLogParsingTests {
     func parseClaudeCodeEntryWithCacheTokens() {
         // Test with cache tokens which VibeMeter currently doesn't track
         let logLine = """
-        {"message":{"usage":{"input_tokens":2,"cache_creation_input_tokens":645,"cache_read_input_tokens":78393,"output_tokens":125,"service_tier":"standard"},"model":"claude-opus-4-20250514"},"timestamp":"2025-06-10T20:30:38.321Z","type":"assistant"}
+        {"message":{"usage":{"input_tokens":2,"cache_creation_input_tokens":645,\
+        "cache_read_input_tokens":78393,"output_tokens":125,"service_tier":"standard"},\
+        "model":"claude-opus-4-20250514"},"timestamp":"2025-06-10T20:30:38.321Z","type":"assistant"}
         """
 
         let entry = ClaudeCodeLogParser.parseLogLine(logLine)
