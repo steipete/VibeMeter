@@ -1,7 +1,6 @@
 import XCTest
 @testable import VibeMeter
 
-@MainActor
 final class StatusBarDisplayManagerTests: XCTestCase {
     // MARK: - Properties
     
@@ -15,8 +14,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
     
     // MARK: - Setup
     
-    override func setUp() async throws {
-        try await super.setUp()
+    @MainActor
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         
         stateManager = MenuBarStateManager()
         settingsManager = MockSettingsManager()
@@ -34,7 +34,8 @@ final class StatusBarDisplayManagerTests: XCTestCase {
         )
     }
     
-    override func tearDown() async throws {
+    @MainActor
+    override func tearDownWithError() throws {
         sut = nil
         stateManager = nil
         settingsManager = nil
@@ -43,11 +44,12 @@ final class StatusBarDisplayManagerTests: XCTestCase {
         currencyData = nil
         mockButton = nil
         
-        try await super.tearDown()
+        try super.tearDownWithError()
     }
     
     // MARK: - Menu Bar Display Mode Tests
     
+    @MainActor
     func testIconOnlyModeShowsNoText() throws {
             // Given
             settingsManager.menuBarDisplayMode = .iconOnly
@@ -78,6 +80,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertNotNil(mockButton.image, "Icon only mode should display an icon")
     }
     
+    @MainActor
     func testMoneyOnlyModeShowsNoIcon() throws {
             // Given
             settingsManager.menuBarDisplayMode = .moneyOnly
@@ -111,6 +114,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertNil(mockButton.image, "Money only mode should not display an icon")
     }
     
+    @MainActor
     func testBothModeShowsIconAndText() throws {
             // Given
             settingsManager.menuBarDisplayMode = .both
@@ -144,6 +148,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertNotNil(mockButton.image, "Both mode should display an icon")
     }
     
+    @MainActor
     func testNoDataAlwaysShowsIcon() throws {
             // Given
             let modes: [MenuBarDisplayMode] = [.iconOnly, .moneyOnly, .both]
@@ -163,6 +168,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             }
     }
     
+    @MainActor
     func testTextSpacingWithIcon() throws {
             // Given
             settingsManager.menuBarDisplayMode = .both
@@ -194,6 +200,7 @@ final class StatusBarDisplayManagerTests: XCTestCase {
             XCTAssertTrue(mockButton.title.hasPrefix("  "), "Text should have spacing when icon is shown")
     }
     
+    @MainActor
     func testTextNoSpacingWithoutIcon() throws {
             // Given
             settingsManager.menuBarDisplayMode = .moneyOnly
