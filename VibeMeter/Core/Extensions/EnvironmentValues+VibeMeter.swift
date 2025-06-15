@@ -24,7 +24,12 @@ private struct DataOrchestratorKey: EnvironmentKey {
 
 /// Environment key for ProviderRegistry dependency
 private struct ProviderRegistryKey: EnvironmentKey {
-    nonisolated(unsafe) static let defaultValue: ProviderRegistry = .shared
+    static var defaultValue: ProviderRegistry {
+        // Access shared instance lazily to avoid concurrency issues
+        MainActor.assumeIsolated {
+            return .shared
+        }
+    }
 }
 
 /// Environment key for refresh action callback

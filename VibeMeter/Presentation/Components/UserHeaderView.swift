@@ -6,14 +6,14 @@ import SwiftUI
 /// It provides a quick overview of the current session state and user identity across
 /// all connected service providers.
 struct UserHeaderView: View {
-    let userSessionData: MultiProviderUserSessionData
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
 
     var body: some View {
         HStack(spacing: 10) {
-            UserAvatarView(email: userSessionData.mostRecentSession?.userEmail)
+            UserAvatarView(email: userSessionData?.mostRecentSession?.userEmail)
 
             VStack(alignment: .leading, spacing: 6) {
-                if let email = userSessionData.mostRecentSession?.userEmail {
+                if let email = userSessionData?.mostRecentSession?.userEmail {
                     Text(email)
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.primary)
@@ -34,10 +34,12 @@ struct UserHeaderView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("User account header")
-        .accessibilityValue(userSessionData.mostRecentSession?.userEmail ?? "No user logged in")
+        .accessibilityValue(userSessionData?.mostRecentSession?.userEmail ?? "No user logged in")
     }
 
     private var providerCountText: String {
+        guard let userSessionData else { return "No providers connected" }
+        
         let providers = userSessionData.loggedInProviders
         let count = providers.count
 
@@ -61,7 +63,8 @@ struct UserHeaderView: View {
         teamName: "Example Team",
         teamId: 123)
 
-    return UserHeaderView(userSessionData: userSessionData)
+    return UserHeaderView()
+        .userSessionData(userSessionData)
         .padding()
         .frame(width: 300)
         .background(Color(NSColor.windowBackgroundColor))
@@ -75,14 +78,16 @@ struct UserHeaderView: View {
         teamName: "Company Team",
         teamId: 123)
 
-    return UserHeaderView(userSessionData: userSessionData)
+    return UserHeaderView()
+        .userSessionData(userSessionData)
         .padding()
         .frame(width: 300)
         .background(Color(NSColor.windowBackgroundColor))
 }
 
 #Preview("User Header - No Session") {
-    UserHeaderView(userSessionData: MultiProviderUserSessionData())
+    UserHeaderView()
+        .userSessionData(MultiProviderUserSessionData())
         .padding()
         .frame(width: 300)
         .background(Color(NSColor.windowBackgroundColor))

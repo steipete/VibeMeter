@@ -7,8 +7,9 @@ import SwiftUI
 /// sections with proper visual hierarchy. It includes currency conversion, progress indicators,
 /// and spending threshold warnings with color-coded visual feedback.
 struct CostTableView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let loginManager: MultiProviderLoginManager?
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
+    
     let showTimestamps: Bool
 
     @Environment(MultiProviderSpendingData.self)
@@ -19,12 +20,7 @@ struct CostTableView: View {
     @State
     private var selectedProvider: ServiceProvider?
 
-    init(
-        settingsManager: any SettingsManagerProtocol,
-        loginManager: MultiProviderLoginManager?,
-        showTimestamps: Bool = true) {
-        self.settingsManager = settingsManager
-        self.loginManager = loginManager
+    init(showTimestamps: Bool = true) {
         self.showTimestamps = showTimestamps
     }
 
@@ -146,11 +142,13 @@ struct CostTableView: View {
     // MARK: - Helper Properties
 
     private var formattedWarningLimit: String {
-        "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))"
+        guard let settingsManager else { return "" }
+        return "\(currencyData.selectedSymbol)\(convertedWarningLimit.formatted(.number.precision(.fractionLength(0))))"
     }
 
     private var formattedUpperLimit: String {
-        "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))"
+        guard let settingsManager else { return "" }
+        return "\(currencyData.selectedSymbol)\(convertedUpperLimit.formatted(.number.precision(.fractionLength(0))))"
     }
 
     private var currentSpendingDisplay: String? {
@@ -172,14 +170,16 @@ struct CostTableView: View {
     }
 
     private var convertedWarningLimit: Double {
-        currencyData.convertAmount(
+        guard let settingsManager else { return 0 }
+        return currencyData.convertAmount(
             settingsManager.warningLimitUSD,
             from: "USD",
             to: currencyData.selectedCode) ?? settingsManager.warningLimitUSD
     }
 
     private var convertedUpperLimit: Double {
-        currencyData.convertAmount(
+        guard let settingsManager else { return 0 }
+        return currencyData.convertAmount(
             settingsManager.upperLimitUSD,
             from: "USD",
             to: currencyData.selectedCode) ?? settingsManager.upperLimitUSD
@@ -207,8 +207,8 @@ struct CostTableView: View {
         // Create hash from key spending values that affect display
         var hasher = Hasher()
         hasher.combine(totalSpending)
-        hasher.combine(settingsManager.warningLimitUSD)
-        hasher.combine(settingsManager.upperLimitUSD)
+        hasher.combine(settingsManager?.warningLimitUSD ?? 0)
+        hasher.combine(settingsManager?.upperLimitUSD ?? 0)
         hasher.combine(providers.count)
         return hasher.finalize()
     }
@@ -390,10 +390,8 @@ struct CostTableView: View {
 #Preview {
     let spendingData = PreviewData.mockSpendingData(cents: 1997, currentRequests: 1535, maxRequests: 500)
 
-    return CostTableView(
-        settingsManager: MockServices.settingsManager(currency: "EUR"),
-        loginManager: nil,
-        showTimestamps: true)
+    return CostTableView(showTimestamps: true)
+        .settingsManager(MockServices.settingsManager(currency: "EUR"))
         .withSpendingEnvironment(spendingData)
         .componentFrame(width: 280)
         .previewBackground()

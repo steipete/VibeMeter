@@ -7,54 +7,10 @@ import SwiftUI
 /// interface when no providers are connected.
 @MainActor
 struct VibeMeterMainView: View {
-    // Support both initializer and environment injection patterns
-    private let injectedSettingsManager: (any SettingsManagerProtocol)?
-    private let injectedUserSessionData: MultiProviderUserSessionData?
-    private let injectedLoginManager: MultiProviderLoginManager?
-    private let injectedOnRefresh: (() async -> Void)?
-    
-    @Environment(\.settingsManager) private var envSettingsManager
-    @Environment(\.userSessionData) private var envUserSessionData
-    @Environment(\.loginManager) private var envLoginManager
-    @Environment(\.refreshAction) private var envRefreshAction
-    
-    // Computed properties that prefer environment values but fall back to injected ones
-    private var settingsManager: (any SettingsManagerProtocol)? {
-        envSettingsManager ?? injectedSettingsManager
-    }
-    
-    private var userSessionData: MultiProviderUserSessionData? {
-        envUserSessionData ?? injectedUserSessionData
-    }
-    
-    private var loginManager: MultiProviderLoginManager? {
-        envLoginManager ?? injectedLoginManager
-    }
-    
-    private var onRefresh: (() async -> Void)? {
-        envRefreshAction ?? injectedOnRefresh
-    }
-    
-    // New environment-based initializer
-    init() {
-        self.injectedSettingsManager = nil
-        self.injectedUserSessionData = nil
-        self.injectedLoginManager = nil
-        self.injectedOnRefresh = nil
-    }
-    
-    // Legacy initializer for backward compatibility
-    init(
-        settingsManager: any SettingsManagerProtocol,
-        userSessionData: MultiProviderUserSessionData,
-        loginManager: MultiProviderLoginManager,
-        onRefresh: @escaping () async -> Void
-    ) {
-        self.injectedSettingsManager = settingsManager
-        self.injectedUserSessionData = userSessionData
-        self.injectedLoginManager = loginManager
-        self.injectedOnRefresh = onRefresh
-    }
+    @Environment(\.settingsManager) private var settingsManager: (any SettingsManagerProtocol)?
+    @Environment(\.userSessionData) private var userSessionData: MultiProviderUserSessionData?
+    @Environment(\.loginManager) private var loginManager: MultiProviderLoginManager?
+    @Environment(\.refreshAction) private var onRefresh: (@Sendable () async -> Void)?
 
     @State
     private var claudeLogManager = ClaudeLogManager.shared
@@ -66,11 +22,7 @@ struct VibeMeterMainView: View {
            let onRefresh = onRefresh {
             Group {
                 if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
-                    LoggedInContentView(
-                        settingsManager: settingsManager,
-                        userSessionData: userSessionData,
-                        loginManager: loginManager,
-                        onRefresh: onRefresh)
+                    LoggedInContentView()
                 } else {
                     NoProvidersConfiguredView(
                         onConfigureProviders: {
@@ -131,12 +83,12 @@ struct VibeMeterMainView: View {
 // MARK: - Preview
 
 #Preview("Logged Out") {
-    VibeMeterMainView(
-        settingsManager: MockSettingsManager(),
-        userSessionData: MultiProviderUserSessionData(),
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        onRefresh: {})
+    VibeMeterMainView()
+        .settingsManager(MockSettingsManager())
+        .userSessionData(MultiProviderUserSessionData())
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .refreshAction { }
         .environment(MultiProviderSpendingData())
         .environment(CurrencyData())
 }
@@ -170,12 +122,12 @@ struct VibeMeterMainView: View {
             startOfMonth: Date(),
             provider: .cursor))
 
-    return VibeMeterMainView(
-        settingsManager: MockSettingsManager(),
-        userSessionData: userSessionData,
-        loginManager: MultiProviderLoginManager(
-            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())),
-        onRefresh: {})
+    return VibeMeterMainView()
+        .settingsManager(MockSettingsManager())
+        .userSessionData(userSessionData)
+        .loginManager(MultiProviderLoginManager(
+            providerFactory: ProviderFactory(settingsManager: MockSettingsManager())))
+        .refreshAction { }
         .environment(spendingData)
         .environment(CurrencyData())
 }
