@@ -16,42 +16,39 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-
-        MainActor.assumeIsolated {
-            stateManager = MenuBarStateManager()
-            settingsManager = MockSettingsManager()
-            userSession = MultiProviderUserSessionData()
-            spendingData = MultiProviderSpendingData()
-            currencyData = CurrencyData()
-            mockButton = NSStatusBarButton()
-
-            sut = StatusBarDisplayManager(
-                stateManager: stateManager,
-                settingsManager: settingsManager,
-                userSession: userSession,
-                spendingData: spendingData,
-                currencyData: currencyData)
-        }
     }
 
     override func tearDownWithError() throws {
-        MainActor.assumeIsolated {
-            sut = nil
-            stateManager = nil
-            settingsManager = nil
-            userSession = nil
-            spendingData = nil
-            currencyData = nil
-            mockButton = nil
-        }
-
+        // Properties will be cleaned up when tests complete
         try super.tearDownWithError()
+    }
+
+    // MARK: - Helpers
+
+    @MainActor
+    private func setupTest() {
+        stateManager = MenuBarStateManager()
+        settingsManager = MockSettingsManager()
+        userSession = MultiProviderUserSessionData()
+        spendingData = MultiProviderSpendingData()
+        currencyData = CurrencyData()
+        mockButton = NSStatusBarButton()
+
+        sut = StatusBarDisplayManager(
+            stateManager: stateManager,
+            settingsManager: settingsManager,
+            userSession: userSession,
+            spendingData: spendingData,
+            currencyData: currencyData)
     }
 
     // MARK: - Menu Bar Display Mode Tests
 
     @MainActor
     func testIconOnlyModeShowsNoText() throws {
+        // Setup
+        setupTest()
+
         // Given
         settingsManager.menuBarDisplayMode = .iconOnly
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -81,6 +78,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     @MainActor
     func testMoneyOnlyModeShowsNoIcon() throws {
+        // Setup
+        setupTest()
+
         // Given
         settingsManager.menuBarDisplayMode = .moneyOnly
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -113,6 +113,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     @MainActor
     func testBothModeShowsIconAndText() throws {
+        // Setup
+        setupTest()
+
         // Given
         settingsManager.menuBarDisplayMode = .both
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -145,6 +148,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     @MainActor
     func testNoDataAlwaysShowsIcon() throws {
+        // Setup
+        setupTest()
+
         // Given
         let modes: [MenuBarDisplayMode] = [.iconOnly, .moneyOnly, .both]
 
@@ -165,6 +171,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     @MainActor
     func testTextSpacingWithIcon() throws {
+        // Setup
+        setupTest()
+
         // Given
         settingsManager.menuBarDisplayMode = .both
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")
@@ -195,6 +204,9 @@ final class StatusBarDisplayManagerTests: XCTestCase {
 
     @MainActor
     func testTextNoSpacingWithoutIcon() throws {
+        // Setup
+        setupTest()
+
         // Given
         settingsManager.menuBarDisplayMode = .moneyOnly
         userSession.handleLoginSuccess(for: .cursor, email: "test@example.com", teamName: "Test User")

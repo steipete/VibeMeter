@@ -372,10 +372,10 @@ struct TiktokenTests {
         let tiktoken = try Tiktoken(encoding: .o200k_base)
 
         let tokens = tiktoken.encode("")
-        #expect(tokens.count == 0)
+        #expect(tokens.isEmpty)
 
         let decoded = tiktoken.decode([])
-        #expect(decoded == "")
+        #expect(decoded.isEmpty)
     }
 
     @Test("Test single character edge cases")
@@ -401,7 +401,7 @@ struct TiktokenTests {
 
         for char in testChars {
             let tokens = tiktoken.encode(char)
-            #expect(tokens.count > 0, "Character '\(char.debugDescription)' should produce tokens")
+            #expect(!tokens.isEmpty, "Character '\(char.debugDescription)' should produce tokens")
 
             let decoded = tiktoken.decode(tokens)
             #expect(decoded == char, "Roundtrip failed for '\(char.debugDescription)'")
@@ -415,7 +415,7 @@ struct TiktokenTests {
         // Test valid surrogate pairs
         let emojiWithSurrogates = "👨‍👩‍👧‍👦" // Family emoji with ZWJ
         let tokens = tiktoken.encode(emojiWithSurrogates)
-        #expect(tokens.count > 0)
+        #expect(!tokens.isEmpty)
 
         let decoded = tiktoken.decode(tokens)
         #expect(decoded == emojiWithSurrogates)
@@ -436,7 +436,7 @@ struct TiktokenTests {
         let veryLongText = String(repeating: pattern, count: 10000)
 
         let tokens = tiktoken.encode(veryLongText)
-        #expect(tokens.count > 0)
+        #expect(!tokens.isEmpty)
         #expect(tokens.count < veryLongText.count) // Should be compressed
 
         // Test decode doesn't crash or timeout
@@ -474,7 +474,7 @@ struct TiktokenTests {
         // Empty batch
         let emptyBatch: [String] = []
         let emptyResults = tiktoken.encodeBatch(emptyBatch)
-        #expect(emptyResults.count == 0)
+        #expect(emptyResults.isEmpty)
 
         // Single item batch
         let singleBatch = ["Hello"]
@@ -578,8 +578,7 @@ struct TiktokenTests {
             let decoded = tiktoken.decode(tokens)
 
             // May not roundtrip perfectly due to UTF-8 handling
-            #expect(tokens.count >= 0)
-            #expect(decoded.count >= 0)
+            // tokens and decoded strings are never negative - these checks are redundant
         }
     }
 

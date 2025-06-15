@@ -33,7 +33,7 @@ struct TiktokenMinimalTest {
             let tokens = tiktoken.encode(text)
             print("Encoded '\(text)' into \(tokens.count) tokens: \(tokens)")
 
-            #expect(tokens.count > 0)
+            #expect(!tokens.isEmpty)
             #expect(tokens.count <= text.count) // Tokens should be fewer than characters
 
             // Test decoding
