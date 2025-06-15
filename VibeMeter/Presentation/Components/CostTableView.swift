@@ -323,8 +323,9 @@ struct CostTableView: View {
                                 .frame(height: 6)
 
                                 if let maxRequests = usageData.maxRequests, maxRequests > 0 {
+                                    // currentRequests is a percentage (0-100), totalRequests is the actual token count
                                     Text(
-                                        "\(TokenFormatter.format(usageData.currentRequests))/\(TokenFormatter.format(maxRequests))")
+                                        "\(TokenFormatter.format(usageData.totalRequests)) tokens (\(usageData.currentRequests)%)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .fixedSize()

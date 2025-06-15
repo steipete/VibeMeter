@@ -7,7 +7,7 @@ import Testing
 @Suite("Gauge Calculation Tests", .tags(.gauge))
 struct GaugeCalculationTests {
     // MARK: - Test Helpers
-    
+
     struct TestComponents {
         let controller: StatusBarController
         let settingsManager: MockSettingsManager
@@ -89,8 +89,7 @@ struct GaugeCalculationTests {
             settingsManager: settingsManager,
             spendingData: spendingData,
             userSession: userSession,
-            stateManager: stateManager
-        )
+            stateManager: stateManager)
     }
 
     // MARK: - Basic Calculation Tests

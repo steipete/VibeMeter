@@ -126,7 +126,6 @@ final class StatusBarController: NSObject {
         observer.startObserving()
     }
 
-
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
 
