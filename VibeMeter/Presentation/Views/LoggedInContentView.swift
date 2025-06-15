@@ -6,10 +6,54 @@ import SwiftUI
 /// provider details, spending limits, and action buttons. It provides a compact yet comprehensive
 /// overview of current spending across all connected providers.
 struct LoggedInContentView: View {
-    let settingsManager: any SettingsManagerProtocol
-    let userSessionData: MultiProviderUserSessionData
-    let loginManager: MultiProviderLoginManager?
-    let onRefresh: () async -> Void
+    // Support both initializer and environment injection patterns
+    private let injectedSettingsManager: (any SettingsManagerProtocol)?
+    private let injectedUserSessionData: MultiProviderUserSessionData?
+    private let injectedLoginManager: MultiProviderLoginManager?
+    private let injectedOnRefresh: (() async -> Void)?
+    
+    @Environment(\.settingsManager) private var envSettingsManager
+    @Environment(\.userSessionData) private var envUserSessionData
+    @Environment(\.loginManager) private var envLoginManager
+    @Environment(\.refreshAction) private var envRefreshAction
+    
+    // Computed properties that prefer environment values but fall back to injected ones
+    private var settingsManager: (any SettingsManagerProtocol) {
+        envSettingsManager ?? injectedSettingsManager ?? MockSettingsManager()
+    }
+    
+    private var userSessionData: MultiProviderUserSessionData {
+        envUserSessionData ?? injectedUserSessionData ?? MultiProviderUserSessionData()
+    }
+    
+    private var loginManager: MultiProviderLoginManager? {
+        envLoginManager ?? injectedLoginManager
+    }
+    
+    private var onRefresh: () async -> Void {
+        envRefreshAction ?? injectedOnRefresh ?? { }
+    }
+    
+    // New environment-based initializer
+    init() {
+        self.injectedSettingsManager = nil
+        self.injectedUserSessionData = nil
+        self.injectedLoginManager = nil
+        self.injectedOnRefresh = nil
+    }
+    
+    // Legacy initializer for backward compatibility
+    init(
+        settingsManager: any SettingsManagerProtocol,
+        userSessionData: MultiProviderUserSessionData,
+        loginManager: MultiProviderLoginManager? = nil,
+        onRefresh: @escaping () async -> Void
+    ) {
+        self.injectedSettingsManager = settingsManager
+        self.injectedUserSessionData = userSessionData
+        self.injectedLoginManager = loginManager
+        self.injectedOnRefresh = onRefresh
+    }
 
     @Environment(MultiProviderSpendingData.self)
     private var spendingData

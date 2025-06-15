@@ -104,17 +104,27 @@ struct VibeMeterMainView: View {
             .fixedSize()
             .padding()
         }
-        .onKeyPress(.escape) {
-            // Modern key handling for ESC to close menu
-            // Look for any borderless window that might be our menu
-            for window in NSApp.windows {
-                if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
-                    window.orderOut(nil)
-                    return .handled
+        .background(
+            // Use an invisible view to handle key events
+            Color.clear
+                .contentShape(Rectangle())
+                .focusable()
+                .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+                    // Set up ESC key handling when window becomes key
+                    NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                        if event.keyCode == 53 { // ESC key
+                            // Look for any borderless window that might be our menu
+                            for window in NSApp.windows {
+                                if window.styleMask.contains(.borderless), window.isVisible, window.level == .popUpMenu {
+                                    window.orderOut(nil)
+                                    return nil // Consume the event
+                                }
+                            }
+                        }
+                        return event // Pass through other events
+                    }
                 }
-            }
-            return .ignored
-        }
+        )
     }
 }
 
