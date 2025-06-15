@@ -146,7 +146,7 @@ final class CoreBPESIMD: @unchecked Sendable {
             }
 
             // Merge the pair
-            parts[mergeIndex] = parts[mergeIndex] + parts[mergeIndex + 1]
+            parts[mergeIndex] += parts[mergeIndex + 1]
             parts.remove(at: mergeIndex + 1)
         }
 
@@ -192,7 +192,7 @@ final class CoreBPESIMD: @unchecked Sendable {
             }
 
             // Merge the pair
-            parts[minIndex] = parts[minIndex] + parts[minIndex + 1]
+            parts[minIndex] += parts[minIndex + 1]
             parts.remove(at: minIndex + 1)
         }
 

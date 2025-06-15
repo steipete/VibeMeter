@@ -68,7 +68,8 @@ struct SIMDMergeFinder {
 
             // Find minimum in SIMD vector
             let minRank = ranks.min()
-            if minRank < Int32(bestRank) {
+            // Only process if we found a valid rank (not Int32.max)
+            if minRank < Int32.max && Int(minRank) < bestRank {
                 // Find which index has the minimum
                 for offset in 0 ..< simdWidth {
                     if ranks[offset] == minRank {
@@ -157,7 +158,7 @@ extension CoreBPESIMD {
             }
 
             // Perform the merge
-            parts[mergeIndex] = parts[mergeIndex] + parts[mergeIndex + 1]
+            parts[mergeIndex] += parts[mergeIndex + 1]
             parts.remove(at: mergeIndex + 1)
         }
 
