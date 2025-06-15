@@ -59,148 +59,25 @@ public actor ClaudeProvider: ProviderProtocol {
                                     teamId _: Int?) async throws -> ProviderMonthlyInvoice {
         logger.info("Claude: fetchMonthlyInvoice called for month: \(month + 1)/\(year)")
 
-        // Get daily usage data
-        let dailyUsage = try await getDailyUsageWithCache()
-        logger.info("Claude: Got daily usage data with \(dailyUsage.count) days")
-
-        let calendar = Calendar.current
-        let components = DateComponents(year: year, month: month + 1) // month is 0-indexed
-        guard let targetMonth = calendar.date(from: components) else {
-            throw ProviderError.decodingError(
-                message: "Invalid month/year: \(month + 1)/\(year)",
-                statusCode: nil)
-        }
-
-        // Filter entries for the target month
-        let monthlyEntries = dailyUsage.compactMap { date, entries -> (Date, [ClaudeLogEntry])? in
-            guard calendar.isDate(date, equalTo: targetMonth, toGranularity: .month) else {
-                return nil
-            }
-            return (date, entries)
-        }
-
+        // Get monthly entries
+        let monthlyEntries = try await getMonthlyEntries(month: month, year: year)
         logger.info("Claude: Filtered to \(monthlyEntries.count) days for month \(month + 1)/\(year)")
 
-        // Calculate costs for each day
-        var invoiceItems: [ProviderInvoiceItem] = []
-        // Get account type from settings
-        let _ = await MainActor.run {
-            SettingsManager.shared.sessionSettingsManager.claudeAccountType
-        }
+        // Calculate invoice items
+        let invoiceItems = try await calculateInvoiceItems(from: monthlyEntries)
 
-        // Group entries by model for analytics (if needed later)
-        let allEntries = monthlyEntries.flatMap(\.1)
-        let _ = Dictionary(grouping: allEntries) { $0.model ?? "claude-3-5-sonnet" }
-
-        for (date, entries) in monthlyEntries {
-            let _ = ClaudeDailyUsage(date: date, entries: entries)
-
-            // Calculate cost using the new pricing manager with smart mode selection
-            var totalDailyCost = 0.0
-
-            // Get cost calculation strategy from settings
-            let costStrategy = await MainActor.run {
-                settingsManager.displaySettingsManager.costCalculationStrategy
-            }
-
-            for entry in entries {
-                // Use the entry's calculateCost method with the strategy
-                let cost = entry.calculateCost(strategy: costStrategy)
-                totalDailyCost += cost
-            }
-
-            if totalDailyCost > 0 {
-                let item = ProviderInvoiceItem(
-                    cents: Int(totalDailyCost * 100),
-                    description: "Claude usage on \(formatDate(date))",
-                    provider: .claude)
-                invoiceItems.append(item)
-            }
-        }
-
-        // Sort by date
-        invoiceItems.sort { _, _ in
-            // Since we're creating items from entries, we use the daily date as a proxy
-            true // Items are already in order from the loop
-        }
-
-        // Calculate total tokens for the month using efficient aggregation
-        var totalInputTokens = 0
-        var totalOutputTokens = 0
-        var totalCost = 0.0
-
-        // Get cost calculation strategy from settings
-        let costStrategy = await MainActor.run {
-            settingsManager.displaySettingsManager.costCalculationStrategy
-        }
-
-        for (_, entries) in monthlyEntries {
-            for entry in entries {
-                totalInputTokens += entry.inputTokens
-                totalOutputTokens += entry.outputTokens
-
-                // Use the entry's calculateCost method with the strategy
-                let cost = entry.calculateCost(strategy: costStrategy)
-                totalCost += cost
-            }
-        }
-
+        // Calculate monthly totals
+        let (totalInputTokens, totalOutputTokens, totalCost) = try await calculateMonthlyTotals(from: monthlyEntries)
         logger
             .info(
                 "Claude: Monthly totals - Input tokens: \(totalInputTokens), Output tokens: \(totalOutputTokens), Total cost: $\(totalCost)")
 
-        // Create pricing description with token counts and cost breakdown
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-
-        let inputStr = formatter.string(from: NSNumber(value: totalInputTokens)) ?? "\(totalInputTokens)"
-        let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
-
-        // Calculate individual costs using pricing manager
-        // Use the most common model from the entries, or default to Claude 3.5 Sonnet
-        let modelCounts = allEntries.reduce(into: [String: Int]()) { counts, entry in
-            let model = entry.model ?? "claude-3-5-sonnet"
-            counts[model, default: 0] += 1
-        }
-        let mostCommonModel = modelCounts.max(by: { $0.value < $1.value })?.key ?? "claude-3-5-sonnet"
-
-        // Calculate costs directly for the actual token counts
-        let inputTokenUsage = TokenUsage(inputTokens: totalInputTokens, outputTokens: 0)
-        let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: totalOutputTokens)
-
-        let inputCost = await pricingManager.calculateCost(
-            tokens: inputTokenUsage,
-            model: mostCommonModel,
-            mode: .calculate)
-        let outputCost = await pricingManager.calculateCost(
-            tokens: outputTokenUsage,
-            model: mostCommonModel,
-            mode: .calculate)
-
-        // Use a custom formatter for small token costs
-        let costFormatter = NumberFormatter()
-        costFormatter.numberStyle = .currency
-        costFormatter.currencyCode = "USD"
-        costFormatter.usesGroupingSeparator = false
-
-        // For very small amounts, show more decimal places
-        if inputCost < 0.01 || outputCost < 0.01 {
-            costFormatter.minimumFractionDigits = 2
-            costFormatter.maximumFractionDigits = 4
-        } else {
-            costFormatter.minimumFractionDigits = 0
-            costFormatter.maximumFractionDigits = 2
-        }
-
-        let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
-        let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
-
-        let pricingDescriptionText = "\(inputStr) input (\(inputCostStr)), \(outputStr) output (\(outputCostStr))"
-        let pricingDescription = ProviderPricingDescription(
-            description: pricingDescriptionText,
-            id: "claude-token-usage",
-            provider: .claude)
+        // Create pricing description
+        let allEntries = monthlyEntries.flatMap(\.1)
+        let pricingDescription = try await createPricingDescription(
+            totalInputTokens: totalInputTokens,
+            totalOutputTokens: totalOutputTokens,
+            entries: allEntries)
 
         logger.info("Fetched monthly invoice for Claude: \(invoiceItems.count) items, month: \(month + 1)/\(year)")
 
@@ -275,6 +152,135 @@ public actor ClaudeProvider: ProviderProtocol {
     /// Check if file access is granted
     public func hasFileAccess() async -> Bool {
         await logManager.hasAccess
+    }
+
+    // MARK: - Private Methods
+
+    private func getMonthlyEntries(month: Int, year: Int) async throws -> [(Date, [ClaudeLogEntry])] {
+        let dailyUsage = try await getDailyUsageWithCache()
+        logger.info("Claude: Got daily usage data with \(dailyUsage.count) days")
+
+        let calendar = Calendar.current
+        let components = DateComponents(year: year, month: month + 1) // month is 0-indexed
+        guard let targetMonth = calendar.date(from: components) else {
+            throw ProviderError.decodingError(
+                message: "Invalid month/year: \(month + 1)/\(year)",
+                statusCode: nil)
+        }
+
+        // Filter entries for the target month
+        return dailyUsage.compactMap { date, entries -> (Date, [ClaudeLogEntry])? in
+            guard calendar.isDate(date, equalTo: targetMonth, toGranularity: .month) else {
+                return nil
+            }
+            return (date, entries)
+        }
+    }
+
+    private func calculateInvoiceItems(from monthlyEntries: [(Date, [ClaudeLogEntry])]) async throws
+        -> [ProviderInvoiceItem] {
+        var invoiceItems: [ProviderInvoiceItem] = []
+        let costStrategy = await MainActor.run {
+            settingsManager.displaySettingsManager.costCalculationStrategy
+        }
+
+        for (date, entries) in monthlyEntries {
+            var totalDailyCost = 0.0
+
+            for entry in entries {
+                let cost = entry.calculateCost(strategy: costStrategy)
+                totalDailyCost += cost
+            }
+
+            if totalDailyCost > 0 {
+                let item = ProviderInvoiceItem(
+                    cents: Int(totalDailyCost * 100),
+                    description: "Claude usage on \(formatDate(date))",
+                    provider: .claude)
+                invoiceItems.append(item)
+            }
+        }
+
+        return invoiceItems
+    }
+
+    private func calculateMonthlyTotals(from monthlyEntries: [(Date, [ClaudeLogEntry])]) async throws
+        -> (inputTokens: Int, outputTokens: Int, totalCost: Double) {
+        var totalInputTokens = 0
+        var totalOutputTokens = 0
+        var totalCost = 0.0
+
+        let costStrategy = await MainActor.run {
+            settingsManager.displaySettingsManager.costCalculationStrategy
+        }
+
+        for (_, entries) in monthlyEntries {
+            for entry in entries {
+                totalInputTokens += entry.inputTokens
+                totalOutputTokens += entry.outputTokens
+
+                let cost = entry.calculateCost(strategy: costStrategy)
+                totalCost += cost
+            }
+        }
+
+        return (totalInputTokens, totalOutputTokens, totalCost)
+    }
+
+    private func createPricingDescription(
+        totalInputTokens: Int,
+        totalOutputTokens: Int,
+        entries: [ClaudeLogEntry]) async throws -> ProviderPricingDescription {
+        // Format token counts
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = ","
+
+        let inputStr = formatter.string(from: NSNumber(value: totalInputTokens)) ?? "\(totalInputTokens)"
+        let outputStr = formatter.string(from: NSNumber(value: totalOutputTokens)) ?? "\(totalOutputTokens)"
+
+        // Get most common model
+        let modelCounts = entries.reduce(into: [String: Int]()) { counts, entry in
+            let model = entry.model ?? "claude-3-5-sonnet"
+            counts[model, default: 0] += 1
+        }
+        let mostCommonModel = modelCounts.max(by: { $0.value < $1.value })?.key ?? "claude-3-5-sonnet"
+
+        // Calculate individual costs
+        let inputTokenUsage = TokenUsage(inputTokens: totalInputTokens, outputTokens: 0)
+        let outputTokenUsage = TokenUsage(inputTokens: 0, outputTokens: totalOutputTokens)
+
+        let inputCost = await pricingManager.calculateCost(
+            tokens: inputTokenUsage,
+            model: mostCommonModel,
+            mode: .calculate)
+        let outputCost = await pricingManager.calculateCost(
+            tokens: outputTokenUsage,
+            model: mostCommonModel,
+            mode: .calculate)
+
+        // Format costs
+        let costFormatter = NumberFormatter()
+        costFormatter.numberStyle = .currency
+        costFormatter.currencyCode = "USD"
+        costFormatter.usesGroupingSeparator = false
+
+        if inputCost < 0.01 || outputCost < 0.01 {
+            costFormatter.minimumFractionDigits = 2
+            costFormatter.maximumFractionDigits = 4
+        } else {
+            costFormatter.minimumFractionDigits = 0
+            costFormatter.maximumFractionDigits = 2
+        }
+
+        let inputCostStr = costFormatter.string(from: NSNumber(value: inputCost)) ?? "$\(inputCost)"
+        let outputCostStr = costFormatter.string(from: NSNumber(value: outputCost)) ?? "$\(outputCost)"
+
+        let pricingDescriptionText = "\(inputStr) input (\(inputCostStr)), \(outputStr) output (\(outputCostStr))"
+        return ProviderPricingDescription(
+            description: pricingDescriptionText,
+            id: "claude-token-usage",
+            provider: .claude)
     }
 
     // MARK: - Private Methods
