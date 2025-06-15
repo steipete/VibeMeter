@@ -117,8 +117,10 @@ final class StatusBarObserver {
                     isLoggedIn: userSession.isLoggedInToAnyProvider,
                     providersCount: spendingData.providersWithData.count,
                     selectedCurrency: currencyData.selectedCode,
+                    selectedSymbol: currencyData.selectedSymbol,
                     upperLimit: settingsManager.upperLimitUSD,
-                    totalSpending: calculateTotalSpending())
+                    totalSpending: calculateTotalSpending(),
+                    menuBarDisplayMode: settingsManager.menuBarDisplayMode)
 
                 // Check if state actually changed and enough time has passed
                 if hasStateChanged(currentState), shouldUpdateNow() {
@@ -169,14 +171,18 @@ private struct ObservedState: Equatable {
     let isLoggedIn: Bool
     let providersCount: Int
     let selectedCurrency: String
+    let selectedSymbol: String
     let upperLimit: Double
     let totalSpending: Double
+    let menuBarDisplayMode: MenuBarDisplayMode
 
     static func == (lhs: ObservedState, rhs: ObservedState) -> Bool {
         lhs.isLoggedIn == rhs.isLoggedIn &&
             lhs.providersCount == rhs.providersCount &&
             lhs.selectedCurrency == rhs.selectedCurrency &&
+            lhs.selectedSymbol == rhs.selectedSymbol &&
             abs(lhs.upperLimit - rhs.upperLimit) < 0.01 &&
-            abs(lhs.totalSpending - rhs.totalSpending) < 0.01
+            abs(lhs.totalSpending - rhs.totalSpending) < 0.01 &&
+            lhs.menuBarDisplayMode == rhs.menuBarDisplayMode
     }
 }

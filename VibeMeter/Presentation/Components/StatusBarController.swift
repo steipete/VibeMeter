@@ -14,7 +14,6 @@ final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
     private let stateManager = MenuBarStateManager()
     private var trackingArea: NSTrackingArea?
-    private var observationTask: Task<Void, Never>?
 
     // MARK: - Component Managers
 
@@ -69,7 +68,6 @@ final class StatusBarController: NSObject {
         setupMenuManager()
         setupCallbacks()
         startComponents()
-        startObservationTracking()
     }
 
     private func setupStatusItem() {
@@ -128,36 +126,6 @@ final class StatusBarController: NSObject {
         observer.startObserving()
     }
 
-    private func startObservationTracking() {
-        // Cancel any existing observation task
-        observationTask?.cancel()
-
-        // Create a new observation task
-        observationTask = Task { [weak self] in
-            guard let self else { return }
-
-            while !Task.isCancelled {
-                withObservationTracking {
-                    // Access all the properties we want to observe
-                    _ = self.spendingData.totalSpendingUSD
-                    _ = self.currencyData.selectedCode
-                    _ = self.currencyData.selectedSymbol
-                    _ = self.settingsManager.menuBarDisplayMode
-                    _ = self.userSession.isLoggedInToAnyProvider
-                    _ = self.stateManager.currentState
-                    _ = self.stateManager.animatedGaugeValue
-                    _ = self.stateManager.animatedCostValue
-                    _ = self.orchestrator.isRefreshing
-                } onChange: {
-                    // When any of the observed properties change, update the display
-                    Task { @MainActor [weak self] in
-                        guard let self, let button = self.statusItem?.button else { return }
-                        self.displayManager.updateDisplay(for: button)
-                    }
-                }
-            }
-        }
-    }
 
     func updateStatusItemDisplay() {
         guard let button = statusItem?.button else { return }
@@ -334,7 +302,6 @@ final class StatusBarController: NSObject {
         // Since deinit cannot be marked as @MainActor, we need to assume we're on the main actor
         // since StatusBarController is @MainActor and deinit is called when the actor is being deallocated
         MainActor.assumeIsolated {
-            observationTask?.cancel()
             animationController.stopTimers()
             observer.stopObserving()
 
