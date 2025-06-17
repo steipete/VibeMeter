@@ -63,6 +63,8 @@ final class CurrencyManager: Sendable {
                 return firstIndex < secondIndex
             }
             return first.key < second.key
+        }.filter { currency in
+            ExchangeRateManager.shared.supportedCurrencies.contains(currency.0)
         }
     }
 

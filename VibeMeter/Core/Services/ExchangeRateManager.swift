@@ -28,8 +28,13 @@ public actor ExchangeRateManager: ExchangeRateManagerProtocol {
     private let apiURL = URL(string: "https://api.frankfurter.app/latest")!
     private let baseCurrency = "USD"
 
-    // Supported currencies
-    public nonisolated let supportedCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
+    // Supported currencies - from https://api.frankfurter.app/currencies
+    // This list includes all currencies supported by the Frankfurter API
+    public nonisolated let supportedCurrencies = [
+        "AUD", "BGN", "BRL", "CAD", "CHF", "CNY", "CZK", "DKK", "EUR", "GBP", 
+        "HKD", "HUF", "IDR", "ILS", "INR", "ISK", "JPY", "KRW", "MXN", "MYR", 
+        "NOK", "NZD", "PHP", "PLN", "RON", "SEK", "SGD", "THB", "TRY", "USD", "ZAR"
+    ]
 
     // MARK: - Singleton
 
