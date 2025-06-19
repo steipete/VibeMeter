@@ -15,6 +15,7 @@
 		06C46ECB7487244FF458BECD /* ProviderInteractionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672B29645EFF1F6E88DF4F2B /* ProviderInteractionHandler.swift */; };
 		06FC01392D7026704882C9BD /* TokenFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C00F5FA709650231ACB22D /* TokenFormatterTests.swift */; };
 		077884B7746093BDBD42AA23 /* MultiProviderDataOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F480F8E8FA5A8C70F6619 /* MultiProviderDataOrchestrator.swift */; };
+		094CC74D179792891D4434FB /* BurnRateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F1FDFFDB602A7C399B21D /* BurnRateCalculator.swift */; };
 		0A16B135674C38B690B22443 /* CostTableView+ViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9EAEBF7438E0E753C5FBDD7 /* CostTableView+ViewState.swift */; };
 		0A63B3A8B28B1318FD438B07 /* CursorResilienceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16672EFBA1AC1084F26EFD72 /* CursorResilienceManager.swift */; };
 		0A708847F26FBB7B500F777E /* StartupManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CC65B526B76FB43AC46C8C /* StartupManagerMock.swift */; };
@@ -48,6 +49,7 @@
 		2206D1464251182139B61861 /* URLRequest+VibeMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A690B1933377A0FC7730B8 /* URLRequest+VibeMeter.swift */; };
 		226701A3C4E0EE5C3D12AE72 /* DebouncedState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B7956AA1E1A43F74416D28 /* DebouncedState.swift */; };
 		25EA6F50EFD068FDBB62877D /* MockURLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE78244C662C610484A80BD5 /* MockURLSession.swift */; };
+		26C9CD5069B222AB31973E2D /* BurnRateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9DD2764CC57AB75EEF782D0 /* BurnRateView.swift */; };
 		272C729B3F43BF9F216ECD23 /* MockResetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439CE23EE076B9D13C4EEA4B /* MockResetProtocol.swift */; };
 		28B5877EF41074B5D32A7AAB /* ClaudeUsageReportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C36E92377245E65F329E1BD /* ClaudeUsageReportModels.swift */; };
 		29DC85ADF37ABFFE56F3994C /* StatusBarGaugeDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A2BC88D59FC6EB769E6C76 /* StatusBarGaugeDisplayTests.swift */; };
@@ -450,6 +452,7 @@
 		A82298CB8F3518EB431A859B /* StatusBarAccessibilityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarAccessibilityProvider.swift; sourceTree = "<group>"; };
 		A848B25F150D101A6A5C6A90 /* ClaudeCodeLogParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCodeLogParser.swift; sourceTree = "<group>"; };
 		A96AD55C6554D8107202CFB8 /* ApplicationMoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMoverTests.swift; sourceTree = "<group>"; };
+		A9DD2764CC57AB75EEF782D0 /* BurnRateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurnRateView.swift; sourceTree = "<group>"; };
 		AAD500DAD229643D09226882 /* ClaudeQuotaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuotaView.swift; sourceTree = "<group>"; };
 		ADF171143CDE4ED1E68255D5 /* ShimmerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerEffect.swift; sourceTree = "<group>"; };
 		AF2FE815C9C73A3EA9DC1D7F /* ProviderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderProtocol.swift; sourceTree = "<group>"; };
@@ -478,6 +481,7 @@
 		C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingHelpers.swift; sourceTree = "<group>"; };
 		CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeter-Info.plist"; sourceTree = "<group>"; };
 		CCB48421ED6BB82167A61CF6 /* NetworkRetryHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandlerTests.swift; sourceTree = "<group>"; };
+		CE2F1FDFFDB602A7C399B21D /* BurnRateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurnRateCalculator.swift; sourceTree = "<group>"; };
 		D017032E04756D3C31B29991 /* URLQueryItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLQueryItemsTests.swift; sourceTree = "<group>"; };
 		D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupManagerTests.swift; sourceTree = "<group>"; };
 		D245032AFD0EC81F0A35ACAA /* View+Cursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Cursor.swift"; sourceTree = "<group>"; };
@@ -629,6 +633,7 @@
 				0A54A6E0927FE1ABF8DBAE40 /* ApplicationMover.swift */,
 				D46D723E09FFAD86CE64E035 /* AuthenticationTokenManager.swift */,
 				4B81D0C97D1F04E31CE36389 /* BackgroundDataProcessor.swift */,
+				CE2F1FDFFDB602A7C399B21D /* BurnRateCalculator.swift */,
 				A848B25F150D101A6A5C6A90 /* ClaudeCodeLogParser.swift */,
 				7148E853485633B711D4A7DE /* ClaudeLogCacheManager.swift */,
 				73006332A10A82BBB8CA094A /* ClaudeLogManager.swift */,
@@ -786,6 +791,7 @@
 			children = (
 				7C4C9F60B7ADDF56A5C4E02A /* Provider */,
 				F0662AEC9A00132BD74EDFC4 /* ActionButtonsView.swift */,
+				A9DD2764CC57AB75EEF782D0 /* BurnRateView.swift */,
 				E264800440E6344663CD5ABC /* ButtonStyles.swift */,
 				6E1D4725775598B85881BF5F /* ClaudeUsageReportWindowController.swift */,
 				F82940A9689EB56962329BAA /* CostTableView.swift */,
@@ -1298,6 +1304,7 @@
 				304F9A0AF360D73323E9389D /* ApplicationMover.swift in Sources */,
 				501D5437564E97147B39B9DD /* AuthenticationTokenManager.swift in Sources */,
 				D7383C238D08542844E9BA50 /* BackgroundDataProcessor.swift in Sources */,
+				094CC74D179792891D4434FB /* BurnRateCalculator.swift in Sources */,
 				46BBE07657B4D32172193D46 /* ClaudeFiveHourWindowCalculator.swift in Sources */,
 				3B4A046C7309B74061418C6F /* ClaudeLogBookmarkManager.swift in Sources */,
 				F2719CE6135603DDFF79FD08 /* ClaudeLogFileScanner.swift in Sources */,
@@ -1359,6 +1366,7 @@
 				11D1CC2D9975DBC2EA567E6F /* VocabularyValidator.swift in Sources */,
 				A8DC3253FBACD1BE87F89C21 /* UserDefaultsBacked.swift in Sources */,
 				8A9DE903DAE2CD34C639E565 /* ActionButtonsView.swift in Sources */,
+				26C9CD5069B222AB31973E2D /* BurnRateView.swift in Sources */,
 				ECA2A3760B1A4D1D39E3580D /* ButtonStyles.swift in Sources */,
 				9E251DF6927168B3B775FC14 /* ClaudeUsageReportWindowController.swift in Sources */,
 				4DD39BD6620B281E8E19CA25 /* CostTableView.swift in Sources */,

@@ -20,6 +20,7 @@ public struct ProviderSpendingData: Codable, Sendable {
     public var lastSuccessfulRefresh: Date?
     public var lastError: String?
     public var retryAfter: Date?
+    public var burnRateInfo: BurnRateCalculator.BurnRateInfo?
 
     public init(
         provider: ServiceProvider,
@@ -33,7 +34,8 @@ public struct ProviderSpendingData: Codable, Sendable {
         connectionStatus: ProviderConnectionStatus = .disconnected,
         lastSuccessfulRefresh: Date? = nil,
         lastError: String? = nil,
-        retryAfter: Date? = nil) {
+        retryAfter: Date? = nil,
+        burnRateInfo: BurnRateCalculator.BurnRateInfo? = nil) {
         self.provider = provider
         self.currentSpendingUSD = currentSpendingUSD
         self.currentSpendingConverted = currentSpendingConverted
@@ -46,6 +48,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         self.lastSuccessfulRefresh = lastSuccessfulRefresh
         self.lastError = lastError
         self.retryAfter = retryAfter
+        self.burnRateInfo = burnRateInfo
     }
 
     /// Returns the current spending in the preferred currency.
@@ -128,6 +131,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         lastSuccessfulRefresh = nil
         lastError = nil
         retryAfter = nil
+        burnRateInfo = nil
     }
 
     /// Updates the connection status.
@@ -196,6 +200,13 @@ public final class MultiProviderSpendingData {
     /// Clears spending data for a specific provider.
     public func clear(provider: ServiceProvider) {
         providerSpending.removeValue(forKey: provider)
+    }
+    
+    /// Updates burn rate info for a specific provider.
+    public func updateBurnRate(for provider: ServiceProvider, burnRateInfo: BurnRateCalculator.BurnRateInfo?) {
+        var data = providerSpending[provider] ?? ProviderSpendingData(provider: provider)
+        data.burnRateInfo = burnRateInfo
+        providerSpending[provider] = data
     }
 
     /// Clears all spending data.

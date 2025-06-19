@@ -47,6 +47,12 @@ struct ProviderSpendingRowView: View {
                     showTimestamp: showTimestamp)
 
                 Spacer()
+                
+                // Burn rate display
+                if let providerData = spendingData.getSpendingData(for: provider) {
+                    BurnRateView(burnRateInfo: providerData.burnRateInfo)
+                        .padding(.trailing, 8)
+                }
 
                 // Last refresh timestamp (only if enabled)
                 if showTimestamp,

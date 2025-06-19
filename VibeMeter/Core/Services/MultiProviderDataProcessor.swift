@@ -14,6 +14,7 @@ final class MultiProviderDataProcessor: Sendable {
     private let sessionStateManager: SessionStateManager
     private let currencyOrchestrator: CurrencyOrchestrator
     private let gravatarService: GravatarService
+    private let burnRateCalculator = BurnRateCalculator()
 
     // MARK: - Initialization
 
@@ -56,6 +57,14 @@ final class MultiProviderDataProcessor: Sendable {
 
         await updateCurrencyAndSpending(for: provider, invoice: invoice, spendingData: spendingData)
         updateGravatarIfNeeded(for: provider, userEmail: userInfo.email, userSessionData: userSessionData)
+        
+        // Calculate and update burn rate
+        await updateBurnRate(
+            for: provider,
+            invoice: invoice,
+            usage: usage,
+            spendingData: spendingData)
+        
         logSuccessAndSpending(for: provider, spendingData: spendingData)
 
         spendingData.updateConnectionStatus(for: provider, status: .connected)
@@ -135,5 +144,53 @@ final class MultiProviderDataProcessor: Sendable {
         let usdSpending = providerSpending?.currentSpendingUSD ?? 0
         let displaySpending = providerSpending?.displaySpending ?? 0
         logger.info("Current spending for \(provider.displayName): USD=\(usdSpending), display=\(displaySpending)")
+    }
+    
+    @MainActor
+    private func updateBurnRate(
+        for provider: ServiceProvider,
+        invoice: ProviderMonthlyInvoice,
+        usage: ProviderUsageData,
+        spendingData: MultiProviderSpendingData) async {
+        
+        // For Claude, we'll need to get token data from ClaudeProvider
+        if provider == .claude {
+            // Claude burn rate is calculated in MultiProviderDataOrchestrator.updateClaudeBurnRate()
+            // because it needs access to ClaudeProvider's token data
+            logger.info("Claude burn rate will be calculated separately using token data")
+            return
+        }
+        
+        // Calculate spending burn rate for other providers
+        let spendingHistory: [(date: Date, amountCents: Int)]
+        if !invoice.items.isEmpty {
+            // Use recent invoice items as spending data points
+            let now = Date()
+            spendingHistory = [(date: now, amountCents: invoice.totalSpendingCents)]
+        } else {
+            spendingHistory = []
+        }
+        
+        // Calculate burn rate
+        let burnRate = burnRateCalculator.calculateSpendingBurnRate(
+            provider: provider,
+            spendingHistory: spendingHistory)
+        
+        // Calculate burn rate info with limits
+        if let burnRate = burnRate {
+            let currentSpending = Double(invoice.totalSpendingCents)
+            let limit = spendingData.getSpendingData(for: provider)?.upperLimitConverted ?? 0
+            let limitCents = limit * 100 // Convert to cents
+            
+            let burnRateInfo = burnRateCalculator.calculateBurnRateInfo(
+                for: provider,
+                currentUsage: currentSpending,
+                limit: limitCents,
+                burnRate: burnRate)
+            
+            spendingData.updateBurnRate(for: provider, burnRateInfo: burnRateInfo)
+            
+            logger.info("Updated burn rate for \(provider.displayName): \(burnRate.formattedRate)")
+        }
     }
 }

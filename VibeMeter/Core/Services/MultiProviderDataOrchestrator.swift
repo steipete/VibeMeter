@@ -30,6 +30,7 @@ public final class MultiProviderDataOrchestrator {
     private let currencyOrchestrator: CurrencyOrchestrator
     private let errorHandler: MultiProviderErrorHandler
     private let dataProcessor: MultiProviderDataProcessor
+    private let burnRateCalculator = BurnRateCalculator()
 
     // MARK: - Data Models
 
@@ -261,6 +262,11 @@ public final class MultiProviderDataOrchestrator {
             userSessionData: userSessionData,
             spendingData: spendingData,
             lastRefreshDates: lastRefreshDates)
+        
+        // Update Claude burn rate after data refresh
+        if provider == .claude {
+            await updateClaudeBurnRate()
+        }
     }
 
     @MainActor
@@ -297,6 +303,30 @@ public final class MultiProviderDataOrchestrator {
         sessionStateManager.handleLogoutFromAll(
             userSessionData: userSessionData,
             spendingData: spendingData)
+    }
+    
+    /// Updates Claude token burn rate specifically
+    public func updateClaudeBurnRate() async {
+        guard userSessionData.isLoggedIn(to: .claude) else { return }
+        
+        let claudeProvider = providerFactory.createProvider(for: .claude) as? ClaudeProvider
+        guard let claudeProvider = claudeProvider else { return }
+        
+        // Calculate token burn rate
+        if let burnRate = await claudeProvider.calculateTokenBurnRate() {
+            // Get current window usage for limit calculation
+            if let fiveHourWindow = try? await claudeProvider.getFiveHourWindowUsage() {
+                let burnRateInfo = await burnRateCalculator.calculateBurnRateInfo(
+                    for: .claude,
+                    currentUsage: Double(fiveHourWindow.tokensUsed),
+                    limit: Double(fiveHourWindow.estimatedTokenLimit),
+                    burnRate: burnRate
+                )
+                
+                spendingData.updateBurnRate(for: .claude, burnRateInfo: burnRateInfo)
+                logger.info("Updated Claude token burn rate: \(burnRate.formattedRate)")
+            }
+        }
     }
 
     // MARK: - Private Methods
