@@ -55,11 +55,17 @@ final class StatusBarTooltipProvider {
             to: "USD",
             rates: currencyData.effectiveRates)
 
-        if totalSpendingUSD > 0 {
+        if totalSpendingUSD > 0 && settingsManager.limitsEnabled {
             // Money has been spent - show spending as percentage of limit
             let upperLimit = settingsManager.upperLimitUSD
             let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
             return "VibeMeter - \(Int(percentage))% of spending limit"
+        } else if !settingsManager.limitsEnabled && totalSpendingUSD > 0 {
+            // Limits disabled - just show spending amount
+            let userSpending = spendingData.totalSpendingConverted(
+                to: currencyData.selectedCode,
+                rates: currencyData.effectiveRates)
+            return "VibeMeter - \(currencyData.selectedSymbol)\(userSpending.formatted(.number.precision(.fractionLength(2))))"
         } else {
             // No money spent - show requests used as percentage of available limit
             let requestPercentage = calculateRequestUsagePercentage()

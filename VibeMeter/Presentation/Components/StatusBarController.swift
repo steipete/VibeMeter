@@ -157,7 +157,7 @@ final class StatusBarController: NSObject {
                     to: "USD",
                     rates: currencyData.effectiveRates)
 
-                if totalSpendingUSD > 0 {
+                if totalSpendingUSD > 0 && settingsManager.limitsEnabled {
                     gaugeValue = min(max(totalSpendingUSD / settingsManager.upperLimitUSD, 0.0), 1.0)
                 } else {
                     gaugeValue = calculateRequestUsagePercentage()

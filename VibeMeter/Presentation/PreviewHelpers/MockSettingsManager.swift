@@ -10,6 +10,7 @@ import SwiftUI
 public class MockSettingsManager: SettingsManagerProtocol {
     public var providerSessions: [ServiceProvider: ProviderSession] = [:]
     public var selectedCurrencyCode: String = "USD"
+    public var limitsEnabled: Bool = true
     public var warningLimitUSD: Double = 200
     public var upperLimitUSD: Double = 500
     public var refreshIntervalMinutes: Int = 5
