@@ -25,6 +25,7 @@ public protocol ClaudeLogManagerProtocol: AnyObject, Sendable {
     func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow
     func countTokens(in text: String) -> Int
     func getCurrentWindowUsage() async -> FiveHourWindow
+    func getSessionTracker() -> ClaudeSessionTracker
 }
 
 // MARK: - Errors

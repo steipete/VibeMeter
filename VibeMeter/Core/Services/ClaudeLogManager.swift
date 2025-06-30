@@ -34,6 +34,7 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
     private let fileScanner: ClaudeLogFileScanner
     private let windowCalculator: ClaudeFiveHourWindowCalculator
     private let cacheManager: ClaudeLogCacheManager
+    private let sessionTracker = ClaudeSessionTracker()
 
     public private(set) var hasAccess = false
     public private(set) var isProcessing = false
@@ -212,6 +213,10 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
 
         // Update caches
         cacheManager.updateDailyUsageCache(dailyUsage, fileHashCache: updatedHashCache)
+        
+        // Update session tracker with all entries
+        let allEntries = dailyUsage.values.flatMap { $0 }
+        sessionTracker.updateSessions(from: allEntries)
 
         // Notify delegate of completion
         delegate?.logProcessingDidComplete(dailyUsage: dailyUsage)
@@ -328,7 +333,18 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
             windowDailyUsage[todayDate] = todaysCachedData
         }
 
-        let window = windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)
+        // Update session tracker with recent entries
+        let allCurrentEntries = windowDailyUsage.values.flatMap { $0 }
+        sessionTracker.updateSessions(from: allCurrentEntries)
+        
+        // Use session-aware calculation if we have an active session
+        let window: FiveHourWindow
+        if sessionTracker.getActiveSession() != nil {
+            window = sessionTracker.calculateSessionAwareFiveHourWindow()
+        } else {
+            // Fall back to traditional calculation
+            window = windowCalculator.calculateFiveHourWindow(from: windowDailyUsage)
+        }
 
         // Cache the result
         cacheManager.cacheCurrentWindow(window)
@@ -336,6 +352,11 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         return window
     }
 
+    /// Get session tracker for burn rate calculations
+    public func getSessionTracker() -> ClaudeSessionTracker {
+        sessionTracker
+    }
+    
     // MARK: - Private Methods
 }
 

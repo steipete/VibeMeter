@@ -255,11 +255,30 @@ extension BurnRateCalculator {
         public let burnRate: BurnRate?
         public let depletionTime: Date?
         public let warningLevel: WarningLevel
+        public let sessionInfo: SessionInfo?
         
         public enum WarningLevel: String, Sendable, Codable {
             case none
             case moderate  // Will deplete in 1-3 hours
             case high      // Will deplete in < 1 hour
+        }
+        
+        /// Session-specific information for providers that track usage sessions
+        public struct SessionInfo: Sendable, Codable {
+            public let sessionStartTime: Date
+            public let sessionEndTime: Date
+            public let isActive: Bool
+            public let isSessionBased: Bool  // true if using exact session times, false if approximate
+            
+            public var timeRemaining: TimeInterval {
+                sessionEndTime.timeIntervalSinceNow
+            }
+            
+            public var sessionProgress: Double {
+                let totalDuration = sessionEndTime.timeIntervalSince(sessionStartTime)
+                let elapsed = Date().timeIntervalSince(sessionStartTime)
+                return min(1.0, max(0.0, elapsed / totalDuration))
+            }
         }
     }
     
@@ -268,14 +287,16 @@ extension BurnRateCalculator {
         for provider: ServiceProvider,
         currentUsage: Double,
         limit: Double,
-        burnRate: BurnRate?
+        burnRate: BurnRate?,
+        sessionInfo: BurnRateInfo.SessionInfo? = nil
     ) -> BurnRateInfo {
         guard let burnRate = burnRate else {
             return BurnRateInfo(
                 provider: provider,
                 burnRate: nil,
                 depletionTime: nil,
-                warningLevel: .none
+                warningLevel: .none,
+                sessionInfo: sessionInfo
             )
         }
         
@@ -302,7 +323,8 @@ extension BurnRateCalculator {
             provider: provider,
             burnRate: burnRate,
             depletionTime: depletionTime,
-            warningLevel: warningLevel
+            warningLevel: warningLevel,
+            sessionInfo: sessionInfo
         )
     }
 }

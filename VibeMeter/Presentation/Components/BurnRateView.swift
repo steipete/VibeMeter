@@ -66,9 +66,77 @@ struct BurnRateView: View {
                     }
                 }
             }
+            
+            // Session information section
+            if let sessionInfo = burnRateInfo.sessionInfo {
+                Divider()
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Session Details")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    HStack {
+                        Image(systemName: sessionInfo.isActive ? "circle.fill" : "circle")
+                            .foregroundStyle(sessionInfo.isActive ? .green : .secondary)
+                            .font(.caption2)
+                        Text(sessionInfo.isActive ? "Active Session" : "No Active Session")
+                            .font(.caption)
+                            .foregroundStyle(sessionInfo.isActive ? .primary : .secondary)
+                    }
+                    
+                    if sessionInfo.isSessionBased {
+                        Label {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Started: \(formatTime(sessionInfo.sessionStartTime))")
+                                Text("Ends: \(formatTime(sessionInfo.sessionEndTime))")
+                            }
+                            .font(.caption)
+                            .monospacedDigit()
+                        } icon: {
+                            Image(systemName: "timer")
+                                .foregroundStyle(.blue)
+                        }
+                    } else {
+                        Label {
+                            Text("Using approximate schedule")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } icon: {
+                            Image(systemName: "calendar.badge.clock")
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    
+                    if sessionInfo.timeRemaining > 0 {
+                        Label {
+                            Text("Resets in \(formatTimeUntil(sessionInfo.sessionEndTime))")
+                                .font(.caption)
+                        } icon: {
+                            Image(systemName: "hourglass")
+                                .foregroundStyle(.purple)
+                        }
+                        
+                        // Progress bar
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.secondary.opacity(0.2))
+                                    .frame(height: 4)
+                                
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(progressColor(for: sessionInfo.sessionProgress))
+                                    .frame(width: geometry.size.width * sessionInfo.sessionProgress, height: 4)
+                            }
+                        }
+                        .frame(height: 4)
+                        .padding(.top, 2)
+                    }
+                }
+            }
         }
         .padding()
-        .frame(minWidth: 250)
+        .frame(minWidth: 300)
     }
     
     private func warningColor(for level: BurnRateCalculator.BurnRateInfo.WarningLevel) -> Color {
@@ -123,6 +191,26 @@ struct BurnRateView: View {
             }
         }
     }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        return formatter.string(from: date)
+    }
+    
+    private func progressColor(for progress: Double) -> Color {
+        switch progress {
+        case 0..<0.5:
+            return .green
+        case 0.5..<0.75:
+            return .orange
+        case 0.75...1.0:
+            return .red
+        default:
+            return .gray
+        }
+    }
 }
 
 // MARK: - Preview
@@ -139,10 +227,11 @@ struct BurnRateView: View {
                 velocityIndicator: .normal
             ),
             depletionTime: Date().addingTimeInterval(3600 * 5),
-            warningLevel: .none
+            warningLevel: .none,
+            sessionInfo: nil
         ))
         
-        // High burn rate
+        // High burn rate with active session
         BurnRateView(burnRateInfo: BurnRateCalculator.BurnRateInfo(
             provider: .claude,
             burnRate: BurnRateCalculator.BurnRate(
@@ -152,7 +241,32 @@ struct BurnRateView: View {
                 velocityIndicator: .veryFast
             ),
             depletionTime: Date().addingTimeInterval(3600 * 0.5),
-            warningLevel: .high
+            warningLevel: .high,
+            sessionInfo: BurnRateCalculator.BurnRateInfo.SessionInfo(
+                sessionStartTime: Date().addingTimeInterval(-3600 * 2), // Started 2 hours ago
+                sessionEndTime: Date().addingTimeInterval(3600 * 3),   // Ends in 3 hours
+                isActive: true,
+                isSessionBased: true
+            )
+        ))
+        
+        // Moderate burn rate with approximate session
+        BurnRateView(burnRateInfo: BurnRateCalculator.BurnRateInfo(
+            provider: .claude,
+            burnRate: BurnRateCalculator.BurnRate(
+                ratePerMinute: 50,
+                ratePerHour: 3000,
+                metric: .tokens,
+                velocityIndicator: .normal
+            ),
+            depletionTime: Date().addingTimeInterval(3600 * 2),
+            warningLevel: .moderate,
+            sessionInfo: BurnRateCalculator.BurnRateInfo.SessionInfo(
+                sessionStartTime: Date().addingTimeInterval(-3600 * 1),
+                sessionEndTime: Date().addingTimeInterval(3600 * 4),
+                isActive: false,
+                isSessionBased: false
+            )
         ))
         
         // No burn rate

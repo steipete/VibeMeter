@@ -20,6 +20,7 @@
 		0A63B3A8B28B1318FD438B07 /* CursorResilienceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16672EFBA1AC1084F26EFD72 /* CursorResilienceManager.swift */; };
 		0A708847F26FBB7B500F777E /* StartupManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CC65B526B76FB43AC46C8C /* StartupManagerMock.swift */; };
 		0BEB139619A5535AB13F2D51 /* ProviderSpendingAmountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DAC2C5B7C438F8B3A725F6 /* ProviderSpendingAmountView.swift */; };
+		0C38436B1658F7F22E7A32EA /* ClaudeSessionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DC2E752FFD05C321025049 /* ClaudeSessionTracker.swift */; };
 		0DD9A8569E4833A9D8593615 /* TimeRangeFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6F634BCA7D9F64AE1E42E9B /* TimeRangeFormattingTests.swift */; };
 		0DED20E09192DFB74E04FFBB /* StartupManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1AFE247B2067E2E7EB3F505 /* StartupManagerTests.swift */; };
 		0E7ABAAE091788D760DEC01C /* CoreBPETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C01B09954D63D028E07B53 /* CoreBPETests.swift */; };
@@ -372,6 +373,7 @@
 		53B57F574449DC23180C90C5 /* ClaudeProviderPricingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProviderPricingTests.swift; sourceTree = "<group>"; };
 		53E3330745D50008D0181887 /* CursorAutoAuthenticationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorAutoAuthenticationTests.swift; sourceTree = "<group>"; };
 		5493C8811511815FE8EAF1AB /* VibeMeter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VibeMeter.entitlements; sourceTree = "<group>"; };
+		54DC2E752FFD05C321025049 /* ClaudeSessionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSessionTracker.swift; sourceTree = "<group>"; };
 		550E1B080BD9EFA949EC9DB1 /* VibeMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5545E83A8CA05D3F0CF65477 /* NetworkStateManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStateManagerTests.swift; sourceTree = "<group>"; };
 		557730A7186DEBD6DAC0BC3B /* CostCalculationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostCalculationStrategy.swift; sourceTree = "<group>"; };
@@ -698,6 +700,7 @@
 				969CDD2E0922FB2CDA3B6E75 /* ClaudeFiveHourWindowCalculator.swift */,
 				64115AE722081C270C0353AB /* ClaudeLogBookmarkManager.swift */,
 				62D39BADDCC375A4A98D8FB8 /* ClaudeLogFileScanner.swift */,
+				54DC2E752FFD05C321025049 /* ClaudeSessionTracker.swift */,
 			);
 			path = Claude;
 			sourceTree = "<group>";
@@ -1308,6 +1311,7 @@
 				46BBE07657B4D32172193D46 /* ClaudeFiveHourWindowCalculator.swift in Sources */,
 				3B4A046C7309B74061418C6F /* ClaudeLogBookmarkManager.swift in Sources */,
 				F2719CE6135603DDFF79FD08 /* ClaudeLogFileScanner.swift in Sources */,
+				0C38436B1658F7F22E7A32EA /* ClaudeSessionTracker.swift in Sources */,
 				98A190F8119B90AD87D08F6F /* ClaudeCodeLogParser.swift in Sources */,
 				AD890567E808815EE8244643 /* ClaudeLogCacheManager.swift in Sources */,
 				4314B4C4F9F5ECD39D01FED1 /* ClaudeLogManager.swift in Sources */,

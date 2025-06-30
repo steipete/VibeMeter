@@ -154,33 +154,13 @@ public actor ClaudeProvider: ProviderProtocol {
         await logManager.hasAccess
     }
     
-    /// Calculate token burn rate from recent log entries
+    /// Calculate token burn rate using session-aware tracking
     public func calculateTokenBurnRate() async -> BurnRateCalculator.BurnRate? {
-        do {
-            // Get recent log entries (last 2 hours to ensure we have enough data)
-            let dailyUsage = try await getDailyUsageWithCache()
-            let now = Date()
-            let twoHoursAgo = now.addingTimeInterval(-7200)
-            
-            // Flatten all entries and filter by time
-            let recentEntries = dailyUsage.values
-                .flatMap { $0 }
-                .filter { $0.timestamp >= twoHoursAgo }
-                .sorted { $0.timestamp < $1.timestamp }
-            
-            guard !recentEntries.isEmpty else { return nil }
-            
-            // Calculate burn rate using the BurnRateCalculator
-            let calculator = BurnRateCalculator()
-            return await calculator.calculateClaudeTokenBurnRate(
-                entries: recentEntries,
-                in: 3600, // 1 hour window
-                currentTime: now
-            )
-        } catch {
-            logger.error("Failed to calculate token burn rate: \(error)")
-            return nil
-        }
+        // Ensure we have fresh data
+        _ = try? await getDailyUsageWithCache()
+        
+        // Use session-aware burn rate calculation
+        return await logManager.getSessionTracker().calculateSessionAwareBurnRate()
     }
 
     // MARK: - Private Methods

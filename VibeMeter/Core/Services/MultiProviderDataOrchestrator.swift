@@ -316,11 +316,35 @@ public final class MultiProviderDataOrchestrator {
         if let burnRate = await claudeProvider.calculateTokenBurnRate() {
             // Get current window usage for limit calculation
             if let fiveHourWindow = try? await claudeProvider.getFiveHourWindowUsage() {
-                let burnRateInfo = await burnRateCalculator.calculateBurnRateInfo(
+                // Get session information from Claude log manager
+                let sessionInfo: BurnRateCalculator.BurnRateInfo.SessionInfo? = await MainActor.run {
+                    let sessionTracker = ClaudeLogManager.shared.getSessionTracker()
+                    if let activeSession = sessionTracker.getActiveSession() {
+                        return BurnRateCalculator.BurnRateInfo.SessionInfo(
+                            sessionStartTime: activeSession.startTime,
+                            sessionEndTime: activeSession.expectedEndTime,
+                            isActive: activeSession.isActive,
+                            isSessionBased: true  // Claude sessions are precisely tracked
+                        )
+                    } else {
+                        // No active session, use approximate reset time
+                        let nextReset = sessionTracker.getNextResetTime()
+                        let approximateStart = nextReset.addingTimeInterval(-5 * 60 * 60)
+                        return BurnRateCalculator.BurnRateInfo.SessionInfo(
+                            sessionStartTime: approximateStart,
+                            sessionEndTime: nextReset,
+                            isActive: false,
+                            isSessionBased: false  // Using approximate schedule
+                        )
+                    }
+                }
+                
+                let burnRateInfo = burnRateCalculator.calculateBurnRateInfo(
                     for: .claude,
                     currentUsage: Double(fiveHourWindow.tokensUsed),
                     limit: Double(fiveHourWindow.estimatedTokenLimit),
-                    burnRate: burnRate
+                    burnRate: burnRate,
+                    sessionInfo: sessionInfo
                 )
                 
                 spendingData.updateBurnRate(for: .claude, burnRateInfo: burnRateInfo)
