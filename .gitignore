@@ -95,9 +95,8 @@ releases/
 VibeMeter-*.dmg
 VibeMeter-*/
 
-# Tuist
-.tuist/
-# *.xcworkspace/  # Allow Xcode workspace files to be checked in
+# Local development settings
+Local.xcconfig
 
 # Temporary test artifacts
 build-test

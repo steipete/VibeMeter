@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -162,7 +162,6 @@
 		9E4737B1C49156D91C59888F /* SpendingLimitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5775960465B9D428644B097D /* SpendingLimitsView.swift */; };
 		9F3058FB18FBA39B4F313308 /* SwiftTestingHelpers+Expectations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DACA014F717F55AD4E79740 /* SwiftTestingHelpers+Expectations.swift */; };
 		A0143C7AAC2B12E5136F0E9C /* NetworkRetryHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB48421ED6BB82167A61CF6 /* NetworkRetryHandlerTests.swift */; };
-		A5382015A3AFDF8560F0787F /* TuistAssets+VibeMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973D8091B71A54D16E72575D /* TuistAssets+VibeMeter.swift */; };
 		A5D96152F8C9DE5D9A62B173 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF643C5ED008D1390C13CFD /* GeneralSettingsView.swift */; };
 		A62B8203AE670771379D35A6 /* SettingsUIComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07DC8F6400197D972DEA9184 /* SettingsUIComponents.swift */; };
 		A73B40F9A14E9D749587540C /* TestHelpers+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDE914A70F2DE66186FB8219 /* TestHelpers+Codable.swift */; };
@@ -196,7 +195,6 @@
 		BDB571CE71022FD5742BAEB9 /* MenuBarStateManagerAnimationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FE27AC0C7BB488E24F50E3 /* MenuBarStateManagerAnimationTests.swift */; };
 		BFC06D21B7FE855C6ADD9720 /* VibeMeterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0E5910E69B56D05D2C196 /* VibeMeterApp.swift */; };
 		C1D7AD0BE1685ED2228B7414 /* CollectionExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B13292824918D56D36152 /* CollectionExtensions.swift */; };
-		C1E09E9E879F4194272EA6BA /* TuistBundle+VibeMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D976BE50C633CE293D244FB /* TuistBundle+VibeMeter.swift */; };
 		C33D4B994D668FAC2935D1C6 /* SparkleUpdaterManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */; };
 		C3C56E5BEFCDF499CE2952D8 /* ClaudeLogProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949935F53A3DFB2C4CA24E8F /* ClaudeLogProtocols.swift */; };
 		C4B5C0AABED48A1A053F967C /* TokenDebuggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342D9EAA4CE979807C63FF68 /* TokenDebuggerTests.swift */; };
@@ -317,7 +315,6 @@
 		1BDE95F8B3B61195BF2A6CEC /* NumberFormatter+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NumberFormatter+VibeMeter.swift"; sourceTree = "<group>"; };
 		1C04FE87449368272166427A /* MultiProviderLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderLoginManager.swift; sourceTree = "<group>"; };
 		1CB0699825BE0B6410D68AD9 /* ExchangeRateManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateManagerTests.swift; sourceTree = "<group>"; };
-		1D976BE50C633CE293D244FB /* TuistBundle+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistBundle+VibeMeter.swift"; sourceTree = "<group>"; };
 		1DD3AE4E36401E8FD3CA8065 /* NetworkRetryHandler+Providers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkRetryHandler+Providers.swift"; sourceTree = "<group>"; };
 		1F474488714BE9E47D88675F /* ProviderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderStateManager.swift; sourceTree = "<group>"; };
 		1F52B03835DB39F577F68F51 /* SparkleUpdaterManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdaterManagerTests.swift; sourceTree = "<group>"; };
@@ -377,7 +374,7 @@
 		550E1B080BD9EFA949EC9DB1 /* VibeMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5545E83A8CA05D3F0CF65477 /* NetworkStateManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStateManagerTests.swift; sourceTree = "<group>"; };
 		557730A7186DEBD6DAC0BC3B /* CostCalculationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostCalculationStrategy.swift; sourceTree = "<group>"; };
-		56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */ = {isa = PBXFileReference; path = o200k_base.tiktoken; sourceTree = "<group>"; };
+		56CA39322179B06EB4CD9F32 /* o200k_base.tiktoken */ = {isa = PBXFileReference; lastKnownFileType = text; path = o200k_base.tiktoken; sourceTree = "<group>"; };
 		5775960465B9D428644B097D /* SpendingLimitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsView.swift; sourceTree = "<group>"; };
 		59BC77A8B9EB0066F4A83225 /* CollectionExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionExtensionsTests.swift; sourceTree = "<group>"; };
 		5AB1DA38348E79E925182B50 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
@@ -438,7 +435,6 @@
 		9595CD1AD619E6C481437036 /* ExchangeRateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateManager.swift; sourceTree = "<group>"; };
 		969CDD2E0922FB2CDA3B6E75 /* ClaudeFiveHourWindowCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeFiveHourWindowCalculator.swift; sourceTree = "<group>"; };
 		96C0A223FA1B324331458338 /* ProviderStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderStatusBadge.swift; sourceTree = "<group>"; };
-		973D8091B71A54D16E72575D /* TuistAssets+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistAssets+VibeMeter.swift"; sourceTree = "<group>"; };
 		986ECB90B7DB0B478BBB0FCE /* StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensions.swift; sourceTree = "<group>"; };
 		9CB3FFE9B30474D1A3682A49 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		9CE6B3050D9B7CD810F4A338 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -481,7 +477,6 @@
 		C6B5D9C53CC36213616E28BF /* MenuBarState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarState.swift; sourceTree = "<group>"; };
 		C6CD0C27E75A0E468DC04949 /* CurrencyFormatter+VibeMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CurrencyFormatter+VibeMeter.swift"; sourceTree = "<group>"; };
 		C8AC682863EF4FBD41BAD505 /* SwiftTestingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingHelpers.swift; sourceTree = "<group>"; };
-		CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeter-Info.plist"; sourceTree = "<group>"; };
 		CCB48421ED6BB82167A61CF6 /* NetworkRetryHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRetryHandlerTests.swift; sourceTree = "<group>"; };
 		CE2F1FDFFDB602A7C399B21D /* BurnRateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurnRateCalculator.swift; sourceTree = "<group>"; };
 		D017032E04756D3C31B29991 /* URLQueryItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLQueryItemsTests.swift; sourceTree = "<group>"; };
@@ -489,7 +484,6 @@
 		D245032AFD0EC81F0A35ACAA /* View+Cursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Cursor.swift"; sourceTree = "<group>"; };
 		D2516C3D1A795ADC16C47893 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D2FD2BDE953D0620D8A6A6C6 /* Error+NetworkRetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+NetworkRetry.swift"; sourceTree = "<group>"; };
-		D428D056C0C0D8BBD12ECE78 /* VibeMeterTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "VibeMeterTests-Info.plist"; sourceTree = "<group>"; };
 		D4567A9C467F31609602D623 /* SwiftTestingHelpers+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftTestingHelpers+Async.swift"; sourceTree = "<group>"; };
 		D46D723E09FFAD86CE64E035 /* AuthenticationTokenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationTokenManager.swift; sourceTree = "<group>"; };
 		D5C01B09954D63D028E07B53 /* CoreBPETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBPETests.swift; sourceTree = "<group>"; };
@@ -589,15 +583,6 @@
 			path = Providers;
 			sourceTree = "<group>";
 		};
-		1E0EDACCC85EE5639F1C773B /* Derived */ = {
-			isa = PBXGroup;
-			children = (
-				B4BDA3ECD1783D8D9BC3F2A6 /* InfoPlists */,
-				CD52B17A5119FCDD14DB8A62 /* Sources */,
-			);
-			path = Derived;
-			sourceTree = "<group>";
-		};
 		20D7AAABB6A186978130B320 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
@@ -611,7 +596,6 @@
 		232F90B50E1EF2C61D36ADCA /* Project */ = {
 			isa = PBXGroup;
 			children = (
-				1E0EDACCC85EE5639F1C773B /* Derived */,
 				06AC8B8F99AB19F0428262B9 /* VibeMeter */,
 				C298F2838F744EB44D55CF6E /* VibeMeterTests */,
 			);
@@ -954,15 +938,6 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		B4BDA3ECD1783D8D9BC3F2A6 /* InfoPlists */ = {
-			isa = PBXGroup;
-			children = (
-				CC01F6D7D0C8732C0BF85952 /* VibeMeter-Info.plist */,
-				D428D056C0C0D8BBD12ECE78 /* VibeMeterTests-Info.plist */,
-			);
-			path = InfoPlists;
-			sourceTree = "<group>";
-		};
 		B93B52F9E09B6CC00543A88A /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -1032,15 +1007,6 @@
 				270C8DC4B520802F1516D87B /* UserDefaultsBackedTests.swift */,
 			);
 			path = VibeMeterTests;
-			sourceTree = "<group>";
-		};
-		CD52B17A5119FCDD14DB8A62 /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				973D8091B71A54D16E72575D /* TuistAssets+VibeMeter.swift */,
-				1D976BE50C633CE293D244FB /* TuistBundle+VibeMeter.swift */,
-			);
-			path = Sources;
 			sourceTree = "<group>";
 		};
 		E5264CF0688BF1CC8444F11A /* Tiktoken */ = {
@@ -1265,8 +1231,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A5382015A3AFDF8560F0787F /* TuistAssets+VibeMeter.swift in Sources */,
-				C1E09E9E879F4194272EA6BA /* TuistBundle+VibeMeter.swift in Sources */,
 				C8BB9215399E2BE0A4851A5B /* AppDelegate.swift in Sources */,
 				BFC06D21B7FE855C6ADD9720 /* VibeMeterApp.swift in Sources */,
 				132DCCF25B60E1BD58F2AA68 /* Color+Theme.swift in Sources */,
@@ -1449,19 +1413,11 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter.tests;
 				PRODUCT_NAME = VibeMeterTests;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-					"$(inherited)",
-					DEBUG,
-				);
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VibeMeter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VibeMeter";
@@ -1535,7 +1491,10 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.0.0;
@@ -1566,23 +1525,13 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = "Derived/InfoPlists/VibeMeter-Info.plist";
+				INFOPLIST_FILE = VibeMeter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-enable-actor-data-race-checks",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-					"-Xfrontend",
-					"-warn-long-function-bodies=500",
-					"-Xfrontend",
-					"-warn-long-expression-type-checking=500",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
@@ -1604,12 +1553,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter.tests;
 				PRODUCT_NAME = VibeMeterTests;
 				SDKROOT = macosx;
@@ -1630,31 +1574,18 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = "Derived/InfoPlists/VibeMeter-Info.plist";
+				INFOPLIST_FILE = VibeMeter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				OTHER_SWIFT_FLAGS = (
-					"-strict-concurrency=complete",
-					"-enable-actor-data-race-checks",
-					"-warn-concurrency",
-					"-enable-bare-slash-regex",
-					"-warn-implicit-overrides",
-					"-Xfrontend",
-					"-warn-long-function-bodies=500",
-					"-Xfrontend",
-					"-warn-long-expression-type-checking=500",
-				);
+				OTHER_SWIFT_FLAGS = "-strict-concurrency=complete -enable-actor-data-race-checks -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter;
 				PRODUCT_NAME = VibeMeter;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-					"$(inherited)",
-					DEBUG,
-				);
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -1733,7 +1664,10 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Peter Steinberger";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.0.0;

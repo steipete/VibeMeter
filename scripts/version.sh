@@ -38,31 +38,31 @@ usage() {
     echo ""
 }
 
-# Get current version from Project.swift
+# Get current version from version.xcconfig
 get_current_version() {
-    grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/'
+    grep 'MARKETING_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*MARKETING_VERSION = \(.*\)/\1/'
 }
 
-# Get current build number from Project.swift
+# Get current build number from version.xcconfig
 get_current_build() {
-    grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"CURRENT_PROJECT_VERSION": "\(.*\)".*/\1/'
+    grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*CURRENT_PROJECT_VERSION = \(.*\)/\1/'
 }
 
-# Update version in Project.swift
+# Update version in version.xcconfig
 update_project_version() {
     local new_version="$1"
     local new_build="$2"
     
     # Create backup
-    cp "$PROJECT_ROOT/Project.swift" "$PROJECT_ROOT/Project.swift.bak"
+    cp "$PROJECT_ROOT/VibeMeter/version.xcconfig" "$PROJECT_ROOT/VibeMeter/version.xcconfig.bak"
     
     # Update marketing version
-    sed -i '' "s/\"MARKETING_VERSION\": \".*\"/\"MARKETING_VERSION\": \"$new_version\"/" "$PROJECT_ROOT/Project.swift"
+    sed -i '' "s/MARKETING_VERSION = .*/MARKETING_VERSION = $new_version/" "$PROJECT_ROOT/VibeMeter/version.xcconfig"
     
     # Update build number
-    sed -i '' "s/\"CURRENT_PROJECT_VERSION\": \".*\"/\"CURRENT_PROJECT_VERSION\": \"$new_build\"/" "$PROJECT_ROOT/Project.swift"
+    sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $new_build/" "$PROJECT_ROOT/VibeMeter/version.xcconfig"
     
-    echo "✅ Updated Project.swift:"
+    echo "✅ Updated version.xcconfig:"
     echo "   Version: $new_version"
     echo "   Build: $new_build"
 }
@@ -263,8 +263,8 @@ main() {
     echo "✅ Version updated successfully!"
     echo ""
     echo "📋 Next steps:"
-    echo "   1. Review the changes: git diff Project.swift"
-    echo "   2. Commit the version bump: git add Project.swift && git commit -m \"Bump version to $new_version\""
+    echo "   1. Review the changes: git diff VibeMeter/version.xcconfig"
+    echo "   2. Commit the version bump: git add VibeMeter/version.xcconfig && git commit -m \"Bump version to $new_version\""
     echo "   3. Create the release: ./scripts/release-auto.sh stable"
     if [[ "$new_version" =~ -[a-z]+\.[0-9]+$ ]]; then
         echo "   3. Create the pre-release: ./scripts/release-auto.sh ${prerelease_type} ${new_version##*.}"
@@ -272,9 +272,9 @@ main() {
     echo ""
 }
 
-# Validate Project.swift exists
-if [[ ! -f "$PROJECT_ROOT/Project.swift" ]]; then
-    echo "❌ Project.swift not found in $PROJECT_ROOT"
+# Validate version.xcconfig exists
+if [[ ! -f "$PROJECT_ROOT/VibeMeter/version.xcconfig" ]]; then
+    echo "❌ version.xcconfig not found in $PROJECT_ROOT/VibeMeter/"
     exit 1
 fi
 

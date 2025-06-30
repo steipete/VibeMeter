@@ -12,7 +12,7 @@
 #   ./scripts/verify-prerelease-system.sh
 #
 # VERIFICATION CHECKS:
-#   - Project.swift IS_PRERELEASE_BUILD configuration
+#   - Info.plist IS_PRERELEASE_BUILD configuration
 #   - UpdateChannel.swift flag detection logic
 #   - Release script environment variable setup
 #   - AppBehaviorSettingsManager integration
@@ -76,13 +76,14 @@ check_warn() {
 
 echo "📌 Configuration Verification:"
 
-# 1. Check Project.swift configuration
-if grep -q '"IS_PRERELEASE_BUILD".*"\$(IS_PRERELEASE_BUILD)"' "$PROJECT_ROOT/Project.swift"; then
-    check_pass "IS_PRERELEASE_BUILD flag configured in Project.swift Info.plist"
+# 1. Check Info.plist configuration
+if grep -q '<key>IS_PRERELEASE_BUILD</key>' "$PROJECT_ROOT/VibeMeter/Info.plist"; then
+    check_pass "IS_PRERELEASE_BUILD flag configured in Info.plist"
 else
-    check_fail "IS_PRERELEASE_BUILD flag missing from Project.swift"
-    echo "  Add this to the infoPlist section in Project.swift:"
-    echo '  "IS_PRERELEASE_BUILD": "$(IS_PRERELEASE_BUILD)",'
+    check_fail "IS_PRERELEASE_BUILD flag missing from Info.plist"
+    echo "  Add this to Info.plist:"
+    echo '  <key>IS_PRERELEASE_BUILD</key>'
+    echo '  <string>$(IS_PRERELEASE_BUILD)</string>'
 fi
 
 # 2. Check UpdateChannel.swift detection logic

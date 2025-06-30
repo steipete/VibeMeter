@@ -1,0 +1,11 @@
+// VibeMeter Version Configuration
+// This file contains the version and build number for the app
+
+MARKETING_VERSION = 2.0.0
+CURRENT_PROJECT_VERSION = 201
+
+// Bundle identifier
+PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter
+
+// Pre-release build flag (set by release script)
+IS_PRERELEASE_BUILD = NO

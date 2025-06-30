@@ -32,7 +32,7 @@
 #
 # DEPENDENCIES:
 #   - preflight-check.sh (validates release readiness)
-#   - generate-xcproj.sh (Tuist project generation)
+#   - Xcode project exists
 #   - build.sh (application building)
 #   - sign-and-notarize.sh (code signing and notarization)
 #   - create-dmg.sh (DMG creation)
@@ -142,18 +142,9 @@ echo "   Build: $BUILD_NUMBER"
 echo "   Tag: $TAG_NAME"
 echo ""
 
-# Step 2: Clean and generate project
-echo -e "${BLUE}📋 Step 2/7: Generating Xcode project...${NC}"
+# Step 2: Clean build directory
+echo -e "${BLUE}📋 Step 2/7: Cleaning build directory...${NC}"
 rm -rf "$PROJECT_ROOT/build"
-"$SCRIPT_DIR/generate-xcproj.sh"
-
-# Check if Xcode project was modified and commit if needed
-if ! git diff --quiet "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"; then
-    echo "📝 Committing Xcode project changes..."
-    git add "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj"
-    git commit -m "Update Xcode project for build $BUILD_NUMBER"
-    echo -e "${GREEN}✅ Xcode project changes committed${NC}"
-fi
 
 # Step 3: Build the app
 echo ""

@@ -112,14 +112,8 @@ if [[ ! -f "Project.swift" ]]; then
     exit 1
 fi
 
-# Generate Xcode project if needed
-if [[ ! -d "VibeMeter.xcworkspace" ]]; then
-    echo -e "${YELLOW}Generating Xcode project...${NC}"
-    ./scripts/generate-xcproj.sh
-fi
-
 # Build the test command
-TEST_CMD="xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration $CONFIGURATION"
+TEST_CMD="xcodebuild -project VibeMeter.xcodeproj -scheme VibeMeter -configuration $CONFIGURATION"
 
 # Add test action
 TEST_CMD="$TEST_CMD test"

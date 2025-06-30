@@ -18,13 +18,13 @@ struct ProviderIconView: View {
             // Provider icon
             switch provider {
             case .cursor:
-                Image(asset: VibeMeterAsset.cursor)
+                Image("cursor")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
                     .accessibilityHidden(true)
             case .claude:
-                Image(asset: VibeMeterAsset.claude)
+                Image("claude")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)

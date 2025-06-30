@@ -1,0 +1,65 @@
+// Shared Configuration
+// This file contains settings shared across all configurations
+
+// Include version configuration
+#include "version.xcconfig"
+
+// Include local development settings (if exists)
+// This file is ignored by git and contains personal development team settings
+#include? "Local.xcconfig"
+
+// Default values (can be overridden in Local.xcconfig)
+// These will be used if Local.xcconfig doesn't exist or doesn't define them
+DEVELOPMENT_TEAM = Y5PE65HELJ
+CODE_SIGN_STYLE = Automatic
+
+// Swift version and concurrency settings
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+
+// Platform settings
+MACOSX_DEPLOYMENT_TARGET = 15.0
+SUPPORTED_PLATFORMS = macosx
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+
+// Build settings
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+COMBINE_HIDPI_IMAGES = YES
+ENABLE_HARDENED_RUNTIME = YES
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+ENABLE_APP_SANDBOX = YES
+GENERATE_INFOPLIST_FILE = NO
+INFOPLIST_FILE = VibeMeter/Info.plist
+
+// Runtime settings
+INFOPLIST_KEY_CFBundleDisplayName = Vibe Meter
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.productivity
+INFOPLIST_KEY_LSUIElement = YES
+INFOPLIST_KEY_NSHumanReadableCopyright = Copyright © 2025 Peter Steinberger
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/../Frameworks
+PRODUCT_NAME = $(TARGET_NAME)
+SWIFT_EMIT_LOC_STRINGS = YES
+
+// Code quality settings
+CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES
+CLANG_WARN_DOCUMENTATION_COMMENTS = YES
+CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES
+CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
+CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES
+CLANG_WARN_EMPTY_BODY = YES
+CLANG_WARN_CONDITIONAL_UNINITIALIZED = YES
+CLANG_WARN_UNREACHABLE_CODE = YES
+GCC_WARN_UNUSED_FUNCTION = YES
+GCC_WARN_UNUSED_VARIABLE = YES
+ENABLE_STRICT_OBJC_MSGSEND = YES
+
+// Recommended settings from Xcode
+ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOL_EXTENSIONS = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES
+
+// Swift compiler flags
+OTHER_SWIFT_FLAGS = -strict-concurrency=complete -enable-actor-data-race-checks -warn-concurrency -enable-bare-slash-regex -warn-implicit-overrides -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500
+
+// AppIntents settings
+SKIP_INSTALL = NO
+APPINTENTS_METADATA_EXTRACTION = NO

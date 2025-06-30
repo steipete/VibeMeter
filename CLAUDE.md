@@ -13,23 +13,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VibeMeter is a macOS menu bar application that monitors monthly spending on AI services, starting with Cursor AI. It's a native Swift 6 application using AppKit and SwiftUI, built with Tuist for project generation. Version 1.0.0 features a multi-provider architecture ready for future AI service integrations.
+VibeMeter is a macOS menu bar application that monitors monthly spending on AI services, starting with Cursor AI. It's a native Swift 6 application using AppKit and SwiftUI, built with Swift Package Manager. Version 1.0.0 features a multi-provider architecture ready for future AI service integrations.
 
 ## Build Commands
 
-### Project Generation
+### Prerequisites
 ```bash
-# Generate Xcode project (required before building)
-./scripts/generate-xcproj.sh
+# Ensure you have Xcode 16+ installed
+# The project uses Swift Package Manager for dependencies
 ```
 
 ### Build & Run
 ```bash
 # Build the app
-xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Debug build
+xcodebuild -project VibeMeter.xcodeproj -scheme VibeMeter -configuration Debug build
 
 # Run tests
-xcodebuild -workspace VibeMeter.xcworkspace -scheme VibeMeter -configuration Debug test
+xcodebuild -project VibeMeter.xcodeproj -scheme VibeMeter -configuration Debug test
 ```
 
 ### Code Quality
@@ -202,8 +202,8 @@ Update channel selection is available in General Settings. The SparkleUpdaterMan
 
 ## Development Tips
 
-- Always run `./scripts/generate-xcproj.sh` after modifying `Project.swift` or `Tuist.swift`
-- The generate script includes patches for Swift 6 Sendable compliance
+- The project uses xcconfig files for build settings (VibeMeter/version.xcconfig, Shared.xcconfig)
+- Create a Local.xcconfig for personal development team settings (git ignored)
 - Use `LoggingService` for consistent logging to Console.app
 - Currency symbols and exchange rates gracefully fall back to USD on failure
 - Test files follow naming convention: `<Component>Tests.swift`

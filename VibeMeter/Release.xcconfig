@@ -1,0 +1,19 @@
+// Release Configuration
+// Settings specific to Release builds
+
+#include "Shared.xcconfig"
+
+// Code signing for release
+CODE_SIGN_IDENTITY = Apple Development
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = Y5PE65HELJ
+
+// Swift release settings
+SWIFT_OPTIMIZATION_LEVEL = -O
+
+// Strict for release
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+
+// Enable hardened runtime for release builds
+ENABLE_HARDENED_RUNTIME = YES

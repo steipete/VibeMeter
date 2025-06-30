@@ -27,7 +27,6 @@
 # DEPENDENCIES:
 #   - Xcode and command line tools
 #   - xcbeautify (optional, for prettier output)
-#   - Generated Xcode project (run generate-xcproj.sh first)
 #
 # EXAMPLES:
 #   ./scripts/build.sh                           # Release build
@@ -87,7 +86,7 @@ fi
 if command -v xcbeautify &> /dev/null; then
     echo "🔨 Building with xcbeautify..."
     xcodebuild \
-        -workspace VibeMeter.xcworkspace \
+        -project VibeMeter.xcodeproj \
         -scheme VibeMeter \
         -configuration "$CONFIGURATION" \
         -derivedDataPath "$BUILD_DIR" \
@@ -97,7 +96,7 @@ if command -v xcbeautify &> /dev/null; then
 else
     echo "🔨 Building (install xcbeautify for cleaner output)..."
     xcodebuild \
-        -workspace VibeMeter.xcworkspace \
+        -project VibeMeter.xcodeproj \
         -scheme VibeMeter \
         -configuration "$CONFIGURATION" \
         -derivedDataPath "$BUILD_DIR" \

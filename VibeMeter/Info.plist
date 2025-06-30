@@ -15,9 +15,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSMinimumSystemVersion</key>
     <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
     <key>LSUIElement</key>
@@ -27,11 +27,11 @@
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSSupportsAutomaticTermination</key>
-    <true/>
+    <false/>
     <key>NSSupportsSuddenTermination</key>
-    <true/>
+    <false/>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2023 Your Name. All rights reserved.</string> <!-- Placeholder -->
+    <string>Copyright © 2025 Peter Steinberger</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
@@ -103,5 +103,11 @@
     <false/>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
+    <key>SUEnableDownloaderService</key>
+    <false/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    <key>IS_PRERELEASE_BUILD</key>
+    <string>$(IS_PRERELEASE_BUILD)</string>
 </dict>
 </plist> 

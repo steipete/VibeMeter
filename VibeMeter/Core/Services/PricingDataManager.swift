@@ -277,7 +277,9 @@ public final class PricingDataManager: @unchecked Sendable {
             ),
             "claude-3.5-sonnet": ModelPricing(
                 inputCostPerToken: 0.000003,
-                outputCostPerToken: 0.000015
+                outputCostPerToken: 0.000015,
+                cacheCreationCostPerToken: 0.00000375,
+                cacheReadCostPerToken: 0.0000003
             ),
             "cursor-small": ModelPricing(
                 inputCostPerToken: 0.000001,

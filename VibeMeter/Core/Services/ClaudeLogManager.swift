@@ -197,6 +197,7 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(
             jsonlFiles,
             usingCache: cacheManager.fileHashCache,
+            cacheManager: cacheManager,
             progressHandler: progressHandler)
 
         let totalEntries = dailyUsage.values.flatMap(\.self).count
@@ -282,7 +283,7 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
             } else {
                 // No cache or file was modified, process it
                 logger.debug("Processing today's log file")
-                let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:])
+                let (dailyUsage, _) = await logProcessor.processLogFiles([todaysLogFile], usingCache: [:], cacheManager: nil)
                 entries = dailyUsage.values.flatMap(\.self)
 
                 // Cache the results

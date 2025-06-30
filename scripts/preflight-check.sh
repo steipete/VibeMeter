@@ -107,14 +107,14 @@ echo ""
 
 # 2. Check version information
 echo "📌 Version Information:"
-MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
-BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"CURRENT_PROJECT_VERSION": "\(.*\)".*/\1/')
+MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*MARKETING_VERSION = \(.*\)/\1/')
+BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*CURRENT_PROJECT_VERSION = \(.*\)/\1/')
 
 echo "   Marketing Version: $MARKETING_VERSION"
 echo "   Build Number: $BUILD_NUMBER"
 
 # Check for Info.plist overrides
-if grep "CFBundleShortVersionString" "$PROJECT_ROOT/Project.swift" | grep -v "MARKETING_VERSION" | grep -q .; then
+if grep "CFBundleShortVersionString" "$PROJECT_ROOT/VibeMeter/Info.plist" | grep -v "MARKETING_VERSION" | grep -q .; then
     check_fail "Info.plist has version overrides - remove them"
 else
     check_pass "No Info.plist version overrides"
@@ -226,11 +226,11 @@ echo ""
 echo "📌 Sparkle Configuration:"
 
 # Check public key
-PUBLIC_KEY=$(grep 'SUPublicEDKey' "$PROJECT_ROOT/Project.swift" | sed 's/.*"SUPublicEDKey": "\(.*\)".*/\1/')
+PUBLIC_KEY=$(grep 'SUPublicEDKey' "$PROJECT_ROOT/VibeMeter/Info.plist" | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p' | head -1)
 if [[ -n "$PUBLIC_KEY" ]]; then
     check_pass "Sparkle public key configured"
 else
-    check_fail "Sparkle public key not found in Project.swift"
+    check_fail "Sparkle public key not found in Info.plist"
 fi
 
 # Check private key in keychain
@@ -271,11 +271,11 @@ echo ""
 # 8. Check IS_PRERELEASE_BUILD Configuration
 echo "📌 IS_PRERELEASE_BUILD System:"
 
-# Check if IS_PRERELEASE_BUILD is configured in Project.swift
-if grep -q '"IS_PRERELEASE_BUILD".*"\$(IS_PRERELEASE_BUILD)"' "$PROJECT_ROOT/Project.swift"; then
-    check_pass "IS_PRERELEASE_BUILD flag configured in Project.swift"
+# Check if IS_PRERELEASE_BUILD is configured in Info.plist
+if grep -q '<key>IS_PRERELEASE_BUILD</key>' "$PROJECT_ROOT/VibeMeter/Info.plist"; then
+    check_pass "IS_PRERELEASE_BUILD flag configured in Info.plist"
 else
-    check_fail "IS_PRERELEASE_BUILD flag missing from Project.swift Info.plist section"
+    check_fail "IS_PRERELEASE_BUILD flag missing from Info.plist"
 fi
 
 # Check if UpdateChannel.swift has the flag detection logic

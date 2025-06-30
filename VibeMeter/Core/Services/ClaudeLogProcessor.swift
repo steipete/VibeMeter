@@ -17,6 +17,7 @@ actor ClaudeLogProcessor {
     func processLogFiles(
         _ fileURLs: [URL],
         usingCache cache: [String: Data],
+        cacheManager: ClaudeLogCacheManager? = nil,
         progressHandler: (@Sendable (Int, [Date: [ClaudeLogEntry]]) async -> Void)? = nil) async -> (entries: [
         Date: [ClaudeLogEntry]
     ], updatedCache: [String: Data]) {
@@ -62,7 +63,7 @@ actor ClaudeLogProcessor {
             for fileURL in fileURLs {
                 group.addTask(priority: .background) { [self] in
                     // Process file without actor isolation to allow true parallelism
-                    return await self.processFileParallel(fileURL, existingCache: cache)
+                    return await self.processFileParallel(fileURL, existingCache: cache, cacheManager: cacheManager)
                 }
             }
 
@@ -139,7 +140,8 @@ actor ClaudeLogProcessor {
 
     // Non-actor isolated method for true parallel processing
     private nonisolated func processFileParallel(_ fileURL: URL,
-                                                 existingCache: [String: Data]) async
+                                                 existingCache: [String: Data],
+                                                 cacheManager: ClaudeLogCacheManager?) async
         -> ([ClaudeLogEntry], String, Data)? {
         let fileKey = fileURL.lastPathComponent
         let projectName = extractProjectNameParallel(from: fileURL)
@@ -166,13 +168,33 @@ actor ClaudeLogProcessor {
                 hashData = Data(SHA256.hash(data: fileData))
             }
 
-            // Check cache
+            // Check temporary cache first
             if let cachedHash = existingCache[fileKey], cachedHash == hashData {
                 return nil
             }
 
+            // Check permanent cache if available
+            if let cacheManager = cacheManager {
+                // Need to call this on MainActor since ClaudeLogCacheManager is @MainActor
+                let cachedEntries = await MainActor.run {
+                    cacheManager.getPermanentlyCachedEntries(for: fileKey, fileHash: hashData)
+                }
+                
+                if let entries = cachedEntries {
+                    // Return cached entries with metadata
+                    return (entries, fileKey, hashData)
+                }
+            }
+
             // Parse the file data in parallel
             let entries = parseFileDataParallel(fileData, projectName: projectName)
+            
+            // Store in permanent cache if eligible
+            if let cacheManager = cacheManager, !entries.isEmpty {
+                await MainActor.run {
+                    cacheManager.permanentlyCacheEntries(entries, for: fileKey, fileHash: hashData)
+                }
+            }
 
             return (entries, fileKey, hashData)
         } catch {

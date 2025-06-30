@@ -81,18 +81,36 @@ public enum ClaudeModelPricingTier: Sendable {
         }
 
         // Pricing as of January 2025
-        if model.contains("opus-4") || model.contains("claude-3-opus") {
+        if model.contains("opus-4") || model.contains("claude-opus-4") {
+            return ClaudeModelPricing(
+                inputPricePerMillion: 5.0,
+                outputPricePerMillion: 25.0,
+                cacheWritePricePerMillion: 6.25,
+                cacheReadPricePerMillion: 0.50)
+        } else if model.contains("claude-3-opus") {
             return ClaudeModelPricing(
                 inputPricePerMillion: 15.0,
                 outputPricePerMillion: 75.0,
                 cacheWritePricePerMillion: 18.75,
                 cacheReadPricePerMillion: 1.50)
-        } else if model.contains("sonnet") || model.contains("claude-3-5") {
+        } else if model.contains("sonnet-4") || model.contains("claude-sonnet-4") {
             return ClaudeModelPricing(
                 inputPricePerMillion: 3.0,
                 outputPricePerMillion: 15.0,
                 cacheWritePricePerMillion: 3.75,
                 cacheReadPricePerMillion: 0.30)
+        } else if model.contains("sonnet") || model.contains("claude-3-5") || model.contains("claude-3.5") {
+            return ClaudeModelPricing(
+                inputPricePerMillion: 3.0,
+                outputPricePerMillion: 15.0,
+                cacheWritePricePerMillion: 3.75,
+                cacheReadPricePerMillion: 0.30)
+        } else if model.contains("haiku") && model.contains("3-5") || model.contains("haiku") && model.contains("3.5") {
+            return ClaudeModelPricing(
+                inputPricePerMillion: 1.0,
+                outputPricePerMillion: 5.0,
+                cacheWritePricePerMillion: 1.25,
+                cacheReadPricePerMillion: 0.10)
         } else if model.contains("haiku") {
             return ClaudeModelPricing(
                 inputPricePerMillion: 0.25,

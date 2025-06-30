@@ -15,8 +15,11 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
         public let startTime: Date
         public var actualEndTime: Date?
         public var totalTokens: Int
+        public var totalCost: Double
+        public var models: [String]
         public var isActive: Bool
         public var isGap: Bool
+        public var entryCount: Int
         
         /// Calculate the expected end time (5 hours after start)
         public var expectedEndTime: Date {
@@ -79,7 +82,10 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
         var newSessions: [Session] = []
         
         for (startTime, groupEntries) in sessionGroups.sorted(by: { $0.key < $1.key }) {
-            let totalTokens = groupEntries.reduce(0) { $0 + $1.inputTokens + $1.outputTokens }
+            let totalTokens = groupEntries.reduce(0) { $0 + $1.inputTokens + $1.outputTokens + 
+                                                      ($1.cacheCreationTokens ?? 0) + ($1.cacheReadTokens ?? 0) }
+            let totalCost = groupEntries.reduce(0.0) { $0 + $1.calculateCost() }
+            let models = Array(Set(groupEntries.compactMap { $0.model }))
             let lastEntryTime = groupEntries.map(\.timestamp).max() ?? startTime
             let isActive = Date().timeIntervalSince(lastEntryTime) < 300 // Active if used in last 5 minutes
             
@@ -88,8 +94,11 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
                 startTime: startTime,
                 actualEndTime: isActive ? nil : lastEntryTime,
                 totalTokens: totalTokens,
+                totalCost: totalCost,
+                models: models,
                 isActive: isActive,
-                isGap: false
+                isGap: false,
+                entryCount: groupEntries.count
             )
             
             newSessions.append(session)
@@ -236,29 +245,125 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
 // MARK: - Extensions for Five Hour Window Calculation
 
 extension ClaudeSessionTracker {
+    /// Session tracking info similar to ccseva
+    public struct SessionTracking: Sendable {
+        public let activeWindow: SessionWindow
+        public let currentSession: Session?
+        public let recentSessions: [Session]
+        public let sessionsInWindow: Int
+        public let averageSessionLength: TimeInterval
+        public let totalCostInWindow: Double
+    }
+    
+    /// Represents a 5-hour window
+    public struct SessionWindow: Sendable {
+        public let startTime: Date
+        public let endTime: Date
+        public let sessions: [Session]
+        public let totalTokens: Int
+        public let totalCost: Double
+        
+        public var duration: TimeInterval {
+            endTime.timeIntervalSince(startTime)
+        }
+    }
+    
+    /// Get session tracking info for current 5-hour window
+    public func getSessionTracking() -> SessionTracking {
+        let now = Date()
+        let windowStart = now.addingTimeInterval(-5 * 60 * 60)
+        
+        // Get all sessions and filter for window
+        let allSessions = getSessions()
+        let sessionsInWindow = allSessions.filter { session in
+            session.startTime >= windowStart || 
+            (session.effectiveEndTime > windowStart && session.startTime < now)
+        }
+        
+        // Calculate window totals
+        let totalTokens = sessionsInWindow.reduce(0) { $0 + $1.totalTokens }
+        let totalCost = sessionsInWindow.reduce(0.0) { $0 + $1.totalCost }
+        
+        // Calculate average session length
+        let completedSessions = sessionsInWindow.filter { !$0.isActive }
+        let averageLength: TimeInterval
+        if !completedSessions.isEmpty {
+            let totalDuration = completedSessions.reduce(0.0) { $0 + $1.duration }
+            averageLength = totalDuration / Double(completedSessions.count)
+        } else {
+            averageLength = 0
+        }
+        
+        let window = SessionWindow(
+            startTime: windowStart,
+            endTime: now,
+            sessions: sessionsInWindow,
+            totalTokens: totalTokens,
+            totalCost: totalCost
+        )
+        
+        return SessionTracking(
+            activeWindow: window,
+            currentSession: getActiveSession(),
+            recentSessions: Array(sessionsInWindow.prefix(10)),
+            sessionsInWindow: sessionsInWindow.count,
+            averageSessionLength: averageLength,
+            totalCostInWindow: totalCost
+        )
+    }
+    
+    /// Get session progress metrics
+    public func getSessionProgress() -> (windowProgress: Double, sessionProgress: Double, efficiency: Double) {
+        let tracking = getSessionTracking()
+        let now = Date()
+        
+        // Window progress (0-100%)
+        let windowElapsed = now.timeIntervalSince(tracking.activeWindow.startTime)
+        let windowProgress = min(100, (windowElapsed / (5 * 60 * 60)) * 100)
+        
+        // Current session progress (assume typical 1 hour session)
+        let sessionProgress: Double
+        if let current = tracking.currentSession {
+            let sessionElapsed = now.timeIntervalSince(current.startTime)
+            sessionProgress = min(100, (sessionElapsed / 3600) * 100)
+        } else {
+            sessionProgress = 0
+        }
+        
+        // Efficiency (tokens per minute in window)
+        let totalMinutes = tracking.activeWindow.sessions.reduce(0.0) { total, session in
+            total + (session.duration / 60)
+        }
+        let efficiency = totalMinutes > 0 ? Double(tracking.activeWindow.totalTokens) / totalMinutes : 0
+        
+        return (windowProgress, sessionProgress, efficiency)
+    }
+    
     /// Calculate five-hour window with session awareness
     public func calculateSessionAwareFiveHourWindow() -> FiveHourWindow {
-        guard let activeSession = getActiveSession() else {
-            // No active session, return empty window
+        let tracking = getSessionTracking()
+        
+        // If we have an active session, use its data
+        if let activeSession = tracking.currentSession {
+            let estimatedLimit = 200_000 // Typical Claude session limit
+            let usagePercentage = min(100, (Double(activeSession.totalTokens) / Double(estimatedLimit)) * 100)
+            
             return FiveHourWindow(
-                used: 0,
+                used: usagePercentage,
                 total: 100,
-                resetDate: getNextResetTime(),
-                tokensUsed: 0,
-                estimatedTokenLimit: 200_000 // Default for Claude
+                resetDate: activeSession.expectedEndTime,
+                tokensUsed: activeSession.totalTokens,
+                estimatedTokenLimit: estimatedLimit
             )
         }
         
-        // Calculate usage percentage based on typical Claude limits
-        let estimatedLimit = 200_000 // Typical Claude session limit
-        let usagePercentage = min(100, (Double(activeSession.totalTokens) / Double(estimatedLimit)) * 100)
-        
+        // No active session, use window data
         return FiveHourWindow(
-            used: usagePercentage,
+            used: 0,
             total: 100,
-            resetDate: activeSession.expectedEndTime,
-            tokensUsed: activeSession.totalTokens,
-            estimatedTokenLimit: estimatedLimit
+            resetDate: getNextResetTime(),
+            tokensUsed: 0,
+            estimatedTokenLimit: 200_000
         )
     }
 }
