@@ -185,7 +185,7 @@ struct EnhancedDashboardView: View {
                 if let recommendation = predictions.recommendation {
                     Text(recommendation)
                         .font(.system(size: 10))
-                        .foregroundStyle(Color.primary.opacity(0.7))
+                        .foregroundStyle(.primary)
                 }
             }
             .padding(10)
@@ -584,14 +584,28 @@ struct QuickActionsBar: View {
             
             Spacer()
             
-            // Export button
-            Button(action: exportData) {
-                Image(systemName: "square.and.arrow.up")
+            // Settings button
+            Button(action: openSettings) {
+                Label("Settings", systemImage: "gearshape")
                     .font(.system(size: 11))
             }
             .buttonStyle(.plain)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.primary.opacity(0.08))
+            )
+            .foregroundStyle(.primary)
+            
+            // Close button
+            Button(action: closePopover) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+            }
+            .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .help("Export usage data")
+            .help("Close (Esc)")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -606,9 +620,20 @@ struct QuickActionsBar: View {
     }
     
     
-    private func exportData() {
-        // TODO: Implement data export
-        NSWorkspace.shared.open(URL(string: "https://github.com/steipete/VibeMeter")!)
+    private func openSettings() {
+        NSApp.openSettings()
+    }
+    
+    private func closePopover() {
+        // Find and close the custom menu window
+        for window in NSApp.windows {
+            if window.styleMask.contains(.borderless), 
+               window.isVisible,
+               window.level == .popUpMenu {
+                window.orderOut(nil)
+                break
+            }
+        }
     }
 }
 
