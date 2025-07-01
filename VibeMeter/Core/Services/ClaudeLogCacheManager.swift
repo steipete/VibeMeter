@@ -319,7 +319,6 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
         logger.info("Starting migration of existing cache to permanent storage")
         
         // Group entries by file
-        var entriesByFile: [String: [ClaudeLogEntry]] = [:]
         let todayStart = Calendar.current.startOfDay(for: Date())
         
         for (_, dayEntries) in dailyUsage {

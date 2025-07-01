@@ -108,7 +108,7 @@ struct ClaudeSessionDetailView: View {
                 
                 StatItem(
                     title: "Total Cost",
-                    value: tracking.activeWindow.totalCost.currencyString,
+                    value: tracking.activeWindow.totalCost.formattedCurrency,
                     icon: "dollarsign.circle"
                 )
                 
@@ -123,7 +123,7 @@ struct ClaudeSessionDetailView: View {
             
             // Window time info
             HStack {
-                Label(tracking.activeWindow.startTime, format: .dateTime.hour().minute(), systemImage: "clock")
+                Label(tracking.activeWindow.startTime.formatted(.dateTime.hour().minute()), systemImage: "clock")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 
@@ -131,7 +131,7 @@ struct ClaudeSessionDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 
-                Label(tracking.activeWindow.endTime, format: .dateTime.hour().minute(), systemImage: "clock.fill")
+                Label(tracking.activeWindow.endTime.formatted(.dateTime.hour().minute()), systemImage: "clock.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -180,7 +180,7 @@ struct ClaudeSessionDetailView: View {
                 
                 StatItem(
                     title: "Session Cost",
-                    value: session.totalCost.currencyString,
+                    value: session.totalCost.formattedCurrency,
                     icon: "dollarsign.circle.fill"
                 )
                 
@@ -237,7 +237,7 @@ struct ClaudeSessionDetailView: View {
                 StatItem(
                     title: "Cost/Session",
                     value: tracking.sessionsInWindow > 0 
-                        ? (tracking.totalCostInWindow / Double(tracking.sessionsInWindow)).currencyString
+                        ? (tracking.totalCostInWindow / Double(tracking.sessionsInWindow)).formattedCurrency
                         : "$0.00",
                     icon: "chart.line.uptrend.xyaxis"
                 )
@@ -286,26 +286,19 @@ struct ClaudeSessionDetailView: View {
         isLoading = true
         error = nil
         
-        do {
-            // Load session tracking data
-            let tracking = await MainActor.run {
-                sessionTracker.getSessionTracking()
-            }
-            
-            let progress = await MainActor.run {
-                sessionTracker.getSessionProgress()
-            }
-            
-            await MainActor.run {
-                self.sessionTracking = tracking
-                self.sessionProgress = progress
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                self.error = error
-                self.isLoading = false
-            }
+        // Load session tracking data
+        let tracking = await MainActor.run {
+            sessionTracker.getSessionTracking()
+        }
+        
+        let progress = await MainActor.run {
+            sessionTracker.getSessionProgress()
+        }
+        
+        await MainActor.run {
+            self.sessionTracking = tracking
+            self.sessionProgress = progress
+            self.isLoading = false
         }
     }
     
@@ -390,21 +383,21 @@ private struct SessionRow: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 2) {
-                Text(session.totalCost.currencyString)
+                Text(session.totalCost.formattedCurrency)
                     .font(.caption)
                     .fontWeight(.medium)
                 
-                Text("\(TokenFormatter.format(session.totalTokens, style: .compact))")
+                Text("\(TokenFormatter.format(session.totalTokens))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)
-        
-        func formatDuration(_ interval: TimeInterval) -> String {
-            let minutes = Int(interval) / 60
-            return "\(minutes)m"
-        }
+    }
+    
+    func formatDuration(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        return "\(minutes)m"
     }
 }
 

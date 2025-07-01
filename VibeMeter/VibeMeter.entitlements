@@ -23,7 +23,7 @@
 	</array>
 	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
 	<array>
-		<string>Library/Logs/Claude/</string>
+		<string>.claude/</string>
 	</array>
 </dict>
 </plist>

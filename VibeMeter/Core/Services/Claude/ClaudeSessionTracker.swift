@@ -104,6 +104,9 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
             newSessions.append(session)
         }
         
+        // Detect and add gap sessions
+        newSessions = detectAndAddGapSessions(newSessions)
+        
         // Mark expired sessions as inactive
         for i in 0..<newSessions.count {
             if newSessions[i].isExpired {
@@ -220,6 +223,136 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
         return sessionGroups
     }
     
+    /// Detect gaps between sessions and add gap sessions
+    private func detectAndAddGapSessions(_ sessions: [Session]) -> [Session] {
+        guard sessions.count > 1 else { return sessions }
+        
+        var result = [Session]()
+        let sortedSessions = sessions.sorted { $0.startTime < $1.startTime }
+        
+        // Configuration
+        let minGapDuration: TimeInterval = 1800  // 30 minutes minimum gap
+        
+        for i in 0..<sortedSessions.count {
+            let currentSession = sortedSessions[i]
+            result.append(currentSession)
+            
+            // Check for gap after this session
+            if i < sortedSessions.count - 1 {
+                let nextSession = sortedSessions[i + 1]
+                let currentEnd = currentSession.effectiveEndTime
+                let gap = nextSession.startTime.timeIntervalSince(currentEnd)
+                
+                // Detect significant gaps
+                if gap > minGapDuration {
+                    // Create a gap session
+                    let gapSession = Session(
+                        id: "gap-\(UUID().uuidString)",
+                        startTime: currentEnd,
+                        actualEndTime: nextSession.startTime,
+                        totalTokens: 0,
+                        totalCost: 0,
+                        models: [],
+                        isActive: false,
+                        isGap: true,
+                        entryCount: 0
+                    )
+                    result.append(gapSession)
+                    logger.debug("Detected gap of \(Int(gap/60)) minutes between sessions")
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    /// Analyze session patterns for anomalies
+    public func analyzeSessionPatterns() -> SessionPatternAnalysis {
+        let allSessions = getSessions()
+        let realSessions = allSessions.filter { !$0.isGap }
+        let gapSessions = allSessions.filter { $0.isGap }
+        
+        // Calculate metrics
+        let totalActiveTime = realSessions.reduce(0.0) { $0 + $1.duration }
+        let totalGapTime = gapSessions.reduce(0.0) { $0 + $1.duration }
+        let totalTime = totalActiveTime + totalGapTime
+        
+        let utilizationRate = totalTime > 0 ? (totalActiveTime / totalTime) * 100 : 0
+        
+        // Find longest session and gap
+        let longestSession = realSessions.max { $0.duration < $1.duration }
+        let longestGap = gapSessions.max { $0.duration < $1.duration }
+        
+        // Calculate session frequency
+        let timeSpan = realSessions.compactMap(\.startTime).max()?.timeIntervalSince(
+            realSessions.compactMap(\.startTime).min() ?? Date()
+        ) ?? 0
+        let sessionsPerHour = timeSpan > 0 ? Double(realSessions.count) / (timeSpan / 3600) : 0
+        
+        // Detect unusual patterns
+        var anomalies: [String] = []
+        
+        // Check for marathon sessions
+        if let longest = longestSession, longest.duration > 14400 { // > 4 hours
+            anomalies.append("Marathon session detected: \(Int(longest.duration/3600))h")
+        }
+        
+        // Check for rapid session switching
+        if sessionsPerHour > 2 {
+            anomalies.append("High session frequency: \(String(format: "%.1f", sessionsPerHour))/hr")
+        }
+        
+        // Check for low utilization
+        if utilizationRate < 50 && realSessions.count > 3 {
+            anomalies.append("Low utilization: \(Int(utilizationRate))%")
+        }
+        
+        return SessionPatternAnalysis(
+            totalSessions: realSessions.count,
+            totalGaps: gapSessions.count,
+            averageSessionLength: totalActiveTime / max(Double(realSessions.count), 1),
+            averageGapLength: totalGapTime / max(Double(gapSessions.count), 1),
+            utilizationRate: utilizationRate,
+            sessionsPerHour: sessionsPerHour,
+            longestSession: longestSession,
+            longestGap: longestGap,
+            anomalies: anomalies
+        )
+    }
+    
+    /// Session pattern analysis results
+    public struct SessionPatternAnalysis: Sendable {
+        public let totalSessions: Int
+        public let totalGaps: Int
+        public let averageSessionLength: TimeInterval
+        public let averageGapLength: TimeInterval
+        public let utilizationRate: Double
+        public let sessionsPerHour: Double
+        public let longestSession: Session?
+        public let longestGap: Session?
+        public let anomalies: [String]
+        
+        public var summary: String {
+            """
+            📊 Session Pattern Analysis
+            Sessions: \(totalSessions) (\(String(format: "%.1f", sessionsPerHour))/hr)
+            Gaps: \(totalGaps)
+            Utilization: \(Int(utilizationRate))%
+            Avg Session: \(formatDuration(averageSessionLength))
+            Avg Gap: \(formatDuration(averageGapLength))
+            \(anomalies.isEmpty ? "✅ No anomalies detected" : "⚠️ Anomalies: \(anomalies.joined(separator: ", "))")
+            """
+        }
+        
+        private func formatDuration(_ duration: TimeInterval) -> String {
+            if duration < 3600 {
+                return "\(Int(duration/60))m"
+            } else {
+                return String(format: "%.1fh", duration/3600)
+            }
+        }
+    }
+    
     private func loadSessionsFromCache() {
         guard let data = UserDefaults.standard.data(forKey: sessionCacheKey),
               let cached = try? JSONDecoder().decode([Session].self, from: data) else {
@@ -262,9 +395,20 @@ extension ClaudeSessionTracker {
         public let sessions: [Session]
         public let totalTokens: Int
         public let totalCost: Double
+        public let gapCount: Int
+        public let totalGapTime: TimeInterval
         
         public var duration: TimeInterval {
             endTime.timeIntervalSince(startTime)
+        }
+        
+        public var utilizationRate: Double {
+            let activeTime = duration - totalGapTime
+            return duration > 0 ? (activeTime / duration) * 100 : 0
+        }
+        
+        public var hasGaps: Bool {
+            gapCount > 0
         }
     }
     
@@ -280,12 +424,16 @@ extension ClaudeSessionTracker {
             (session.effectiveEndTime > windowStart && session.startTime < now)
         }
         
-        // Calculate window totals
-        let totalTokens = sessionsInWindow.reduce(0) { $0 + $1.totalTokens }
-        let totalCost = sessionsInWindow.reduce(0.0) { $0 + $1.totalCost }
+        // Separate real sessions from gaps
+        let realSessions = sessionsInWindow.filter { !$0.isGap }
+        let gapSessions = sessionsInWindow.filter { $0.isGap }
+        
+        // Calculate window totals (only real sessions contribute to tokens/cost)
+        let totalTokens = realSessions.reduce(0) { $0 + $1.totalTokens }
+        let totalCost = realSessions.reduce(0.0) { $0 + $1.totalCost }
         
         // Calculate average session length
-        let completedSessions = sessionsInWindow.filter { !$0.isActive }
+        let completedSessions = realSessions.filter { !$0.isActive }
         let averageLength: TimeInterval
         if !completedSessions.isEmpty {
             let totalDuration = completedSessions.reduce(0.0) { $0 + $1.duration }
@@ -299,14 +447,16 @@ extension ClaudeSessionTracker {
             endTime: now,
             sessions: sessionsInWindow,
             totalTokens: totalTokens,
-            totalCost: totalCost
+            totalCost: totalCost,
+            gapCount: gapSessions.count,
+            totalGapTime: gapSessions.reduce(0.0) { $0 + $1.duration }
         )
         
         return SessionTracking(
             activeWindow: window,
             currentSession: getActiveSession(),
-            recentSessions: Array(sessionsInWindow.prefix(10)),
-            sessionsInWindow: sessionsInWindow.count,
+            recentSessions: Array(realSessions.prefix(10)),
+            sessionsInWindow: realSessions.count,
             averageSessionLength: averageLength,
             totalCostInWindow: totalCost
         )
@@ -365,5 +515,66 @@ extension ClaudeSessionTracker {
             tokensUsed: 0,
             estimatedTokenLimit: 200_000
         )
+    }
+    
+    /// Get detailed gap analysis
+    public func getGapAnalysis() -> GapAnalysis {
+        let sessions = getSessions()
+        _ = sessions.filter { !$0.isGap }
+        let gaps = sessions.filter { $0.isGap }
+        
+        // Calculate gap statistics
+        let totalGapTime = gaps.reduce(0.0) { $0 + $1.duration }
+        let averageGapDuration = gaps.isEmpty ? 0 : totalGapTime / Double(gaps.count)
+        let longestGap = gaps.max { $0.duration < $1.duration }
+        
+        // Find patterns in gaps
+        let calendar = Calendar.current
+        var gapsByHour: [Int: Int] = [:]
+        for gap in gaps {
+            let hour = calendar.component(.hour, from: gap.startTime)
+            gapsByHour[hour, default: 0] += 1
+        }
+        
+        let frequentGapHours = gapsByHour
+            .sorted { $0.value > $1.value }
+            .prefix(3)
+            .map(\.key)
+        
+        return GapAnalysis(
+            totalGaps: gaps.count,
+            totalGapTime: totalGapTime,
+            averageGapDuration: averageGapDuration,
+            longestGap: longestGap,
+            frequentGapHours: Array(frequentGapHours),
+            recentGaps: Array(gaps.suffix(5))
+        )
+    }
+    
+    /// Gap analysis results
+    public struct GapAnalysis: Sendable {
+        public let totalGaps: Int
+        public let totalGapTime: TimeInterval
+        public let averageGapDuration: TimeInterval
+        public let longestGap: Session?
+        public let frequentGapHours: [Int]
+        public let recentGaps: [Session]
+        
+        public var summary: String {
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .abbreviated
+            
+            let totalTimeStr = formatter.string(from: totalGapTime) ?? "0m"
+            let avgTimeStr = formatter.string(from: averageGapDuration) ?? "0m"
+            
+            return """
+            🕳️ Gap Analysis
+            Total Gaps: \(totalGaps)
+            Total Gap Time: \(totalTimeStr)
+            Average Gap: \(avgTimeStr)
+            Frequent Gap Hours: \(frequentGapHours.map { "\($0):00" }.joined(separator: ", "))
+            """
+        }
     }
 }
