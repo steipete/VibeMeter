@@ -162,7 +162,9 @@ struct EnhancedDashboardView: View {
                         
                         Button(action: {
                             // Refresh data for this provider
-                            orchestrator?.refreshData(for: provider)
+                            Task {
+                                await orchestrator?.refreshData(for: provider)
+                            }
                         }) {
                             Label("Refresh", systemImage: "arrow.clockwise")
                         }
