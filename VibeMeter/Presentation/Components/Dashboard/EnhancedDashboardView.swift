@@ -34,7 +34,7 @@ struct EnhancedDashboardView: View {
             StatusHeaderBar()
             
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     // Key metrics grid
                     keyMetricsGrid
                         .padding(.horizontal, 12)
@@ -114,7 +114,6 @@ struct EnhancedDashboardView: View {
             
             // Removed Velocity Card - redundant with Burn Rate
         }
-        .frame(minHeight: 180)
     }
     
     // MARK: - Provider Breakdown Section

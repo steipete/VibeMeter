@@ -148,7 +148,7 @@ struct KeyMetricsCard: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.primary.opacity(isHovering ? 0.06 : 0.04))
