@@ -55,10 +55,10 @@ struct EnhancedDashboardView: View {
                             .padding(.horizontal, 8)
                     }
                     
-                    // Spending limits section
-                    spendingLimitsSection
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, 8)
+                    // Spending limits section - hidden per user request
+                    // spendingLimitsSection
+                    //     .padding(.horizontal, 8)
+                    //     .padding(.bottom, 8)
                 }
             }
             .scrollIndicators(.never)
