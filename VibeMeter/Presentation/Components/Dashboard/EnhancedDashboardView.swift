@@ -46,6 +46,19 @@ struct EnhancedDashboardView: View {
                             .padding(.horizontal, 12)
                     }
                     
+                    // Multi-account sessions (Claude only)
+                    if loggedInProviders.contains(.claude),
+                       let accountSessions = getAccountSessions(),
+                       accountSessions.count > 0,
+                       let detector = getMultiAccountDetector() {
+                        MultiAccountSessionsView(
+                            accountSessions: accountSessions,
+                            currentSessionId: getCurrentAccountSessionId(),
+                            multiAccountDetector: detector
+                        )
+                        .padding(.horizontal, 12)
+                    }
+                    
                     // Predictive analytics
                     if let predictions = getPredictions() {
                         predictiveAnalyticsSection(predictions: predictions)
@@ -227,6 +240,25 @@ struct EnhancedDashboardView: View {
     
     private var loggedInProviders: [ServiceProvider] {
         userSessionData?.loggedInProviders ?? []
+    }
+    
+    private func getAccountSessions() -> [AccountSession]? {
+        // Access ClaudeLogManager directly (it's a shared instance)
+        let sessionTracker = ClaudeLogManager.shared.getSessionTracker()
+        let accountSessions = sessionTracker.getAccountSessions()
+        return accountSessions.isEmpty ? nil : accountSessions
+    }
+    
+    private func getCurrentAccountSessionId() -> String? {
+        // Access ClaudeLogManager directly (it's a shared instance)
+        let sessionTracker = ClaudeLogManager.shared.getSessionTracker()
+        return sessionTracker.getCurrentAccountSessionId()
+    }
+    
+    private func getMultiAccountDetector() -> MultiAccountDetector? {
+        // Access ClaudeLogManager directly (it's a shared instance)
+        let sessionTracker = ClaudeLogManager.shared.getSessionTracker()
+        return sessionTracker.multiAccountDetector
     }
     
     private var formattedWarningLimit: String {
@@ -436,14 +468,22 @@ struct EnhancedDashboardView: View {
         }
         
         // Add account switching suggestion for high usage
-        var recommendation = prediction.recommendation
+        let baseRecommendation = prediction.recommendation
+        let finalRecommendation: String?
+        
         if primaryProvider == .claude && prediction.hoursRemaining < 2 {
-            recommendation = (recommendation ?? "") + " • Consider switching accounts if available"
+            if !baseRecommendation.isEmpty {
+                finalRecommendation = baseRecommendation + " • Consider switching accounts if available"
+            } else {
+                finalRecommendation = "Consider switching accounts if available"
+            }
+        } else {
+            finalRecommendation = baseRecommendation
         }
         
         return PredictionInfo(
             message: prediction.depletionText,
-            recommendation: recommendation,
+            recommendation: finalRecommendation,
             confidence: "\(prediction.confidence) confidence",
             icon: icon,
             color: color

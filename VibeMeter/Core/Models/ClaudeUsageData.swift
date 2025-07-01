@@ -11,6 +11,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
     public let cacheReadTokens: Int?
     public let costUSD: Double?
     public let projectName: String?
+    public let parentUuid: String?
+    public let conversationType: String?
 
     private enum CodingKeys: String, CodingKey {
         case timestamp
@@ -18,6 +20,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         case message
         case costUSD
         case projectName
+        case parentUuid
+        case type
     }
 
     private enum MessageKeys: String, CodingKey {
@@ -54,6 +58,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         self.model = try container.decodeIfPresent(String.self, forKey: .model)
         self.costUSD = try container.decodeIfPresent(Double.self, forKey: .costUSD)
         self.projectName = try container.decodeIfPresent(String.self, forKey: .projectName)
+        self.parentUuid = try container.decodeIfPresent(String.self, forKey: .parentUuid)
+        self.conversationType = try container.decodeIfPresent(String.self, forKey: .type)
 
         let messageContainer = try container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         let usageContainer = try messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
@@ -74,6 +80,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         try container.encodeIfPresent(model, forKey: .model)
         try container.encodeIfPresent(costUSD, forKey: .costUSD)
         try container.encodeIfPresent(projectName, forKey: .projectName)
+        try container.encodeIfPresent(parentUuid, forKey: .parentUuid)
+        try container.encodeIfPresent(conversationType, forKey: .type)
 
         var messageContainer = container.nestedContainer(keyedBy: MessageKeys.self, forKey: .message)
         var usageContainer = messageContainer.nestedContainer(keyedBy: UsageKeys.self, forKey: .usage)
@@ -93,7 +101,9 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         cacheCreationTokens: Int? = nil,
         cacheReadTokens: Int? = nil,
         costUSD: Double? = nil,
-        projectName: String? = nil) {
+        projectName: String? = nil,
+        parentUuid: String? = nil,
+        conversationType: String? = nil) {
         self.timestamp = timestamp
         self.model = model
         self.inputTokens = inputTokens
@@ -102,6 +112,8 @@ public struct ClaudeLogEntry: Codable, Identifiable, Sendable {
         self.cacheReadTokens = cacheReadTokens
         self.costUSD = costUSD
         self.projectName = projectName
+        self.parentUuid = parentUuid
+        self.conversationType = conversationType
     }
 
     /// Calculate cost based on the selected strategy

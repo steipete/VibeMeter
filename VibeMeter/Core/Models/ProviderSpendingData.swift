@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// This model contains all spending information for a single provider,
 /// including invoices, limits, currency conversions, and connection status.
-public struct ProviderSpendingData: Codable, Sendable {
+public struct ProviderSpendingData: Sendable {
     public let provider: ServiceProvider
     public var currentSpendingUSD: Double?
     public var currentSpendingConverted: Double?
@@ -21,6 +21,7 @@ public struct ProviderSpendingData: Codable, Sendable {
     public var lastError: String?
     public var retryAfter: Date?
     public var burnRateInfo: BurnRateCalculator.BurnRateInfo?
+    public var fiveHourWindow: FiveHourWindow?
 
     public init(
         provider: ServiceProvider,
@@ -35,7 +36,8 @@ public struct ProviderSpendingData: Codable, Sendable {
         lastSuccessfulRefresh: Date? = nil,
         lastError: String? = nil,
         retryAfter: Date? = nil,
-        burnRateInfo: BurnRateCalculator.BurnRateInfo? = nil) {
+        burnRateInfo: BurnRateCalculator.BurnRateInfo? = nil,
+        fiveHourWindow: FiveHourWindow? = nil) {
         self.provider = provider
         self.currentSpendingUSD = currentSpendingUSD
         self.currentSpendingConverted = currentSpendingConverted
@@ -49,6 +51,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         self.lastError = lastError
         self.retryAfter = retryAfter
         self.burnRateInfo = burnRateInfo
+        self.fiveHourWindow = fiveHourWindow
     }
 
     /// Returns the current spending in the preferred currency.
@@ -132,6 +135,7 @@ public struct ProviderSpendingData: Codable, Sendable {
         lastError = nil
         retryAfter = nil
         burnRateInfo = nil
+        fiveHourWindow = nil
     }
 
     /// Updates the connection status.

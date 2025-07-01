@@ -86,6 +86,18 @@ public enum RelativeTimeFormatter {
             return .systemRed
         }
     }
+    
+    /// Formats a time interval into a human-readable string
+    public static func format(timeInterval: TimeInterval) -> String {
+        let hours = Int(timeInterval) / 3600
+        let minutes = (Int(timeInterval) % 3600) / 60
+        
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else {
+            return "\(minutes)m"
+        }
+    }
 }
 
 // MARK: - SwiftUI Extensions

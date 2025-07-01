@@ -189,7 +189,9 @@ enum ClaudeCodeLogParser {
                 cacheCreationTokens: cacheCreationTokens,
                 cacheReadTokens: cacheReadTokens,
                 costUSD: format.costUSD,
-                projectName: projectName)
+                projectName: projectName,
+                parentUuid: format.parentUuid,
+                conversationType: format.type)
         } catch {
             // Log decoding error for debugging
             logger.debug("Failed to decode Claude Code format: \(error)")

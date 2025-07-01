@@ -56,6 +56,10 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
     // Fixed reset schedule (like Claude token monitor)
     private let defaultResetHours = [4, 9, 14, 18, 23]
     
+    // Multi-account support
+    public let multiAccountDetector = MultiAccountDetector()
+    private var accountSessions: [AccountSession] = []
+    
     // MARK: - Public Methods
     
     /// Get all sessions, loading from cache if needed
@@ -69,6 +73,57 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
     /// Get the currently active session
     public func getActiveSession() -> Session? {
         getSessions().first { $0.isActive && !$0.isExpired }
+    }
+    
+    // MARK: - Multi-Account Support
+    
+    /// Get all detected account sessions
+    public func getAccountSessions() -> [AccountSession] {
+        accountSessions
+    }
+    
+    /// Get active account sessions (used within last 15 minutes)
+    public func getActiveAccountSessions() -> [AccountSession] {
+        accountSessions.filter { $0.isActive }
+    }
+    
+    /// Get the current account session ID
+    public func getCurrentAccountSessionId() -> String? {
+        multiAccountDetector.currentSessionId
+    }
+    
+    /// Get account-specific five-hour window
+    public func getAccountSpecificWindow(accountId: String? = nil) -> FiveHourWindow? {
+        let targetAccountId = accountId ?? getCurrentAccountSessionId()
+        
+        guard let targetAccountId = targetAccountId,
+              let accountSession = accountSessions.first(where: { $0.id == targetAccountId }) else {
+            return nil
+        }
+        
+        // Calculate window based on account session
+        let estimatedLimit = 200_000
+        let usagePercentage = min(100, (Double(accountSession.totalTokens) / Double(estimatedLimit)) * 100)
+        
+        return FiveHourWindow(
+            used: usagePercentage,
+            total: 100,
+            resetDate: accountSession.firstSeen.addingTimeInterval(5 * 60 * 60),
+            tokensUsed: accountSession.totalTokens,
+            estimatedTokenLimit: estimatedLimit
+        )
+    }
+    
+    /// Get per-account usage summary
+    public func getPerAccountUsageSummary() -> [(accountId: String, tokens: Int, sessions: Int, duration: TimeInterval)] {
+        accountSessions.map { account in
+            (
+                accountId: account.id,
+                tokens: account.totalTokens,
+                sessions: 1, // Each AccountSession represents one detected account period
+                duration: account.duration
+            )
+        }
     }
     
     /// Update sessions based on log entries
@@ -125,6 +180,10 @@ public final class ClaudeSessionTracker: @unchecked Sendable {
         saveSessionsToCache()
         
         logger.info("Updated to \(self.sessions.count) sessions, active: \(self.sessions.filter(\.isActive).count)")
+        
+        // Update multi-account detection
+        accountSessions = multiAccountDetector.detectAccountSessions(from: entries)
+        logger.info("Detected \(self.accountSessions.count) account sessions")
     }
     
     /// Get the next reset time based on fixed schedule
