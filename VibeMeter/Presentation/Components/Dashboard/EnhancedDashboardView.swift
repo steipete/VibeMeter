@@ -572,21 +572,6 @@ struct QuickActionsBar: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            // Analytics button
-            Button(action: openAnalyticsDashboard) {
-                Label("Analytics", systemImage: "chart.xyaxis.line")
-                    .font(.system(size: 11))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.blue.opacity(0.1))
-            )
-            .foregroundStyle(.blue)
-            
-            
             Spacer()
             
             // Settings button
@@ -619,11 +604,6 @@ struct QuickActionsBar: View {
                 .fill(Color.primary.opacity(0.03))
         )
     }
-    
-    private func openAnalyticsDashboard() {
-        AnalyticsDashboardWindowController.showWindow()
-    }
-    
     
     private func openSettings() {
         NSApp.openSettings()
