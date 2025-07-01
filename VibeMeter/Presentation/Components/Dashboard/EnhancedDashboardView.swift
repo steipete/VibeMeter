@@ -568,21 +568,16 @@ struct QuickActionsBar: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            Spacer()
-            
-            // Settings button
+            // Settings button (icon only)
             Button(action: openSettings) {
-                Label("Settings", systemImage: "gearshape")
-                    .font(.system(size: 11))
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 14))
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.primary.opacity(0.08))
-            )
-            .foregroundStyle(.primary)
+            .foregroundStyle(.secondary)
+            .help("Settings")
+            
+            Spacer()
             
             // Close button
             Button(action: closePopover) {
