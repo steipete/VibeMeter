@@ -11,6 +11,8 @@ struct CostTableView: View {
     private var settingsManager: (any SettingsManagerProtocol)?
     @Environment(\.loginManager)
     private var loginManager: MultiProviderLoginManager?
+    @Environment(\.userSessionData)
+    private var userSessionData: MultiProviderUserSessionData?
 
     let showTimestamps: Bool
 
@@ -28,8 +30,8 @@ struct CostTableView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Provider breakdown at the top
-            if !spendingData.providersWithData.isEmpty {
+            // Provider breakdown at the top - show for all logged-in providers
+            if let userSessionData, userSessionData.isLoggedInToAnyProvider {
                 providerBreakdownSection
             }
 
@@ -44,7 +46,9 @@ struct CostTableView: View {
 
     private var providerBreakdownSection: some View {
         VStack(spacing: 4) {
-            ForEach(spendingData.providersWithData, id: \.self) { provider in
+            // Show all logged-in providers, not just those with data
+            let loggedInProviders = userSessionData?.loggedInProviders ?? []
+            ForEach(loggedInProviders, id: \.self) { provider in
                 providerRowContent(for: provider)
             }
         }
@@ -155,6 +159,16 @@ struct CostTableView: View {
 
     private var currentSpendingDisplay: String? {
         let providers = spendingData.providersWithData
+        
+        // Check if we have any connected providers (even without data yet)
+        let hasConnectedProviders = userSessionData?.isLoggedInToAnyProvider ?? false
+        
+        // If we have connected providers but no data yet, show $0
+        if hasConnectedProviders && providers.isEmpty {
+            return "\(currencyData.selectedSymbol)0"
+        }
+        
+        // If truly no providers, return nil to show "No data"
         guard !providers.isEmpty else { return nil }
 
         let totalSpending = spendingData.totalSpendingConverted(
@@ -189,7 +203,13 @@ struct CostTableView: View {
 
     /// Determines if any provider is currently loading data
     private var isLoadingData: Bool {
-        spendingData.providersWithData.contains { provider in
+        // Don't show loading if we have logged-in providers but no data yet
+        // This prevents the shimmer on initial load
+        if let userSessionData, userSessionData.isLoggedInToAnyProvider && spendingData.providersWithData.isEmpty {
+            return false
+        }
+        
+        return spendingData.providersWithData.contains { provider in
             if let providerData = spendingData.getSpendingData(for: provider) {
                 return providerData.connectionStatus == .connecting || providerData.connectionStatus == .syncing
             }
@@ -324,14 +344,14 @@ struct CostTableView: View {
 
                                 if let maxRequests = usageData.maxRequests, maxRequests > 0 {
                                     // currentRequests is a percentage (0-100), totalRequests is the actual token count
-                                    if providerData.connectionStatus == .syncing || 
-                                       (usageData.totalRequests == 0 && usageData.currentRequests == 0 && providerData.connectionStatus == .connected) {
-                                        // Show loading state while data is being fetched
+                                    if providerData.connectionStatus == .syncing {
+                                        // Show loading state only while actively syncing
                                         Text("Loading...")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                             .fixedSize()
                                     } else {
+                                        // Always show the data we have, even if it's 0
                                         Text(
                                             "\(TokenFormatter.format(usageData.totalRequests)) tokens (\(usageData.currentRequests)%)")
                                             .font(.caption)

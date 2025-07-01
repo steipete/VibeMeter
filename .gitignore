@@ -103,3 +103,4 @@ build-test
 build_output.txt
 /temp_releases
 /temp
+*.profraw

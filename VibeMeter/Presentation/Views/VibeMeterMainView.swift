@@ -25,15 +25,8 @@ struct VibeMeterMainView: View {
            loginManager != nil,
            onRefresh != nil {
             Group {
-                if userSessionData.isLoggedInToAnyProvider || claudeLogManager.hasAccess {
-                    LoggedInContentView()
-                } else {
-                    NoProvidersConfiguredView(
-                        onConfigureProviders: {
-                            // Open settings window to the providers tab
-                            openSettingsToProvidersTab()
-                        })
-                }
+                // Always show the main UI - most computers will have Claude
+                LoggedInContentView()
             }
             .frame(minWidth: 320)
             .fixedSize()
