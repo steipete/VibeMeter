@@ -119,9 +119,9 @@ struct KeyMetricsCard: View {
                     }
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.top, 10)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+            .padding(.bottom, 10)
             
             // Progress bar if provided
             if let progress {
@@ -137,16 +137,16 @@ struct KeyMetricsCard: View {
                     }
                 }
                 .frame(height: 3)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 6)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
             }
             
             // Subtitle
             Text(subtitle)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 10)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(

@@ -37,28 +37,24 @@ struct EnhancedDashboardView: View {
             StatusHeaderBar()
             
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     // Key metrics grid
                     keyMetricsGrid
-                        .padding(.horizontal, 8)
-                        .padding(.top, 8)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 12)
                     
                     // Provider breakdown
                     if !loggedInProviders.isEmpty {
                         providerBreakdownSection
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
                     }
                     
                     // Predictive analytics
                     if let predictions = getPredictions() {
                         predictiveAnalyticsSection(predictions: predictions)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 12)
                     }
-                    
-                    // Spending limits section - hidden per user request
-                    // spendingLimitsSection
-                    //     .padding(.horizontal, 8)
-                    //     .padding(.bottom, 8)
                 }
             }
             .scrollIndicators(.never)
@@ -74,7 +70,7 @@ struct EnhancedDashboardView: View {
     // MARK: - Key Metrics Grid
     
     private var keyMetricsGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             // Current Usage Card
             if let usageMetrics = getCurrentUsageMetrics() {
                 KeyMetricsCard.usage(
@@ -114,19 +110,19 @@ struct EnhancedDashboardView: View {
                 )
             }
         }
-        .frame(height: 160)
+        .frame(minHeight: 180)
     }
     
     // MARK: - Provider Breakdown Section
     
     private var providerBreakdownSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Providers")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
             
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
                 ForEach(loggedInProviders, id: \.self) { provider in
                     EnhancedProviderRow(
                         provider: provider,
@@ -150,7 +146,7 @@ struct EnhancedDashboardView: View {
     // MARK: - Predictive Analytics Section
     
     private func predictiveAnalyticsSection(predictions: PredictionInfo) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 10))
@@ -171,7 +167,7 @@ struct EnhancedDashboardView: View {
             }
             .padding(.horizontal, 4)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Image(systemName: predictions.icon)
                         .font(.system(size: 12))
@@ -185,10 +181,10 @@ struct EnhancedDashboardView: View {
                 if let recommendation = predictions.recommendation {
                     Text(recommendation)
                         .font(.system(size: 10))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(10)
+            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 8)
@@ -512,8 +508,8 @@ struct EnhancedProviderRow: View {
                 .font(.system(size: 11, weight: .semibold))
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.primary.opacity(isHovering ? 0.06 : 0.04))
@@ -597,8 +593,8 @@ struct QuickActionsBar: View {
             .foregroundStyle(.secondary)
             .help("Close (Esc)")
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(
             Rectangle()
                 .fill(Color.primary.opacity(0.03))
