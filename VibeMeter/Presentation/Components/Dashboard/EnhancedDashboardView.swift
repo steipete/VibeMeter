@@ -140,6 +140,33 @@ struct EnhancedDashboardView: View {
                             loginManager: loginManager
                         )
                     }
+                    .contextMenu {
+                        Button(action: {
+                            ProviderInteractionHandler.openProviderDashboard(
+                                for: provider,
+                                loginManager: loginManager
+                            )
+                        }) {
+                            Label("Open Dashboard", systemImage: "safari")
+                        }
+                        
+                        if provider == .claude {
+                            Button(action: {
+                                ClaudeUsageReportWindowController.showWindow()
+                            }) {
+                                Label("Show Token Usage Report", systemImage: "chart.bar.doc.horizontal")
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            // Refresh data for this provider
+                            orchestrator?.refreshData(for: provider)
+                        }) {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                    }
                 }
             }
         }
@@ -527,6 +554,19 @@ struct EnhancedProviderRow: View {
             
             // Metrics badges
             HStack(spacing: 6) {
+                // Usage report button for Claude
+                if provider == .claude {
+                    Button(action: {
+                        ClaudeUsageReportWindowController.showWindow()
+                    }) {
+                        Image(systemName: "chart.bar.doc.horizontal")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Show Token Usage Report")
+                }
+                
                 // Burn rate badge
                 if let burnRate {
                     HStack(spacing: 2) {

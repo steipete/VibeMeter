@@ -19,22 +19,43 @@ struct MultiAccountSessionsView: View {
                 
                 Spacer()
                 
-                if accountSessions.count > 1 {
-                    Text("\(accountSessions.count) detected")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else if accountSessions.count == 1,
-                          let session = accountSessions.first,
-                          multiAccountDetector.getAccountName(for: session.id) == nil {
+                // Action buttons
+                HStack(spacing: 8) {
+                    // Usage report button
                     Button(action: {
-                        editingSessionId = session.id
-                        editingName = ""
+                        ClaudeUsageReportWindowController.showWindow()
                     }) {
-                        Label("Name Account", systemImage: "pencil")
+                        Label("Usage Report", systemImage: "chart.bar.doc.horizontal")
                             .font(.caption)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.accentColor)
+                    
+                    if accountSessions.count > 1 {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        
+                        Text("\(accountSessions.count) detected")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if accountSessions.count == 1,
+                              let session = accountSessions.first,
+                              multiAccountDetector.getAccountName(for: session.id) == nil {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        
+                        Button(action: {
+                            editingSessionId = session.id
+                            editingName = ""
+                        }) {
+                            Label("Name Account", systemImage: "pencil")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.accentColor)
+                    }
                 }
             }
             
