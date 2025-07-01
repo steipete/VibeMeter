@@ -226,13 +226,15 @@ public final class AutoPlanDetector: @unchecked Sendable {
         }
         
         // Check for usage spikes
-        let spikes = history.filter { $0.usage > history.map(\.usage).max()! * 0.8 }
-        if spikes.count > 2 {
-            evidence.append(DetectedPlan.Evidence(
-                type: .usagePattern,
-                value: "Regular usage spikes detected",
-                weight: 0.5
-            ))
+        if let maxUsage = history.map(\.usage).max(), maxUsage > 0 {
+            let spikes = history.filter { $0.usage > maxUsage * 0.8 }
+            if spikes.count > 2 {
+                evidence.append(DetectedPlan.Evidence(
+                    type: .usagePattern,
+                    value: "Regular usage spikes detected",
+                    weight: 0.5
+                ))
+            }
         }
         
         return evidence
@@ -302,13 +304,15 @@ public final class AutoPlanDetector: @unchecked Sendable {
         
         // Look for reset patterns
         var resetDates: [Date] = []
-        for i in 1..<sortedHistory.count {
-            let prevUsage = sortedHistory[i-1].value
-            let currUsage = sortedHistory[i].value
-            
-            // Significant drop indicates reset
-            if currUsage < prevUsage * 0.2 {
-                resetDates.append(sortedHistory[i].key)
+        if sortedHistory.count > 1 {
+            for i in 1..<sortedHistory.count {
+                let prevUsage = sortedHistory[i-1].value
+                let currUsage = sortedHistory[i].value
+                
+                // Significant drop indicates reset
+                if currUsage < prevUsage * 0.2 {
+                    resetDates.append(sortedHistory[i].key)
+                }
             }
         }
         
