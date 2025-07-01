@@ -200,13 +200,15 @@ extension KeyMetricsCard {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            title: "Daily Limit",
+            title: plan.contains("Claude") ? "5-Hour Window" : "Daily Limit",
             value: "\(Int(percentage))%",
-            subtitle: "\(plan) • Resets \(resetTime)",
+            subtitle: plan.contains("Claude") ? "5h window • \(resetTime)" : "\(plan) • Resets \(resetTime)",
             trend: nil,
             progress: percentage / 100,
             status: status,
-            helpText: "Daily usage: \(formattedUsage) of \(formattedLimit) tokens (\(Int(percentage))%)"
+            helpText: plan.contains("Claude") 
+                ? "5-hour window: \(formattedUsage) of ~\(formattedLimit) tokens (\(Int(percentage))%)"
+                : "Daily usage: \(formattedUsage) of \(formattedLimit) tokens (\(Int(percentage))%)"
         )
     }
     
@@ -238,7 +240,7 @@ extension KeyMetricsCard {
             ),
             title: "Burn Rate",
             value: TokenFormatter.formatRate(rate),
-            subtitle: "Depletes in \(depletionTime)",
+            subtitle: depletionTime == "No depletion" ? "Window will not fill" : "Window fills in \(depletionTime)",
             trend: trendIndicator,
             progress: nil,
             status: nil,

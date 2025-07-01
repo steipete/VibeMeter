@@ -13,9 +13,6 @@ struct EnhancedDashboardView: View {
         MultiProviderDataOrchestrator.shared
     }
     
-    private var velocityTracker: VelocityTracker {
-        orchestrator?.velocityTracker ?? VelocityTracker()
-    }
     
     private var predictionEngine: PredictionEngine {
         orchestrator?.predictionEngine ?? PredictionEngine()
@@ -102,13 +99,7 @@ struct EnhancedDashboardView: View {
                 currencySymbol: currencyData.selectedSymbol
             )
             
-            // Velocity Card
-            if let velocityMetrics = getVelocityMetrics() {
-                KeyMetricsCard.velocity(
-                    velocity: velocityMetrics.info,
-                    recommendation: velocityMetrics.recommendation
-                )
-            }
+            // Removed Velocity Card - redundant with Burn Rate
         }
         .frame(minHeight: 180)
     }
@@ -128,8 +119,7 @@ struct EnhancedDashboardView: View {
                         provider: provider,
                         spendingData: spendingData,
                         currencyData: currencyData,
-                        burnRate: getBurnRateForProvider(provider),
-                        velocity: getVelocityForProvider(provider)
+                        burnRate: getBurnRateForProvider(provider)
                     )
                     .onTapGesture {
                         selectedProvider = provider
@@ -270,25 +260,43 @@ struct EnhancedDashboardView: View {
     }
     
     private func getCurrentUsageMetrics() -> UsageMetrics? {
-        // Get the provider with highest usage percentage
-        let providerUsages = loggedInProviders.compactMap { provider -> (ServiceProvider, Double, Double, Double)? in
-            guard let data = spendingData.getSpendingData(for: provider),
-                  let usage = data.usageData else { return nil }
+        // For Claude, use the 5-hour window calculation
+        if loggedInProviders.contains(.claude),
+           let claudeData = spendingData.getSpendingData(for: .claude),
+           let windowData = claudeData.fiveHourWindow {
             
-            if provider == .claude {
-                // For Claude, currentRequests is already a percentage (0-100)
-                // totalRequests is the actual token count
-                let dailyLimit = 200_000.0 // Claude's daily token limit
-                let tokensUsed = Double(usage.totalRequests ?? 0)
-                let dailyPercentage = (tokensUsed / dailyLimit) * 100
-                return (provider, tokensUsed, dailyLimit, dailyPercentage)
-            } else if let maxRequests = usage.maxRequests, maxRequests > 0 {
-                let current = Double(usage.currentRequests)
-                let max = Double(maxRequests)
-                let percentage = (current / max) * 100
-                return (provider, current, max, percentage)
-            }
-            return nil
+            // Use the window usage percentage directly
+            let percentage = windowData.used
+            let status: KeyMetricsCard.StatusLevel = percentage >= 90 ? .critical : percentage >= 70 ? .warning : .safe
+            
+            // Get plan info
+            let planInfo = autoPlanDetector.detectPlan(for: .claude, currentUsage: Double(windowData.tokensUsed), historicalData: [:])
+            
+            // Calculate when oldest tokens expire (5 hours from oldest entry in window)
+            let oldestExpiry = Date().addingTimeInterval(-5 * 60 * 60)
+            let timeUntilExpiry = max(0, oldestExpiry.addingTimeInterval(5 * 60 * 60).timeIntervalSinceNow)
+            let expiryText = RelativeTimeFormatter.format(timeInterval: timeUntilExpiry)
+            
+            return UsageMetrics(
+                currentUsage: Double(windowData.tokensUsed),
+                limit: Double(windowData.estimatedTokenLimit),
+                plan: planInfo.planType.rawValue,
+                resetTime: "oldest expire in \(expiryText)",
+                status: status
+            )
+        }
+        
+        // Fallback for other providers
+        let providerUsages = loggedInProviders.compactMap { provider -> (ServiceProvider, Double, Double, Double)? in
+            guard provider != .claude,
+                  let data = spendingData.getSpendingData(for: provider),
+                  let usage = data.usageData,
+                  let maxRequests = usage.maxRequests, maxRequests > 0 else { return nil }
+            
+            let current = Double(usage.currentRequests)
+            let max = Double(maxRequests)
+            let percentage = (current / max) * 100
+            return (provider, current, max, percentage)
         }
         
         guard let highest = providerUsages.max(by: { $0.3 < $1.3 }) else {
@@ -344,19 +352,6 @@ struct EnhancedDashboardView: View {
         )
     }
     
-    private struct VelocityMetrics {
-        let info: VelocityTracker.VelocityInfo
-        let recommendation: String?
-    }
-    
-    private func getVelocityMetrics() -> VelocityMetrics? {
-        guard let primaryProvider = getPrimaryProvider() else { return nil }
-        
-        guard let velocity = velocityTracker.calculateVelocity(for: primaryProvider) else { return nil }
-        let recommendation = velocity.recommendation ?? velocityTracker.getRecommendation(for: velocity)
-        
-        return VelocityMetrics(info: velocity, recommendation: recommendation)
-    }
     
     private func getTotalTokensToday() -> Int? {
         // For Claude, return token count
@@ -392,10 +387,6 @@ struct EnhancedDashboardView: View {
         spendingData.getSpendingData(for: provider)?.burnRateInfo?.burnRate
     }
     
-    private func getVelocityForProvider(_ provider: ServiceProvider) -> VelocityTracker.VelocityInfo? {
-        velocityTracker.calculateVelocity(for: provider)
-    }
-    
     private struct PredictionInfo {
         let message: String
         let recommendation: String?
@@ -406,12 +397,22 @@ struct EnhancedDashboardView: View {
     
     private func getPredictions() -> PredictionInfo? {
         guard let primaryProvider = getPrimaryProvider(),
-              let data = spendingData.getSpendingData(for: primaryProvider),
-              let usage = data.usageData else { return nil }
+              let data = spendingData.getSpendingData(for: primaryProvider) else { return nil }
         
-        let currentUsage = primaryProvider == .claude ? Double(usage.totalRequests ?? 0) : Double(usage.currentRequests)
-        let limit = primaryProvider == .claude ? 200_000.0 : Double(usage.maxRequests ?? 1000)
+        let currentUsage: Double
+        let limit: Double
         let burnRate = getBurnRateForProvider(primaryProvider)
+        
+        // Use 5-hour window data for Claude
+        if primaryProvider == .claude, let windowData = data.fiveHourWindow {
+            currentUsage = Double(windowData.tokensUsed)
+            limit = Double(windowData.estimatedTokenLimit)
+        } else if let usage = data.usageData {
+            currentUsage = Double(usage.currentRequests)
+            limit = Double(usage.maxRequests ?? 1000)
+        } else {
+            return nil
+        }
         
         let prediction = predictionEngine.calculatePrediction(
             for: primaryProvider,
@@ -434,9 +435,15 @@ struct EnhancedDashboardView: View {
             color = .green
         }
         
+        // Add account switching suggestion for high usage
+        var recommendation = prediction.recommendation
+        if primaryProvider == .claude && prediction.hoursRemaining < 2 {
+            recommendation = (recommendation ?? "") + " • Consider switching accounts if available"
+        }
+        
         return PredictionInfo(
             message: prediction.depletionText,
-            recommendation: prediction.recommendation,
+            recommendation: recommendation,
             confidence: "\(prediction.confidence) confidence",
             icon: icon,
             color: color
@@ -451,7 +458,6 @@ struct EnhancedProviderRow: View {
     let spendingData: MultiProviderSpendingData
     let currencyData: CurrencyData
     let burnRate: BurnRateCalculator.BurnRate?
-    let velocity: VelocityTracker.VelocityInfo?
     
     @State private var isHovering = false
     
