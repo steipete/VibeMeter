@@ -164,7 +164,7 @@ struct EnhancedDashboardView: View {
                 
                 Text(predictions.confidence)
                     .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(Color.primary.opacity(0.08)))
@@ -275,26 +275,31 @@ struct EnhancedDashboardView: View {
     
     private func getCurrentUsageMetrics() -> UsageMetrics? {
         // Get the provider with highest usage percentage
-        let providerUsages = loggedInProviders.compactMap { provider -> (ServiceProvider, Double, Double)? in
+        let providerUsages = loggedInProviders.compactMap { provider -> (ServiceProvider, Double, Double, Double)? in
             guard let data = spendingData.getSpendingData(for: provider),
                   let usage = data.usageData else { return nil }
             
             if provider == .claude {
-                // For Claude, we have token limits
-                let limit = Double(usage.maxRequests ?? 200_000) * 100 // Convert percentage back to tokens
-                let currentUsage = Double(usage.totalRequests)
-                return (provider, currentUsage, limit)
+                // For Claude, currentRequests is already a percentage (0-100)
+                // totalRequests is the actual token count
+                let dailyLimit = 200_000.0 // Claude's daily token limit
+                let tokensUsed = Double(usage.totalRequests ?? 0)
+                let dailyPercentage = (tokensUsed / dailyLimit) * 100
+                return (provider, tokensUsed, dailyLimit, dailyPercentage)
             } else if let maxRequests = usage.maxRequests, maxRequests > 0 {
-                return (provider, Double(usage.currentRequests), Double(maxRequests))
+                let current = Double(usage.currentRequests)
+                let max = Double(maxRequests)
+                let percentage = (current / max) * 100
+                return (provider, current, max, percentage)
             }
             return nil
         }
         
-        guard let highest = providerUsages.max(by: { ($0.1 / $0.2) < ($1.1 / $1.2) }) else {
+        guard let highest = providerUsages.max(by: { $0.3 < $1.3 }) else {
             return nil
         }
         
-        let percentage = (highest.1 / highest.2) * 100
+        let percentage = highest.3
         let status: KeyMetricsCard.StatusLevel = percentage >= 90 ? .critical : percentage >= 70 ? .warning : .safe
         
         // Get plan info

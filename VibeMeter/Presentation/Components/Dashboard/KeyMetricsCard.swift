@@ -144,7 +144,7 @@ struct KeyMetricsCard: View {
             // Subtitle
             Text(subtitle)
                 .font(.system(size: 10))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
         }
@@ -190,6 +190,9 @@ extension KeyMetricsCard {
         status: StatusLevel
     ) -> KeyMetricsCard {
         let percentage = limit > 0 ? (currentUsage / limit) * 100 : 0
+        let formattedUsage = TokenFormatter.format(Int(currentUsage))
+        let formattedLimit = TokenFormatter.format(Int(limit))
+        
         return KeyMetricsCard(
             icon: "chart.pie.fill",
             iconGradient: LinearGradient(
@@ -197,13 +200,13 @@ extension KeyMetricsCard {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            title: "Current Usage",
+            title: "Daily Limit",
             value: "\(Int(percentage))%",
             subtitle: "\(plan) • Resets \(resetTime)",
             trend: nil,
             progress: percentage / 100,
             status: status,
-            helpText: "Percentage of your daily limit used"
+            helpText: "Daily usage: \(formattedUsage) of \(formattedLimit) tokens (\(Int(percentage))%)"
         )
     }
     
