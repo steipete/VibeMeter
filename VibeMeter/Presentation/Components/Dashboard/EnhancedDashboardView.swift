@@ -158,7 +158,7 @@ struct EnhancedDashboardView: View {
                 
                 Text("Predictions")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.7))
                 
                 Spacer()
                 
@@ -185,7 +185,7 @@ struct EnhancedDashboardView: View {
                 if let recommendation = predictions.recommendation {
                     Text(recommendation)
                         .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.7))
                 }
             }
             .padding(10)
@@ -581,19 +581,6 @@ struct QuickActionsBar: View {
             )
             .foregroundStyle(.blue)
             
-            // Terminal button
-            Button(action: openTerminalView) {
-                Label("Terminal", systemImage: "terminal")
-                    .font(.system(size: 11))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.green.opacity(0.1))
-            )
-            .foregroundStyle(.green)
             
             Spacer()
             
@@ -618,9 +605,6 @@ struct QuickActionsBar: View {
         AnalyticsDashboardWindowController.showWindow()
     }
     
-    private func openTerminalView() {
-        TerminalWindowController.showWindow()
-    }
     
     private func exportData() {
         // TODO: Implement data export

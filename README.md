@@ -312,6 +312,7 @@ Vibe Meter follows clean architecture principles:
 ## 🙏 Acknowledgments
 
 - **Cost Calculation** - Thanks to [ryoppippi/ccusage](https://github.com/ryoppippi/ccusage) for helping with Claude cost calculation logic
+- **UI Inspiration** - Special thanks to [Iamshankhadeep/ccseva](https://github.com/Iamshankhadeep/ccseva) for the enhanced dashboard design inspiration
 
 ## 🔐 Privacy & Security
 
