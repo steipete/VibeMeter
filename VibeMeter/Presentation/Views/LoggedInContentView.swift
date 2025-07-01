@@ -31,10 +31,16 @@ struct LoggedInContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Title bar with settings and close buttons
+            PopoverTitleBar()
+                .padding(.horizontal, 8)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+            
             // Header section - better spacing
             UserHeaderView()
                 .padding(.horizontal, 8)
-                .padding(.top, 12)
+                .padding(.top, 8)
                 .padding(.bottom, 10)
                 .transition(.opacity.combined(with: .move(edge: .top)))
                 .accessibilityElement(children: .contain)

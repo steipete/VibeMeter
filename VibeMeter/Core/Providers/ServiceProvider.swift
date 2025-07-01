@@ -39,7 +39,7 @@ public enum ServiceProvider: String, CaseIterable, Codable, Sendable {
         case .cursor:
             URL(string: "https://www.cursor.com/analytics")!
         case .claude:
-            URL(string: "https://claude.ai/usage")!
+            URL(string: "https://claude.ai")!
         }
     }
 
