@@ -22,6 +22,7 @@ public final class VelocityTracker: @unchecked Sendable {
             case increasing
             case decreasing
             case stable
+            case starting
         }
         
         public var trendEmoji: String {
@@ -29,11 +30,38 @@ public final class VelocityTracker: @unchecked Sendable {
             case .increasing: return "📈"
             case .decreasing: return "📉"
             case .stable: return "➡️"
+            case .starting: return "🆕"
             }
         }
         
+        /// Formatted rate for display
+        public var formattedRate: String {
+            TokenFormatter.formatRate(current)
+        }
+        
+        /// Formatted trend percentage
+        public var formattedTrend: String {
+            if abs(trendPercent) < 1 {
+                return "0%"
+            }
+            let sign = trend == .increasing ? "+" : ""
+            return "\(sign)\(Int(trendPercent))%"
+        }
+        
+        /// Recommendation based on velocity
+        public var recommendation: String? {
+            if isAccelerating {
+                return "Usage rapidly increasing"
+            } else if trend == .increasing && trendPercent > 30 {
+                return "Consider pacing usage"
+            } else if trend == .decreasing && trendPercent < -30 {
+                return "Good usage reduction"
+            }
+            return nil
+        }
+        
         public var description: String {
-            "\(trendEmoji) \(trend.rawValue.capitalized) (\(trendPercent > 0 ? "+" : "")\(Int(trendPercent))%)"
+            "\(trendEmoji) \(trend.rawValue.capitalized) (\(formattedTrend))"
         }
     }
     
@@ -52,6 +80,11 @@ public final class VelocityTracker: @unchecked Sendable {
     private let accelerationThreshold: Double = 50.0 // 50% increase for acceleration
     
     // MARK: - Public Methods
+    
+    /// Get recommendation based on velocity info
+    public func getRecommendation(for velocity: VelocityInfo) -> String? {
+        velocity.recommendation
+    }
     
     /// Add a usage data point
     public func addDataPoint(value: Double, provider: ServiceProvider, timestamp: Date = Date()) {

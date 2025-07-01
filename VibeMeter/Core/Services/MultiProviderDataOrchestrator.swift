@@ -15,6 +15,10 @@ import os.log
 @Observable
 @MainActor
 public final class MultiProviderDataOrchestrator {
+    // MARK: - Shared Instance
+    
+    public static var shared: MultiProviderDataOrchestrator!
+    
     // MARK: - Dependencies
 
     private let providerFactory: ProviderFactory
@@ -31,6 +35,14 @@ public final class MultiProviderDataOrchestrator {
     private let errorHandler: MultiProviderErrorHandler
     private let dataProcessor: MultiProviderDataProcessor
     private let burnRateCalculator = BurnRateCalculator()
+    
+    // New analytics services
+    public let velocityTracker = VelocityTracker()
+    public let predictionEngine = PredictionEngine()
+    public let resetTimeService = ResetTimeService()
+    public let autoPlanDetector = AutoPlanDetector()
+    public let enhancedBurnRateCalculator = EnhancedBurnRateCalculator()
+    public private(set) var realTimeMonitor: RealTimeMonitor?
 
     // MARK: - Data Models
 
@@ -118,6 +130,9 @@ public final class MultiProviderDataOrchestrator {
 
         let providerCount = loginManager.loggedInProviders.count
         logger.info("MultiProviderDataOrchestrator initialized with \(providerCount) logged-in providers")
+        
+        // Initialize real-time monitor after all other initialization
+        self.realTimeMonitor = RealTimeMonitor(orchestrator: self)
 
         // Trigger initial data refresh for providers with existing tokens
         Task {
@@ -263,10 +278,13 @@ public final class MultiProviderDataOrchestrator {
             spendingData: spendingData,
             lastRefreshDates: lastRefreshDates)
         
-        // Update Claude burn rate after data refresh
+        // Update analytics after data refresh
         if provider == .claude {
             await updateClaudeBurnRate()
         }
+        
+        // Update velocity tracking
+        updateVelocityTracking(for: provider)
     }
 
     @MainActor
@@ -482,5 +500,22 @@ public final class MultiProviderDataOrchestrator {
 
         // Default to normal interval (minimum 5 minutes)
         return max(Double(settingsManager.refreshIntervalMinutes * 60), 300)
+    }
+    
+    /// Update velocity tracking for a provider
+    private func updateVelocityTracking(for provider: ServiceProvider) {
+        guard let data = spendingData.getSpendingData(for: provider) else { return }
+        
+        if provider == .claude, let usageData = data.usageData {
+            velocityTracker.addDataPoint(value: Double(usageData.totalRequests), provider: provider)
+        } else if let spending = data.currentSpendingUSD {
+            velocityTracker.addDataPoint(value: spending, provider: provider)
+        }
+        
+        // VelocityTracker calculates velocity based on current usage
+        if let velocity = velocityTracker.calculateVelocity(for: provider) {
+            let formattedRate = TokenFormatter.formatRate(velocity.current)
+            logger.info("\(provider.displayName) velocity: \(formattedRate) (\(velocity.trend.rawValue))")
+        }
     }
 }

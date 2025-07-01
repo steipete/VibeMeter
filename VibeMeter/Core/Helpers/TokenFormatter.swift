@@ -23,6 +23,19 @@ public enum TokenFormatter {
             return "\(tokens / 1_000_000)M"
         }
     }
+    
+    /// Formats token rate (per hour) with k/M suffixes
+    public static func formatRate(_ tokensPerHour: Double) -> String {
+        let tokens = Int(tokensPerHour)
+        
+        if tokensPerHour < 1 {
+            return "0/hr"
+        } else if tokensPerHour < 1000 {
+            return "\(Int(tokensPerHour))/hr"
+        } else {
+            return "\(format(tokens))/hr"
+        }
+    }
 }
 
 // MARK: - Convenience Extensions

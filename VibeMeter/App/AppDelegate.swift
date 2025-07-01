@@ -146,6 +146,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             spendingData: spendingData,
             userSessionData: userSession,
             currencyData: currencyData)
+        
+        // Set the shared instance
+        MultiProviderDataOrchestrator.shared = multiProviderOrchestrator
     }
 
     private func setupStatusBarController(orchestrator: MultiProviderDataOrchestrator, isRunningInTests: Bool) {

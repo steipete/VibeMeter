@@ -400,6 +400,7 @@ struct VelocityGauge: View {
         case .increasing: return .orange
         case .decreasing: return .green
         case .stable: return .blue
+        case .starting: return .gray
         }
     }
 }

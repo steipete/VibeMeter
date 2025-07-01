@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Terminal-style UI components inspired by ccseva
 struct TerminalStyleView: View {
-    @StateObject private var viewModel = TerminalStyleViewModel(provider: .cursor)
+    @StateObject private var viewModel = TerminalStyleViewModel(provider: .claude)
     @State private var commandInput = ""
     @FocusState private var isInputFocused: Bool
     

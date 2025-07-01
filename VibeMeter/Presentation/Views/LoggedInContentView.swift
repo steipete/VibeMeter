@@ -44,51 +44,15 @@ struct LoggedInContentView: View {
             Divider()
                 .overlay(Color.dividerOverlay(for: colorScheme))
 
-            // Content section - improved spacing
-            VStack(spacing: 6) {
-                CostTableView(showTimestamps: false)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
-            .transition(.opacity.combined(with: .scale(scale: 0.98)))
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Spending dashboard")
-            .accessibilityHint("Shows total spending, provider breakdown, and spending limits")
-            .animation(.easeInOut(duration: 0.2), value: spendingData.providersWithData.count)
+            // Enhanced dashboard content
+            EnhancedDashboardView()
+                .frame(maxHeight: 500)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Enhanced spending dashboard")
+                .accessibilityHint("Shows key metrics, provider breakdown, predictions, and spending limits")
+                .animation(.easeInOut(duration: 0.2), value: spendingData.providersWithData.count)
 
-            // Last updated section at bottom - always reserve space to prevent layout jump
-            VStack(spacing: 2) {
-                HStack {
-                    if let lastUpdate = mostRecentRefresh {
-                        Text(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .accessibilityLabel(
-                                "Last updated \(RelativeTimeFormatter.string(from: lastUpdate, style: .withPrefix))")
-                    } else {
-                        // Show shimmer placeholder to reserve space and prevent layout jump
-                        ShimmerShapes.text(width: 120, height: 11, cornerRadius: 2)
-                            .accessibilityLabel("Loading update timestamp")
-                    }
-
-                    Spacer()
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-            }
-
-            // Action buttons footer - more compact
-            VStack(spacing: 0) {
-                Divider()
-                    .overlay(Color.secondaryDivider(for: colorScheme))
-
-                ActionButtonsView()
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 10)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Action buttons")
-                    .accessibilityHint("Contains refresh, settings, and quit buttons")
-            }
         }
     }
 }

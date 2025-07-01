@@ -35,6 +35,21 @@ public final class BurnRateCalculator: @unchecked Sendable {
         public let ratePerHour: Double
         public let metric: MetricType
         public let velocityIndicator: VelocityIndicator
+        public let trend: BurnRateTrend
+        
+        public init(ratePerMinute: Double, ratePerHour: Double, metric: MetricType, 
+                    velocityIndicator: VelocityIndicator, trend: BurnRateTrend = .steady(percentageChange: 0)) {
+            self.ratePerMinute = ratePerMinute
+            self.ratePerHour = ratePerHour
+            self.metric = metric
+            self.velocityIndicator = velocityIndicator
+            self.trend = trend
+        }
+        
+        /// Token burn rate per hour (for Claude)
+        public var tokensPerHour: Double {
+            metric == .tokens ? ratePerHour : 0
+        }
         
         public var formattedRate: String {
             switch metric {
@@ -45,6 +60,22 @@ public final class BurnRateCalculator: @unchecked Sendable {
                 return String(format: "$%.2f/hour", dollarsPerHour)
             case .requests:
                 return "\(Int(ratePerHour)) requests/hour"
+            }
+        }
+        
+        /// Burn rate trend analysis
+        public enum BurnRateTrend: Sendable, Codable {
+            case accelerating(percentageChange: Double)
+            case steady(percentageChange: Double)
+            case decelerating(percentageChange: Double)
+            case erratic(percentageChange: Double)
+            
+            public var percentageChange: Double {
+                switch self {
+                case .accelerating(let change), .steady(let change), 
+                     .decelerating(let change), .erratic(let change):
+                    return change
+                }
             }
         }
     }
@@ -118,7 +149,8 @@ public final class BurnRateCalculator: @unchecked Sendable {
             ratePerMinute: ratePerMinute,
             ratePerHour: ratePerHour,
             metric: metric,
-            velocityIndicator: velocityIndicator
+            velocityIndicator: velocityIndicator,
+            trend: .steady(percentageChange: 0)
         )
     }
     
