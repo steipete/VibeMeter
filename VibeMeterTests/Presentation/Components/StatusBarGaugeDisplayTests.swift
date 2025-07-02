@@ -1,7 +1,6 @@
 import XCTest
 @testable import VibeMeter
 
-@MainActor
 final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Properties
@@ -16,12 +15,12 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Setup
     
+    @MainActor
     override func setUp() {
         super.setUp()
         
-        MainActor.assumeIsolated {
-            // Create mock dependencies
-            settingsManager = MockSettingsManager()
+        // Create mock dependencies
+        settingsManager = MockSettingsManager()
         userSession = MultiProviderUserSessionData()
         spendingData = MultiProviderSpendingData()
         currencyData = CurrencyData()
@@ -53,7 +52,6 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
                 currencyData: currencyData,
                 orchestrator: orchestrator
             )
-        }
     }
     
     // MARK: - Claude Quota Display Tests
