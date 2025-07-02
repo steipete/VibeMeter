@@ -62,7 +62,7 @@ extension ClaudeUsageReportView {
             }
             .width(min: 80, ideal: 100)
         } rows: {
-            ForEach(sortedSummaries) { summary in
+            ForEach(cachedSummaries) { summary in
                 TableRow(summary)
             }
         }
@@ -135,7 +135,7 @@ extension ClaudeUsageReportView {
             }
             .width(min: 100, ideal: 120)
         } rows: {
-            ForEach(sortedProjectSummaries) { summary in
+            ForEach(cachedProjectSummaries) { summary in
                 TableRow(summary)
             }
         }
@@ -249,7 +249,7 @@ extension ClaudeUsageReportView {
                 .frame(maxWidth: 300)
 
             Button("Retry") {
-                refreshData()
+                dataLoader.loadData(forceRefresh: true)
             }
             .buttonStyle(.borderedProminent)
             Spacer()
@@ -307,92 +307,38 @@ extension ClaudeUsageReportView {
 // MARK: - Data Processing
 
 extension ClaudeUsageReportView {
-    var filteredDailyUsage: [Date: [ClaudeLogEntry]] {
-        guard selectedProject != "All Projects" else {
-            return dataLoader.dailyUsage
-        }
-
-        var filtered: [Date: [ClaudeLogEntry]] = [:]
-        for (date, entries) in dataLoader.dailyUsage {
-            let projectEntries = entries.filter { $0.projectName == selectedProject }
-            if !projectEntries.isEmpty {
-                filtered[date] = projectEntries
-            }
-        }
-        return filtered
-    }
-
-    var sortedDays: [Date] {
-        filteredDailyUsage.keys.sorted(by: >)
-    }
-
-    var summaries: [DailyUsageSummary] {
-        sortedDays.compactMap { date in
-            guard let entries = filteredDailyUsage[date] else { return nil }
-            return DailyUsageSummary(date: date, entries: entries, costStrategy: selectedCostStrategy)
-        }
-    }
-
-    var sortedSummaries: [DailyUsageSummary] {
-        summaries.sorted(using: sortOrder)
-    }
-
-    // Project summaries for "By Project" view
-    var projectSummaries: [ProjectUsageSummary] {
-        // Filter entries by date range
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: dateRangeStart)
-        let endOfDay = calendar.startOfDay(for: dateRangeEnd).addingTimeInterval(24 * 60 * 60)
-
-        let filteredEntries = dataLoader.dailyUsage.flatMap { date, entries -> [ClaudeLogEntry] in
-            guard date >= startOfDay, date < endOfDay else { return [] }
-            return entries
-        }
-
-        // Group by project
-        let entriesByProject = Dictionary(grouping: filteredEntries) { entry in
-            entry.projectName ?? "Unknown"
-        }
-
-        // Create summaries
-        return entriesByProject.map { projectName, entries in
-            ProjectUsageSummary(projectName: projectName, entries: entries, costStrategy: selectedCostStrategy)
-        }
-    }
-
-    var sortedProjectSummaries: [ProjectUsageSummary] {
-        projectSummaries.sorted(using: projectSortOrder)
-    }
+    // Note: Data processing has been moved to the main view file
+    // to support proper debouncing and caching of computed values
 
     var totalInputTokens: Int {
         if viewMode == .daily {
-            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.inputTokens }
+            cachedSummaries.reduce(0) { $0 + $1.inputTokens }
         } else {
-            projectSummaries.reduce(0) { $0 + $1.inputTokens }
+            cachedProjectSummaries.reduce(0) { $0 + $1.inputTokens }
         }
     }
 
     var totalOutputTokens: Int {
         if viewMode == .daily {
-            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + $1.outputTokens }
+            cachedSummaries.reduce(0) { $0 + $1.outputTokens }
         } else {
-            projectSummaries.reduce(0) { $0 + $1.outputTokens }
+            cachedProjectSummaries.reduce(0) { $0 + $1.outputTokens }
         }
     }
 
     var totalCacheCreationTokens: Int {
         if viewMode == .daily {
-            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheCreationTokens ?? 0) }
+            cachedSummaries.reduce(0) { $0 + $1.cacheCreationTokens }
         } else {
-            projectSummaries.reduce(0) { $0 + $1.cacheCreationTokens }
+            cachedProjectSummaries.reduce(0) { $0 + $1.cacheCreationTokens }
         }
     }
 
     var totalCacheReadTokens: Int {
         if viewMode == .daily {
-            filteredDailyUsage.values.flatMap(\.self).reduce(0) { $0 + ($1.cacheReadTokens ?? 0) }
+            cachedSummaries.reduce(0) { $0 + $1.cacheReadTokens }
         } else {
-            projectSummaries.reduce(0) { $0 + $1.cacheReadTokens }
+            cachedProjectSummaries.reduce(0) { $0 + $1.cacheReadTokens }
         }
     }
 
@@ -402,11 +348,9 @@ extension ClaudeUsageReportView {
 
     var totalCost: Double {
         if viewMode == .daily {
-            // Calculate costs based on the selected strategy
-            filteredDailyUsage.values.flatMap(\.self)
-                .reduce(0) { $0 + $1.calculateCost(strategy: selectedCostStrategy) }
+            cachedSummaries.reduce(0) { $0 + $1.cost }
         } else {
-            projectSummaries.reduce(0) { $0 + $1.cost }
+            cachedProjectSummaries.reduce(0) { $0 + $1.cost }
         }
     }
 }
@@ -429,11 +373,11 @@ extension ClaudeUsageReportView {
         .frame(width: 180)
 
         // Project filter (only in By Day mode)
-        if viewMode == .daily, !dataLoader.availableProjects.isEmpty {
+        if viewMode == .daily, !availableProjects.isEmpty {
             Picker(selection: $selectedProject) {
                 Text("All Projects").tag("All Projects")
                 Divider()
-                ForEach(dataLoader.availableProjects, id: \.self) { project in
+                ForEach(availableProjects, id: \.self) { project in
                     Text(project).tag(project)
                 }
             } label: {
@@ -482,7 +426,9 @@ extension ClaudeUsageReportView {
         .frame(width: 250)
 
         // Refresh button
-        Button(action: refreshData) {
+        Button {
+            dataLoader.loadData(forceRefresh: true)
+        } label: {
             Label("Refresh", systemImage: "arrow.clockwise")
         }
         .help("Refresh usage data")
