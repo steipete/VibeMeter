@@ -16,8 +16,8 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     // MARK: - Setup
     
     @MainActor
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         
         // Create mock dependencies
         settingsManager = MockSettingsManager()

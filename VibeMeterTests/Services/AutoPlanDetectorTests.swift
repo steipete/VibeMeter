@@ -273,7 +273,7 @@ struct AutoPlanDetectorTests {
         #expect(plan.confidenceIndicator == expectedIndicator)
     }
     
-    @Test("Plan colors", arguments: AutoPlanDetector.DetectedPlan.PlanType.allCases)
+    @Test("Plan colors", arguments: [AutoPlanDetector.DetectedPlan.PlanType.free, .basic, .pro, .team, .enterprise, .unknown])
     func planColors(planType: AutoPlanDetector.DetectedPlan.PlanType) {
         // Given
         let plan = AutoPlanDetector.DetectedPlan(
@@ -374,7 +374,26 @@ struct AutoPlanDetectorIntegrationTests {
     func detectAllPlans() async {
         // Given
         let detector = AutoPlanDetector()
-        let orchestrator = MultiProviderDataOrchestrator()
+        // Create test dependencies
+        let settingsManager = MockSettingsManager()
+        let exchangeRateManager = ExchangeRateManagerMock()
+        let notificationManager = NotificationManagerMock()
+        let providerFactory = ProviderFactory(settingsManager: settingsManager)
+        let loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
+        let spendingData = MultiProviderSpendingData()
+        let userSessionData = MultiProviderUserSessionData()
+        let currencyData = CurrencyData()
+        
+        let orchestrator = MultiProviderDataOrchestrator(
+            providerFactory: providerFactory,
+            settingsManager: settingsManager,
+            exchangeRateManager: exchangeRateManager,
+            notificationManager: notificationManager,
+            loginManager: loginManager,
+            spendingData: spendingData,
+            userSessionData: userSessionData,
+            currencyData: currencyData
+        )
         
         // When
         let plans = await detector.detectAllPlans(orchestrator: orchestrator)

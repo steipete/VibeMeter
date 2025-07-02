@@ -72,10 +72,13 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         // Measure performance separately
         measure {
             let expectation = self.expectation(description: "Parse small log")
+            let processor = logProcessor!
             
             Task { @Sendable in
-                let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
-                XCTAssertFalse(dailyUsage.isEmpty)
+                let (dailyUsage, _) = await processor.processLogFiles([logFile], usingCache: [:])
+                if dailyUsage.isEmpty {
+                    XCTFail("Daily usage should not be empty")
+                }
                 expectation.fulfill()
             }
             
@@ -90,10 +93,13 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         
         measure {
             let expectation = self.expectation(description: "Parse medium log")
+            let processor = logProcessor!
             
             Task { @Sendable in
-                let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
-                XCTAssertFalse(dailyUsage.isEmpty)
+                let (dailyUsage, _) = await processor.processLogFiles([logFile], usingCache: [:])
+                if dailyUsage.isEmpty {
+                    XCTFail("Daily usage should not be empty")
+                }
                 expectation.fulfill()
             }
             
@@ -108,10 +114,13 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         
         measure {
             let expectation = self.expectation(description: "Parse large log")
+            let processor = logProcessor!
             
             Task { @Sendable in
-                let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
-                XCTAssertFalse(dailyUsage.isEmpty)
+                let (dailyUsage, _) = await processor.processLogFiles([logFile], usingCache: [:])
+                if dailyUsage.isEmpty {
+                    XCTFail("Daily usage should not be empty")
+                }
                 expectation.fulfill()
             }
             
@@ -132,10 +141,13 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         measure {
             let expectation = self.expectation(description: "Parse multiple logs")
             let files = logFiles // Create local copy for Sendable closure
+            let processor = logProcessor!
             
             Task { @Sendable in
-                let (dailyUsage, _) = await logProcessor.processLogFiles(files, usingCache: [:])
-                XCTAssertFalse(dailyUsage.isEmpty)
+                let (dailyUsage, _) = await processor.processLogFiles(files, usingCache: [:])
+                if dailyUsage.isEmpty {
+                    XCTFail("Daily usage should not be empty")
+                }
                 expectation.fulfill()
             }
             
@@ -158,10 +170,14 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         // Measure second parse with cache
         measure {
             let expectation = self.expectation(description: "Parse with cache")
+            let processor = logProcessor!
+            let cache = hashCache
             
             Task { @Sendable in
-                let (dailyUsage, _) = await logProcessor.processLogFiles([logFile1, logFile2], usingCache: hashCache)
-                XCTAssertFalse(dailyUsage.isEmpty)
+                let (dailyUsage, _) = await processor.processLogFiles([logFile1, logFile2], usingCache: cache)
+                if dailyUsage.isEmpty {
+                    XCTFail("Daily usage should not be empty")
+                }
                 expectation.fulfill()
             }
             
