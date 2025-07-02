@@ -123,8 +123,8 @@ echo -e "${GREEN}✅ Pre-flight check passed!${NC}"
 echo ""
 
 # Get version info
-MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"MARKETING_VERSION": "\(.*\)".*/\1/')
-BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/Project.swift" | sed 's/.*"CURRENT_PROJECT_VERSION": "\(.*\)".*/\1/')
+MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*MARKETING_VERSION = \(.*\)/\1/')
+BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*CURRENT_PROJECT_VERSION = \(.*\)/\1/')
 
 # Determine release version
 if [[ "$RELEASE_TYPE" == "stable" ]]; then
