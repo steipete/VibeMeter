@@ -165,7 +165,7 @@ struct GaugeCalculationTests {
 
         // Enable Claude and set to quota mode
         userSession.handleLoginSuccess(for: ServiceProvider.claude, email: "test@claude.ai", teamName: "Claude Team")
-        settingsManager.displaySettingsManager.gaugeRepresentation = GaugeRepresentation.claudeQuota
+        settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
 
         // Mock Claude quota data
         let logManager = ClaudeLogManagerMock()

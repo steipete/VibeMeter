@@ -160,7 +160,7 @@ struct RealTimeMonitorTests {
         // When - Emit events for different providers
         sut.eventStream.sink { event in
             // This will trigger the subscription
-        }.store(in: &cancellables)
+        } // Local subscription, no need to store
         
         // Then - Only Claude events should be received
         for event in receivedEvents {
@@ -194,7 +194,7 @@ struct RealTimeMonitorTests {
         for alert in alerts {
             #expect(!alert.message.isEmpty)
             #expect(alert.timestamp <= Date())
-            #expect(alert.provider != nil)
+            // Provider is non-optional, always has a value
         }
     }
     
@@ -263,7 +263,7 @@ struct RealTimeMonitorTests {
         }
         
         // Then - Verify subscription works
-        #expect(cancellable != nil)
+        // AnyCancellable is always non-nil
         
         // Cleanup
         cancellable.cancel()
@@ -324,9 +324,8 @@ struct RealTimeMonitorTests {
         #expect(sut.lastUpdate > Date.distantPast)
         
         // Check event stream
-        var eventReceived = false
         let cancellable = sut.eventStream.sink { _ in
-            eventReceived = true
+            // Event received
         }
         
         await sut.forceUpdate()
@@ -380,7 +379,7 @@ struct RealTimeStatsTests {
         #expect(alert.type == .usage)
         #expect(alert.message.contains("90%"))
         #expect(alert.severity == .critical)
-        #expect(alert.id != nil)
+        // UUID is always non-nil
     }
 }
 

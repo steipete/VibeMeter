@@ -156,7 +156,7 @@ struct PredictionEngineTests {
         )
         
         // Then
-        let resetHour = calendar.component(.hour, from: prediction.resetTime)
+        _ = calendar.component(.hour, from: prediction.resetTime)
         // Claude resets every 5 hours, verify it's within expected range
         #expect(prediction.resetTime > now)
     }
@@ -179,7 +179,7 @@ struct PredictionEngineTests {
         velocityTracker.addDataPoint(value: 600, provider: provider, timestamp: Date().addingTimeInterval(-3600))
         velocityTracker.addDataPoint(value: 550, provider: provider, timestamp: Date().addingTimeInterval(-7200))
         
-        let velocity = velocityTracker.calculateVelocity(for: provider)
+        _ = velocityTracker.calculateVelocity(for: provider)
         
         // When
         let prediction1 = sut.calculatePrediction(

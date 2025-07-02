@@ -180,12 +180,12 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     @MainActor
     func testGaugeStateTransitions() async {
         // Test loading state
-        orchestrator.isRefreshing[.claude] = true
+        // Note: isRefreshing is read-only, we cannot set it directly in tests
+        // The orchestrator manages this state internally during refresh operations
         statusBarController.updateStatusItemDisplay()
         // Would verify loading animation in actual UI
         
         // Test data state
-        orchestrator.isRefreshing[.claude] = false
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         let usageData = ProviderUsageData(
@@ -221,15 +221,14 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         ]
         
         for testCase in testCases {
-            let claudeData = ProviderSpendingData(provider: .claude)
-            claudeData.updateUsageData(ProviderUsageData(
+            let usageData = ProviderUsageData(
                 currentRequests: testCase.current,
                 totalRequests: testCase.current * 1000,
                 maxRequests: 100,
                 startOfMonth: Date().startOfMonth,
                 provider: .claude
-            ))
-            spendingData.updateProviderData(claudeData)
+            )
+            spendingData.updateUsage(for: .claude, from: usageData)
             
             // Use reflection to test private method
             let mirror = Mirror(reflecting: statusBarController)
@@ -249,26 +248,25 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Initial state
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let initialUsageData = ProviderUsageData(
             currentRequests: 20,
             totalRequests: 40_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: initialUsageData)
         statusBarController.updateStatusItemDisplay()
         
         // Simulate usage increase
-        claudeData.updateUsageData(ProviderUsageData(
+        let updatedUsageData = ProviderUsageData(
             currentRequests: 35,
             totalRequests: 70_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: updatedUsageData)
         statusBarController.updateStatusItemDisplay()
         
         // Verify update occurred
