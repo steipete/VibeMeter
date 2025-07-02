@@ -1,6 +1,7 @@
 import XCTest
 @testable import VibeMeter
 
+@MainActor
 final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Properties
@@ -15,12 +16,12 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Setup
     
-    @MainActor
     override func setUp() {
         super.setUp()
         
-        // Create mock dependencies
-        settingsManager = MockSettingsManager()
+        MainActor.assumeIsolated {
+            // Create mock dependencies
+            settingsManager = MockSettingsManager()
         userSession = MultiProviderUserSessionData()
         spendingData = MultiProviderSpendingData()
         currencyData = CurrencyData()
@@ -44,14 +45,15 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
             currencyData: currencyData
         )
         
-        statusBarController = StatusBarController(
-            settingsManager: settingsManager,
-            userSession: userSession,
-            loginManager: loginManager,
-            spendingData: spendingData,
-            currencyData: currencyData,
-            orchestrator: orchestrator
-        )
+            statusBarController = StatusBarController(
+                settingsManager: settingsManager,
+                userSession: userSession,
+                loginManager: loginManager,
+                spendingData: spendingData,
+                currencyData: currencyData,
+                orchestrator: orchestrator
+            )
+        }
     }
     
     // MARK: - Claude Quota Display Tests
@@ -231,7 +233,7 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
             spendingData.updateUsage(for: .claude, from: usageData)
             
             // Use reflection to test private method
-            let mirror = Mirror(reflecting: statusBarController)
+            let mirror = Mirror(reflecting: statusBarController!)
             if let calculateMethod = mirror.children.first(where: { $0.label == "calculateClaudeQuotaPercentage" }) {
                 // In real tests, we'd verify the gauge value through the UI
                 XCTAssertNotNil(calculateMethod)
