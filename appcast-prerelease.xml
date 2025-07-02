@@ -6,62 +6,100 @@
         <description>VibeMeter pre-release and beta updates feed</description>
         <language>en</language>
         <item>
-            <title>VibeMeter 2.0.0-beta.1</title>
-            <link>https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.zip</link>
-            <sparkle:version>200</sparkle:version>
-            <sparkle:shortVersionString>2.0.0-beta.1</sparkle:shortVersionString>
+            <title>VibeMeter 2.0.0-beta.3</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.3/VibeMeter-2.0.0-beta.3.dmg</link>
+            <sparkle:version>203</sparkle:version>
+            <sparkle:shortVersionString>2.0.0-beta.3</sparkle:shortVersionString>
             <description><![CDATA[
-                <h2>VibeMeter 2.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><h3>🚀 New Features</h3>
+                <h2>VibeMeter 2.0.0-beta.3</h2><p><strong>Pre-release version</strong></p><div><h3>🎯 Major Features</h3>
 <ul>
-<li><strong>Claude AI Support</strong> - Added comprehensive Claude usage tracking via local log file analysis</li>
-<li><strong>Dual-Mode Menu Bar Gauge</strong> - Toggle between total spending and Claude 5-hour window quota display</li>
-<li><strong>5-Hour Window Tracking</strong> - Real-time monitoring of Claude's rolling quota with visual progress bar</li>
-<li><strong>Token Counting</strong> - Integrated Tiktoken library with o200k_base encoding for accurate token calculation</li>
-<li><strong>Daily Usage Breakdown</strong> - New detailed view showing Claude token usage per day with cost calculation</li>
-<li><strong>No-Login Authentication</strong> - Claude integration works without login, using secure folder access instead</li>
-<li><strong>Claude Subscription Tiers</strong> - Added support for Free, Pro ($20), Max 5× ($100), and Max 20× ($200) tiers</li>
-<li><strong>Automatic Re-authentication</strong> - Cursor sessions now automatically re-authenticate when cookies expire</li>
-<li><strong>Official Claude Icon</strong> - Extracted and integrated the official Claude app icon for better recognition</li>
-<li><strong>Login Consent Flow</strong> - New consent dialog explains credential handling before Cursor login</li>
+<li><strong>Enhanced Dashboard with Real-time Analytics</strong> - Completely redesigned dashboard for Claude's 5-hour window system with key metrics cards</li>
+<li><strong>Multi-Account Detection</strong> - VibeMeter now detects and tracks usage across multiple Claude accounts with consolidated data</li>
+<li><strong>Advanced Analytics Services</strong> - New burn rate calculator, velocity tracker, and prediction engine for usage forecasting</li>
+<li><strong>Permanent Log Caching</strong> - Historical Claude logs are now cached permanently, dramatically improving startup performance</li>
+<li><strong>Quick Access to Usage Reports</strong> - Direct navigation to Claude token usage report from the dashboard</li>
 </ul>
 <h3>🎨 UI Improvements</h3>
 <ul>
-<li><strong>ClaudeQuotaView</strong> - Dedicated 5-hour window progress display in the popover</li>
-<li><strong>ClaudeDetailView</strong> - Table view with daily token usage breakdown and costs</li>
-<li><strong>Gauge Representation Setting</strong> - New toggle in settings to switch between spending/quota display</li>
-<li><strong>Claude Account Type Setting</strong> - Select subscription tier for accurate quota calculations</li>
-<li><strong>Provider Configuration</strong> - Login/Grant Access buttons now always visible with auto-enable on click</li>
-<li><strong>Settings Navigation</strong> - Configure Providers button opens directly to Providers tab</li>
-<li><strong>Menu Bar Highlight</strong> - Button highlight state now properly syncs with popover visibility</li>
-<li><strong>Improved Provider Dialog</strong> - Larger dialog (600×700) with better layout and removed logout button</li>
+<li><strong>Fixed Dark Mode Visibility</strong> - Improved text contrast and readability across all themes</li>
+<li><strong>Improved Dashboard Layout</strong> - Resolved spacing issues preventing squished or overly spaced content</li>
+<li><strong>Simplified Quick Actions Bar</strong> - Streamlined with icon-only settings button for cleaner interface</li>
+<li><strong>Immediate UI Display</strong> - Interface shows instantly without waiting for data to load</li>
+<li><strong>Special Thanks Section</strong> - Added acknowledgments in the UI</li>
 </ul>
 <h3>🔧 Technical Improvements</h3>
 <ul>
-<li><strong>Refactored ClaudeLogManager</strong> - Made testable with dependency injection and protocol-based design</li>
-<li><strong>Comprehensive Test Suite</strong> - Added extensive tests for Claude provider functionality with mocks</li>
-<li><strong>Sandbox Security</strong> - Implemented security-scoped bookmarks for safe folder access</li>
-<li><strong>Protocol-Based Architecture</strong> - ClaudeLogManagerProtocol enables better testing and flexibility</li>
-<li><strong>Folder Access Validation</strong> - Validates home directory selection and cleans up invalid bookmarks</li>
-<li><strong>Credential Storage</strong> - Secure storage of Cursor credentials in macOS Keychain for auto-auth</li>
-<li><strong>CAPTCHA Detection</strong> - Automatic detection and user notification when manual intervention needed</li>
-<li><strong>WebView Preloading</strong> - Login page preloads in background while consent dialog is shown</li>
-<li><strong>Parallel Log Processing</strong> - Claude log files now process in parallel across all CPU cores for faster performance</li>
+<li><strong>Migrated to Swift Package Manager</strong> - Replaced Tuist with SPM for simplified build configuration</li>
+<li><strong>Enhanced Test Suite</strong> - Fixed all compilation errors and improved actor isolation for Swift 6</li>
+<li><strong>90-Day Cache Cleanup</strong> - Automatic cleanup of old cached logs to manage storage efficiently</li>
+<li><strong>File Hash Validation</strong> - Ensures cache integrity with cryptographic verification</li>
 </ul>
 <h3>🐛 Bug Fixes</h3>
 <ul>
-<li><strong>Fixed Claude initialization race condition</strong> - Claude now properly initializes before data refresh</li>
-<li><strong>Fixed provider error messages</strong> - Shortened error messages to prevent UI truncation</li>
-<li><strong>Fixed directory picker</strong> - Now pre-selects actual home directory instead of sandboxed path</li>
-<li><strong>Fixed Claude directory validation</strong> - Properly handles sandboxed environments and accepts any directory containing .claude/projects</li>
+<li><strong>Fixed AutoPlanDetector Range Error</strong> - Properly handles empty history without crashing</li>
+<li><strong>Fixed Build Errors</strong> - Resolved ClaudeUsageReportSubviews and async Task wrapping issues</li>
+<li><strong>Fixed Claude Usage URLs</strong> - Removed references to non-existent URLs</li>
+<li><strong>Improved 5-Hour Window Accuracy</strong> - Better alignment with Claude's actual reset schedule</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#200---2025-06-12">View full changelog</a></p></div>
+<h3>🗑️ Removed Features</h3>
+<ul>
+<li><strong>Analytics Dashboard</strong> - Consolidated into the main enhanced dashboard for streamlined experience</li>
+<li><strong>Sandboxing</strong> - Temporarily disabled app sandboxing for improved functionality</li>
+</ul>
+<h3>📝 Notes</h3>
+<ul>
+<li>This beta includes significant architectural improvements and performance optimizations</li>
+<li>Multi-account support provides better visibility for users with multiple Claude accounts</li>
+<li>The new caching system significantly improves app launch time for heavy users</li>
+</ul>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#200-beta3-20250703">View full changelog</a></p></div>
             ]]></description>
-            <pubDate>Thu, 12 Jun 2025 14:35:00 -0700</pubDate>
+            <pubDate>Wed, 02 Jul 2025 23:49:45 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.3/VibeMeter-2.0.0-beta.3.dmg"
+                length="7860282"
+                type="application/octet-stream"
+                sparkle:edSignature="g/dZ+XEocW6YTNW9lJhHUIZ6T/H96y0HpjeEcBydk78svU/TB8aIIvW3raZOKFsOETVFP1hleviDrEPDddN4CA=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
+            <title>VibeMeter 2.0.0-beta.2</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.2/VibeMeter-2.0.0-beta.2.dmg</link>
+            <sparkle:version>201</sparkle:version>
+            <sparkle:shortVersionString>2.0.0-beta.2</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 2.0.0-beta.2</h2><p><strong>Pre-release version</strong></p><div><h2>VibeMeter 2.0.0-beta.2</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
+            ]]></description>
+            <pubDate>Sun, 15 Jun 2025 20:52:52 +0100</pubDate>
+            <enclosure 
+                url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.2/VibeMeter-2.0.0-beta.2.dmg"
+                length="8676541"
+                type="application/octet-stream"
+                sparkle:edSignature="6yb2htMWDSTo9JyV03Oq5FfNVuaAu93c0MQTU3cvq2p/ph6f2qAb3QA2pP/PH3NFtKMYI7e82IokfB2ehdQYCw=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+        </item>
+        <item>
+            <title>VibeMeter 2.0.0-beta.1</title>
+            <link>https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.dmg</link>
+            <sparkle:version>200</sparkle:version>
+            <sparkle:shortVersionString>2.0.0-beta.1</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>VibeMeter 2.0.0-beta.1</h2><p><strong>Pre-release version</strong></p><div><h2>VibeMeter 2.0.0-beta.1</h2>
+<p>Latest version of VibeMeter with new features and improvements.</p>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md">View full changelog</a></p></div>
+            ]]></description>
+            <pubDate>Thu, 12 Jun 2025 12:35:56 +0100</pubDate>
             <enclosure 
                 url="https://github.com/steipete/VibeMeter/releases/download/v2.0.0-beta.1/VibeMeter-2.0.0-beta.1.dmg"
                 length="8441306"
                 type="application/octet-stream"
-                sparkle:edSignature="bGn3PyiZ6OHv4STPcaLa8jPFoIP/vb1wHQhE5vyi18pl4EpyHtqSy5rYzP1WkLEoThPiRd5Ee3mN+riDaMc2AQ==" />
+                sparkle:edSignature="bGn3PyiZ6OHv4STPcaLa8jPFoIP/vb1wHQhE5vyi18pl4EpyHtqSy5rYzP1WkLEoThPiRd5Ee3mN+riDaMc2AQ=="
+            />
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
         </item>
         <item>
             <title>VibeMeter 1.1.0-beta.1</title>
@@ -98,7 +136,7 @@
 <li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
 <li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-beta1-20250610">View full changelog</a></p></div>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-beta1-20250703">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 01:14:25 +0100</pubDate>
             <enclosure 
@@ -152,7 +190,7 @@
 <ul>
 <li>Added link to code signing guide in scripts README</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta7-20250610">View full changelog</a></p></div>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta7-20250703">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 21:44:22 +0100</pubDate>
             <enclosure 
@@ -263,7 +301,7 @@
 <li>Added comprehensive release checklist</li>
 <li>Improved troubleshooting guides</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta2-20250610">View full changelog</a></p></div>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#100-beta2-20250703">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Thu, 05 Jun 2025 10:59:00 +0100</pubDate>
             <enclosure 
@@ -328,7 +366,7 @@
 <li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
 <li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250610">View full changelog</a></p></div>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250703">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 02:05:44 +0100</pubDate>
             <enclosure 

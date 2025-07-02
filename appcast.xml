@@ -40,7 +40,7 @@
 <li><strong>Swift Concurrency compliance</strong> - Added proper <code>@MainActor</code> annotations throughout the codebase</li>
 <li><strong>Code consistency</strong> - Unified gauge calculation logic across StatusBarController and StatusBarDisplayManager</li>
 </ul>
-<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250610">View full changelog</a></p></div>
+<p><a href="https://github.com/steipete/VibeMeter/blob/main/CHANGELOG.md#110-20250703">View full changelog</a></p></div>
             ]]></description>
             <pubDate>Tue, 10 Jun 2025 02:05:44 +0100</pubDate>
             <enclosure 
