@@ -26,7 +26,7 @@
 # DEPENDENCIES:
 #   - git (repository management)
 #   - gh (GitHub CLI)
-#   - tuist (project generation)
+#   - Xcode project existence (SPM-based)
 #   - sign_update (Sparkle EdDSA signing)
 #   - xcbeautify (optional, build output formatting)
 #   - security (keychain access for certificates)
@@ -114,8 +114,10 @@ echo "   Marketing Version: $MARKETING_VERSION"
 echo "   Build Number: $BUILD_NUMBER"
 
 # Check for Info.plist overrides
-if grep "CFBundleShortVersionString" "$PROJECT_ROOT/VibeMeter/Info.plist" | grep -v "MARKETING_VERSION" | grep -q .; then
-    check_fail "Info.plist has version overrides - remove them"
+# Extract the value for CFBundleShortVersionString
+VERSION_VALUE=$(xmllint --xpath "string(//key[text()='CFBundleShortVersionString']/following-sibling::string[1])" "$PROJECT_ROOT/VibeMeter/Info.plist" 2>/dev/null || true)
+if [[ "$VERSION_VALUE" != "" ]] && [[ "$VERSION_VALUE" != '$(MARKETING_VERSION)' ]]; then
+    check_fail "Info.plist has version overrides - found: $VERSION_VALUE"
 else
     check_pass "No Info.plist version overrides"
 fi
@@ -180,11 +182,11 @@ else
     check_fail "GitHub CLI not installed - run: brew install gh"
 fi
 
-# Tuist
-if command -v tuist &> /dev/null; then
-    check_pass "Tuist installed"
+# Xcode project (check if it exists since we're using SPM now)
+if [[ -f "$PROJECT_ROOT/VibeMeter.xcodeproj/project.pbxproj" ]]; then
+    check_pass "Xcode project exists"
 else
-    check_fail "Tuist not installed - run: curl -Ls https://install.tuist.io | bash"
+    check_fail "Xcode project not found - run: ./scripts/create-modern-xcodeproj.sh"
 fi
 
 # Sparkle tools
@@ -225,8 +227,8 @@ echo ""
 # 6. Check Sparkle configuration
 echo "📌 Sparkle Configuration:"
 
-# Check public key
-PUBLIC_KEY=$(grep 'SUPublicEDKey' "$PROJECT_ROOT/VibeMeter/Info.plist" | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p' | head -1)
+# Check public key using xmllint for proper XML parsing
+PUBLIC_KEY=$(xmllint --xpath "string(//key[text()='SUPublicEDKey']/following-sibling::string[1])" "$PROJECT_ROOT/VibeMeter/Info.plist" 2>/dev/null || true)
 if [[ -n "$PUBLIC_KEY" ]]; then
     check_pass "Sparkle public key configured"
 else
