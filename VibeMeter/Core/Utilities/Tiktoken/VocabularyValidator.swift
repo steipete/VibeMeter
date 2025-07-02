@@ -164,9 +164,11 @@ final class VocabularyValidator {
         let sortedRanks = bytePairRanks.values.sorted()
         if sortedRanks.count > 1 {
             for i in 1 ..< sortedRanks.count {
-                let gap = sortedRanks[i] - sortedRanks[i - 1]
-                if gap > 1000 {
-                    warnings.append(.gapInRanks(start: sortedRanks[i - 1], end: sortedRanks[i]))
+                let prev = sortedRanks[i - 1]
+                let curr = sortedRanks[i]
+                let gap = curr - prev
+                if gap > 1000 && prev < curr {
+                    warnings.append(.gapInRanks(start: prev, end: curr))
                 }
             }
         }
