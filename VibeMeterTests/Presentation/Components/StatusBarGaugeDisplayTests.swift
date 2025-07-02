@@ -1,23 +1,23 @@
-import XCTest
+import Testing
+import Foundation
 @testable import VibeMeter
 
-final class StatusBarGaugeDisplayTests: XCTestCase {
+@MainActor
+struct StatusBarGaugeDisplayTests {
     
     // MARK: - Properties
     
-    private var statusBarController: StatusBarController!
-    private var settingsManager: MockSettingsManager!
-    private var userSession: MultiProviderUserSessionData!
-    private var loginManager: MultiProviderLoginManager!
-    private var spendingData: MultiProviderSpendingData!
-    private var currencyData: CurrencyData!
-    private var orchestrator: MultiProviderDataOrchestrator!
+    private let statusBarController: StatusBarController
+    private let settingsManager: MockSettingsManager
+    private let userSession: MultiProviderUserSessionData
+    private let loginManager: MultiProviderLoginManager
+    private let spendingData: MultiProviderSpendingData
+    private let currencyData: CurrencyData
+    private let orchestrator: MultiProviderDataOrchestrator
     
     // MARK: - Setup
     
-    override func setUp() {
-        super.setUp()
-        
+    init() {
         // Create mock dependencies
         settingsManager = MockSettingsManager()
         userSession = MultiProviderUserSessionData()
@@ -43,20 +43,20 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
             currencyData: currencyData
         )
         
-            statusBarController = StatusBarController(
-                settingsManager: settingsManager,
-                userSession: userSession,
-                loginManager: loginManager,
-                spendingData: spendingData,
-                currencyData: currencyData,
-                orchestrator: orchestrator
-            )
+        statusBarController = StatusBarController(
+            settingsManager: settingsManager,
+            userSession: userSession,
+            loginManager: loginManager,
+            spendingData: spendingData,
+            currencyData: currencyData,
+            orchestrator: orchestrator
+        )
     }
     
     // MARK: - Claude Quota Display Tests
     
-    @MainActor
-    func testClaudeQuotaGaugeWithLowUsage() async {
+    @Test("Claude quota gauge with low usage")
+    func claudeQuotaGaugeWithLowUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
@@ -76,12 +76,12 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         
         // Then - verify gauge would show 10% fill
         // Note: In actual UI tests, we'd verify the visual representation
-        XCTAssertTrue(userSession.isLoggedIn(to: .claude))
-        XCTAssertEqual(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests, 10)
+        #expect(userSession.isLoggedIn(to: .claude))
+        #expect(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests == 10)
     }
     
-    @MainActor
-    func testClaudeQuotaGaugeWithHighUsage() async {
+    @Test("Claude quota gauge with high usage")
+    func claudeQuotaGaugeWithHighUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
@@ -100,11 +100,11 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         statusBarController.updateStatusItemDisplay()
         
         // Then - verify gauge would show 85% fill (likely orange/red)
-        XCTAssertEqual(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests, 85)
+        #expect(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests == 85)
     }
     
-    @MainActor
-    func testClaudeQuotaGaugeWithNoUsage() async {
+    @Test("Claude quota gauge with no usage")
+    func claudeQuotaGaugeWithNoUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
@@ -123,13 +123,13 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         statusBarController.updateStatusItemDisplay()
         
         // Then - verify gauge would be empty
-        XCTAssertEqual(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests, 0)
+        #expect(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests == 0)
     }
     
     // MARK: - Badge Text Display Tests
     
-    @MainActor
-    func testProviderUsageBadgeWithTokenFormatter() async {
+    @Test("Provider usage badge with token formatter")
+    func providerUsageBadgeWithTokenFormatter() async {
         // Given
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
@@ -149,11 +149,11 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         let displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
         
         // Then
-        XCTAssertEqual(displayText, "45k/200k")
+        #expect(displayText == "45k/200k")
     }
     
-    @MainActor
-    func testProviderUsageBadgeWithSmallTokens() async {
+    @Test("Provider usage badge with small tokens")
+    func providerUsageBadgeWithSmallTokens() async {
         // Given
         let usageData = ProviderUsageData(
             currentRequests: 0,
@@ -171,13 +171,13 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         let displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
         
         // Then
-        XCTAssertEqual(displayText, "146/200k")
+        #expect(displayText == "146/200k")
     }
     
     // MARK: - Gauge State Transitions
     
-    @MainActor
-    func testGaugeStateTransitions() async {
+    @Test("Gauge state transitions")
+    func gaugeStateTransitions() async {
         // Test loading state
         // Note: isRefreshing is read-only, we cannot set it directly in tests
         // The orchestrator manages this state internally during refresh operations
@@ -207,8 +207,8 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Percentage Calculation Tests
     
-    @MainActor
-    func testCalculateClaudeQuotaPercentage() async {
+    @Test("Calculate Claude quota percentage")
+    func calculateClaudeQuotaPercentage() async {
         // Test various percentage calculations
         let testCases: [(current: Int, expected: Double)] = [
             (0, 0.0),
@@ -230,18 +230,17 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
             spendingData.updateUsage(for: .claude, from: usageData)
             
             // Use reflection to test private method
-            let mirror = Mirror(reflecting: statusBarController!)
-            if let calculateMethod = mirror.children.first(where: { $0.label == "calculateClaudeQuotaPercentage" }) {
-                // In real tests, we'd verify the gauge value through the UI
-                XCTAssertNotNil(calculateMethod)
-            }
+            let mirror = Mirror(reflecting: statusBarController)
+            let calculateMethod = mirror.children.first(where: { $0.label == "calculateClaudeQuotaPercentage" })
+            // In real tests, we'd verify the gauge value through the UI
+            #expect(calculateMethod != nil)
         }
     }
     
     // MARK: - Real-time Update Tests
     
-    @MainActor
-    func testRealTimeGaugeUpdates() async {
+    @Test("Real-time gauge updates")
+    func realTimeGaugeUpdates() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
@@ -269,6 +268,6 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         statusBarController.updateStatusItemDisplay()
         
         // Verify update occurred
-        XCTAssertEqual(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests, 35)
+        #expect(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests == 35)
     }
 }
