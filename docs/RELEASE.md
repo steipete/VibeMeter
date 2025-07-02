@@ -259,11 +259,38 @@ codesign -dvv "VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XP
 grep '<sparkle:version>' appcast-prerelease.xml
 ```
 
+## 📡 Appcast File Management
+
+### Important: Appcast files are now hosted in the stats-store repository
+
+As of v2.0.0-beta.3, VibeMeter's appcast files have been migrated to the [stats-store](https://github.com/steipete/stats-store) repository for anonymous telemetry collection:
+
+1. **Appcast URLs** (configured in UpdateChannel.swift):
+   - Stable: `https://stats.store/api/v1/appcast/appcast.xml`
+   - Pre-release: `https://stats.store/api/v1/appcast/appcast-prerelease.xml`
+
+2. **How it works**:
+   - The stats.store proxy fetches appcast files from `https://github.com/steipete/stats-store`
+   - Anonymous telemetry is collected during update checks
+   - No personal data or IP addresses are stored
+
+3. **Release workflow**:
+   - The release script generates appcast files locally
+   - The `push-appcast-to-stats-store.sh` script copies them to the stats-store repo
+   - Changes are committed and pushed to GitHub
+   - stats.store serves them via the proxy API
+
+4. **Important notes**:
+   - Appcast files are stored in the root of the stats-store repository
+   - The VibeMeter repository no longer contains appcast files
+   - All update checks go through stats.store for telemetry
+
 ## 📚 Important Links
 
 - [Sparkle Sandboxing Guide](https://sparkle-project.org/documentation/sandboxing/)
 - [Sparkle Code Signing](https://sparkle-project.org/documentation/sandboxing/#code-signing)
 - [Apple Notarization](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
+- [stats-store Repository](https://github.com/steipete/stats-store)
 
 ---
 

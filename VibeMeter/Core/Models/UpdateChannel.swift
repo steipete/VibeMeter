@@ -32,9 +32,9 @@ public enum UpdateChannel: String, CaseIterable, Codable, Sendable {
     public var appcastURL: String {
         switch self {
         case .stable:
-            "https://stats.steipete.com/api/v1/appcast/appcast.xml"
+            "https://stats.store/api/v1/appcast/appcast.xml"
         case .prerelease:
-            "https://stats.steipete.com/api/v1/appcast/appcast-prerelease.xml"
+            "https://stats.store/api/v1/appcast/appcast-prerelease.xml"
         }
     }
 
