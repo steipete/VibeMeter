@@ -5,6 +5,43 @@ All notable changes to VibeMeter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-beta.3] - 2025-07-02
+
+### 🎯 Major Features
+- **Enhanced Dashboard with Real-time Analytics** - Completely redesigned dashboard for Claude's 5-hour window system with key metrics cards
+- **Multi-Account Detection** - VibeMeter now detects and tracks usage across multiple Claude accounts with consolidated data
+- **Advanced Analytics Services** - New burn rate calculator, velocity tracker, and prediction engine for usage forecasting
+- **Permanent Log Caching** - Historical Claude logs are now cached permanently, dramatically improving startup performance
+- **Quick Access to Usage Reports** - Direct navigation to Claude token usage report from the dashboard
+
+### 🎨 UI Improvements
+- **Fixed Dark Mode Visibility** - Improved text contrast and readability across all themes
+- **Improved Dashboard Layout** - Resolved spacing issues preventing squished or overly spaced content
+- **Simplified Quick Actions Bar** - Streamlined with icon-only settings button for cleaner interface
+- **Immediate UI Display** - Interface shows instantly without waiting for data to load
+- **Special Thanks Section** - Added acknowledgments in the UI
+
+### 🔧 Technical Improvements
+- **Migrated to Swift Package Manager** - Replaced Tuist with SPM for simplified build configuration
+- **Enhanced Test Suite** - Fixed all compilation errors and improved actor isolation for Swift 6
+- **90-Day Cache Cleanup** - Automatic cleanup of old cached logs to manage storage efficiently
+- **File Hash Validation** - Ensures cache integrity with cryptographic verification
+
+### 🐛 Bug Fixes
+- **Fixed AutoPlanDetector Range Error** - Properly handles empty history without crashing
+- **Fixed Build Errors** - Resolved ClaudeUsageReportSubviews and async Task wrapping issues
+- **Fixed Claude Usage URLs** - Removed references to non-existent URLs
+- **Improved 5-Hour Window Accuracy** - Better alignment with Claude's actual reset schedule
+
+### 🗑️ Removed Features
+- **Analytics Dashboard** - Consolidated into the main enhanced dashboard for streamlined experience
+- **Sandboxing** - Temporarily disabled app sandboxing for improved functionality
+
+### 📝 Notes
+- This beta includes significant architectural improvements and performance optimizations
+- Multi-account support provides better visibility for users with multiple Claude accounts
+- The new caching system significantly improves app launch time for heavy users
+
 ## [2.0.0] - 2025-06-15
 
 ### 🚀 New Features
