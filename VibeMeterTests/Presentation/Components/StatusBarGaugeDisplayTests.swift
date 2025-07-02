@@ -15,7 +15,6 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     
     // MARK: - Setup
     
-    @MainActor
     override func setUp() {
         super.setUp()
         
