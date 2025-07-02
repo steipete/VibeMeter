@@ -32,18 +32,33 @@ Before creating any release, ensure the CHANGELOG.md file contains a proper sect
 
 **CRITICAL**: The appcast generation relies on the local CHANGELOG.md file, NOT the GitHub release description. The changelog must be added to CHANGELOG.md BEFORE running the release script.
 
-### Step 3: Create the Release
+### Step 3: Update Version Configuration
+Before creating a release, update the version in `VibeMeter/version.xcconfig`:
+
+```
+MARKETING_VERSION = 2.0.0         # For stable releases
+MARKETING_VERSION = 2.0.0-beta.3  # For pre-releases
+CURRENT_PROJECT_VERSION = 203     # Must increment for each release
+```
+
+**CRITICAL**: 
+- For pre-releases, include the suffix in MARKETING_VERSION (e.g., "2.0.0-beta.3")
+- For stable releases, use only the base version (e.g., "2.0.0")
+- The release script will detect and use the version as configured
+- Always increment CURRENT_PROJECT_VERSION (build number)
+
+### Step 4: Create the Release
 ```bash
 # For stable releases:
 ./scripts/release.sh stable
 
 # For pre-releases (beta, alpha, rc):
-./scripts/release.sh beta 1    # Creates version-beta.1
-./scripts/release.sh alpha 2   # Creates version-alpha.2
-./scripts/release.sh rc 1      # Creates version-rc.1
+./scripts/release.sh beta 3    # Expects version.xcconfig to have "2.0.0-beta.3"
+./scripts/release.sh alpha 2   # Expects version.xcconfig to have "2.0.0-alpha.2"
+./scripts/release.sh rc 1      # Expects version.xcconfig to have "2.0.0-rc.1"
 ```
 
-**IMPORTANT**: The release script does NOT automatically increment build numbers. You must manually update the build number in Project.swift before running the script, or it will fail the pre-flight check.
+**IMPORTANT**: The release script validates that the version in version.xcconfig matches the expected format for the release type.
 
 The script will:
 1. Validate build number is unique and incrementing
