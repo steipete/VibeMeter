@@ -2,7 +2,7 @@
 // This file contains the version and build number for the app
 
 MARKETING_VERSION = 2.0.0-beta.3
-CURRENT_PROJECT_VERSION = 202
+CURRENT_PROJECT_VERSION = 203
 
 // Bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.steipete.vibemeter
