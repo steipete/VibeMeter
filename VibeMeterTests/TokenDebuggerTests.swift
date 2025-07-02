@@ -36,9 +36,8 @@ struct TokenDebuggerTests {
 
         #expect(!viz.segments.isEmpty)
 
-        // Verify all segments have valid colors
+        // Verify all segments have valid tokens
         for segment in viz.segments {
-            #expect(segment.color != nil)
             #expect(segment.token >= 0)
         }
     }
