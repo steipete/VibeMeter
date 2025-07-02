@@ -107,6 +107,12 @@ final class MockClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendable 
     func getCurrentWindowUsage() async -> FiveHourWindow {
         calculateFiveHourWindowResult
     }
+    
+    @MainActor
+    func getSessionTracker() -> ClaudeSessionTracker {
+        // Return a new instance for testing
+        return ClaudeSessionTracker()
+    }
 }
 
 // MARK: - ClaudeLogManager Tests

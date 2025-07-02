@@ -1,33 +1,23 @@
 import XCTest
 @testable import VibeMeter
 
+@MainActor
 final class ClaudeProviderIntegrationTests: XCTestCase {
     
     // MARK: - Properties
     
-    private var provider: ClaudeProvider!
-    private var mockLogManager: MockClaudeLogManager!
-    private var mockSettingsManager: MockSettingsManager!
-    
-    // MARK: - Setup
-    
-    override func setUp() async throws {
-        try await super.setUp()
-        
-        mockSettingsManager = MockSettingsManager()
-        mockLogManager = MockClaudeLogManager()
-        
-        provider = await ClaudeProvider(
-            settingsManager: mockSettingsManager,
-            logManager: mockLogManager
-        )
-    }
+    private lazy var mockSettingsManager = MockSettingsManager()
+    private lazy var mockLogManager = ClaudeLogManagerMock()
+    private lazy var provider = ClaudeProvider(
+        settingsManager: mockSettingsManager,
+        logManager: mockLogManager
+    )
     
     // MARK: - User Info Tests
     
     func testFetchUserInfoWithAccess() async throws {
         // Given
-        mockLogManager.hasAccess = true
+        mockLogManager.setHasAccess(true)
         
         // When
         let userInfo = try await provider.fetchUserInfo(authToken: "dummy")
@@ -39,7 +29,7 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchUserInfoWithoutAccess() async {
         // Given
-        mockLogManager.hasAccess = false
+        mockLogManager.setHasAccess(false)
         
         // When/Then
         do {
@@ -58,8 +48,8 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchUsageDataWithLowUsage() async throws {
         // Given
-        mockLogManager.hasAccess = true
-        mockLogManager.currentWindow = FiveHourWindow(
+        mockLogManager.setHasAccess(true)
+        mockLogManager.calculateFiveHourWindowResult = FiveHourWindow(
             used: 10.0,
             total: 100.0,
             resetDate: Date().addingTimeInterval(5 * 60 * 60),
@@ -79,8 +69,8 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchUsageDataWithHighUsage() async throws {
         // Given
-        mockLogManager.hasAccess = true
-        mockLogManager.currentWindow = FiveHourWindow(
+        mockLogManager.setHasAccess(true)
+        mockLogManager.calculateFiveHourWindowResult = FiveHourWindow(
             used: 85.5,
             total: 100.0,
             resetDate: Date().addingTimeInterval(5 * 60 * 60),
@@ -98,8 +88,8 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchUsageDataWithNoUsage() async throws {
         // Given
-        mockLogManager.hasAccess = true
-        mockLogManager.currentWindow = FiveHourWindow(
+        mockLogManager.setHasAccess(true)
+        mockLogManager.calculateFiveHourWindowResult = FiveHourWindow(
             used: 0.0,
             total: 100.0,
             resetDate: Date().addingTimeInterval(5 * 60 * 60),
@@ -119,7 +109,7 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchMonthlyInvoiceWithData() async throws {
         // Given
-        mockLogManager.hasAccess = true
+        mockLogManager.setHasAccess(true)
         let now = Date()
         let calendar = Calendar.current
         let month = calendar.component(.month, from: now) - 1 // 0-indexed
@@ -131,24 +121,20 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-24 * 60 * 60), // Yesterday
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 10_000,
-                outputTokens: 5_000,
-                projectId: nil,
-                id: "test-1"
+                outputTokens: 5_000
             ),
             ClaudeLogEntry(
                 timestamp: now.addingTimeInterval(-48 * 60 * 60), // 2 days ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 20_000,
-                outputTokens: 10_000,
-                projectId: nil,
-                id: "test-2"
+                outputTokens: 10_000
             )
         ]
         
-        mockLogManager.dailyUsage = [
+        mockLogManager.setDailyUsage([
             calendar.startOfDay(for: now.addingTimeInterval(-24 * 60 * 60)): [entries[0]],
             calendar.startOfDay(for: now.addingTimeInterval(-48 * 60 * 60)): [entries[1]]
-        ]
+        ])
         
         // When
         let invoice = try await provider.fetchMonthlyInvoice(
@@ -173,8 +159,8 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchMonthlyInvoiceWithNoData() async throws {
         // Given
-        mockLogManager.hasAccess = true
-        mockLogManager.dailyUsage = [:]
+        mockLogManager.setHasAccess(true)
+        mockLogManager.setDailyUsage([:])
         
         let now = Date()
         let calendar = Calendar.current
@@ -198,7 +184,7 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testValidateTokenWithAccess() async {
         // Given
-        mockLogManager.hasAccess = true
+        mockLogManager.setHasAccess(true)
         
         // When
         let isValid = await provider.validateToken(authToken: "dummy")
@@ -209,7 +195,7 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testValidateTokenWithoutAccess() async {
         // Given
-        mockLogManager.hasAccess = false
+        mockLogManager.setHasAccess(false)
         
         // When
         let isValid = await provider.validateToken(authToken: "dummy")
@@ -222,20 +208,20 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testRequestFileAccess() async {
         // Given
-        mockLogManager.hasAccess = false
-        mockLogManager.accessRequestResult = true
+        mockLogManager.setHasAccess(false)
+        mockLogManager.requestLogAccessResult = true
         
         // When
         let granted = await provider.requestFileAccess()
         
         // Then
         XCTAssertTrue(granted)
-        XCTAssertTrue(mockLogManager.requestLogAccessCalled)
+        XCTAssertTrue(mockLogManager.callCount(for: "requestLogAccess") > 0)
     }
     
     func testHasFileAccess() async {
         // Given
-        mockLogManager.hasAccess = true
+        mockLogManager.setHasAccess(true)
         
         // When
         let hasAccess = await provider.hasFileAccess()
@@ -248,8 +234,8 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     
     func testFetchUsageDataPerformance() async throws {
         // Given
-        mockLogManager.hasAccess = true
-        mockLogManager.currentWindow = FiveHourWindow(
+        mockLogManager.setHasAccess(true)
+        mockLogManager.calculateFiveHourWindowResult = FiveHourWindow(
             used: 50.0,
             total: 100.0,
             resetDate: Date().addingTimeInterval(5 * 60 * 60),
@@ -267,55 +253,3 @@ final class ClaudeProviderIntegrationTests: XCTestCase {
     }
 }
 
-// MARK: - Mock ClaudeLogManager
-
-@MainActor
-final class MockClaudeLogManager: ClaudeLogManagerProtocol {
-    var hasAccess = true
-    var isProcessing = false
-    var lastError: Error?
-    var dailyUsage: [Date: [ClaudeLogEntry]] = [:]
-    var currentWindow = FiveHourWindow(
-        used: 0,
-        total: 100,
-        resetDate: Date().addingTimeInterval(5 * 60 * 60),
-        tokensUsed: 0,
-        estimatedTokenLimit: 500_000
-    )
-    var accessRequestResult = true
-    var requestLogAccessCalled = false
-    
-    func requestLogAccess() async -> Bool {
-        requestLogAccessCalled = true
-        hasAccess = accessRequestResult
-        return accessRequestResult
-    }
-    
-    func revokeAccess() {
-        hasAccess = false
-    }
-    
-    func getDailyUsage() async -> [Date: [ClaudeLogEntry]] {
-        return dailyUsage
-    }
-    
-    func getDailyUsageWithProgress(delegate: ClaudeLogProgressDelegate?) async -> [Date: [ClaudeLogEntry]] {
-        return dailyUsage
-    }
-    
-    func invalidateCache() {
-        // No-op
-    }
-    
-    func calculateFiveHourWindow(from dailyUsage: [Date: [ClaudeLogEntry]]) -> FiveHourWindow {
-        return currentWindow
-    }
-    
-    func countTokens(in text: String) -> Int {
-        return text.count * 2 // Simple estimation
-    }
-    
-    func getCurrentWindowUsage() async -> FiveHourWindow {
-        return currentWindow
-    }
-}

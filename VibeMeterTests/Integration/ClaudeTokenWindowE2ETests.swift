@@ -6,44 +6,41 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
     
     // MARK: - Properties
     
-    private var orchestrator: MultiProviderDataOrchestrator!
-    private var settingsManager: MockSettingsManager!
-    private var userSession: MultiProviderUserSessionData!
-    private var spendingData: MultiProviderSpendingData!
-    private var currencyData: CurrencyData!
-    private var notificationManager: NotificationManager!
-    private var statusBarController: StatusBarController!
-    private var loginManager: MultiProviderLoginManager!
+    private lazy var settingsManager = MockSettingsManager()
+    private lazy var userSession = MultiProviderUserSessionData()
+    private lazy var spendingData = MultiProviderSpendingData()
+    private lazy var currencyData = CurrencyData()
+    private lazy var notificationManager = NotificationManager()
+    private lazy var providerFactory = ProviderFactory(settingsManager: settingsManager, urlSession: URLSession.shared)
+    private lazy var loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
+    private lazy var exchangeRateManager = ExchangeRateManagerMock()
+    private lazy var notificationManagerMock = NotificationManagerMock()
+    
+    private lazy var orchestrator = MultiProviderDataOrchestrator(
+        providerFactory: providerFactory,
+        settingsManager: settingsManager,
+        exchangeRateManager: exchangeRateManager,
+        notificationManager: notificationManagerMock,
+        loginManager: loginManager,
+        spendingData: spendingData,
+        userSessionData: userSession,
+        currencyData: currencyData
+    )
+    
+    private lazy var statusBarController = StatusBarController(
+        settingsManager: settingsManager,
+        userSession: userSession,
+        loginManager: loginManager,
+        spendingData: spendingData,
+        currencyData: currencyData,
+        orchestrator: orchestrator
+    )
     
     // MARK: - Setup
     
-    override func setUp() async throws {
-        try await super.setUp()
-        
-        // Initialize all components
-        settingsManager = MockSettingsManager()
-        userSession = MultiProviderUserSessionData()
-        spendingData = MultiProviderSpendingData()
-        currencyData = CurrencyData()
-        notificationManager = NotificationManager()
-        loginManager = MultiProviderLoginManager(settingsManager: settingsManager)
-        
-        orchestrator = MultiProviderDataOrchestrator(
-            userSession: userSession,
-            spendingData: spendingData,
-            currencyData: currencyData,
-            settingsManager: settingsManager,
-            notificationManager: notificationManager
-        )
-        
-        statusBarController = StatusBarController(
-            settingsManager: settingsManager,
-            userSession: userSession,
-            loginManager: loginManager,
-            spendingData: spendingData,
-            currencyData: currencyData,
-            orchestrator: orchestrator
-        )
+    override func setUp() {
+        super.setUp()
+        // Properties are initialized lazily when first accessed
     }
     
     // MARK: - End-to-End Tests
@@ -54,46 +51,44 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
         XCTAssertTrue(ProviderRegistry.shared.isEnabled(.claude))
         
         // Step 2: Simulate user login
-        userSession.setLoggedIn(
-            to: .claude,
-            userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude)
-        )
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         XCTAssertTrue(userSession.isLoggedIn(to: .claude))
         
         // Step 3: Set gauge to Claude quota mode
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         
         // Step 4: Simulate Claude usage data
-        let claudeData = ProviderSpendingData(provider: .claude)
-        
-        // Simulate 23% usage with 45,678 tokens
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 23, // Percentage for gauge
             totalRequests: 45_678, // Actual token count
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // Set pricing info for cost display
-        claudeData.updateLatestInvoiceResponse(ProviderLatestInvoiceResponse(
-            cents: 223, // $0.0223
+        let invoice = ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 223, description: "Claude usage", provider: .claude)
+            ],
             pricingDescription: ProviderPricingDescription(
                 description: "25,678 input ($0.077), 20,000 output ($0.30)",
-                id: "claude-tokens",
+                id: "test-pricing",
                 provider: .claude
             ),
-            provider: .claude
-        ))
-        
-        spendingData.updateProviderData(claudeData)
+            provider: .claude,
+            month: Date().month - 1,
+            year: Date().year
+        )
+        spendingData.updateSpending(for: .claude, from: invoice, rates: [:], targetCurrency: "USD")
         
         // Step 5: Update status bar
         statusBarController.updateStatusItemDisplay()
         
         // Step 6: Verify gauge calculation
         // The gauge should show 23% (0.23 as decimal)
-        let expectedGaugeValue = 0.23
+        _ = 0.23 // expectedGaugeValue
         
         // Verify spending data
         let providerData = spendingData.getSpendingData(for: .claude)
@@ -127,20 +122,18 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
     func testClaudeTokenWindowWithHighUsage() async throws {
         // Setup
         ProviderRegistry.shared.enableProvider(.claude)
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         
         // Simulate high usage (85%)
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 85,
             totalRequests: 170_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         statusBarController.updateStatusItemDisplay()
         
         // Verify high usage display
@@ -152,33 +145,32 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
     func testClaudeTokenWindowRealTimeUpdates() async throws {
         // Setup
         ProviderRegistry.shared.enableProvider(.claude)
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         
         // Initial state - 20% usage
-        var claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData20 = ProviderUsageData(
             currentRequests: 20,
             totalRequests: 40_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData20)
         statusBarController.updateStatusItemDisplay()
         
         // Verify initial state
         XCTAssertEqual(spendingData.getSpendingData(for: .claude)?.usageData?.currentRequests, 20)
         
         // Simulate usage increase to 35%
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData35 = ProviderUsageData(
             currentRequests: 35,
             totalRequests: 70_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData35)
         statusBarController.updateStatusItemDisplay()
         
         // Verify update
@@ -188,30 +180,32 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
     
     func testClaudeTokenWindowWithoutAccess() async throws {
         // Setup without file access
-        userSession.setError("No folder access", for: .claude)
+        userSession.setErrorMessage(for: .claude, message: "No folder access")
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         
         statusBarController.updateStatusItemDisplay()
         
         // Verify error state
-        XCTAssertNotNil(userSession.getError(for: .claude))
+        XCTAssertNotNil(userSession.getSession(for: .claude)?.lastErrorMessage)
         XCTAssertNil(spendingData.getSpendingData(for: .claude)?.usageData)
     }
     
     func testClaudeTokenWindowModeSwitch() async throws {
         // Setup with spending mode
         ProviderRegistry.shared.enableProvider(.claude)
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
-        settingsManager.displaySettingsManager.gaugeRepresentation = .spending
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
+        settingsManager.displaySettingsManager.gaugeRepresentation = .totalSpending
         
         // Add spending data
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateLatestInvoiceResponse(ProviderLatestInvoiceResponse(
-            cents: 2500, // $25.00
-            pricingDescription: nil,
-            provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        let invoice = ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 2500, description: "Claude usage", provider: .claude)
+            ],
+            provider: .claude,
+            month: Date().month,
+            year: Date().year
+        )
+        spendingData.updateSpending(for: .claude, from: invoice, rates: [:], targetCurrency: "USD")
         
         statusBarController.updateStatusItemDisplay()
         
@@ -219,14 +213,14 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
         
         // Add usage data
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 50,
             totalRequests: 100_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         statusBarController.updateStatusItemDisplay()
         
@@ -237,20 +231,22 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
     func testClaudeTokenWindowCurrencyConversion() async throws {
         // Setup
         ProviderRegistry.shared.enableProvider(.claude)
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Set currency to EUR
-        currencyData.updateSelectedCode("EUR")
-        currencyData.updateRates(["EUR": 0.85]) // 1 USD = 0.85 EUR
+        currencyData.updateSelectedCurrency("EUR")
+        currencyData.updateExchangeRates(["EUR": 0.85]) // 1 USD = 0.85 EUR
         
         // Add Claude data with USD costs
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateLatestInvoiceResponse(ProviderLatestInvoiceResponse(
-            cents: 1000, // $10.00 USD
-            pricingDescription: nil,
-            provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        let invoice = ProviderMonthlyInvoice(
+            items: [
+                ProviderInvoiceItem(cents: 1000, description: "Claude usage", provider: .claude)
+            ],
+            provider: .claude,
+            month: Date().month,
+            year: Date().year
+        )
+        spendingData.updateSpending(for: .claude, from: invoice, rates: [:], targetCurrency: "USD")
         
         // Verify currency conversion
         let convertedAmount = spendingData.totalSpendingConverted(
@@ -269,18 +265,17 @@ final class ClaudeTokenWindowE2ETests: XCTestCase {
             Task { @MainActor in
                 // Run complete flow
                 ProviderRegistry.shared.enableProvider(.claude)
-                userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+                userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
                 settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
                 
-                let claudeData = ProviderSpendingData(provider: .claude)
-                claudeData.updateUsageData(ProviderUsageData(
+                let usageData = ProviderUsageData(
                     currentRequests: 50,
                     totalRequests: 100_000,
                     maxRequests: 100,
                     startOfMonth: Date().startOfMonth,
                     provider: .claude
-                ))
-                spendingData.updateProviderData(claudeData)
+                )
+                spendingData.updateUsage(for: .claude, from: usageData)
                 statusBarController.updateStatusItemDisplay()
                 
                 expectation.fulfill()

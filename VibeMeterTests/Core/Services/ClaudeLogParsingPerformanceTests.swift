@@ -65,10 +65,15 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         let logFile = tempDirectory.appendingPathComponent("small.jsonl")
         try createTestLogFile(with: 100, at: logFile)
         
+        // Test once to ensure it works
+        let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
+        XCTAssertFalse(dailyUsage.isEmpty)
+        
+        // Measure performance separately
         measure {
             let expectation = self.expectation(description: "Parse small log")
             
-            Task {
+            Task { @Sendable in
                 let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
                 XCTAssertFalse(dailyUsage.isEmpty)
                 expectation.fulfill()
@@ -86,7 +91,7 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         measure {
             let expectation = self.expectation(description: "Parse medium log")
             
-            Task {
+            Task { @Sendable in
                 let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
                 XCTAssertFalse(dailyUsage.isEmpty)
                 expectation.fulfill()
@@ -104,7 +109,7 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         measure {
             let expectation = self.expectation(description: "Parse large log")
             
-            Task {
+            Task { @Sendable in
                 let (dailyUsage, _) = await logProcessor.processLogFiles([logFile], usingCache: [:])
                 XCTAssertFalse(dailyUsage.isEmpty)
                 expectation.fulfill()
@@ -126,9 +131,10 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         
         measure {
             let expectation = self.expectation(description: "Parse multiple logs")
+            let files = logFiles // Create local copy for Sendable closure
             
-            Task {
-                let (dailyUsage, _) = await logProcessor.processLogFiles(logFiles, usingCache: [:])
+            Task { @Sendable in
+                let (dailyUsage, _) = await logProcessor.processLogFiles(files, usingCache: [:])
                 XCTAssertFalse(dailyUsage.isEmpty)
                 expectation.fulfill()
             }
@@ -153,7 +159,7 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
         measure {
             let expectation = self.expectation(description: "Parse with cache")
             
-            Task {
+            Task { @Sendable in
                 let (dailyUsage, _) = await logProcessor.processLogFiles([logFile1, logFile2], usingCache: hashCache)
                 XCTAssertFalse(dailyUsage.isEmpty)
                 expectation.fulfill()
@@ -176,18 +182,18 @@ final class ClaudeLogParsingPerformanceTests: XCTestCase {
                 timestamp: timestamp,
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: Int.random(in: 100...1000),
-                outputTokens: Int.random(in: 50...500),
-                projectId: nil,
-                id: "test-\(i)"
+                outputTokens: Int.random(in: 50...500)
             )
             entries.append(entry)
         }
         
         let dailyUsage = [Calendar.current.startOfDay(for: now): entries]
-        let calculator = ClaudeFiveHourWindowCalculator()
         
         measure {
-            _ = calculator.calculateFiveHourWindow(from: dailyUsage)
+            Task { @MainActor @Sendable in
+                let calculator = ClaudeFiveHourWindowCalculator()
+                _ = calculator.calculateFiveHourWindow(from: dailyUsage)
+            }
         }
     }
     

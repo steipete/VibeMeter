@@ -1,18 +1,12 @@
 import XCTest
 @testable import VibeMeter
 
+@MainActor
 final class ClaudeFiveHourWindowTests: XCTestCase {
     
     // MARK: - Properties
     
-    private var calculator: ClaudeFiveHourWindowCalculator!
-    
-    // MARK: - Setup
-    
-    override func setUp() {
-        super.setUp()
-        calculator = ClaudeFiveHourWindowCalculator()
-    }
+    private lazy var calculator = ClaudeFiveHourWindowCalculator()
     
     // MARK: - Basic Window Calculations
     
@@ -31,9 +25,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
             timestamp: now.addingTimeInterval(-60), // 1 minute ago
             model: "claude-3-5-sonnet-latest",
             inputTokens: 1000,
-            outputTokens: 500,
-            projectId: nil,
-            id: "test-1"
+            outputTokens: 500
         )
         
         let dailyUsage = [Calendar.current.startOfDay(for: now): [entry]]
@@ -51,25 +43,19 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-30 * 60), // 30 minutes ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 10_000,
-                outputTokens: 5_000,
-                projectId: nil,
-                id: "test-1"
+                outputTokens: 5_000
             ),
             ClaudeLogEntry(
                 timestamp: now.addingTimeInterval(-60 * 60), // 1 hour ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 20_000,
-                outputTokens: 10_000,
-                projectId: nil,
-                id: "test-2"
+                outputTokens: 10_000
             ),
             ClaudeLogEntry(
                 timestamp: now.addingTimeInterval(-120 * 60), // 2 hours ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 30_000,
-                outputTokens: 15_000,
-                projectId: nil,
-                id: "test-3"
+                outputTokens: 15_000
             )
         ]
         
@@ -91,18 +77,14 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-2 * 60 * 60), // 2 hours ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 10_000,
-                outputTokens: 5_000,
-                projectId: nil,
-                id: "test-1"
+                outputTokens: 5_000
             ),
             // Outside window
             ClaudeLogEntry(
                 timestamp: now.addingTimeInterval(-6 * 60 * 60), // 6 hours ago
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 20_000,
-                outputTokens: 10_000,
-                projectId: nil,
-                id: "test-2"
+                outputTokens: 10_000
             )
         ]
         
@@ -123,18 +105,14 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: fiveHoursAgo,
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 1000,
-                outputTokens: 1000,
-                projectId: nil,
-                id: "test-1"
+                outputTokens: 1000
             ),
             // Just inside the window
             ClaudeLogEntry(
                 timestamp: fiveHoursAgo.addingTimeInterval(1), // 1 second after boundary
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 2000,
-                outputTokens: 2000,
-                projectId: nil,
-                id: "test-2"
+                outputTokens: 2000
             )
         ]
         
@@ -160,9 +138,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-3 * 60 * 60), // 3 hours ago (might be yesterday)
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 5000,
-                outputTokens: 2500,
-                projectId: nil,
-                id: "yesterday-1"
+                outputTokens: 2500
             )
         ]
         
@@ -171,9 +147,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-1 * 60 * 60), // 1 hour ago (today)
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 3000,
-                outputTokens: 1500,
-                projectId: nil,
-                id: "today-1"
+                outputTokens: 1500
             )
         ]
         
@@ -205,9 +179,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-60),
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 50_000,
-                outputTokens: 25_000,
-                projectId: nil,
-                id: "test-1"
+                outputTokens: 25_000
             )
         ]
         
@@ -237,9 +209,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: now.addingTimeInterval(-60),
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: testCase.tokens / 2,
-                outputTokens: testCase.tokens / 2,
-                projectId: nil,
-                id: "test-\(testCase.tokens)"
+                outputTokens: testCase.tokens / 2
             )
             
             let dailyUsage = [Calendar.current.startOfDay(for: now): [entry]]
@@ -279,9 +249,7 @@ final class ClaudeFiveHourWindowTests: XCTestCase {
                 timestamp: timestamp,
                 model: "claude-3-5-sonnet-latest",
                 inputTokens: 100,
-                outputTokens: 50,
-                projectId: nil,
-                id: "test-\(i)"
+                outputTokens: 50
             )
             entries.append(entry)
         }

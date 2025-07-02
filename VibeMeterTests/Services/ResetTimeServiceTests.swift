@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import VibeMeter
 
 // MARK: - Test Tags
@@ -6,13 +7,14 @@ import Testing
 extension Tag {
     @Tag static var reset: Self
     @Tag static var schedule: Self
+    @Tag static var cursor: Self  // Add missing cursor tag
 }
 
 // MARK: - Test Suite
 
 @Suite("ResetTimeService Tests", .tags(.reset))
 @MainActor
-struct ResetTimeServiceTests {
+struct ResetTimeServiceTests: Sendable {
     let sut: ResetTimeService
     
     init() {
@@ -140,11 +142,11 @@ struct ResetTimeServiceTests {
     // MARK: - Optimal Rate Calculation Tests
     
     @Test("Calculate optimal usage rate", arguments: [
-        (currentUsage: 50.0, limit: 100.0, expectedRate: Double?.some),
-        (currentUsage: 100.0, limit: 100.0, expectedRate: Double?.some), // At limit
-        (currentUsage: 0.0, limit: 200.0, expectedRate: Double?.some)
+        (currentUsage: 50.0, limit: 100.0),
+        (currentUsage: 100.0, limit: 100.0), // At limit
+        (currentUsage: 0.0, limit: 200.0)
     ])
-    func calculateOptimalRate(currentUsage: Double, limit: Double, expectedRate: Double?) {
+    func calculateOptimalRate(currentUsage: Double, limit: Double) {
         // Given
         let provider = ServiceProvider.claude
         
@@ -279,14 +281,12 @@ struct ResetTimeServiceTests {
     
     // MARK: - Usage Recommendation Tests
     
-    @Test("Usage recommendations", arguments: [
-        (usage: 95.0, limit: 100.0, expectedContains: "🚨"),
-        (usage: 10.0, limit: 100.0, expectedContains: "📊"),
-        (usage: 50.0, limit: 100.0, expectedContains: ["📊", "✅"])
-    ])
-    func usageRecommendations(usage: Double, limit: Double, expectedContains: Any) {
+    @Test("Usage recommendations - high usage")
+    func usageRecommendationsHighUsage() {
         // Given
         let provider = ServiceProvider.claude
+        let usage = 95.0
+        let limit = 100.0
         
         // When
         let recommendation = sut.getUsageRecommendation(
@@ -296,18 +296,50 @@ struct ResetTimeServiceTests {
         )
         
         // Then
-        if let strings = expectedContains as? [String] {
-            #expect(strings.contains { recommendation.contains($0) })
-        } else if let string = expectedContains as? String {
-            #expect(recommendation.contains(string))
-        }
+        #expect(recommendation.contains("🚨"))
+    }
+    
+    @Test("Usage recommendations - low usage")
+    func usageRecommendationsLowUsage() {
+        // Given
+        let provider = ServiceProvider.claude
+        let usage = 10.0
+        let limit = 100.0
+        
+        // When
+        let recommendation = sut.getUsageRecommendation(
+            currentUsage: usage,
+            limit: limit,
+            provider: provider
+        )
+        
+        // Then
+        #expect(recommendation.contains("📊"))
+    }
+    
+    @Test("Usage recommendations - medium usage")
+    func usageRecommendationsMediumUsage() {
+        // Given
+        let provider = ServiceProvider.claude
+        let usage = 50.0
+        let limit = 100.0
+        
+        // When
+        let recommendation = sut.getUsageRecommendation(
+            currentUsage: usage,
+            limit: limit,
+            provider: provider
+        )
+        
+        // Then
+        #expect(recommendation.contains("📊") || recommendation.contains("✅"))
     }
 }
 
 // MARK: - Persistence Tests
 
 @Suite("ResetSchedule Persistence Tests")
-struct ResetSchedulePersistenceTests {
+struct ResetSchedulePersistenceTests: Sendable {
     
     @Test("Save and load schedules")
     func saveAndLoadSchedules() {

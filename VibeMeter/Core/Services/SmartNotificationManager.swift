@@ -13,7 +13,7 @@ public final class SmartNotificationManager: NSObject {
     // MARK: - Types
     
     /// Notification type with priority
-    public enum NotificationType: String {
+    public enum NotificationType: String, Sendable {
         case usageWarning = "usage_warning"
         case usageCritical = "usage_critical" 
         case depletionAlert = "depletion_alert"
@@ -45,7 +45,7 @@ public final class SmartNotificationManager: NSObject {
     }
     
     /// Usage status for notification decisions
-    public enum UsageStatus: Int, Comparable {
+    public enum UsageStatus: Int, Comparable, Sendable {
         case safe = 0
         case warning = 1
         case critical = 2

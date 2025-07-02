@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import VibeMeter
 
@@ -96,7 +97,7 @@ struct EnhancedBurnRateCalculatorTests {
         ))
         
         // Then
-        #expect(result.trend == .accelerating)
+        #expect(result.trend == EnhancedBurnRateCalculator.EnhancedBurnRate.Trend.accelerating)
         #expect(result.acceleration > 0)
     }
     
@@ -121,7 +122,7 @@ struct EnhancedBurnRateCalculatorTests {
         ))
         
         // Then
-        #expect(result.trend == .steady)
+        #expect(result.trend == EnhancedBurnRateCalculator.EnhancedBurnRate.Trend.steady)
         #expect(abs(result.acceleration) < 0.1)
     }
     
@@ -136,7 +137,7 @@ struct EnhancedBurnRateCalculatorTests {
         
         for day in 0..<7 {
             for hour in [9, 10, 14, 15, 16] { // Work hours with afternoon peak
-                var components = calendar.dateComponents([.year, .month, .day], from: now)
+                var components = calendar.dateComponents([Calendar.Component.year, Calendar.Component.month, Calendar.Component.day], from: now)
                 components.day! -= day
                 components.hour = hour
                 

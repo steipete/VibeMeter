@@ -33,12 +33,15 @@ final class TokenFormatterTests: XCTestCase {
     }
     
     func testFormatMillions() {
-        // Numbers 1,000,000+ should show millions with one decimal
+        // Numbers 1,000,000-9,999,999 should show millions with one decimal
         XCTAssertEqual(TokenFormatter.format(1_000_000), "1.0M")
         XCTAssertEqual(TokenFormatter.format(1_234_567), "1.2M")
         XCTAssertEqual(TokenFormatter.format(5_678_901), "5.7M") // Tests rounding
-        XCTAssertEqual(TokenFormatter.format(10_000_000), "10.0M")
-        XCTAssertEqual(TokenFormatter.format(123_456_789), "123.5M")
+        XCTAssertEqual(TokenFormatter.format(9_999_999), "10.0M")
+        
+        // Numbers 10,000,000+ should show no decimal places
+        XCTAssertEqual(TokenFormatter.format(10_000_000), "10M")
+        XCTAssertEqual(TokenFormatter.format(123_456_789), "123M")
     }
     
     // MARK: - Edge Cases

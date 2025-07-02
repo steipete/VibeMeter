@@ -36,6 +36,11 @@ public enum TokenFormatter {
             return "\(format(tokens))/hr"
         }
     }
+    
+    /// Formats a range of tokens with k/M suffixes
+    public static func formatRange(from: Int, to: Int) -> String {
+        return "\(format(from))-\(format(to))"
+    }
 }
 
 // MARK: - Convenience Extensions

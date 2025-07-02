@@ -158,6 +158,12 @@ final class ClaudeLogManagerMock: BaseMock, ClaudeLogManagerProtocol {
         recordCall("getCurrentWindowUsage")
         return calculateFiveHourWindowResult
     }
+    
+    func getSessionTracker() -> ClaudeSessionTracker {
+        recordCall("getSessionTracker")
+        // Return a new instance for testing
+        return ClaudeSessionTracker()
+    }
 
     // MARK: - Mock Control Methods
 

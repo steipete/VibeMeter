@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import VibeMeter
 
@@ -37,7 +38,7 @@ struct VelocityTrackerTests {
     }
     
     @Test("Calculate velocity with multiple data points")
-    func calculateVelocityWithMultipleDataPoints() {
+    func calculateVelocityWithMultipleDataPoints() throws {
         // Given
         let provider = ServiceProvider.claude
         let now = Date()
@@ -61,7 +62,7 @@ struct VelocityTrackerTests {
         (values: [1000, 2000, 3000, 4000, 5000], expectedTrend: VelocityTracker.VelocityInfo.Trend.increasing),
         (values: [100, 200, 400, 800, 1600], expectedTrend: VelocityTracker.VelocityInfo.Trend.increasing)
     ])
-    func detectsIncreasingTrend(values: [Double], expectedTrend: VelocityTracker.VelocityInfo.Trend) {
+    func detectsIncreasingTrend(values: [Double], expectedTrend: VelocityTracker.VelocityInfo.Trend) throws {
         // Given
         let provider = ServiceProvider.claude
         let now = Date()
@@ -81,7 +82,7 @@ struct VelocityTrackerTests {
     }
     
     @Test("Detects decreasing trend")
-    func detectsDecreasingTrend() {
+    func detectsDecreasingTrend() throws {
         // Given
         let provider = ServiceProvider.cursor
         let now = Date()
@@ -104,7 +105,7 @@ struct VelocityTrackerTests {
     @Test("Detects stable trend with small variations", arguments: [
         5000.0, 4950.0, 5050.0, 4980.0, 5020.0 // Small variations around 5000
     ])
-    func detectsStableTrend(baseValue: Double) {
+    func detectsStableTrend(baseValue: Double) throws {
         // Given
         let provider = ServiceProvider.claude
         let now = Date()
@@ -127,7 +128,7 @@ struct VelocityTrackerTests {
     // MARK: - Acceleration Detection Tests
     
     @Test("Detects acceleration with exponential growth")
-    func detectsAcceleration() {
+    func detectsAcceleration() throws {
         // Given
         let provider = ServiceProvider.claude
         let now = Date()
@@ -151,7 +152,7 @@ struct VelocityTrackerTests {
     // MARK: - Time-based Calculations Tests
     
     @Test("Detects peak hours from usage patterns")
-    func detectsPeakHours() {
+    func detectsPeakHours() throws {
         // Given
         let provider = ServiceProvider.claude
         let calendar = Calendar.current
@@ -178,7 +179,7 @@ struct VelocityTrackerTests {
     }
     
     @Test("Calculates 24-hour average correctly")
-    func calculates24HourAverage() {
+    func calculates24HourAverage() throws {
         // Given
         let provider = ServiceProvider.claude
         let now = Date()
@@ -281,11 +282,11 @@ struct VelocityTrackerTests {
     func updatesFromProviderUsage(provider: ServiceProvider, currentRequests: Int) {
         // Given
         let usage = ProviderUsageData(
-            totalRequests: 100,
             currentRequests: currentRequests,
-            requestsLimit: 500,
-            currentSpending: 25.0,
-            spendingLimit: 100.0
+            totalRequests: 100,
+            maxRequests: 500,
+            startOfMonth: Date().addingTimeInterval(-7 * 24 * 3600), // 7 days ago
+            provider: provider
         )
         
         // When

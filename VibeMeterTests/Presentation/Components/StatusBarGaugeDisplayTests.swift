@@ -22,16 +22,26 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         // Create mock dependencies
         settingsManager = MockSettingsManager()
         userSession = MultiProviderUserSessionData()
-        loginManager = MultiProviderLoginManager(settingsManager: settingsManager)
         spendingData = MultiProviderSpendingData()
         currencyData = CurrencyData()
         
+        // Create provider factory and login manager
+        let providerFactory = ProviderFactory(settingsManager: settingsManager, urlSession: URLSession.shared)
+        loginManager = MultiProviderLoginManager(providerFactory: providerFactory)
+        
+        // Create mock exchange rate manager and notification manager
+        let exchangeRateManager = ExchangeRateManagerMock()
+        let notificationManager = NotificationManagerMock()
+        
         orchestrator = MultiProviderDataOrchestrator(
-            userSession: userSession,
-            spendingData: spendingData,
-            currencyData: currencyData,
+            providerFactory: providerFactory,
             settingsManager: settingsManager,
-            notificationManager: NotificationManager()
+            exchangeRateManager: exchangeRateManager,
+            notificationManager: notificationManager,
+            loginManager: loginManager,
+            spendingData: spendingData,
+            userSessionData: userSession,
+            currencyData: currencyData
         )
         
         statusBarController = StatusBarController(
@@ -50,18 +60,17 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     func testClaudeQuotaGaugeWithLowUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Set up Claude spending data with low usage
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 10, // 10% usage
             totalRequests: 50_000, // Actual token count
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // When
         statusBarController.updateStatusItemDisplay()
@@ -76,18 +85,17 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     func testClaudeQuotaGaugeWithHighUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Set up Claude spending data with high usage
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 85, // 85% usage
             totalRequests: 425_000, // Actual token count
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // When
         statusBarController.updateStatusItemDisplay()
@@ -100,18 +108,17 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     func testClaudeQuotaGaugeWithNoUsage() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Set up Claude spending data with no usage
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 0, // 0% usage
             totalRequests: 0, // No tokens used
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // When
         statusBarController.updateStatusItemDisplay()
@@ -125,20 +132,20 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     @MainActor
     func testProviderUsageBadgeWithTokenFormatter() async {
         // Given
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 23, // Percentage for gauge
             totalRequests: 45_678, // Actual tokens for display
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // When - simulate badge view creation
-        let current = claudeData.usageData?.totalRequests ?? 0
+        let claudeData = spendingData.getSpendingData(for: .claude)
+        let current = claudeData?.usageData?.totalRequests ?? 0
         let max = 200_000 // Claude Pro limit
         let displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
         
@@ -149,17 +156,18 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     @MainActor
     func testProviderUsageBadgeWithSmallTokens() async {
         // Given
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 0,
             totalRequests: 146, // Small token count
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         // When
-        let current = claudeData.usageData?.totalRequests ?? 0
+        let claudeData = spendingData.getSpendingData(for: .claude)
+        let current = claudeData?.usageData?.totalRequests ?? 0
         let max = 200_000
         let displayText = "\(TokenFormatter.format(current))/\(TokenFormatter.format(max))"
         
@@ -178,23 +186,22 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
         
         // Test data state
         orchestrator.isRefreshing[.claude] = false
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
-        let claudeData = ProviderSpendingData(provider: .claude)
-        claudeData.updateUsageData(ProviderUsageData(
+        let usageData = ProviderUsageData(
             currentRequests: 50,
             totalRequests: 100_000,
             maxRequests: 100,
             startOfMonth: Date().startOfMonth,
             provider: .claude
-        ))
-        spendingData.updateProviderData(claudeData)
+        )
+        spendingData.updateUsage(for: .claude, from: usageData)
         
         statusBarController.updateStatusItemDisplay()
         // Would verify 50% gauge fill in actual UI
         
         // Test not logged in state
-        userSession.logout(from: .claude)
+        userSession.handleLogout(from: .claude)
         statusBarController.updateStatusItemDisplay()
         // Would verify empty gauge in actual UI
     }
@@ -239,7 +246,7 @@ final class StatusBarGaugeDisplayTests: XCTestCase {
     func testRealTimeGaugeUpdates() async {
         // Given
         settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
-        userSession.setLoggedIn(to: .claude, userInfo: ProviderUserInfo(email: "test@example.com", provider: .claude))
+        userSession.handleLoginSuccess(for: .claude, email: "test@example.com", teamName: nil)
         
         // Initial state
         let claudeData = ProviderSpendingData(provider: .claude)

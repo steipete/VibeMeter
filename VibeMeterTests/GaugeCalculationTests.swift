@@ -66,16 +66,16 @@ struct GaugeCalculationTests {
                     provider: ServiceProvider.cursor))
             // Create an invoice to set spending data
             let invoice = ProviderMonthlyInvoice(
-                items: [ProviderInvoiceItem(cents: Int(totalSpending * 100), description: "Test", provider: .cursor)],
+                items: [ProviderInvoiceItem(cents: Int(totalSpending * 100), description: "Test", provider: ServiceProvider.cursor)],
                 pricingDescription: nil,
-                provider: .cursor,
+                provider: ServiceProvider.cursor,
                 month: Calendar.current.component(.month, from: Date()),
                 year: Calendar.current.component(.year, from: Date()))
-            spendingData.updateSpending(for: .cursor, from: invoice, rates: [:], targetCurrency: "USD")
+            spendingData.updateSpending(for: ServiceProvider.cursor, from: invoice, rates: [:], targetCurrency: "USD")
 
             // Update usage data separately
             if let usageData = providerData.usageData {
-                spendingData.updateUsage(for: .cursor, from: usageData)
+                spendingData.updateUsage(for: ServiceProvider.cursor, from: usageData)
             }
             // Use handleLoginSuccess instead of setLoginState
             userSession.handleLoginSuccess(
@@ -97,10 +97,11 @@ struct GaugeCalculationTests {
     @Test("Calculate gauge for zero spending shows request usage")
     @MainActor
     func gaugeForZeroSpending() async {
-        let (controller, _, _, _, _) = createTestController(
+        let components = createTestController(
             totalSpending: 0,
             currentRequests: 182,
             maxRequests: 500)
+        let controller = components.controller
 
         controller.updateStatusItemDisplay()
 
@@ -116,12 +117,13 @@ struct GaugeCalculationTests {
     @Test("Calculate gauge for spending shows percentage of limit")
     @MainActor
     func gaugeForSpending() async {
-        let (controller, _, _, _, _) = createTestController(
+        let components = createTestController(
             totalSpending: 150, // $150 spent
             currentRequests: 100,
             maxRequests: 500,
             upperLimit: 300 // $300 limit
         )
+        let controller = components.controller
 
         controller.updateStatusItemDisplay()
 
@@ -134,12 +136,13 @@ struct GaugeCalculationTests {
     @Test("Gauge caps at 1.0 when over limit")
     @MainActor
     func gaugeCapsAtOne() async {
-        let (controller, _, _, _, _) = createTestController(
+        let components = createTestController(
             totalSpending: 400, // $400 spent
             currentRequests: 600,
             maxRequests: 500,
             upperLimit: 300 // $300 limit
         )
+        let controller = components.controller
 
         controller.updateStatusItemDisplay()
 
@@ -155,11 +158,14 @@ struct GaugeCalculationTests {
     @Test("Calculate gauge for Claude quota mode")
     @MainActor
     func gaugeForClaudeQuotaMode() async {
-        let (controller, settingsManager, _, userSession, _) = createTestController()
+        let components = createTestController()
+        let controller = components.controller
+        let settingsManager = components.settingsManager
+        let userSession = components.userSession
 
         // Enable Claude and set to quota mode
         userSession.handleLoginSuccess(for: ServiceProvider.claude, email: "test@claude.ai", teamName: "Claude Team")
-        settingsManager.displaySettingsManager.gaugeRepresentation = .claudeQuota
+        settingsManager.displaySettingsManager.gaugeRepresentation = GaugeRepresentation.claudeQuota
 
         // Mock Claude quota data
         let logManager = ClaudeLogManagerMock()
@@ -179,7 +185,10 @@ struct GaugeCalculationTests {
     @Test("Gauge updates from loading to data state")
     @MainActor
     func gaugeTransitionFromLoading() async {
-        let (controller, _, spendingData, userSession, _) = createTestController()
+        let components = createTestController()
+        let controller = components.controller
+        let spendingData = components.spendingData
+        let userSession = components.userSession
 
         // Initially should be loading or not logged in
         controller.updateStatusItemDisplay()
@@ -198,16 +207,16 @@ struct GaugeCalculationTests {
                 provider: ServiceProvider.cursor))
         // Create invoice to update spending
         let invoice = ProviderMonthlyInvoice(
-            items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: .cursor)],
+            items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: ServiceProvider.cursor)],
             pricingDescription: nil,
-            provider: .cursor,
+            provider: ServiceProvider.cursor,
             month: Date().month,
             year: Date().year)
-        spendingData.updateSpending(for: .cursor, from: invoice, rates: [:], targetCurrency: "USD")
+        spendingData.updateSpending(for: ServiceProvider.cursor, from: invoice, rates: [:], targetCurrency: "USD")
 
         // Update usage data
         if let usageData = providerData.usageData {
-            spendingData.updateUsage(for: .cursor, from: usageData)
+            spendingData.updateUsage(for: ServiceProvider.cursor, from: usageData)
         }
 
         controller.updateStatusItemDisplay()
@@ -220,7 +229,9 @@ struct GaugeCalculationTests {
     @Test("Gauge shows loading during data fetch")
     @MainActor
     func gaugeShowsLoadingDuringFetch() async {
-        let (controller, _, _, userSession, _) = createTestController()
+        let components = createTestController()
+        let controller = components.controller
+        let userSession = components.userSession
 
         userSession.handleLoginSuccess(for: ServiceProvider.cursor, email: "test@example.com", teamName: "Test Team")
 
@@ -269,7 +280,10 @@ struct GaugeCalculationTests {
     @Test("Gauge uses first provider with usage data")
     @MainActor
     func gaugeUsesFirstProviderWithData() async {
-        let (controller, _, spendingData, userSession, _) = createTestController()
+        let components = createTestController()
+        let controller = components.controller
+        let spendingData = components.spendingData
+        let userSession = components.userSession
 
         // Add Claude with no usage data
         userSession.handleLoginSuccess(for: ServiceProvider.claude, email: "test@claude.ai", teamName: "Claude Team")
@@ -281,7 +295,7 @@ struct GaugeCalculationTests {
         )
         // No need to set spending for Claude since it has 0 spending
         // Just update the connection status
-        spendingData.updateConnectionStatus(for: .claude, status: .connected)
+        spendingData.updateConnectionStatus(for: ServiceProvider.claude, status: .connected)
 
         // Add Cursor with usage data
         userSession.handleLoginSuccess(for: ServiceProvider.cursor, email: "test@cursor.sh", teamName: "Cursor Team")
@@ -299,14 +313,14 @@ struct GaugeCalculationTests {
         let cursorInvoice = ProviderMonthlyInvoice(
             items: [],
             pricingDescription: nil,
-            provider: .cursor,
+            provider: ServiceProvider.cursor,
             month: Date().month,
             year: Date().year)
-        spendingData.updateSpending(for: .cursor, from: cursorInvoice, rates: [:], targetCurrency: "USD")
+        spendingData.updateSpending(for: ServiceProvider.cursor, from: cursorInvoice, rates: [:], targetCurrency: "USD")
 
         // Update usage data
         if let usageData = cursorData.usageData {
-            spendingData.updateUsage(for: .cursor, from: usageData)
+            spendingData.updateUsage(for: ServiceProvider.cursor, from: usageData)
         }
 
         controller.updateStatusItemDisplay()
@@ -321,7 +335,10 @@ struct GaugeCalculationTests {
     @Test("Handle nil max requests gracefully")
     @MainActor
     func handleNilMaxRequests() async {
-        let (controller, _, spendingData, userSession, _) = createTestController()
+        let components = createTestController()
+        let controller = components.controller
+        let spendingData = components.spendingData
+        let userSession = components.userSession
 
         userSession.handleLoginSuccess(for: ServiceProvider.cursor, email: "test@example.com", teamName: "Test Team")
         let providerData = ProviderSpendingData(
@@ -336,16 +353,16 @@ struct GaugeCalculationTests {
                 provider: ServiceProvider.cursor))
         // Create invoice to update spending
         let invoice = ProviderMonthlyInvoice(
-            items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: .cursor)],
+            items: [ProviderInvoiceItem(cents: 5000, description: "Test", provider: ServiceProvider.cursor)],
             pricingDescription: nil,
-            provider: .cursor,
+            provider: ServiceProvider.cursor,
             month: Date().month,
             year: Date().year)
-        spendingData.updateSpending(for: .cursor, from: invoice, rates: [:], targetCurrency: "USD")
+        spendingData.updateSpending(for: ServiceProvider.cursor, from: invoice, rates: [:], targetCurrency: "USD")
 
         // Update usage data
         if let usageData = providerData.usageData {
-            spendingData.updateUsage(for: .cursor, from: usageData)
+            spendingData.updateUsage(for: ServiceProvider.cursor, from: usageData)
         }
 
         controller.updateStatusItemDisplay()
@@ -359,11 +376,13 @@ struct GaugeCalculationTests {
     @Test("Small value changes don't trigger update")
     @MainActor
     func smallChangesIgnored() async {
-        let (controller, _, spendingData, _, _) = createTestController(
+        let components = createTestController(
             totalSpending: 100,
             currentRequests: 250,
             maxRequests: 500,
             upperLimit: 300)
+        let controller = components.controller
+        let spendingData = components.spendingData
 
         controller.updateStatusItemDisplay()
 
@@ -379,16 +398,16 @@ struct GaugeCalculationTests {
             usageData: currentData.usageData)
         // Create invoice with slightly higher spending
         let updatedInvoice = ProviderMonthlyInvoice(
-            items: [ProviderInvoiceItem(cents: 10020, description: "Test", provider: .cursor)],
+            items: [ProviderInvoiceItem(cents: 10020, description: "Test", provider: ServiceProvider.cursor)],
             pricingDescription: nil,
-            provider: .cursor,
+            provider: ServiceProvider.cursor,
             month: Date().month,
             year: Date().year)
-        spendingData.updateSpending(for: .cursor, from: updatedInvoice, rates: [:], targetCurrency: "USD")
+        spendingData.updateSpending(for: ServiceProvider.cursor, from: updatedInvoice, rates: [:], targetCurrency: "USD")
 
         // Keep the same usage data
         if let usageData = currentData.usageData {
-            spendingData.updateUsage(for: .cursor, from: usageData)
+            spendingData.updateUsage(for: ServiceProvider.cursor, from: usageData)
         }
 
         controller.updateStatusItemDisplay()
