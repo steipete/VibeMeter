@@ -126,12 +126,47 @@ echo ""
 MARKETING_VERSION=$(grep 'MARKETING_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*MARKETING_VERSION = \(.*\)/\1/')
 BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION' "$PROJECT_ROOT/VibeMeter/version.xcconfig" | sed 's/.*CURRENT_PROJECT_VERSION = \(.*\)/\1/')
 
+# Check if MARKETING_VERSION already contains a pre-release suffix
+if [[ "$MARKETING_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-(.+))?$ ]]; then
+    BASE_VERSION="${BASH_REMATCH[1]}"
+    EXISTING_SUFFIX="${BASH_REMATCH[3]}"
+else
+    echo -e "${RED}❌ Error: Invalid version format in version.xcconfig: $MARKETING_VERSION${NC}"
+    exit 1
+fi
+
 # Determine release version
 if [[ "$RELEASE_TYPE" == "stable" ]]; then
+    if [[ -n "$EXISTING_SUFFIX" ]]; then
+        echo -e "${YELLOW}⚠️  Warning: version.xcconfig contains pre-release suffix '$EXISTING_SUFFIX' for a stable release${NC}"
+        echo "The MARKETING_VERSION should be just '$BASE_VERSION' for stable releases."
+        echo ""
+        read -p "Continue with version $MARKETING_VERSION? (y/n): " confirm
+        if [[ "$confirm" != "y" ]]; then
+            echo -e "${RED}❌ Release cancelled. Please update version.xcconfig first.${NC}"
+            exit 1
+        fi
+    fi
     RELEASE_VERSION="$MARKETING_VERSION"
     TAG_NAME="v$RELEASE_VERSION"
 else
-    RELEASE_VERSION="$MARKETING_VERSION-$RELEASE_TYPE.$PRERELEASE_NUMBER"
+    # For pre-releases, check if version already has the correct suffix
+    EXPECTED_SUFFIX="$RELEASE_TYPE.$PRERELEASE_NUMBER"
+    
+    if [[ -n "$EXISTING_SUFFIX" ]]; then
+        if [[ "$EXISTING_SUFFIX" == "$EXPECTED_SUFFIX" ]]; then
+            # Version already has the correct pre-release suffix
+            RELEASE_VERSION="$MARKETING_VERSION"
+        else
+            echo -e "${RED}❌ Error: version.xcconfig has suffix '$EXISTING_SUFFIX' but expected '$EXPECTED_SUFFIX'${NC}"
+            echo "Please update version.xcconfig to have MARKETING_VERSION = $BASE_VERSION-$EXPECTED_SUFFIX"
+            exit 1
+        fi
+    else
+        # No suffix in version.xcconfig, add it
+        RELEASE_VERSION="$BASE_VERSION-$EXPECTED_SUFFIX"
+        echo -e "${YELLOW}⚠️  Note: Adding pre-release suffix to create version $RELEASE_VERSION${NC}"
+    fi
     TAG_NAME="v$RELEASE_VERSION"
 fi
 
