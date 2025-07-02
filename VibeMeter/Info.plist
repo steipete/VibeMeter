@@ -94,7 +94,7 @@
     <key>SUPublicEDKey</key>
     <string>oIgha2beQWnyCXgOIlB8+oaUzFNtWgkqq6jKXNNDhv4=</string>
     <key>SUFeedURL</key>
-    <string>https://raw.githubusercontent.com/steipete/VibeMeter/main/appcast-prerelease.xml</string>
+    <string>https://stats.steipete.com/api/v1/appcast/appcast-prerelease.xml</string>
     <key>SUCheckAtStartup</key>
     <true/>
     <key>SUEnableAutomaticChecks</key>

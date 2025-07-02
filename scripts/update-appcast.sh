@@ -95,3 +95,6 @@ if [[ "$ED_SIGNATURE" == "SIGNATURE_PLACEHOLDER" ]]; then
     echo "⚠️  Remember to sign the DMG with your Sparkle private key and update the signature"
     echo "⚠️  Command: sign_update '$DMG_PATH'"
 fi
+
+# Push appcast to stats-store
+"$SCRIPT_DIR/push-appcast-to-stats-store.sh"
