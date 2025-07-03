@@ -17,9 +17,12 @@ This directory contains all automation scripts for VibeMeter development, buildi
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
+| [`prepare-release.sh`](./prepare-release.sh) | **⭐ All-in-one release preparation** | `./scripts/prepare-release.sh <version>` |
+| [`bump-version.sh`](./bump-version.sh) | Update version and auto-increment build | `./scripts/bump-version.sh <version> [build]` |
+| [`release-simple.sh`](./release-simple.sh) | Simplified release (reads from xcconfig) | `./scripts/release-simple.sh` |
+| [`release.sh`](./release.sh) | Full release automation script | `./scripts/release.sh <stable\|beta\|alpha\|rc> [number]` |
 | [`preflight-check.sh`](./preflight-check.sh) | Validate release readiness | `./scripts/preflight-check.sh` |
-| [`release.sh`](./release.sh) | **Main release automation script** | `./scripts/release.sh <stable\|beta\|alpha\|rc> [number]` |
-| [`version.sh`](./version.sh) | Manage version numbers | `./scripts/version.sh --patch\|--minor\|--major` |
+| [`push-appcast-to-stats-store.sh`](./push-appcast-to-stats-store.sh) | Push appcast to stats-store repo | `./scripts/push-appcast-to-stats-store.sh` |
 
 ### 🔐 **Code Signing & Distribution**
 
@@ -55,32 +58,53 @@ This directory contains all automation scripts for VibeMeter development, buildi
 
 ## 🔄 **Common Workflows**
 
+### **Quick Release Workflow (Recommended) ⭐**
+```bash
+# One command to prepare and create release
+./scripts/prepare-release.sh 2.0.0        # Stable release
+./scripts/prepare-release.sh 2.0.0-beta.4 # Pre-release
+
+# This handles everything:
+# ✅ Git status check
+# ✅ CHANGELOG.md verification
+# ✅ Version bump with auto-increment
+# ✅ Pre-flight checks
+# ✅ Release creation
+```
+
 ### **Development Workflow**
 ```bash
-# 1. Generate Xcode project (after Project.swift changes)
-./scripts/generate-xcproj.sh
-
-# 2. Format and lint code
+# 1. Format and lint code
 ./scripts/format.sh
 ./scripts/lint.sh
 
-# 3. Build and test
+# 2. Build and test
 ./scripts/build.sh --configuration Debug
 ```
 
-### **Release Workflow**
+### **Manual Release Workflow**
+```bash
+# 1. Update CHANGELOG.md
+# 2. Bump version (auto-increments build)
+./scripts/bump-version.sh 2.0.0-beta.4
+
+# 3. Commit changes
+git add -A && git commit -m "chore: prepare release"
+
+# 4. Create release (reads version from xcconfig)
+./scripts/release-simple.sh
+```
+
+### **Traditional Release Workflow**
 ```bash
 # 1. Check release readiness
 ./scripts/preflight-check.sh
 
-# 2. Verify IS_PRERELEASE_BUILD system
-./scripts/verify-prerelease-system.sh
+# 2. Update version.xcconfig manually
 
-# 3. Create release (choose appropriate type)
+# 3. Create release (specify type and number)
 ./scripts/release.sh stable           # Production release
-./scripts/release.sh beta 1           # Beta release
-./scripts/release.sh alpha 2          # Alpha release
-./scripts/release.sh rc 1             # Release candidate
+./scripts/release.sh beta 4           # Beta.4 release
 ```
 
 ### **Manual Build & Distribution**

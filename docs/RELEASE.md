@@ -11,19 +11,30 @@ VibeMeter uses an automated release process that handles all the complexity of:
 - Publishing to GitHub
 - Updating Sparkle appcast files
 
-## 🚀 Creating a Release
+## 🚀 Quick Release Guide (Recommended)
 
-### Step 1: Pre-flight Check
+### One-Command Release Preparation
 ```bash
-./scripts/preflight-check.sh
+./scripts/prepare-release.sh 2.0.0        # For stable release
+./scripts/prepare-release.sh 2.0.0-beta.4 # For pre-release
 ```
-This validates your environment is ready for release.
 
-### Step 2: Update CHANGELOG.md
+This script will guide you through:
+1. ✅ Checking git status
+2. ✅ Verifying CHANGELOG.md
+3. ✅ Bumping version and build number
+4. ✅ Running pre-flight checks
+5. ✅ Creating the release
+
+## 📋 Manual Release Process
+
+If you prefer to do each step manually:
+
+### Step 1: Update CHANGELOG.md
 Before creating any release, ensure the CHANGELOG.md file contains a proper section for the version being released:
 
 ```markdown
-## [1.1.0] - 2025-06-10
+## [2.0.0] - 2025-07-03
 
 ### 🎨 UI Improvements
 - **Enhanced feature** - Description of the improvement
@@ -32,22 +43,29 @@ Before creating any release, ensure the CHANGELOG.md file contains a proper sect
 
 **CRITICAL**: The appcast generation relies on the local CHANGELOG.md file, NOT the GitHub release description. The changelog must be added to CHANGELOG.md BEFORE running the release script.
 
-### Step 3: Update Version Configuration
-Before creating a release, update the version in `VibeMeter/version.xcconfig`:
-
-```
-MARKETING_VERSION = 2.0.0         # For stable releases
-MARKETING_VERSION = 2.0.0-beta.3  # For pre-releases
-CURRENT_PROJECT_VERSION = 203     # Must increment for each release
+### Step 2: Bump Version
+```bash
+./scripts/bump-version.sh 2.0.0          # Stable release
+./scripts/bump-version.sh 2.0.0-beta.4   # Pre-release
 ```
 
-**CRITICAL**: 
-- For pre-releases, include the suffix in MARKETING_VERSION (e.g., "2.0.0-beta.3")
-- For stable releases, use only the base version (e.g., "2.0.0")
-- The release script will detect and use the version as configured
-- Always increment CURRENT_PROJECT_VERSION (build number)
+This automatically:
+- Updates `MARKETING_VERSION` in version.xcconfig
+- Auto-increments `CURRENT_PROJECT_VERSION` (build number)
+- Sets `IS_PRERELEASE_BUILD` flag correctly
+
+### Step 3: Commit Changes
+```bash
+git add -A
+git commit -m "chore: prepare release 2.0.0 (build 204)"
+```
 
 ### Step 4: Create the Release
+```bash
+./scripts/release-simple.sh
+```
+
+Or use the original script:
 ```bash
 # For stable releases:
 ./scripts/release.sh stable
@@ -58,18 +76,15 @@ CURRENT_PROJECT_VERSION = 203     # Must increment for each release
 ./scripts/release.sh rc 1      # Expects version.xcconfig to have "2.0.0-rc.1"
 ```
 
-**IMPORTANT**: The release script validates that the version in version.xcconfig matches the expected format for the release type.
-
 The script will:
-1. Validate build number is unique and incrementing
-2. Generate Xcode project
-3. Build, sign, and notarize the app
-4. Create a DMG
-5. Publish to GitHub
-6. Update the appcast files with EdDSA signatures
-7. Commit and push all changes
+1. Validate everything is ready
+2. Build, sign, and notarize the app
+3. Create a DMG
+4. Publish to GitHub
+5. Update the appcast files with EdDSA signatures
+6. Push appcast to stats-store repository
 
-### Step 4: Verify Success
+### Step 5: Verify Success
 - Check the GitHub releases page
 - Verify the appcast was updated correctly with proper changelog content
 - Test updating from a previous version
@@ -272,6 +287,39 @@ codesign -dvv "VibeMeter.app/Contents/Frameworks/Sparkle.framework/Versions/B/XP
 
 # Check if build number is "1" (common bug)
 grep '<sparkle:version>' appcast-prerelease.xml
+```
+
+## 🛠️ Release Scripts Overview
+
+VibeMeter provides several scripts to streamline the release process:
+
+### Quick Release Scripts
+- **`prepare-release.sh`** - All-in-one script that guides you through the entire release process
+- **`bump-version.sh`** - Updates version and auto-increments build numbers
+- **`release-simple.sh`** - Simplified release that reads version from xcconfig
+
+### Core Release Scripts
+- **`release.sh`** - Main release script with full control
+- **`preflight-check.sh`** - Validates environment before release
+- **`push-appcast-to-stats-store.sh`** - Pushes appcast files to stats-store repo
+
+### Example Workflows
+
+#### Quick Release (Recommended)
+```bash
+# One command to prepare and release
+./scripts/prepare-release.sh 2.0.0-beta.4
+```
+
+#### Manual Steps
+```bash
+# 1. Update CHANGELOG.md
+# 2. Bump version
+./scripts/bump-version.sh 2.0.0-beta.4
+# 3. Commit changes
+git add -A && git commit -m "chore: prepare release 2.0.0-beta.4"
+# 4. Create release
+./scripts/release-simple.sh
 ```
 
 ## 📡 Appcast File Management
