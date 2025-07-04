@@ -13,7 +13,7 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     private let cacheVersionKey = "com.vibemeter.claudeLogCacheVersion"
     
     // Cache schema version - increment this when parser format changes
-    private let currentCacheVersion = 6 // Incremented for database migration
+    private let currentCacheVersion = 7 // Force cleanup of old permanent cache entries
     
     // Cache validity duration
     private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
@@ -340,21 +340,20 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     private func migrateToDatabase() async {
         logger.info("Starting migration from UserDefaults to database")
         
-        // Clean up old UserDefaults keys
-        let oldKeys = [
-            "com.vibemeter.claudeLogCache",
-            "com.vibemeter.claudeFileHashCache",
-            "com.vibemeter.claudeLogPermanentCache",
-            "com.vibemeter.claudeLogPermanentCacheMetadata"
-        ]
+        // Clean up ALL old UserDefaults keys including individual permanent cache entries
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        var removedCount = 0
         
-        for key in oldKeys {
-            if userDefaults.object(forKey: key) != nil {
+        for key in allKeys {
+            if key.contains("claudeLog") || key.contains("claudeFileHash") {
                 userDefaults.removeObject(forKey: key)
-                logger.debug("Removed old UserDefaults key: \(key)")
+                removedCount += 1
             }
         }
         
-        logger.info("Migration complete - old UserDefaults cache cleared")
+        // Also remove the file hash cache
+        userDefaults.removeObject(forKey: "com.vibemeter.claudeFileHashCache")
+        
+        logger.info("Migration complete - removed \(removedCount) old UserDefaults cache entries")
     }
 }

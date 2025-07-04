@@ -136,6 +136,9 @@ public final class MultiProviderDataOrchestrator {
 
         // Trigger initial data refresh for providers with existing tokens
         Task {
+            // Add a small delay to let the UI settle before heavy processing
+            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            
             let loggedInProviders = loginManager.loggedInProviders
             logger.info("Starting initial data refresh for \(loggedInProviders.count) logged-in providers")
 
@@ -146,6 +149,11 @@ public final class MultiProviderDataOrchestrator {
                     logger.info("Claude: Initial check - hasToken: \(hasToken)")
                 }
                 await refreshData(for: provider, showSyncedMessage: false)
+                
+                // Small delay between providers to prevent simultaneous heavy processing
+                if provider == .claude {
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                }
             }
 
             // Start monitoring systems

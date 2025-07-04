@@ -53,18 +53,22 @@ actor ClaudeLogProcessor {
 
         let collector = ResultCollector(cache: cache)
 
-        // Use all available processors for maximum parallelism
-        let processorCount = ProcessInfo.processInfo.activeProcessorCount
-        logger.info("Processing \(fileURLs.count) log files using \(processorCount) processors")
+        // Limit concurrent tasks to prevent CPU overload
+        let maxConcurrentTasks = min(4, ProcessInfo.processInfo.activeProcessorCount)
+        logger.info("Processing \(fileURLs.count) log files using max \(maxConcurrentTasks) concurrent tasks")
 
-        // Process all files concurrently with TRUE parallelism
+        // Process files with controlled concurrency
         await withTaskGroup(of: ([ClaudeLogEntry], String, Data)?.self, returning: Void.self) { group in
-            // Add all tasks at once - Swift concurrency will manage the actual parallelism
-            for fileURL in fileURLs {
+            var fileIndex = 0
+            
+            // Start initial batch of tasks
+            for _ in 0..<min(maxConcurrentTasks, fileURLs.count) {
+                let fileURL = fileURLs[fileIndex]
                 group.addTask(priority: .background) { [self] in
                     // Process file without actor isolation to allow true parallelism
                     return await self.processFileParallel(fileURL, existingCache: cache, cacheManager: cacheManager)
                 }
+                fileIndex += 1
             }
 
             // Collect results as they complete
@@ -76,6 +80,15 @@ actor ClaudeLogProcessor {
                     await collector.addResult(entries: entries, fileKey: fileKey, fileHash: fileHash)
                 } else {
                     await collector.incrementProcessedCount()
+                }
+
+                // Start next task if there are more files
+                if fileIndex < fileURLs.count {
+                    let fileURL = fileURLs[fileIndex]
+                    group.addTask(priority: .background) { [self] in
+                        return await self.processFileParallel(fileURL, existingCache: cache, cacheManager: cacheManager)
+                    }
+                    fileIndex += 1
                 }
 
                 // Send progress update every 10 files or on last file
