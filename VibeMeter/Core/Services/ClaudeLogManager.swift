@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import Foundation
 import os.log
 
@@ -292,16 +293,15 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
                 // Cache the results
                 cacheManager.cacheTodaysLog(entries, for: todaysLogFile, fileManager: fileManager)
                 
-                // Also update the daily usage cache with today's data
-                let todayDate = Calendar.current.startOfDay(for: Date())
-                if var cachedDaily = cacheManager.cachedDailyUsage {
-                    cachedDaily[todayDate] = entries
-                    cacheManager.cachedDailyUsage = cachedDaily
-                } else {
-                    cacheManager.cachedDailyUsage = [todayDate: entries]
+                // Cache today's entries in database
+                if !entries.isEmpty {
+                    let todayFileKey = todaysLogFile.lastPathComponent
+                    if let todayFileData = try? Data(contentsOf: todaysLogFile) {
+                        let todayFileHash = Data(SHA256.hash(data: todayFileData))
+                        await cacheManager.permanentlyCacheEntries(entries, for: todayFileKey, fileHash: todayFileHash)
+                        logger.info("Cached \(entries.count) entries for today in database")
+                    }
                 }
-                
-                logger.info("Cached \(entries.count) entries for today in daily usage cache")
             }
 
             let recentFromToday = entries.filter { $0.timestamp >= fiveHoursAgo }
@@ -309,14 +309,16 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
             logger.debug("Found \(recentFromToday.count) recent entries in today's log")
         }
 
-        // If we need more data (crossing day boundary), check cached data
+        // If we need more data (crossing day boundary), check database
         if Calendar.current.startOfDay(for: Date()) > fiveHoursAgo {
             // We need data from yesterday too
-            if let cachedData = cacheManager.cachedDailyUsage {
-                let yesterdayEntries = cachedData.values.flatMap(\.self)
-                    .filter { $0.timestamp >= fiveHoursAgo && $0.timestamp < Calendar.current.startOfDay(for: Date()) }
+            let yesterdayStart = fiveHoursAgo
+            let todayStart = Calendar.current.startOfDay(for: Date())
+            if let cachedData = await cacheManager.getCachedDailyUsage(from: yesterdayStart, to: todayStart) {
+                let yesterdayEntries = cachedData.values.flatMap { $0 }
+                    .filter { $0.timestamp >= fiveHoursAgo && $0.timestamp < todayStart }
                 recentEntries.append(contentsOf: yesterdayEntries)
-                logger.debug("Added \(yesterdayEntries.count) entries from cache")
+                logger.debug("Added \(yesterdayEntries.count) entries from database")
             }
         }
 
@@ -332,9 +334,11 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         
         // Also include all of today's entries for accurate token counting
         let todayDate = Calendar.current.startOfDay(for: Date())
-        if let todaysCachedData = cacheManager.cachedDailyUsage?[todayDate] {
+        if let todaysCachedData = await cacheManager.getCachedDailyUsage(from: todayDate, to: Date()) {
             // Merge today's full data with what we already have
-            windowDailyUsage[todayDate] = todaysCachedData
+            if let todaysEntries = todaysCachedData[todayDate] {
+                windowDailyUsage[todayDate] = todaysEntries
+            }
         }
 
         // Update session tracker with recent entries

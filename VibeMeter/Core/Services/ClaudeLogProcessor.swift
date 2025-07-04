@@ -189,9 +189,7 @@ actor ClaudeLogProcessor {
             
             // Store in permanent cache if eligible
             if let cacheManager = cacheManager, !entries.isEmpty {
-                await MainActor.run {
-                    await cacheManager.permanentlyCacheEntries(entries, for: fileKey, fileHash: hashData)
-                }
+                await cacheManager.permanentlyCacheEntries(entries, for: fileKey, fileHash: hashData)
             }
 
             return (entries, fileKey, hashData)

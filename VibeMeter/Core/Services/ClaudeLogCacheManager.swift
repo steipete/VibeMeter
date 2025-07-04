@@ -266,15 +266,11 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     public func cleanupOldPermanentCache(olderThan days: Int = 90) async {
         guard databaseManager.isInitialized else { return }
         
-        let cutoffDate = Date().addingTimeInterval(-Double(days) * 24 * 60 * 60)
+        _ = Date().addingTimeInterval(-Double(days) * 24 * 60 * 60)
         
-        do {
-            // For now, we'll keep all data in the database
-            // In the future, we might want to implement cleanup based on date
-            logger.info("Database cleanup not yet implemented - all data retained")
-        } catch {
-            logger.error("Failed to cleanup old cache: \(error)")
-        }
+        // For now, we'll keep all data in the database
+        // In the future, we might want to implement cleanup based on date
+        logger.info("Database cleanup not yet implemented - all data retained")
     }
     
     // MARK: - Cache Management
@@ -293,16 +289,16 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
         for (_, entries) in dailyUsage {
             let dailyUsages = entries.map { entry in
                 DailyClaudeUsage(
-                    conversationId: entry.conversationId,
+                    conversationId: entry.parentUuid ?? UUID().uuidString,
                     timestamp: entry.timestamp,
-                    model: entry.model,
+                    model: entry.model ?? "unknown",
                     inputTokens: entry.inputTokens,
                     outputTokens: entry.outputTokens,
-                    cacheCreationTokens: entry.cacheCreationInputTokens,
-                    cacheReadTokens: entry.cacheReadInputTokens,
-                    costUSD: entry.totalCost,
-                    project: entry.project,
-                    title: entry.title
+                    cacheCreationTokens: entry.cacheCreationTokens ?? 0,
+                    cacheReadTokens: entry.cacheReadTokens ?? 0,
+                    costUSD: entry.costUSD ?? 0.0,
+                    project: entry.projectName,
+                    title: nil
                 )
             }
             
