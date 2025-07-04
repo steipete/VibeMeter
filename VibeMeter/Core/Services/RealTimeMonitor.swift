@@ -28,7 +28,7 @@ public final class RealTimeMonitor: ObservableObject {
         public let providers: [ServiceProvider]
         
         public static let `default` = Configuration(
-            updateInterval: 30, // 30 seconds
+            updateInterval: 60, // 60 seconds - reduced from 30 for better performance
             enableAnomalyDetection: true,
             enablePredictiveAlerts: true,
             burnRateThreshold: 10000, // tokens/hour

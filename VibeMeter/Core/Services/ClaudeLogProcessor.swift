@@ -78,8 +78,10 @@ actor ClaudeLogProcessor {
                     await collector.incrementProcessedCount()
                 }
 
-                // Send progress update if handler provided
-                if let progressHandler {
+                // Send progress update every 10 files or on last file
+                let shouldUpdateProgress = processedCount % 10 == 0 || processedCount == fileURLs.count
+                
+                if let progressHandler, shouldUpdateProgress {
                     let (currentDailyUsage, _, currentFilesProcessed) = await collector.getResults()
                     await progressHandler(currentFilesProcessed, currentDailyUsage)
                 }

@@ -157,6 +157,8 @@ final class ClaudeUsageDataLoader {
     var availableProjects: [String] = []
 
     private let claudeLogManager = ClaudeLogManager.shared
+    private var updateTimer: Timer?
+    private var pendingDailyUsage: [Date: [ClaudeLogEntry]]?
 
     func loadData(forceRefresh: Bool = false) {
         guard !isLoading else { return }
@@ -208,18 +210,31 @@ extension ClaudeUsageDataLoader: ClaudeLogProgressDelegate {
 
     func logProcessingDidUpdate(filesProcessed: Int, dailyUsage: [Date: [ClaudeLogEntry]]) {
         self.filesProcessed = filesProcessed
-        self.dailyUsage = dailyUsage
+        self.pendingDailyUsage = dailyUsage
 
         let percentage = totalFiles > 0 ? Int((Double(filesProcessed) / Double(totalFiles)) * 100) : 0
         self.loadingMessage = "Processing files... \(percentage)% (\(filesProcessed)/\(totalFiles))"
 
-        // Update available projects
-        updateAvailableProjects()
-
-        // Keep isLoading true - it will be set to false in logProcessingDidComplete
+        // Cancel existing timer
+        updateTimer?.invalidate()
+        
+        // Debounce the UI update by 0.5 seconds
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self, let pendingData = self.pendingDailyUsage else { return }
+                self.dailyUsage = pendingData
+                self.updateAvailableProjects()
+                self.pendingDailyUsage = nil
+            }
+        }
     }
 
     func logProcessingDidComplete(dailyUsage: [Date: [ClaudeLogEntry]]) {
+        // Cancel any pending timer
+        updateTimer?.invalidate()
+        updateTimer = nil
+        pendingDailyUsage = nil
+        
         self.dailyUsage = dailyUsage
         self.isLoading = false
         self.loadingMessage = ""
