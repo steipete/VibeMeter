@@ -176,9 +176,7 @@ actor ClaudeLogProcessor {
             // Check permanent cache if available
             if let cacheManager = cacheManager {
                 // Need to call this on MainActor since ClaudeLogCacheManager is @MainActor
-                let cachedEntries = await MainActor.run {
-                    cacheManager.getPermanentlyCachedEntries(for: fileKey, fileHash: hashData)
-                }
+                let cachedEntries = await cacheManager.getPermanentlyCachedEntries(for: fileKey, fileHash: hashData)
                 
                 if let entries = cachedEntries {
                     // Return cached entries with metadata
@@ -192,7 +190,7 @@ actor ClaudeLogProcessor {
             // Store in permanent cache if eligible
             if let cacheManager = cacheManager, !entries.isEmpty {
                 await MainActor.run {
-                    cacheManager.permanentlyCacheEntries(entries, for: fileKey, fileHash: hashData)
+                    await cacheManager.permanentlyCacheEntries(entries, for: fileKey, fileHash: hashData)
                 }
             }
 

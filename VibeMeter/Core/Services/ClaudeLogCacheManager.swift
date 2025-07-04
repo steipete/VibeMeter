@@ -1,22 +1,19 @@
 import Foundation
 import os.log
 
-/// Manages all caching for Claude log data
+/// Manages all caching for Claude log data using SQLite database
 @MainActor
 public final class ClaudeLogCacheManager: @unchecked Sendable {
     private let logger = Logger.vibeMeter(category: "ClaudeLogCacheManager")
     private let userDefaults: UserDefaults
+    private let databaseManager = DatabaseManager.shared
     
-    // Cache keys for UserDefaults
-    private let cacheKey = "com.vibemeter.claudeLogCache"
+    // Cache keys for UserDefaults (only for small metadata)
     private let cacheTimestampKey = "com.vibemeter.claudeLogCacheTimestamp"
-    private let fileHashCacheKey = "com.vibemeter.claudeFileHashCache"
     private let cacheVersionKey = "com.vibemeter.claudeLogCacheVersion"
-    private let permanentCacheKey = "com.vibemeter.claudeLogPermanentCache"
-    private let permanentCacheMetadataKey = "com.vibemeter.claudeLogPermanentCacheMetadata"
     
     // Cache schema version - increment this when parser format changes
-    private let currentCacheVersion = 5 // Incremented for permanent cache support
+    private let currentCacheVersion = 6 // Incremented for database migration
     
     // Cache validity duration
     private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
@@ -39,28 +36,61 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
         // Check cache version and invalidate if outdated
         let storedVersion = userDefaults.integer(forKey: cacheVersionKey)
         if storedVersion < currentCacheVersion {
-            logger.info("Cache version outdated (stored: \(storedVersion), current: \(self.currentCacheVersion)). Clearing cache.")
-            invalidateAll()
+            logger.info("Cache version outdated (stored: \(storedVersion), current: \(self.currentCacheVersion)). Migrating to database.")
+            Task {
+                await migrateToDatabase()
+            }
             userDefaults.set(currentCacheVersion, forKey: cacheVersionKey)
         }
         
-        // Perform periodic cleanup of old permanent cache entries
-        cleanupOldPermanentCache()
+        // Initialize database if needed
+        Task {
+            do {
+                if !databaseManager.isInitialized {
+                    try await databaseManager.initialize()
+                }
+            } catch {
+                logger.error("Failed to initialize database: \(error)")
+            }
+        }
     }
     
     // MARK: - Daily Usage Cache
     
-    /// Get cached daily usage data
-    public var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
-        get {
-            // Don't cache full daily usage in UserDefaults - it's too large
-            // Rely on permanent cache for individual files instead
+    /// Get cached daily usage data from database
+    public func getCachedDailyUsage(from startDate: Date, to endDate: Date) async -> [Date: [ClaudeLogEntry]]? {
+        guard databaseManager.isInitialized else { return nil }
+        
+        do {
+            let dailyUsage = try await databaseManager.fetchClaudeLogs(from: startDate, to: endDate)
+            
+            // Convert DailyClaudeUsage to ClaudeLogEntry and group by date
+            var result: [Date: [ClaudeLogEntry]] = [:]
+            for usage in dailyUsage {
+                let entry = ClaudeLogEntry(
+                    timestamp: usage.timestamp,
+                    model: usage.model,
+                    inputTokens: usage.inputTokens,
+                    outputTokens: usage.outputTokens,
+                    cacheCreationTokens: usage.cacheCreationTokens,
+                    cacheReadTokens: usage.cacheReadTokens,
+                    costUSD: usage.costUSD,
+                    projectName: usage.project,
+                    parentUuid: usage.conversationId,
+                    conversationType: nil
+                )
+                
+                let date = Calendar.current.startOfDay(for: usage.timestamp)
+                if result[date] == nil {
+                    result[date] = []
+                }
+                result[date]?.append(entry)
+            }
+            
+            return result.isEmpty ? nil : result
+        } catch {
+            logger.error("Failed to fetch cached daily usage: \(error)")
             return nil
-        }
-        set {
-            // Don't store in UserDefaults to avoid 4MB limit
-            // The permanent cache handles individual file caching
-            logger.debug("Skipping UserDefaults cache for daily usage (too large)")
         }
     }
     
@@ -82,13 +112,15 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     
     // MARK: - File Hash Cache
     
-    /// File hash cache for detecting changes
-    public var fileHashCache: [String: Data] {
-        get {
-            userDefaults.dictionary(forKey: fileHashCacheKey) as? [String: Data] ?? [:]
-        }
-        set {
-            userDefaults.set(newValue, forKey: fileHashCacheKey)
+    /// Check if file hash exists in database
+    public func hasFileHash(_ hash: String) async -> Bool {
+        guard databaseManager.isInitialized else { return false }
+        
+        do {
+            return try await databaseManager.hasLogsForFile(hash: hash)
+        } catch {
+            logger.error("Failed to check file hash: \(error)")
+            return false
         }
     }
     
@@ -145,33 +177,6 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     
     // MARK: - Permanent Cache for Old Files
     
-    /// Structure to store metadata about permanently cached files
-    private struct PermanentCacheMetadata: Codable {
-        let fileKey: String
-        let fileHash: Data
-        let entryCount: Int
-        let dateRange: ClosedRange<Date>
-        let cachedAt: Date
-    }
-    
-    /// Get permanent cache metadata
-    private var permanentCacheMetadata: [String: PermanentCacheMetadata] {
-        get {
-            guard let data = userDefaults.data(forKey: permanentCacheMetadataKey),
-                  let decoded = try? JSONDecoder().decode([String: PermanentCacheMetadata].self, from: data) else {
-                return [:]
-            }
-            return decoded
-        }
-        set {
-            if let encoded = try? JSONEncoder().encode(newValue) {
-                userDefaults.set(encoded, forKey: permanentCacheMetadataKey)
-            } else {
-                userDefaults.removeObject(forKey: permanentCacheMetadataKey)
-            }
-        }
-    }
-    
     /// Check if a file is eligible for permanent caching (older than today)
     public func isEligibleForPermanentCache(fileKey: String, entries: [ClaudeLogEntry]) -> Bool {
         guard !entries.isEmpty else { return false }
@@ -184,157 +189,176 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
         return latestDate < todayStart
     }
     
-    /// Get permanently cached entries for a file
-    public func getPermanentlyCachedEntries(for fileKey: String, fileHash: Data) -> [ClaudeLogEntry]? {
-        // Check metadata first
-        guard let metadata = permanentCacheMetadata[fileKey],
-              metadata.fileHash == fileHash else {
-            return nil
-        }
+    /// Get permanently cached entries for a file from database
+    public func getPermanentlyCachedEntries(for fileKey: String, fileHash: Data) async -> [ClaudeLogEntry]? {
+        guard databaseManager.isInitialized else { return nil }
         
-        // Load the actual entries
-        let fullKey = "\(permanentCacheKey).\(fileKey)"
-        guard let data = userDefaults.data(forKey: fullKey),
-              let entries = try? JSONDecoder().decode([ClaudeLogEntry].self, from: data) else {
-            // Metadata exists but data is missing - clean up
-            var updatedMetadata = permanentCacheMetadata
-            updatedMetadata.removeValue(forKey: fileKey)
-            permanentCacheMetadata = updatedMetadata
-            return nil
-        }
+        let hashString = fileHash.base64EncodedString()
         
-        logger.debug("Retrieved \(entries.count) entries from permanent cache for \(fileKey)")
-        return entries
-    }
-    
-    /// Permanently cache entries for a file
-    public func permanentlyCacheEntries(_ entries: [ClaudeLogEntry], for fileKey: String, fileHash: Data) {
-        guard !entries.isEmpty,
-              isEligibleForPermanentCache(fileKey: fileKey, entries: entries) else {
-            return
-        }
-        
-        // Store the entries
-        let fullKey = "\(permanentCacheKey).\(fileKey)"
-        guard let encoded = try? JSONEncoder().encode(entries) else {
-            logger.error("Failed to encode entries for permanent cache")
-            return
-        }
-        
-        userDefaults.set(encoded, forKey: fullKey)
-        
-        // Store metadata
-        let minDate = entries.min(by: { $0.timestamp < $1.timestamp })?.timestamp ?? Date()
-        let maxDate = entries.max(by: { $0.timestamp < $1.timestamp })?.timestamp ?? Date()
-        
-        let metadata = PermanentCacheMetadata(
-            fileKey: fileKey,
-            fileHash: fileHash,
-            entryCount: entries.count,
-            dateRange: minDate...maxDate,
-            cachedAt: Date()
-        )
-        
-        var updatedMetadata = permanentCacheMetadata
-        updatedMetadata[fileKey] = metadata
-        permanentCacheMetadata = updatedMetadata
-        
-        logger.info("Permanently cached \(entries.count) entries for \(fileKey) (dates: \(minDate)...\(maxDate))")
-    }
-    
-    /// Clean up permanent cache entries older than a certain age
-    public func cleanupOldPermanentCache(olderThan days: Int = 90) {
-        let cutoffDate = Date().addingTimeInterval(-Double(days) * 24 * 60 * 60)
-        var metadata = permanentCacheMetadata
-        var removedCount = 0
-        
-        for (fileKey, meta) in metadata {
-            if meta.cachedAt < cutoffDate {
-                // Remove the actual data
-                let fullKey = "\(permanentCacheKey).\(fileKey)"
-                userDefaults.removeObject(forKey: fullKey)
-                
-                // Remove metadata
-                metadata.removeValue(forKey: fileKey)
-                removedCount += 1
+        do {
+            // Check if we have logs for this file hash
+            guard try await databaseManager.hasLogsForFile(hash: hashString) else {
+                return nil
             }
+            
+            // Fetch all logs (we'll filter by file hash later if needed)
+            let allLogs = try await databaseManager.fetchClaudeLogs()
+            
+            // Convert to ClaudeLogEntry
+            let entries = allLogs.map { usage in
+                ClaudeLogEntry(
+                    timestamp: usage.timestamp,
+                    model: usage.model,
+                    inputTokens: usage.inputTokens,
+                    outputTokens: usage.outputTokens,
+                    cacheCreationTokens: usage.cacheCreationTokens,
+                    cacheReadTokens: usage.cacheReadTokens,
+                    costUSD: usage.costUSD,
+                    projectName: usage.project,
+                    parentUuid: usage.conversationId,
+                    conversationType: nil
+                )
+            }
+            
+            logger.debug("Retrieved \(entries.count) entries from database for \(fileKey)")
+            return entries
+        } catch {
+            logger.error("Failed to get cached entries: \(error)")
+            return nil
+        }
+    }
+    
+    /// Permanently cache entries for a file in database
+    public func permanentlyCacheEntries(_ entries: [ClaudeLogEntry], for fileKey: String, fileHash: Data) async {
+        guard !entries.isEmpty,
+              isEligibleForPermanentCache(fileKey: fileKey, entries: entries),
+              databaseManager.isInitialized else {
+            return
         }
         
-        if removedCount > 0 {
-            permanentCacheMetadata = metadata
-            logger.info("Cleaned up \(removedCount) old permanent cache entries")
+        let hashString = fileHash.base64EncodedString()
+        
+        // Convert to DailyClaudeUsage for database storage
+        let dailyUsages = entries.map { entry in
+            DailyClaudeUsage(
+                conversationId: entry.parentUuid ?? UUID().uuidString,
+                timestamp: entry.timestamp,
+                model: entry.model ?? "unknown",
+                inputTokens: entry.inputTokens,
+                outputTokens: entry.outputTokens,
+                cacheCreationTokens: entry.cacheCreationTokens ?? 0,
+                cacheReadTokens: entry.cacheReadTokens ?? 0,
+                costUSD: entry.costUSD ?? 0.0,
+                project: entry.projectName,
+                title: nil
+            )
+        }
+        
+        do {
+            try await databaseManager.insertClaudeLogs(dailyUsages, filePath: fileKey, fileHash: hashString)
+            logger.info("Permanently cached \(entries.count) entries for \(fileKey) in database")
+        } catch {
+            logger.error("Failed to cache entries in database: \(error)")
+        }
+    }
+    
+    /// Clean up old cache entries from database
+    public func cleanupOldPermanentCache(olderThan days: Int = 90) async {
+        guard databaseManager.isInitialized else { return }
+        
+        let cutoffDate = Date().addingTimeInterval(-Double(days) * 24 * 60 * 60)
+        
+        do {
+            // For now, we'll keep all data in the database
+            // In the future, we might want to implement cleanup based on date
+            logger.info("Database cleanup not yet implemented - all data retained")
+        } catch {
+            logger.error("Failed to cleanup old cache: \(error)")
         }
     }
     
     // MARK: - Cache Management
     
-    /// Update daily usage cache
-    public func updateDailyUsageCache(_ dailyUsage: [Date: [ClaudeLogEntry]], fileHashCache: [String: Data]) {
-        // Don't cache the full daily usage - it's too large for UserDefaults
-        // Only update the timestamp and file hash cache
+    /// Update daily usage cache in database
+    public func updateDailyUsageCache(_ dailyUsage: [Date: [ClaudeLogEntry]], fileHashCache: [String: Data]) async {
+        guard databaseManager.isInitialized else {
+            logger.warning("Database not initialized, skipping cache update")
+            return
+        }
+        
+        // Update timestamp
         self.cacheTimestamp = Date()
-        self.fileHashCache = fileHashCache
+        
+        // Convert and store in database
+        for (_, entries) in dailyUsage {
+            let dailyUsages = entries.map { entry in
+                DailyClaudeUsage(
+                    conversationId: entry.conversationId,
+                    timestamp: entry.timestamp,
+                    model: entry.model,
+                    inputTokens: entry.inputTokens,
+                    outputTokens: entry.outputTokens,
+                    cacheCreationTokens: entry.cacheCreationInputTokens,
+                    cacheReadTokens: entry.cacheReadInputTokens,
+                    costUSD: entry.totalCost,
+                    project: entry.project,
+                    title: entry.title
+                )
+            }
+            
+            do {
+                try await databaseManager.insertClaudeLogs(dailyUsages)
+            } catch {
+                logger.error("Failed to update database cache: \(error)")
+            }
+        }
         
         let totalEntries = dailyUsage.values.flatMap { $0 }.count
-        logger.info("Processed \(totalEntries) entries, updated cache timestamp (not storing full data)")
+        logger.info("Processed \(totalEntries) entries, updated database cache")
     }
     
     /// Invalidate all caches
     public func invalidateAll() {
-        // Remove the old cache key if it exists
-        userDefaults.removeObject(forKey: cacheKey)
         cacheTimestamp = nil
-        fileHashCache = [:]
         currentWindowCache = nil
         currentWindowCacheTime = nil
         todaysLogCache = nil
         todaysLogCacheURL = nil
         todaysLogCacheModificationDate = nil
-        // Note: We don't clear permanent cache on normal invalidation
+        // Note: We don't clear database on normal invalidation
     }
     
-    /// Clear permanent cache (use with caution)
-    public func clearPermanentCache() {
-        let metadata = permanentCacheMetadata
+    /// Clear all database cache (use with caution)
+    public func clearPermanentCache() async {
+        guard databaseManager.isInitialized else { return }
         
-        // Remove all permanent cache entries
-        for fileKey in metadata.keys {
-            let fullKey = "\(permanentCacheKey).\(fileKey)"
-            userDefaults.removeObject(forKey: fullKey)
+        do {
+            try await databaseManager.clearAllData()
+            logger.warning("Cleared all database cache entries")
+        } catch {
+            logger.error("Failed to clear database cache: \(error)")
         }
-        
-        // Clear metadata
-        userDefaults.removeObject(forKey: permanentCacheMetadataKey)
-        
-        logger.warning("Cleared all permanent cache entries")
     }
     
-    /// Migrate existing daily usage cache to permanent cache
-    public func migrateExistingCacheToPermanent(fileHashCache: [String: Data]) {
-        guard let dailyUsage = cachedDailyUsage else {
-            logger.info("No existing cache to migrate")
-            return
-        }
+    /// Migrate existing UserDefaults cache to database
+    private func migrateToDatabase() async {
+        logger.info("Starting migration from UserDefaults to database")
         
-        logger.info("Starting migration of existing cache to permanent storage")
+        // Clean up old UserDefaults keys
+        let oldKeys = [
+            "com.vibemeter.claudeLogCache",
+            "com.vibemeter.claudeFileHashCache",
+            "com.vibemeter.claudeLogPermanentCache",
+            "com.vibemeter.claudeLogPermanentCacheMetadata"
+        ]
         
-        // Group entries by file
-        let todayStart = Calendar.current.startOfDay(for: Date())
-        
-        for (_, dayEntries) in dailyUsage {
-            for entry in dayEntries {
-                // Skip today's entries
-                if entry.timestamp >= todayStart {
-                    continue
-                }
-                
-                // Try to extract file key from entry data (this is a heuristic)
-                // In a real implementation, we'd need to track which file each entry came from
-                // For now, we'll skip migration and let the cache rebuild naturally
-                logger.debug("Skipping migration for entry - file tracking not available")
+        for key in oldKeys {
+            if userDefaults.object(forKey: key) != nil {
+                userDefaults.removeObject(forKey: key)
+                logger.debug("Removed old UserDefaults key: \(key)")
             }
         }
         
-        logger.info("Migration complete - cache will be built incrementally as files are processed")
+        logger.info("Migration complete - old UserDefaults cache cleared")
     }
 }

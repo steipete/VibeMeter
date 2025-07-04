@@ -10,6 +10,7 @@
 		2F5E9A9C2D51AA5800123456 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 2F5E9A9B2D51AA5800123456 /* Logging */; };
 		2F5E9A9F2D51AA6300123456 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 2F5E9A9E2D51AA6300123456 /* KeychainAccess */; };
 		2F5E9AA22D51AA6F00123456 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 2F5E9AA12D51AA6F00123456 /* Sparkle */; };
+		2F5E9AA52D51AA7500123456 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 2F5E9AA42D51AA7500123456 /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 				2F5E9A9C2D51AA5800123456 /* Logging in Frameworks */,
 				2F5E9A9F2D51AA6300123456 /* KeychainAccess in Frameworks */,
 				2F5E9AA22D51AA6F00123456 /* Sparkle in Frameworks */,
+				2F5E9AA52D51AA7500123456 /* GRDB in Frameworks */,
 			);
 		};
 		2F5E9A6A2D51A9A400123456 /* Frameworks */ = {
@@ -113,6 +115,7 @@
 				2F5E9A9B2D51AA5800123456 /* Logging */,
 				2F5E9A9E2D51AA6300123456 /* KeychainAccess */,
 				2F5E9AA12D51AA6F00123456 /* Sparkle */,
+				2F5E9AA42D51AA7500123456 /* GRDB */,
 			);
 			productName = VibeMeter;
 			productReference = 2F5E9A4D2D51A9A300123456 /* VibeMeter.app */;
@@ -170,6 +173,7 @@
 				2F5E9A9A2D51AA5800123456 /* XCRemoteSwiftPackageReference "swift-log" */,
 				2F5E9A9D2D51AA6300123456 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				2F5E9AA02D51AA6F00123456 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				2F5E9AA32D51AA7500123456 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 2F5E9A4E2D51A9A300123456 /* Products */;
@@ -513,6 +517,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		2F5E9AA32D51AA7500123456 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -530,6 +542,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2F5E9AA02D51AA6F00123456 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		2F5E9AA42D51AA7500123456 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2F5E9AA32D51AA7500123456 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

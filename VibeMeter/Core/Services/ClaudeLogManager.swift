@@ -126,7 +126,9 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
     /// Get daily usage data from Claude logs with progress updates
     public func getDailyUsageWithProgress(delegate: ClaudeLogProgressDelegate?) async -> [Date: [ClaudeLogEntry]] {
         // Check cache first
-        if let cachedData = cacheManager.cachedDailyUsage,
+        let startDate = Date().addingTimeInterval(-90 * 24 * 60 * 60) // 90 days back
+        let endDate = Date()
+        if let cachedData = await cacheManager.getCachedDailyUsage(from: startDate, to: endDate),
            cacheManager.isCacheValid {
             logger.info("ClaudeLogManager: Returning cached data")
             delegate?.logProcessingDidComplete(dailyUsage: cachedData)
@@ -194,9 +196,10 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         }
 
         // Process files using the background actor with parallel processing
+        // Process files using the background actor with parallel processing
         let (dailyUsage, updatedHashCache) = await logProcessor.processLogFiles(
             jsonlFiles,
-            usingCache: cacheManager.fileHashCache,
+            usingCache: [:], // File hash cache now in database
             cacheManager: cacheManager,
             progressHandler: progressHandler)
 
@@ -213,7 +216,7 @@ public final class ClaudeLogManager: ClaudeLogManagerProtocol, @unchecked Sendab
         }
 
         // Update caches
-        cacheManager.updateDailyUsageCache(dailyUsage, fileHashCache: updatedHashCache)
+        await cacheManager.updateDailyUsageCache(dailyUsage, fileHashCache: updatedHashCache)
         
         // Update session tracker with all entries
         let allEntries = dailyUsage.values.flatMap { $0 }
