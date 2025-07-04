@@ -11,11 +11,7 @@ final class ClaudeLogFileScanner: @unchecked Sendable {
     /// Find all JSONL files in the Claude logs directory
     func findJSONLFiles(in directory: URL) -> [URL] {
         var jsonlFiles: [URL] = []
-        let cutoffDate = Date().addingTimeInterval(-30 * 24 * 60 * 60) // 30 days ago
-
-        // Date formatter for parsing filenames (optimization #9)
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
+        // Removed 30-day limit to get all historical data
 
         logger.debug("Searching for JSONL files in: \(directory.path)")
 
@@ -24,26 +20,6 @@ final class ClaudeLogFileScanner: @unchecked Sendable {
             includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey, .fileSizeKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
             for case let fileURL as URL in enumerator where fileURL.pathExtension == "jsonl" {
-                let filename = fileURL.lastPathComponent
-
-                // Try to extract date from filename first (optimization #9)
-                if let dateRange = filename.range(of: #"\d{4}-\d{2}-\d{2}"#, options: .regularExpression) {
-                    let dateString = String(filename[dateRange])
-                    if let fileDate = dateFormatter.date(from: dateString),
-                       fileDate < cutoffDate {
-                        logger.trace("Skipping old file based on filename: \(filename)")
-                        continue
-                    }
-                } else {
-                    // Fall back to modification date if no date in filename
-                    if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
-                       let modificationDate = attributes[.modificationDate] as? Date,
-                       modificationDate < cutoffDate {
-                        logger.trace("Skipping old file: \(fileURL.lastPathComponent)")
-                        continue
-                    }
-                }
-
                 jsonlFiles.append(fileURL)
                 logger.debug("Found JSONL file: \(fileURL.path)")
             }
@@ -60,7 +36,7 @@ final class ClaudeLogFileScanner: @unchecked Sendable {
             return date1 > date2
         }
 
-        logger.info("Found \(jsonlFiles.count) JSONL files (excluding old files)")
+        logger.info("Found \(jsonlFiles.count) JSONL files (all available history)")
         return jsonlFiles
     }
 

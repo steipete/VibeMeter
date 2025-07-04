@@ -62,30 +62,97 @@ actor BackgroundDataProcessor {
             teamInfo = ProviderTeamInfo(id: 0, name: "Individual Account", provider: provider)
         }
 
-        // Calculate current month for up-to-date spending data
+        // Fetch all available months of data
         let calendar = Calendar.current
         let currentDate = Date()
-        let calendarMonth = calendar.component(.month, from: currentDate) // 1-based (1-12)
-        let month = calendarMonth - 1 // Convert to 0-based for API (0-11)
-        let year = calendar.component(.year, from: currentDate)
-
-        logger
-            .info(
-                """
-                Requesting invoice data for current month \(month)/\(year) \
-                (Calendar month \(calendarMonth) -> API month \(month))
-                """)
-
-        // Fetch invoice and usage data concurrently
-        // Use team ID from team info (or 0 for fallback)
-        async let invoiceTask = providerClient.fetchMonthlyInvoice(
-            authToken: authToken,
-            month: month,
-            year: year,
-            teamId: teamInfo.id == 0 ? nil : teamInfo.id) // Use nil for fallback team
+        let currentYear = calendar.component(.year, from: currentDate)
+        let currentMonth = calendar.component(.month, from: currentDate) // 1-based (1-12)
+        
+        // Determine start date for historical data (e.g., 12 months back)
+        let startDate = calendar.date(byAdding: .month, value: -12, to: currentDate) ?? currentDate
+        let startYear = calendar.component(.year, from: startDate)
+        let startMonth = calendar.component(.month, from: startDate) // 1-based (1-12)
+        
+        logger.info("Fetching historical data from \(startMonth)/\(startYear) to \(currentMonth)/\(currentYear)")
+        
+        // Collect all invoice tasks
+        var invoiceTasks: [Task<ProviderMonthlyInvoice?, Never>] = []
+        var yearMonth = (year: startYear, month: startMonth)
+        
+        // Get invoice cache for Cursor provider
+        let invoiceCache = if provider == .cursor {
+            await CursorInvoiceCache.shared
+        } else {
+            nil as CursorInvoiceCache?
+        }
+        
+        while (yearMonth.year < currentYear) || (yearMonth.year == currentYear && yearMonth.month <= currentMonth) {
+            let apiMonth = yearMonth.month - 1 // Convert to 0-based for API (0-11)
+            let year = yearMonth.year
+            let effectiveTeamId = teamInfo.id == 0 ? nil : teamInfo.id
+            
+            let task = Task { () -> ProviderMonthlyInvoice? in
+                // Check cache first for Cursor provider
+                if let cache = invoiceCache,
+                   let cachedInvoice = await cache.getCachedInvoice(month: apiMonth, year: year, teamId: effectiveTeamId) {
+                    logger.info("Using cached invoice for \(yearMonth.month)/\(year): \(cachedInvoice.totalSpendingCents) cents")
+                    return cachedInvoice
+                }
+                
+                // Fetch from API if not cached
+                do {
+                    let invoice = try await providerClient.fetchMonthlyInvoice(
+                        authToken: authToken,
+                        month: apiMonth,
+                        year: year,
+                        teamId: effectiveTeamId)
+                    logger.info("Fetched invoice for \(yearMonth.month)/\(year): \(invoice.totalSpendingCents) cents")
+                    
+                    // Cache the result for Cursor provider
+                    if let cache = invoiceCache {
+                        await cache.cacheInvoice(invoice, month: apiMonth, year: year, teamId: effectiveTeamId)
+                    }
+                    
+                    return invoice
+                } catch {
+                    logger.warning("Failed to fetch invoice for \(yearMonth.month)/\(year): \(error.localizedDescription)")
+                    return nil
+                }
+            }
+            invoiceTasks.append(task)
+            
+            // Move to next month
+            if yearMonth.month == 12 {
+                yearMonth = (year: yearMonth.year + 1, month: 1)
+            } else {
+                yearMonth = (year: yearMonth.year, month: yearMonth.month + 1)
+            }
+        }
+        
+        // Also fetch usage data concurrently
         async let usageTask = providerClient.fetchUsageData(authToken: authToken)
-
-        let invoice = try await invoiceTask
+        
+        // Wait for all invoice tasks to complete
+        var invoices: [ProviderMonthlyInvoice] = []
+        for task in invoiceTasks {
+            if let invoice = await task.value {
+                invoices.append(invoice)
+            }
+        }
+        
+        // Combine all invoices into a single invoice with all items
+        let allItems = invoices.flatMap { $0.items }
+        
+        // Use the most recent invoice's pricing description
+        let latestInvoice = invoices.last(where: { $0.totalSpendingCents > 0 }) ?? invoices.last
+        
+        let combinedInvoice = ProviderMonthlyInvoice(
+            items: allItems,
+            pricingDescription: latestInvoice?.pricingDescription,
+            provider: provider,
+            month: currentMonth - 1, // API month (0-based)
+            year: currentYear
+        )
 
         // Try to fetch usage data, but don't fail if it's unavailable
         let usage: ProviderUsageData
@@ -105,18 +172,18 @@ actor BackgroundDataProcessor {
         }
 
         if provider == .claude {
-            logger.info("Claude: Invoice items: \(invoice.items.count), total: \(invoice.totalSpendingCents) cents")
+            logger.info("Claude: Total invoice items across all months: \(combinedInvoice.items.count), total: \(combinedInvoice.totalSpendingCents) cents")
             logger.info("Claude: Usage data - current: \(usage.currentRequests), max: \(usage.maxRequests ?? 0)")
-            if let pricing = invoice.pricingDescription {
+            if let pricing = combinedInvoice.pricingDescription {
                 logger.info("Claude: Pricing description: \(pricing.description)")
             }
         }
 
-        logger.info("Completed background processing for \(provider.displayName)")
+        logger.info("Completed background processing for \(provider.displayName) - fetched \(invoices.count) months of data")
         return ProviderDataResult(
             userInfo: userInfo,
             teamInfo: teamInfo,
-            invoice: invoice,
+            invoice: combinedInvoice,
             usage: usage)
     }
 }
