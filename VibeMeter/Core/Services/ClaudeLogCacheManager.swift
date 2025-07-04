@@ -53,19 +53,14 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     /// Get cached daily usage data
     public var cachedDailyUsage: [Date: [ClaudeLogEntry]]? {
         get {
-            guard let data = userDefaults.data(forKey: cacheKey),
-                  let decoded = try? JSONDecoder().decode([Date: [ClaudeLogEntry]].self, from: data) else {
-                return nil
-            }
-            return decoded
+            // Don't cache full daily usage in UserDefaults - it's too large
+            // Rely on permanent cache for individual files instead
+            return nil
         }
         set {
-            if let newValue,
-               let encoded = try? JSONEncoder().encode(newValue) {
-                userDefaults.set(encoded, forKey: cacheKey)
-            } else {
-                userDefaults.removeObject(forKey: cacheKey)
-            }
+            // Don't store in UserDefaults to avoid 4MB limit
+            // The permanent cache handles individual file caching
+            logger.debug("Skipping UserDefaults cache for daily usage (too large)")
         }
     }
     
@@ -275,14 +270,19 @@ public final class ClaudeLogCacheManager: @unchecked Sendable {
     
     /// Update daily usage cache
     public func updateDailyUsageCache(_ dailyUsage: [Date: [ClaudeLogEntry]], fileHashCache: [String: Data]) {
-        self.cachedDailyUsage = dailyUsage
+        // Don't cache the full daily usage - it's too large for UserDefaults
+        // Only update the timestamp and file hash cache
         self.cacheTimestamp = Date()
         self.fileHashCache = fileHashCache
+        
+        let totalEntries = dailyUsage.values.flatMap { $0 }.count
+        logger.info("Processed \(totalEntries) entries, updated cache timestamp (not storing full data)")
     }
     
     /// Invalidate all caches
     public func invalidateAll() {
-        cachedDailyUsage = nil
+        // Remove the old cache key if it exists
+        userDefaults.removeObject(forKey: cacheKey)
         cacheTimestamp = nil
         fileHashCache = [:]
         currentWindowCache = nil
