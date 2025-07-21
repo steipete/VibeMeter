@@ -19,6 +19,14 @@ A beautiful, native macOS menu bar application that helps you track your monthly
 
 ## 🚀 Quick Start
 
+- 🍺 **Install Vibe Meter** via [homebrew](https://formulae.brew.sh/cask/vibemeter#default):
+
+```shell
+brew install --cask vibemeter
+```
+
+or
+
 1. **Download Vibe Meter** from the [latest release](https://github.com/steipete/VibeMeter/releases)
 2. **Install** by dragging Vibe Meter.app to your Applications folder
 3. **Launch** and click the menu bar icon to get started
