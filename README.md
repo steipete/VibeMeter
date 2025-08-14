@@ -332,10 +332,9 @@ We welcome contributions! When contributing to Vibe Meter:
 
 ## 📖 Documentation
 
-- [Architecture Overview](docs/MODERN-ARCHITECTURE.md)
+- [Architecture Overview](docs/modern-swift.md)
 - [Release Process](docs/RELEASE.md)
 - [Code Signing Setup](docs/SIGNING-AND-NOTARIZATION.md)
-- [CI/CD Pipeline](docs/CI-SETUP.md)
 
 ## 🐛 Support
 
