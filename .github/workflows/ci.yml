@@ -144,6 +144,10 @@ jobs:
           -derivedDataPath build/DerivedData \
           -destination 'platform=macOS,arch=arm64' \
           -resultBundlePath test-results.xcresult \
+          -parallel-testing-enabled NO \
+          -test-timeouts-enabled YES \
+          -default-test-execution-time-allowance 60 \
+          -maximum-test-execution-time-allowance 300 \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGN_IDENTITY="" \
