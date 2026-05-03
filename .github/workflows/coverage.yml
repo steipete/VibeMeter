@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   coverage:
@@ -82,10 +83,14 @@ jobs:
         fail_ci_if_error: false
         
     - name: Create coverage badge
+      if: env.COVERAGE != '' && env.GIST_SECRET != '' && env.COVERAGE_BADGE_GIST_ID != ''
       uses: schneegans/dynamic-badges-action@v1.7.0
+      env:
+        GIST_SECRET: ${{ secrets.GIST_SECRET }}
+        COVERAGE_BADGE_GIST_ID: ${{ vars.COVERAGE_BADGE_GIST_ID }}
       with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: YOUR_GIST_ID_HERE
+        auth: ${{ env.GIST_SECRET }}
+        gistID: ${{ env.COVERAGE_BADGE_GIST_ID }}
         filename: vibemeter-coverage.json
         label: Coverage
         message: ${{ env.COVERAGE }}
