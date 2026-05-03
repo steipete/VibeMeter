@@ -32,7 +32,13 @@ jobs:
         brew install tuist xcbeautify
 
     - name: Generate Xcode project
-      run: ./scripts/generate-xcproj.sh
+      run: |
+        if [[ -x ./scripts/generate-xcproj.sh ]]; then
+          ./scripts/generate-xcproj.sh
+        else
+          echo "Using checked-in VibeMeter.xcodeproj"
+          test -d VibeMeter.xcodeproj
+        fi
 
     - name: Build tests with verbose output
       run: |

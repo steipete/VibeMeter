@@ -77,7 +77,12 @@ jobs:
     - name: Generate Xcode project
       run: |
         eval "$(mise activate bash)"
-        ./scripts/generate-xcproj.sh
+        if [[ -x ./scripts/generate-xcproj.sh ]]; then
+          ./scripts/generate-xcproj.sh
+        else
+          echo "Using checked-in VibeMeter.xcodeproj"
+          test -d VibeMeter.xcodeproj
+        fi
 
     - name: Lint code
       if: github.event_name == 'pull_request'
