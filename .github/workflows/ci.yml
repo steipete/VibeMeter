@@ -114,6 +114,9 @@ jobs:
           -configuration Release \
           -derivedDataPath build/DerivedData \
           -destination 'platform=macOS,arch=arm64' \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
           | xcbeautify
         
         # Copy built app
@@ -134,8 +137,17 @@ jobs:
           echo "Running full test suite"
         fi
         
-        # Run tests with unified runner
-        ./test-runner.sh $TEST_MODE --junit-output test-results.xml
+        xcodebuild test \
+          -workspace VibeMeter.xcworkspace \
+          -scheme VibeMeter \
+          -configuration Debug \
+          -derivedDataPath build/DerivedData \
+          -destination 'platform=macOS,arch=arm64' \
+          -resultBundlePath test-results.xcresult \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
+          | xcbeautify --report junit --report-path . --junit-report-filename test-results.xml
         
         echo "::endgroup::"
 

@@ -48,7 +48,10 @@ jobs:
           -scheme VibeMeter \
           -destination 'platform=macOS,arch=arm64' \
           -configuration Debug \
-          -derivedDataPath build/DerivedData
+          -derivedDataPath build/DerivedData \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY=""
 
     - name: Run tests with debugging
       timeout-minutes: ${{ github.event.inputs.timeout_minutes }}
@@ -75,6 +78,9 @@ jobs:
           -enableAddressSanitizer NO \
           -enableThreadSanitizer NO \
           -enableUndefinedBehaviorSanitizer NO \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
           $TEST_FILTER \
           -resultBundlePath "debug-test-results.xcresult" \
           2>&1 | tee test-output.log
