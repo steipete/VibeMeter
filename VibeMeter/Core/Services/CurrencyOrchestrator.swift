@@ -112,12 +112,14 @@ public final class CurrencyOrchestrator {
             rates: rates,
             targetCurrency: targetCurrency)
 
-        spendingData.updateLimits(
-            for: provider,
-            warningUSD: settingsManager.warningLimitUSD,
-            upperUSD: settingsManager.upperLimitUSD,
-            rates: rates,
-            targetCurrency: targetCurrency)
+        if settingsManager.limitsEnabled {
+            spendingData.updateLimits(
+                for: provider,
+                warningUSD: settingsManager.warningLimitUSD,
+                upperUSD: settingsManager.upperLimitUSD,
+                rates: rates,
+                targetCurrency: targetCurrency)
+        }
     }
 
     /// Checks spending limits and sends notifications for all providers
@@ -142,7 +144,8 @@ public final class CurrencyOrchestrator {
         spendingData: MultiProviderSpendingData,
         targetCurrency: String? = nil,
         exchangeRates: [String: Double]? = nil) async {
-        guard let providerData = spendingData.getSpendingData(for: provider),
+        guard settingsManager.limitsEnabled,
+              let providerData = spendingData.getSpendingData(for: provider),
               let spendingUSD = providerData.currentSpendingUSD else {
             return
         }

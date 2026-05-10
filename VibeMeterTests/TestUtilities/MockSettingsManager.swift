@@ -9,6 +9,7 @@ import Foundation
 final class MockSettingsManager: SettingsManagerProtocol {
     var providerSessions: [ServiceProvider: ProviderSession] = [:]
     var selectedCurrencyCode: String = "USD"
+    var limitsEnabled: Bool = true
     var warningLimitUSD: Double = 200
     var upperLimitUSD: Double = 500
     var refreshIntervalMinutes: Int = 5
@@ -24,6 +25,7 @@ final class MockSettingsManager: SettingsManagerProtocol {
 
     init(
         selectedCurrencyCode: String = "USD",
+        limitsEnabled: Bool = true,
         warningLimitUSD: Double = 200,
         upperLimitUSD: Double = 500,
         refreshIntervalMinutes: Int = 5,
@@ -33,6 +35,7 @@ final class MockSettingsManager: SettingsManagerProtocol {
         enabledProviders: Set<ServiceProvider> = [.cursor],
         updateChannel: UpdateChannel = .stable) {
         self.selectedCurrencyCode = selectedCurrencyCode
+        self.limitsEnabled = limitsEnabled
         self.warningLimitUSD = warningLimitUSD
         self.upperLimitUSD = upperLimitUSD
         self.refreshIntervalMinutes = refreshIntervalMinutes
@@ -86,7 +89,7 @@ extension MockSettingsManager {
     }
 
     /// Creates a MockSettingsManager with custom limits
-    static func withLimits(warning: Double, upper: Double) -> MockSettingsManager {
-        MockSettingsManager(warningLimitUSD: warning, upperLimitUSD: upper)
+    static func withLimits(warning: Double, upper: Double, enabled: Bool = true) -> MockSettingsManager {
+        MockSettingsManager(limitsEnabled: enabled, warningLimitUSD: warning, upperLimitUSD: upper)
     }
 }

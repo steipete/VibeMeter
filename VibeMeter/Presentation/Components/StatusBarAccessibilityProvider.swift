@@ -54,25 +54,28 @@ final class StatusBarAccessibilityProvider {
         let totalSpendingUSD = spendingData.totalSpendingConverted(
             to: "USD",
             rates: currencyData.effectiveRates)
-        let upperLimit = settingsManager.upperLimitUSD
-        let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
 
         let userSpending = spendingData.totalSpendingConverted(
             to: currencyData.selectedCode,
             rates: currencyData.effectiveRates)
-        let userLimit = settingsManager.upperLimitUSD * currencyData.effectiveRates[
-            currencyData.selectedCode,
-            default: 1.0
-        ]
-
         let spendingText =
             "\(currencyData.selectedSymbol)\(userSpending.formatted(.number.precision(.fractionLength(2))))"
-        let limitText = "\(currencyData.selectedSymbol)\(userLimit.formatted(.number.precision(.fractionLength(2))))"
 
-        let statusText = determineStatusText(for: percentage)
+        if settingsManager.limitsEnabled {
+            let upperLimit = settingsManager.upperLimitUSD
+            let percentage = (totalSpendingUSD / upperLimit * 100).rounded()
+            let userLimit = settingsManager.upperLimitUSD * currencyData.effectiveRates[
+                currencyData.selectedCode,
+                default: 1.0
+            ]
+            let limitText = "\(currencyData.selectedSymbol)\(userLimit.formatted(.number.precision(.fractionLength(2))))"
+            let statusText = determineStatusText(for: percentage)
 
-        return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. " +
-            "\(Int(percentage)) percent used."
+            return "\(statusText). Current spending: \(spendingText) of \(limitText) limit. " +
+                "\(Int(percentage)) percent used."
+        } else {
+            return "Current spending: \(spendingText). Spending limits disabled."
+        }
     }
 
     private func determineStatusText(for percentage: Double) -> String {

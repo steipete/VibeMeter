@@ -24,8 +24,11 @@ struct SpendingLimitsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                warningLimitSection
-                upperLimitSection
+                enableLimitsSection
+                if settingsManager?.limitsEnabled ?? true {
+                    warningLimitSection
+                    upperLimitSection
+                }
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
@@ -54,7 +57,17 @@ struct SpendingLimitsView: View {
             .upperLimitUSD
     }
 
-    // MARK: - Helper Views
+    private var enableLimitsSection: some View {
+        Section {
+            Toggle("Enable Limits", isOn: Binding(
+                get: { settingsManager?.limitsEnabled ?? true },
+                set: { settingsManager?.limitsEnabled = $0 }
+            ))
+            Text("Disable limits for unlimited plans (e.g., Cursor Pro, Claude Max)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
 
     private var warningLimitSection: some View {
         Section {
@@ -179,9 +192,13 @@ struct SpendingLimitsView: View {
         HStack {
             Spacer()
             Text({
-                let limitText = "Limits are stored in USD and will be displayed in your selected currency " +
-                    "(\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor."
-                return limitText
+                if settingsManager?.limitsEnabled ?? true {
+                    let limitText = "Limits are stored in USD and will be displayed in your selected currency " +
+                        "(\(currencyData.selectedCode)).\nSpending thresholds apply to Cursor."
+                    return limitText
+                } else {
+                    return "Spending limits are disabled. Perfect for unlimited subscription plans."
+                }
             }())
                 .font(.caption)
                 .foregroundStyle(.secondary)

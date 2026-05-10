@@ -15,6 +15,7 @@ public protocol SettingsManagerProtocol: AnyObject, Sendable {
     var refreshIntervalMinutes: Int { get set }
 
     // Spending limits (stored in USD)
+    var limitsEnabled: Bool { get set }
     var warningLimitUSD: Double { get set }
     var upperLimitUSD: Double { get set }
 
@@ -102,6 +103,11 @@ public final class SettingsManager: SettingsManagerProtocol {
     }
 
     // Spending limits
+    public var limitsEnabled: Bool {
+        get { limitsManager.limitsEnabled }
+        set { limitsManager.limitsEnabled = newValue }
+    }
+
     public var warningLimitUSD: Double {
         get { limitsManager.warningLimitUSD }
         set { limitsManager.warningLimitUSD = newValue }

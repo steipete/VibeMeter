@@ -18,9 +18,18 @@ public final class SpendingLimitsManager {
     private enum Keys {
         static let warningLimitUSD = "warningLimitUSD"
         static let upperLimitUSD = "upperLimitUSD"
+        static let limitsEnabled = "limitsEnabled"
     }
 
     // MARK: - Spending Limits (stored in USD)
+
+    /// Whether spending limits are enabled
+    public var limitsEnabled: Bool {
+        didSet {
+            userDefaults.set(limitsEnabled, forKey: Keys.limitsEnabled)
+            logger.debug("Limits enabled updated: \(self.limitsEnabled)")
+        }
+    }
 
     /// Warning threshold for spending notifications
     public var warningLimitUSD: Double {
@@ -44,12 +53,13 @@ public final class SpendingLimitsManager {
         self.userDefaults = userDefaults
 
         // Load spending limits with defaults
+        limitsEnabled = userDefaults.object(forKey: Keys.limitsEnabled) as? Bool ?? true
         warningLimitUSD = userDefaults.object(forKey: Keys.warningLimitUSD) as? Double ?? 200.0
         upperLimitUSD = userDefaults.object(forKey: Keys.upperLimitUSD) as? Double ?? 1000.0
 
         logger
             .info(
-                "SpendingLimitsManager initialized - warning: $\(self.warningLimitUSD), upper: $\(self.upperLimitUSD)")
+                "SpendingLimitsManager initialized - enabled: \(self.limitsEnabled), warning: $\(self.warningLimitUSD), upper: $\(self.upperLimitUSD)")
     }
 
     // MARK: - Public Methods
@@ -120,6 +130,7 @@ public final class SpendingLimitsManager {
     /// Resets limits to default values
     public func resetToDefaults() {
         logger.info("Resetting spending limits to defaults")
+        limitsEnabled = true
         warningLimitUSD = 200.0
         upperLimitUSD = 1000.0
     }

@@ -38,8 +38,10 @@ struct CostTableView: View {
             // Total spending in the middle
             totalSpendingSection
 
-            // Spending limits at the bottom
-            spendingLimitsSection
+            // Spending limits at the bottom (only if enabled)
+            if settingsManager?.limitsEnabled ?? true {
+                spendingLimitsSection
+            }
         }
         .id("cost-table-\(spendingData.providersWithData.count)-\(currencyData.selectedCode)-\(totalSpendingHash)")
     }
